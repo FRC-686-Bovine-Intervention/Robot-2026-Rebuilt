@@ -73,7 +73,7 @@ public class Perspective {
 		}
 	};
 
-	private static final String key = "Perspective/Chooser";
+	private static final String key = "SmartDashboard/Perspective/Chooser";
 	private static final StringPublisher namePublisher;
 	private static final StringPublisher typePublisher;
 	private static final StringArrayPublisher optionsPublisher;

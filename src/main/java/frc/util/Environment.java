@@ -22,7 +22,7 @@ public enum Environment {
 	Competition,
 	Demo,
 	;
-	private static final String key = "Environment Chooser";
+	private static final String key = "SmartDashboard/Environment Chooser";
 	private static final StringPublisher namePublisher;
 	private static final StringPublisher typePublisher;
 	private static final StringArrayPublisher optionsPublisher;
