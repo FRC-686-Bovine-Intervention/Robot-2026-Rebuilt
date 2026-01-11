@@ -152,7 +152,7 @@ public class Perspective {
 			selectedName = selected;
 			selectionPriority = 2;
 		}
-		if (Environment.isCompetition() && selectionPriority <= 1 && !alliancePerspectiveName.getOurs().equals(selectedName)) {
+		if (selectionPriority <= 1 && Environment.isCompetition() && !selectedName.equals(alliancePerspectiveName.getOurs())) {
 			selectedName = alliancePerspectiveName.getOurs();
 			selectedEntry.set(selectedName);
 			selectionPriority = 1;

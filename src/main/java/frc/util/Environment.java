@@ -94,7 +94,7 @@ public enum Environment {
 			selectedName = selected;
 			selectionPriority = 2;
 		}
-		if (selectionPriority <= 1 && DriverStation.isFMSAttached()) {
+		if (selectionPriority <= 1 && DriverStation.isFMSAttached() && !selectedName.equals("Competition")) {
 			selectedName = "Competition";
 			selectedEntry.set(selectedName);
 			selectionPriority = 1;
