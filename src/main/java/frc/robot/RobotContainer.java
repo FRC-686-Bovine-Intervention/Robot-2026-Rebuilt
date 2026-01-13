@@ -20,6 +20,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.HubShifts.Shift;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.constants.RobotConstants;
@@ -249,66 +251,48 @@ public class RobotContainer {
 		// 	)
 		// )));
 
-		this.driveController.povUp().whileTrue(new Command() {
-			private final Timer timer = new Timer();
+		new Trigger(() -> HubShifts.getCurrentShift() != Shift.Auto && HubShifts.getCurrentShift().getSecsLeftInShift() < 3.0).onTrue(new Command() {
+			private Shift initShift;
 
 			@Override
 			public void initialize() {
-				this.timer.restart();
+				this.initShift = HubShifts.getCurrentShift();
 			}
 
 			@Override
 			public void execute() {
-				if (this.timer.hasElapsed(3.0)) {
-					if (this.timer.get() % 1.0 < 0.7) {
-						driveController.setRumble(RumbleType.kBothRumble, 0.8);
+				var wrappedTime = this.initShift.getSecsSinceShiftStarted() % 1.0;
+				if (initShift.isHubActive().getOurs()) {
+					if (initShift.next().isHubActive().getOurs()) {
+						driveController.setRumble(RumbleType.kBothRumble, (wrappedTime < 0.3) ? (0.4) : (0.0));
 					} else {
-						driveController.setRumble(RumbleType.kBothRumble, 0.0);
+						if (this.initShift.getSecsLeftInShift() > 0.0) {
+							driveController.setRumble(RumbleType.kBothRumble, (wrappedTime < 0.7) ? (0.8) : (0.0));
+						} else {
+							driveController.setRumble(RumbleType.kBothRumble, (wrappedTime < 0.3) ? (0.4) : (0.0));
+						}
 					}
 				} else {
-					if (this.timer.get() % 1.0 < 0.3) {
-						driveController.setRumble(RumbleType.kBothRumble, 0.4);
+					if (initShift.next().isHubActive().getOurs()) {
+						if (this.initShift.getSecsLeftInShift() > 0.0) {
+							driveController.setRumble(RumbleType.kBothRumble, (wrappedTime < 0.3) ? (0.4) : (0.0));
+						} else {
+							driveController.setRumble(RumbleType.kBothRumble, (wrappedTime < 0.7) ? (0.8) : (0.0));
+						}
 					} else {
-						driveController.setRumble(RumbleType.kBothRumble, 0.0);
+						driveController.setRumble(RumbleType.kBothRumble, (wrappedTime < 0.7) ? (0.8) : (0.0));
 					}
 				}
 			}
 
 			@Override
 			public void end(boolean interrupted) {
-				this.timer.stop();
 				driveController.setRumble(RumbleType.kBothRumble, 0.0);
 			}
-		});
-		this.driveController.povDown().whileTrue(new Command() {
-			private final Timer timer = new Timer();
 
 			@Override
-			public void initialize() {
-				this.timer.restart();
-			}
-
-			@Override
-			public void execute() {
-				if (this.timer.hasElapsed(3.0)) {
-					if (this.timer.get() % 1.0 < 0.3) {
-						driveController.setRumble(RumbleType.kBothRumble, 0.4);
-					} else {
-						driveController.setRumble(RumbleType.kBothRumble, 0.0);
-					}
-				} else {
-					if (this.timer.get() % 1.0 < 0.7) {
-						driveController.setRumble(RumbleType.kBothRumble, 0.8);
-					} else {
-						driveController.setRumble(RumbleType.kBothRumble, 0.0);
-					}
-				}
-			}
-
-			@Override
-			public void end(boolean interrupted) {
-				this.timer.stop();
-				driveController.setRumble(RumbleType.kBothRumble, 0.0);
+			public boolean isFinished() {
+				return this.initShift.getSecsLeftInShift() < -1.0;
 			}
 		});
 	}
