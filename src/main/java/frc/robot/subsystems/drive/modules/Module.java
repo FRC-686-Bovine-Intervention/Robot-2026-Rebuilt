@@ -104,7 +104,7 @@ public class Module {
 
 		this.modulePositionSamples = new SwerveModulePosition[this.inputs.odometryDriveRads.length];
 		for (int i = 0; i < this.modulePositionSamples.length; i++) {
-			var angle = this.config.moduleForwardDirection.plus(
+			var angle = this.config.moduleTransform.getRotation().plus(
 				Rotation2d.fromRadians(
 					DriveConstants.azimuthEncoderToCarriageRatio.applyUnsigned(this.inputs.odometryAzimuthRads[i])
 				)
@@ -115,7 +115,7 @@ public class Module {
 		}
 		System.arraycopy(this.modulePositionSampleBuffer, 0, this.modulePositionSamples, 0, this.modulePositionSamples.length);
 
-		var angle = this.config.moduleForwardDirection.plus(
+		var angle = this.config.moduleTransform.getRotation().plus(
 			Rotation2d.fromRadians(
 				DriveConstants.azimuthEncoderToCarriageRatio.applyUnsigned(this.inputs.azimuthEncoder.getPositionRads())
 			)
@@ -162,7 +162,7 @@ public class Module {
 		setpoint.optimize(this.getAngle());
 
 		var turnSetpoint = setpoint.angle;
-		this.io.setAzimuthAngleRads(turnSetpoint.minus(this.config.moduleForwardDirection).getRadians());
+		this.io.setAzimuthAngleRads(turnSetpoint.minus(this.config.moduleTransform.getRotation()).getRadians());
 
 		setpoint.speedMetersPerSecond *= turnSetpoint.minus(this.getAngle()).getCos();
 
@@ -214,7 +214,7 @@ public class Module {
 	 * Must be called periodically.
 	 */
 	public void runVolts(double volts, Rotation2d moduleAngle) {
-		this.io.setAzimuthAngleRads(moduleAngle.minus(this.config.moduleForwardDirection).getRadians());
+		this.io.setAzimuthAngleRads(moduleAngle.minus(this.config.moduleTransform.getRotation()).getRadians());
 		this.io.setDriveVolts(volts);
 	}
 

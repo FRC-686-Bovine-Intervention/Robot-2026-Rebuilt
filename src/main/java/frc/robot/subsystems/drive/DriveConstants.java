@@ -12,6 +12,7 @@ import java.util.Arrays;
 import com.ctre.phoenix6.signals.InvertedValue;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -40,19 +41,17 @@ public final class DriveConstants {
 		public final CANDevice driveMotorID;
 		public final CANDevice azimuthMotorID;
 		public final InvertedValue driveInverted;
-		public final Rotation2d moduleForwardDirection;
 		public final Angle encoderZeroOffset;
-		public final Translation2d moduleTranslation;
+		public final Transform2d moduleTransform;
 		public final Rotation2d positiveRotVec;
-		ModuleConstants(String name, CANDevice driveMotorID, CANDevice turnMotorID, InvertedValue driveInverted, Rotation2d moduleForwardDirection, Angle encoderZeroOffset, Translation2d moduleTranslation) {
+		ModuleConstants(String name, CANDevice driveMotorID, CANDevice turnMotorID, InvertedValue driveInverted, Angle encoderZeroOffset, Transform2d moduleTransform) {
 			this.name = name;
 			this.driveMotorID = driveMotorID;
 			this.azimuthMotorID = turnMotorID;
 			this.driveInverted = driveInverted;
-			this.moduleForwardDirection = moduleForwardDirection;
 			this.encoderZeroOffset = encoderZeroOffset;
-			this.moduleTranslation = moduleTranslation;
-			this.positiveRotVec = this.moduleTranslation.getAngle().plus(Rotation2d.kCCW_90deg);
+			this.moduleTransform = moduleTransform;
+			this.positiveRotVec = this.moduleTransform.getTranslation().getAngle().plus(Rotation2d.kCCW_90deg);
 		}
 	}
 
@@ -61,48 +60,56 @@ public final class DriveConstants {
 			"Front Left",
 			HardwareDevices.frontLeftDriveMotorID, HardwareDevices.frontLeftTurnMotorID,
 			InvertedValue.CounterClockwise_Positive,
-			Rotation2d.kCCW_90deg,
-			Rotations.of(0.7326064),
-			new Translation2d(
-				trackWidthX.div(+2),
-				trackWidthY.div(+2)
+			Rotations.of(0.7326218),
+			new Transform2d(
+				new Translation2d(
+					trackWidthX.div(+2),
+					trackWidthY.div(+2)
+				),
+				Rotation2d.kCCW_90deg
 			)
 		),
 		new ModuleConstants(
 			"Front Right",
 			HardwareDevices.frontRightDriveMotorID, HardwareDevices.frontRightTurnMotorID,
 			InvertedValue.CounterClockwise_Positive,
-			Rotation2d.kZero,
-			Rotations.of(0.7325602),
-			new Translation2d(
-				trackWidthX.div(+2),
-				trackWidthY.div(-2)
+			Rotations.of(0.7325910),
+			new Transform2d(
+				new Translation2d(
+					trackWidthX.div(+2),
+					trackWidthY.div(-2)
+				),
+				Rotation2d.kZero
 			)
 		),
 		new ModuleConstants(
 			"Back Left",
 			HardwareDevices.backLeftDriveMotorID, HardwareDevices.backLeftTurnMotorID,
 			InvertedValue.CounterClockwise_Positive,
-			Rotation2d.k180deg,
-			Rotations.of(0.6867877),
-			new Translation2d(
-				trackWidthX.div(-2),
-				trackWidthY.div(+2)
+			Rotations.of(0.6857859),
+			new Transform2d(
+				new Translation2d(
+					trackWidthX.div(-2),
+					trackWidthY.div(+2)
+				),
+				Rotation2d.k180deg
 			)
 		),
 		new ModuleConstants(
 			"Back Right",
 			HardwareDevices.backRightDriveMotorID, HardwareDevices.backRightTurnMotorID,
 			InvertedValue.CounterClockwise_Positive,
-			Rotation2d.kCW_90deg,
-			Rotations.of(0.8682748),
-			new Translation2d(
-				trackWidthX.div(-2),
-				trackWidthY.div(-2)
+			Rotations.of(0.8681977),
+			new Transform2d(
+				new Translation2d(
+					trackWidthX.div(-2),
+					trackWidthY.div(-2)
+				),
+				Rotation2d.kCW_90deg
 			)
 		),
 	};
-	public static final Translation2d[] moduleTranslations = Arrays.stream(moduleConstants).map((a) -> a.moduleTranslation).toArray(Translation2d[]::new);
+	public static final Translation2d[] moduleTranslations = Arrays.stream(moduleConstants).map((a) -> a.moduleTransform.getTranslation()).toArray(Translation2d[]::new);
 	public static final Distance driveBaseRadius = Meters.of(Arrays.stream(moduleTranslations).mapToDouble((t) -> t.getNorm()).max().orElse(0.5));
 
 	public static final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(moduleTranslations);

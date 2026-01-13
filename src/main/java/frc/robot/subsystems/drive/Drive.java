@@ -553,7 +553,7 @@ public class Drive extends VirtualSubsystem {
 		IntStream.range(0, DriveConstants.moduleConstants.length).forEach((i) -> {
 			this.setpointStates[i] = new SwerveModuleState(
 				0,
-				DriveConstants.moduleConstants[i].moduleTranslation.getAngle()
+				DriveConstants.moduleConstants[i].moduleTransform.getTranslation().getAngle()
 			);
 		});
 	}
