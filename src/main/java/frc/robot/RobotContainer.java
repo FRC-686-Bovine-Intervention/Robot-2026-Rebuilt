@@ -13,6 +13,7 @@ import java.util.Set;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -247,5 +248,68 @@ public class RobotContainer {
 		// 		Rotation2d.kZero
 		// 	)
 		// )));
+
+		this.driveController.povUp().whileTrue(new Command() {
+			private final Timer timer = new Timer();
+
+			@Override
+			public void initialize() {
+				this.timer.restart();
+			}
+
+			@Override
+			public void execute() {
+				if (this.timer.hasElapsed(3.0)) {
+					if (this.timer.get() % 1.0 < 0.7) {
+						driveController.setRumble(RumbleType.kBothRumble, 0.8);
+					} else {
+						driveController.setRumble(RumbleType.kBothRumble, 0.0);
+					}
+				} else {
+					if (this.timer.get() % 1.0 < 0.3) {
+						driveController.setRumble(RumbleType.kBothRumble, 0.4);
+					} else {
+						driveController.setRumble(RumbleType.kBothRumble, 0.0);
+					}
+				}
+			}
+
+			@Override
+			public void end(boolean interrupted) {
+				this.timer.stop();
+				driveController.setRumble(RumbleType.kBothRumble, 0.0);
+			}
+		});
+		this.driveController.povDown().whileTrue(new Command() {
+			private final Timer timer = new Timer();
+
+			@Override
+			public void initialize() {
+				this.timer.restart();
+			}
+
+			@Override
+			public void execute() {
+				if (this.timer.hasElapsed(3.0)) {
+					if (this.timer.get() % 1.0 < 0.3) {
+						driveController.setRumble(RumbleType.kBothRumble, 0.4);
+					} else {
+						driveController.setRumble(RumbleType.kBothRumble, 0.0);
+					}
+				} else {
+					if (this.timer.get() % 1.0 < 0.7) {
+						driveController.setRumble(RumbleType.kBothRumble, 0.8);
+					} else {
+						driveController.setRumble(RumbleType.kBothRumble, 0.0);
+					}
+				}
+			}
+
+			@Override
+			public void end(boolean interrupted) {
+				this.timer.stop();
+				driveController.setRumble(RumbleType.kBothRumble, 0.0);
+			}
+		});
 	}
 }
