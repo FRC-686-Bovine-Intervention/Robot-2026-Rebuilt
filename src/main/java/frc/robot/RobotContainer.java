@@ -264,23 +264,23 @@ public class RobotContainer {
 				var wrappedTime = this.initShift.getSecsSinceShiftStarted() % 1.0;
 				if (initShift.isHubActive().getOurs()) {
 					if (initShift.next().isHubActive().getOurs()) {
-						driveController.setRumble(RumbleType.kBothRumble, (wrappedTime < 0.3) ? (0.4) : (0.0));
+						driveController.setRumble(RumbleType.kLeftRumble, (wrappedTime < 0.3) ? (0.8) : (0.0));
 					} else {
 						if (this.initShift.getSecsLeftInShift() > 0.0) {
-							driveController.setRumble(RumbleType.kBothRumble, (wrappedTime < 0.7) ? (0.8) : (0.0));
+							driveController.setRumble(RumbleType.kRightRumble, (wrappedTime < 0.5) ? (0.8) : (0.0));
 						} else {
-							driveController.setRumble(RumbleType.kBothRumble, (wrappedTime < 0.3) ? (0.4) : (0.0));
+							driveController.setRumble(RumbleType.kLeftRumble, (wrappedTime < 0.3) ? (0.8) : (0.0));
 						}
 					}
 				} else {
 					if (initShift.next().isHubActive().getOurs()) {
 						if (this.initShift.getSecsLeftInShift() > 0.0) {
-							driveController.setRumble(RumbleType.kBothRumble, (wrappedTime < 0.3) ? (0.4) : (0.0));
+							driveController.setRumble(RumbleType.kLeftRumble, (wrappedTime < 0.3) ? (0.8) : (0.0));
 						} else {
-							driveController.setRumble(RumbleType.kBothRumble, (wrappedTime < 0.7) ? (0.8) : (0.0));
+							driveController.setRumble(RumbleType.kRightRumble, (wrappedTime < 0.5) ? (0.8) : (0.0));
 						}
 					} else {
-						driveController.setRumble(RumbleType.kBothRumble, (wrappedTime < 0.7) ? (0.8) : (0.0));
+						driveController.setRumble(RumbleType.kRightRumble, (wrappedTime < 0.5) ? (0.8) : (0.0));
 					}
 				}
 			}
