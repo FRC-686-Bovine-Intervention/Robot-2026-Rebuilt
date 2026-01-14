@@ -75,7 +75,7 @@ public class Cooldown {
 						this.inner -= this.stepAmount.get().in(outputUnit);
 					}
 				}
-				Logger.recordOutput(loggingKey + "/Target", this.inner);
+				Logger.recordOutput(loggingKey + "/Target", this.inner, outputUnit);
 				return inner;
 			}
 		};

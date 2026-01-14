@@ -45,9 +45,6 @@ public class LinearRelation {
 	public double metersToRadians(double meters) {
 		return meters / this.effectiveRadiusMeters;
 	}
-	public double metersToRotations(double meters) {
-		return meters / (this.effectiveRadiusMeters * 2 * Math.PI);
-	}
 	public Distance angleToDistance(Measure<AngleUnit> angle) {
 		return Meters.of(this.radiansToMeters(angle.in(Radians)));
 	}
