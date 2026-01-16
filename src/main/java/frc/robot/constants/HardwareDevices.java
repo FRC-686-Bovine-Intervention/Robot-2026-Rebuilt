@@ -26,18 +26,18 @@ public class HardwareDevices {
 	public static final CANBus canivore = CANBus.newBus("canivore");
 
 	// Drive
-	public static final CANDevice pigeonID = canivore.id(0);
+	public static final CANDevice pigeonID = rio.id(0);
 	// | Front Left
-	public static final CANDevice frontLeftDriveMotorID = canivore.id(1);
+	public static final CANDevice frontLeftDriveMotorID = rio.id(1);
 	public static final CANDevice frontLeftTurnMotorID = rio.id(1);
 	// | Front Right
-	public static final CANDevice frontRightDriveMotorID = canivore.id(2);
+	public static final CANDevice frontRightDriveMotorID = rio.id(2);
 	public static final CANDevice frontRightTurnMotorID = rio.id(2);
 	// | Back Left
-	public static final CANDevice backLeftDriveMotorID = canivore.id(3);
+	public static final CANDevice backLeftDriveMotorID = rio.id(3);
 	public static final CANDevice backLeftTurnMotorID = rio.id(3);
 	// | Back Right
-	public static final CANDevice backRightDriveMotorID = canivore.id(4);
+	public static final CANDevice backRightDriveMotorID = rio.id(4);
 	public static final CANDevice backRightTurnMotorID = rio.id(4);
 
 	// RIO
