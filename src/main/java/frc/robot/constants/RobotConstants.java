@@ -7,6 +7,7 @@ import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Pounds;
 import static edu.wpi.first.units.Units.Seconds;
 
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Frequency;
 import edu.wpi.first.units.measure.Mass;
@@ -30,6 +31,11 @@ public final class RobotConstants {
 
 	public static final Distance centerToFrontBumper = centerToFrontFrame.plus(bumperThickness);
 	public static final Distance centerToSideBumper = centerToSideFrame.plus(bumperThickness);
+
+	public static final Translation2d flBumperCorner = new Translation2d(centerToFrontBumper, centerToSideBumper);
+	public static final Translation2d frBumperCorner = new Translation2d(centerToFrontBumper, centerToSideBumper.unaryMinus());
+	public static final Translation2d blBumperCorner = new Translation2d(centerToFrontBumper.unaryMinus(), centerToSideBumper);
+	public static final Translation2d brBumperCorner = new Translation2d(centerToFrontBumper.unaryMinus(), centerToSideBumper.unaryMinus());
 
 	/**Distance between back bumper and front bumper, aka in the X axis */
 	public static final Distance robotLength = centerToFrontBumper.times(2);
