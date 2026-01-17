@@ -191,6 +191,7 @@ public class Robot extends LoggedRobot {
 		Logger.recordOutput("DEBUG/topUpright", topUpright);
 		Logger.recordOutput("DEBUG/backBottomUpright", backBottomUpright);
 		Logger.recordOutput("DEBUG/backTopUpright", backTopUpright);
+		Logger.recordOutput("DEBUG/alliancezone", new Pose3d(new Translation3d(FieldConstants.blueAllianceZoneBoundaryX.in(Meters),0.0,0.0), Rotation3d.kZero));
 	}
 
 	@Override
