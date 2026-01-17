@@ -106,15 +106,15 @@ public class Flywheels extends SubsystemBase {
 				var newDriverSetpoint = flywheels.driverMotionProfile.calculate(RobotConstants.rioUpdatePeriodSecs, flywheels.driverSetpointState, goalState);
 				var driverFFOut = flywheels.driverFF.calculateWithVelocities(flywheels.driverSetpointState.position, newDriverSetpoint.position);
 				flywheels.io.setDriverVelocityRadsPerSec(
-					FlywheelConstants.driverMotorToFlywheelRatio.inverse().applyUnsigned(FlywheelConstants.driverFlywheelWheel.metersToRadians(newDriverSetpoint.position)),
-					FlywheelConstants.driverMotorToFlywheelRatio.inverse().applyUnsigned(FlywheelConstants.driverFlywheelWheel.metersToRadians(newDriverSetpoint.velocity)),
+					FlywheelsConstants.driverMotorToFlywheelRatio.inverse().applyUnsigned(FlywheelsConstants.driverFlywheelWheel.metersToRadians(newDriverSetpoint.position)),
+					FlywheelsConstants.driverMotorToFlywheelRatio.inverse().applyUnsigned(FlywheelsConstants.driverFlywheelWheel.metersToRadians(newDriverSetpoint.velocity)),
 					driverFFOut
 				);
 				var newKickerSetpoint = flywheels.kickerMotionProfile.calculate(RobotConstants.rioUpdatePeriodSecs, flywheels.kickerSetpointState, goalState);
 				var kickerFFOut = flywheels.kickerFF.calculateWithVelocities(flywheels.kickerSetpointState.position, newKickerSetpoint.position);
 				flywheels.io.setKickerVelocityRadsPerSec(
-					FlywheelConstants.kickerMotorToFlywheelRatio.inverse().applyUnsigned(FlywheelConstants.kickerWheel.metersToRadians(newKickerSetpoint.position)),
-					FlywheelConstants.kickerMotorToFlywheelRatio.inverse().applyUnsigned(FlywheelConstants.kickerWheel.metersToRadians(newKickerSetpoint.velocity)),
+					FlywheelsConstants.kickerMotorToFlywheelRatio.inverse().applyUnsigned(FlywheelsConstants.kickerWheel.metersToRadians(newKickerSetpoint.position)),
+					FlywheelsConstants.kickerMotorToFlywheelRatio.inverse().applyUnsigned(FlywheelsConstants.kickerWheel.metersToRadians(newKickerSetpoint.velocity)),
 					kickerFFOut
 				);
 			}

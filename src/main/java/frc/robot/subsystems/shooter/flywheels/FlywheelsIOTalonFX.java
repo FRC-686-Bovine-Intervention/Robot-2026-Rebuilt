@@ -22,12 +22,14 @@ import frc.util.loggerUtil.inputs.LoggedEncodedMotor.EncodedMotorStatusSignalCac
 public class FlywheelsIOTalonFX implements FlywheelsIO {
 	private final TalonFX leftDriverMotor = new TalonFX(0);
 	private final TalonFX rightDriverMotor = new TalonFX(1);
-	private final TalonFX kickerMotor = new TalonFX(2);
+	private final TalonFX slaveleftDriverMotor = new TalonFX(2);
+	private final TalonFX slaverightDriverMotor = new TalonFX(3);
+	// private final TalonFX kickerMotor = new TalonFX(2);
 
 	private final BaseStatusSignal[] refreshSignals;
 	private final EncodedMotorStatusSignalCache leftDriverCache;
 	private final EncodedMotorStatusSignalCache righttDriverCache;
-	private final EncodedMotorStatusSignalCache kickerCache;
+	// private final EncodedMotorStatusSignalCache kickerCache;
 
 	private final NeutralOut neutralRequest = new NeutralOut();
 	private final CoastOut coastRequest = new CoastOut();
@@ -43,21 +45,23 @@ public class FlywheelsIOTalonFX implements FlywheelsIO {
 			.withInverted(InvertedValue.CounterClockwise_Positive)
 		;
 		this.leftDriverMotor.getConfigurator().apply(driverConfig);
+		this.slaveleftDriverMotor.getConfigurator().apply(driverConfig);
 		driverConfig.MotorOutput
 			.withInverted(InvertedValue.Clockwise_Positive)
 		;
 		this.rightDriverMotor.getConfigurator().apply(driverConfig);
+		this.slaverightDriverMotor.getConfigurator().apply(driverConfig);
 
-		var kickerConfig = new TalonFXConfiguration();
-		kickerConfig.MotorOutput
-			.withNeutralMode(NeutralModeValue.Coast)
-			.withInverted(InvertedValue.CounterClockwise_Positive)
-		;
-		this.kickerMotor.getConfigurator().apply(kickerConfig);
+		// var kickerConfig = new TalonFXConfiguration();
+		// kickerConfig.MotorOutput
+		// 	.withNeutralMode(NeutralModeValue.Coast)
+		// 	.withInverted(InvertedValue.CounterClockwise_Positive)
+		// ;
+		// this.kickerMotor.getConfigurator().apply(kickerConfig);
 
 		this.leftDriverCache = EncodedMotorStatusSignalCache.from(this.leftDriverMotor);
 		this.righttDriverCache = EncodedMotorStatusSignalCache.from(this.rightDriverMotor);
-		this.kickerCache = EncodedMotorStatusSignalCache.from(this.kickerMotor);
+		// this.kickerCache = EncodedMotorStatusSignalCache.from(this.kickerMotor);
 
 		this.refreshSignals = new BaseStatusSignal[] {
 			this.leftDriverCache.encoder().position(),
@@ -74,13 +78,13 @@ public class FlywheelsIOTalonFX implements FlywheelsIO {
 			this.righttDriverCache.motor().supplyCurrent(),
 			this.righttDriverCache.motor().torqueCurrent(),
 			this.righttDriverCache.motor().deviceTemperature(),
-			this.kickerCache.encoder().position(),
-			this.kickerCache.encoder().velocity(),
-			this.kickerCache.motor().appliedVoltage(),
-			this.kickerCache.motor().statorCurrent(),
-			this.kickerCache.motor().supplyCurrent(),
-			this.kickerCache.motor().torqueCurrent(),
-			this.kickerCache.motor().deviceTemperature(),
+			// this.kickerCache.encoder().position(),
+			// this.kickerCache.encoder().velocity(),
+			// this.kickerCache.motor().appliedVoltage(),
+			// this.kickerCache.motor().statorCurrent(),
+			// this.kickerCache.motor().supplyCurrent(),
+			// this.kickerCache.motor().torqueCurrent(),
+			// this.kickerCache.motor().deviceTemperature(),
 		};
 	}
 
@@ -89,7 +93,7 @@ public class FlywheelsIOTalonFX implements FlywheelsIO {
 		BaseStatusSignal.refreshAll(this.refreshSignals);
 		inputs.leftDriverMotor.updateFrom(this.leftDriverCache);
 		inputs.rightDriverMotor.updateFrom(this.righttDriverCache);
-		inputs.kicker.updateFrom(this.kickerCache);
+		// inputs.kicker.updateFrom(this.kickerCache);
 	}
 
 	@Override
@@ -99,15 +103,18 @@ public class FlywheelsIOTalonFX implements FlywheelsIO {
 			.withAcceleration(Units.radiansToRotations(accelerationRadsPerSecSqr))
 			.withFeedForward(feedforwardVolts)
 		);
-		this.rightDriverMotor.setControl(this.followerRequest.withLeaderID(this.leftDriverMotor.getDeviceID()));
+		this.followerRequest.withLeaderID(this.leftDriverMotor.getDeviceID());
+		this.rightDriverMotor.setControl(this.followerRequest);
+		this.slaveleftDriverMotor.setControl(this.followerRequest);
+		this.slaverightDriverMotor.setControl(this.followerRequest);
 	}
 	@Override
 	public void setKickerVelocityRadsPerSec(double velocityRadsPerSec, double accelerationRadsPerSecSqr, double feedforwardVolts) {
-		this.kickerMotor.setControl(this.kickerVelocityRequest
-			.withVelocity(Units.radiansToRotations(velocityRadsPerSec))
-			.withAcceleration(Units.radiansToRotations(accelerationRadsPerSecSqr))
-			.withFeedForward(feedforwardVolts)
-		);
+		// this.kickerMotor.setControl(this.kickerVelocityRequest
+		// 	.withVelocity(Units.radiansToRotations(velocityRadsPerSec))
+		// 	.withAcceleration(Units.radiansToRotations(accelerationRadsPerSecSqr))
+		// 	.withFeedForward(feedforwardVolts)
+		// );
 	}
 
 	@Override
@@ -115,11 +122,13 @@ public class FlywheelsIOTalonFX implements FlywheelsIO {
 		var controlRequest = NeutralMode.selectControlRequest(neutralMode, this.neutralRequest, this.coastRequest, this.brakeRequest);
 		this.leftDriverMotor.setControl(controlRequest);
 		this.rightDriverMotor.setControl(controlRequest);
+		this.slaveleftDriverMotor.setControl(controlRequest);
+		this.slaverightDriverMotor.setControl(controlRequest);
 	}
 	@Override
 	public void stopKicker(Optional<NeutralMode> neutralMode) {
-		var controlRequest = NeutralMode.selectControlRequest(neutralMode, this.neutralRequest, this.coastRequest, this.brakeRequest);
-		this.kickerMotor.setControl(controlRequest);
+		// var controlRequest = NeutralMode.selectControlRequest(neutralMode, this.neutralRequest, this.coastRequest, this.brakeRequest);
+		// this.kickerMotor.setControl(controlRequest);
 	}
 
 	@Override
@@ -131,9 +140,9 @@ public class FlywheelsIOTalonFX implements FlywheelsIO {
 	}
 	@Override
 	public void configKickerPID(PIDConstants pidConstants) {
-		var config = new Slot0Configs();
-		this.kickerMotor.getConfigurator().refresh(config);
-		pidConstants.update(config);
-		this.kickerMotor.getConfigurator().apply(config);
+		// var config = new Slot0Configs();
+		// this.kickerMotor.getConfigurator().refresh(config);
+		// pidConstants.update(config);
+		// this.kickerMotor.getConfigurator().apply(config);
 	}
 }

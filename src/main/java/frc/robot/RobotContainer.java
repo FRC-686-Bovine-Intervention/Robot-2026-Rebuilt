@@ -9,7 +9,6 @@ package frc.robot;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 
-import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
@@ -245,7 +244,7 @@ public class RobotContainer {
 		// 		Rotation2d.kZero
 		// 	)
 		// )));
-		
+
 		this.driveController.y().toggleOnTrue(this.shooter.flywheels.runAtSurfaceVelo(
 			Cooldown.incrementingStepper(
 				"Shooter/Flywheels/Custom",
