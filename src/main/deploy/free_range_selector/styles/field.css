@@ -1,0 +1,49 @@
+#field {
+  position: relative;
+  width: auto;
+  height: 100vh;
+
+  background-image: url("../media/FieldImage2026.svg");
+  background-repeat: no-repeat;
+  background-position: left center;   /* flush left */
+  background-size: auto 100vh;          /* fit vertically */
+}
+
+#keepout {
+  position: absolute;
+  top: 100px;
+  left: 100px;
+  width: 200px;
+  height: 150px;
+  background: rgba(255,0,0,0.35);
+  border: 2px solid red;
+  box-sizing: border-box;
+  cursor: move;
+  z-index: 10;
+}
+
+.handle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: red;
+  z-index: 11;
+}
+
+.nw { top:-7px; left:-7px; cursor:nwse-resize; }
+.ne { top:-7px; right:-7px; cursor:nesw-resize; }
+.se { bottom:-7px; right:-7px; cursor:nwse-resize; }
+.sw { bottom:-7px; left:-7px; cursor:nesw-resize; }
+.n { top:-7px; left:50%; transform:translateX(-50%); cursor:ns-resize; }
+.s { bottom:-7px; left:50%; transform:translateX(-50%); cursor:ns-resize; }
+.e { right:-7px; top:50%; transform:translateY(-50%); cursor:ew-resize; }
+.w { left:-7px; top:50%; transform:translateY(-50%); cursor:ew-resize; }
+
+
+#fieldbounds {
+  position: absolute;
+  width: 90%;           /* relative to field width */
+  height: calc(90% * (26.25 / 30)); /* height proportional to field aspect */
+  top: 5%;
+  left: 5%;
+}
