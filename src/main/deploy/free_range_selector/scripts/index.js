@@ -1,22 +1,76 @@
-const overlay = document.getElementById("keepout");
+import { NT4_Client } from "../lib/NT4.js";
+
+const toRobotPrefix = "/FreeRangeSelector/ToRobot/";
+
+const shouldKeepOutName = "KeepOut/ShouldKeepOut";
+const keepOutTopLeftName = "KeepOut/TopLeft";
+const keepOutBottomRightName = "KeepOut/BottomRight";
+
+const shouldClimbName = "ShouldClimb";
+
+let shouldKeepOut = true;
+let topLeftX = 0;
+let topLeftY = 0;
+let bottomRightX = 0;
+let bottomRightY = 0;
+
+let shouldClimb = false;
+
+const ntClient = new NT4_Client(
+  window.location.hostname,
+  "FreeRangeSelector",
+  (topic) => {},
+  (topic) => {},
+  (topic, timestamp, value) => {},
+  () => {},
+  () => {}
+);
+
+window.addEventListener("load", () => {
+  ntClient.subscribe(
+    [
+      "/AdvantageKit/Timestamp" //Required due to a bug in networktables
+    ]
+  );
+
+  ntClient.publishTopic(toRobotPrefix + shouldKeepOutName, "boolean");
+  ntClient.publishTopic(toRobotPrefix + keepOutTopLeftName, "double[]");
+  ntClient.publishTopic(toRobotPrefix + keepOutBottomRightName, "double[]");
+  ntClient.publishTopic(toRobotPrefix + shouldClimbName, "boolean");
+  ntClient.connect();
+});
+
+const keepOutBoxDOM = document.getElementById("keepout");
+const shouldKeepOutDOM = document.getElementById("respect_keepout");
+const shouldClimbDOM = document.getElementById("climb");
+
+window.addEventListener("load", () => {
+  bind(shouldKeepOutDOM, () => {
+    ntClient.addSample(toRobotPrefix + shouldKeepOutName, shouldKeepOutDOM.checked);
+    console.log(shouldKeepOutDOM.checked);
+  });
+  bind(shouldClimbDOM, () => {
+    ntClient.addSample(toRobotPrefix + shouldClimbName, shouldClimbDOM.checked);
+    console.log(shouldClimbDOM.checked);
+  });
+});
 
 let startX, startY, startW, startH, startL, startT;
 let mode = null;
 
-overlay.addEventListener("mousedown", e => {
+keepOutBoxDOM.addEventListener("mousedown", e => {
   e.preventDefault();
 
-  // If clicked on a handle → resize; else → move
   const handleClasses = ["nw","ne","sw","se","n","s","e","w"];
   const handleClicked = handleClasses.find(c => e.target.classList.contains(c));
   mode = handleClicked ? handleClicked : "move";
 
   startX = e.clientX;
   startY = e.clientY;
-  startW = overlay.offsetWidth;
-  startH = overlay.offsetHeight;
-  startL = overlay.offsetLeft;
-  startT = overlay.offsetTop;
+  startW = keepOutBoxDOM.offsetWidth;
+  startH = keepOutBoxDOM.offsetHeight;
+  startL = keepOutBoxDOM.offsetLeft;
+  startT = keepOutBoxDOM.offsetTop;
 
   document.addEventListener("mousemove", onMove);
   document.addEventListener("mouseup", stopDrag);
@@ -32,30 +86,29 @@ function onMove(e) {
   let newH = startH;
 
   if (mode === "move") {
-    // Move the entire box
     newL = startL + dx;
     newT = startT + dy;
   } else {
-    // Resize based on handle
     if (mode.includes("e")) newW = startW + dx;
     if (mode.includes("s")) newH = startH + dy;
     if (mode.includes("w")) { newW = startW - dx; newL = startL + dx; }
     if (mode.includes("n")) { newH = startH - dy; newT = startT + dy; }
 
-    // Minimum size
     const minSize = 20;
     newW = Math.max(minSize, newW);
     newH = Math.max(minSize, newH);
   }
 
-  overlay.style.left = newL + "px";
-  overlay.style.top = newT + "px";
-  overlay.style.width = newW + "px";
-  overlay.style.height = newH + "px";
+  keepOutBoxDOM.style.left = newL + "px";
+  keepOutBoxDOM.style.top = newT + "px";
+  keepOutBoxDOM.style.width = newW + "px";
+  keepOutBoxDOM.style.height = newH + "px";
 
   const corners = getBoxRelativePositions();
-console.log("Top-left corner (fraction):", corners.topLeft);
-console.log("Bottom-right corner (fraction):", corners.bottomRight);
+  ntClient.addSample(toRobotPrefix + keepOutTopLeftName, packInt(corners.topLeft, 2));
+  ntClient.addSample(toRobotPrefix + keepOutBottomRightName, packInt(corners.bottomRight, 2));
+// console.log("Top-left corner (fraction):", corners.topLeft);
+// console.log("Bottom-right corner (fraction):", corners.bottomRight);
 
 }
 
@@ -74,16 +127,13 @@ function getBoxRelativePositions() {
   const boundsWidthPx = boundsRect.width;
   const boundsHeightPx = boundsRect.height;
 
-  const FIELD_HEIGHT_M = 8.001; // 26'3" in meters
+  const FIELD_HEIGHT_M = 8.001;
 
-  // Pixels-to-meters ratio based on height
   const pixelsPerMeter = boundsHeightPx / FIELD_HEIGHT_M;
 
-  // Top-left corner relative to bottom-left
   const topLeftX_m = (boxRect.left - boundsRect.left) / pixelsPerMeter;
   const topLeftY_m = (boundsHeightPx - (boxRect.top - boundsRect.top)) / pixelsPerMeter;
 
-  // Bottom-right corner
   const bottomRightX_m = (boxRect.right - boundsRect.left) / pixelsPerMeter;
   const bottomRightY_m = (boundsHeightPx - (boxRect.bottom - boundsRect.top)) / pixelsPerMeter;
 
@@ -91,4 +141,43 @@ function getBoxRelativePositions() {
     topLeft: { x: topLeftX_m, y: topLeftY_m },
     bottomRight: { x: bottomRightX_m, y: bottomRightY_m }
   };
+}
+
+function bind(element, callback) {
+   let lastActivation = 0;
+
+  element.addEventListener("click", (event) => {
+    const now = new Date().getTime();
+    if (now - lastActivation > 250) {
+      callback();
+      lastActivation = now;
+    }
+    // DO NOT preventDefault! Let checkbox animate normally
+  });
+
+  // Optional: handle touch for mobile
+  element.addEventListener("touchstart", (event) => {
+    const now = new Date().getTime();
+    if (now - lastActivation > 250) {
+      callback();
+      lastActivation = now;
+    }
+  });
+}
+
+function unpackInt(n, totalBits, size) {
+  let values = [];
+  for (let i = 0; i < totalBits / size; i++) {
+    values.unshift(n & ((1 << size) - 1));
+    n >>= size;
+  }
+  return values;
+}
+
+function packInt(values, size) {
+  let n = 0;
+  for (let i = 0; i < values.length; i++) {
+    n = (n << size) | values[i];
+  }
+  return n;
 }
