@@ -65,31 +65,30 @@ function stopDrag() {
 }
 
 function getBoxRelativePositions() {
-  const field = document.getElementById("fieldbounds");
+  const bounds = document.getElementById("fieldbounds");
   const box = document.getElementById("keepout");
 
-  const fieldHeightPx = field.clientHeight;
-  const fieldWidthPx = field.clientWidth;
+  const boundsRect = bounds.getBoundingClientRect();
+  const boxRect = box.getBoundingClientRect();
 
-  const fieldHeightFt = 26.25; // 26' 3" in feet
+  const boundsWidthPx = boundsRect.width;
+  const boundsHeightPx = boundsRect.height;
 
-  // Top-left corner of the box (relative to bottom-left)
-  const topLeftX = box.offsetLeft / fieldWidthPx;  // fraction across width
-  const topLeftY = (fieldHeightPx - box.offsetTop) / fieldHeightPx; // fraction up from bottom
+  const FIELD_HEIGHT_M = 8.001; // 26'3" in meters
 
-  // Bottom-right corner of the box
-  const bottomRightX = (box.offsetLeft + box.offsetWidth) / fieldWidthPx;
-  const bottomRightY = (fieldHeightPx - (box.offsetTop + box.offsetHeight)) / fieldHeightPx;
+  // Pixels-to-meters ratio based on height
+  const pixelsPerMeter = boundsHeightPx / FIELD_HEIGHT_M;
 
-  // Convert to feet
-  const topLeftX_ft = topLeftX * fieldWidthPx;  // optional: scale to width in whatever units
-  const topLeftY_ft = topLeftY * fieldHeightFt;
+  // Top-left corner relative to bottom-left
+  const topLeftX_m = (boxRect.left - boundsRect.left) / pixelsPerMeter;
+  const topLeftY_m = (boundsHeightPx - (boxRect.top - boundsRect.top)) / pixelsPerMeter;
 
-  const bottomRightX_ft = bottomRightX * fieldWidthPx;
-  const bottomRightY_ft = bottomRightY * fieldHeightFt;
+  // Bottom-right corner
+  const bottomRightX_m = (boxRect.right - boundsRect.left) / pixelsPerMeter;
+  const bottomRightY_m = (boundsHeightPx - (boxRect.bottom - boundsRect.top)) / pixelsPerMeter;
 
   return {
-    topLeft: { x: topLeftX, y: topLeftY, yFeet: topLeftY_ft },
-    bottomRight: { x: bottomRightX, y: bottomRightY, yFeet: bottomRightY_ft }
+    topLeft: { x: topLeftX_m, y: topLeftY_m },
+    bottomRight: { x: bottomRightX_m, y: bottomRightY_m }
   };
 }

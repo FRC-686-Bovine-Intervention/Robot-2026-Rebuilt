@@ -42,8 +42,10 @@
 
 #fieldbounds {
   position: absolute;
-  width: 90%;           /* relative to field width */
-  height: calc(90% * (26.25 / 30)); /* height proportional to field aspect */
-  top: 5%;
-  left: 5%;
+  top: 50%;               /* middle of the container */
+  left: 5vh;                /* or center horizontally if needed */
+  transform: translateY(-50%); /* shift up by half height */
+  width: 90%;
+  height: 90%;
+  background: rgba(0,0,255,0.1);
 }
