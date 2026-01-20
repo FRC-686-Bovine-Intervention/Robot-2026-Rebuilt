@@ -47,5 +47,5 @@
   transform: translateY(-50%); /* shift up by half height */
   width: 90%;
   height: 90%;
-  background: rgba(0,0,255,0.1);
+  /* background: rgba(0,0,255,0.1); */
 }
