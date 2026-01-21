@@ -136,7 +136,7 @@ repositories {
 
 // Check constants for pull request
 task(checkConstantsPullRequest, dependsOn: "classes", type: JavaExec) {
-	main = "frc.robot.constants\$CheckPullRequest"
+	main = "frc.robot.constants.CheckPullRequest"
 	classpath = sourceSets.main.runtimeClasspath
 }
 
