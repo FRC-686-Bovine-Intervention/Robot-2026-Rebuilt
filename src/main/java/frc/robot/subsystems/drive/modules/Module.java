@@ -46,15 +46,6 @@ public class Module {
 			0
 		)
 	);
-	private static final LoggedTunable<FFGains> driveFFConsts = LoggedTunable.from(
-		"Drive/Module/Drive/FF",
-		new FFGains(
-			0,
-			0,
-			2.2,
-			0
-		)
-	);
 	private static final LoggedTunable<PIDGains> azimuthPIDConsts = LoggedTunable.from(
 		"Drive/Module/Azimuth/PID",
 		new PIDGains(
@@ -63,8 +54,6 @@ public class Module {
 			0*2*Math.PI
 		)
 	);
-
-	private final SimpleMotorFeedforward driveFeedforward = new SimpleMotorFeedforward(0,0,0);
 
 	// private final DeviceFaultAlerts driveMotorActiveFaultsAlert;
 	// private final DeviceFaultAlerts driveMotorStickyFaultsAlert;
@@ -84,7 +73,6 @@ public class Module {
 		this.io = io;
 		this.config = config;
 
-		driveFFConsts.get().update(this.driveFeedforward);
 		this.io.configDrivePID(drivePIDConsts.get());
 		this.io.configAzimuthPID(azimuthPIDConsts.get());
 
@@ -144,9 +132,6 @@ public class Module {
 		this.modulePosition.distanceMeters = DriveConstants.wheel.radiansToMeters(this.wheelAngularPositionRads);
 		this.moduleState.speedMetersPerSecond = DriveConstants.wheel.radiansToMeters(this.wheelAngularVelocityRadsPerSec);
 
-		if (driveFFConsts.hasChanged(hashCode())) {
-			driveFFConsts.get().update(this.driveFeedforward);
-		}
 		if (drivePIDConsts.hasChanged(hashCode())) {
 			this.io.configDrivePID(drivePIDConsts.get());
 		}
@@ -191,6 +176,10 @@ public class Module {
 		var belowBrakeModeThreshold = Math.abs(setpoint.speedMetersPerSecond) < brakeModeThreshold.get().in(MetersPerSecond);
 
 		this.io.setDriveVelocityRadPerSec(velocityRadPerSec, 0.0, ffout, belowBrakeModeThreshold);
+	}
+
+	public void runSetpoint() {
+		
 	}
 
 	/**

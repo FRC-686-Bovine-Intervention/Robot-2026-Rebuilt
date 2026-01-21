@@ -51,10 +51,10 @@ public class FollowTrajectoryCommand extends Command {
 	@Override
 	public void initialize() {
 		this.trajectoryTimer.reset();
-		if (LoggedTunable.hasChanged(this.hashCode(), TRANS_PID_GAINS)) {
+		if (TRANS_PID_GAINS.hasChanged(this.hashCode())) {
 			TRANS_PID_GAINS.get().update(this.translationalPID);
 		}
-		if (LoggedTunable.hasChanged(this.hashCode(), ROT_PID_GAINS)) {
+		if (ROT_PID_GAINS.hasChanged(this.hashCode())) {
 			ROT_PID_GAINS.get().update(this.rotationalPID);
 		}
 	}
@@ -67,6 +67,8 @@ public class FollowTrajectoryCommand extends Command {
 		var errY = sample.y - robotPose.getY();
 		var errTheta = MathUtil.angleModulus(sample.heading - robotPose.getRotation().getRadians());
 		var distanceFromSetpointMeters = Math.hypot(errX, errY);
+
+		sample.ax;
 
 		var errXNorm = errX / distanceFromSetpointMeters;
 		var errYNorm = errY / distanceFromSetpointMeters;

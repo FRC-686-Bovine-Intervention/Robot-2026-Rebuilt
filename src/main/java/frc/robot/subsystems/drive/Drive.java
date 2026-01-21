@@ -22,6 +22,7 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -59,12 +60,12 @@ import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.robotStructure.Root;
 
 public class Drive extends VirtualSubsystem {
-	private static final LoggedTunable<Time> discretizationCorrection = LoggedTunable.from("Drive/Descretization Correction", Seconds::of, 0.125);
-	private static final Supplier<DoubleSupplier> maxDriveSpeedEnvCoef = Environment.switchVar(
+	private static final LoggedTunable<Time> discretizationCorrection = LoggedTunable.from("Drive/Discretization Correction", Seconds::of, 0.125);
+	public static final Supplier<DoubleSupplier> maxDriveSpeedEnvCoef = Environment.switchVar(
 		() -> 1.0,
 		new LoggedNetworkNumber("Demo Constraints/Max Translational Percentage", 0.25)::get
 	);
-	private static final Supplier<DoubleSupplier> maxTurnRateEnvCoef = Environment.switchVar(
+	public static final Supplier<DoubleSupplier> maxTurnRateEnvCoef = Environment.switchVar(
 		() -> 1.0,
 		new LoggedNetworkNumber("Demo Constraints/Max Rotational Percentage", 0.5)::get
 	);
@@ -85,6 +86,8 @@ public class Drive extends VirtualSubsystem {
 			0
 		)
 	);
+	private final SimpleMotorFeedforward translationalFF = translationalFFGains.get().update(new SimpleMotorFeedforward(0.0, 0.0, 0.0));
+	private final SimpleMotorFeedforward rotationalFF = rotationalFFGains.get().update(new SimpleMotorFeedforward(0.0, 0.0, 0.0));
 
 	public final Module[] modules = new Module[DriveConstants.moduleConstants.length];
 
@@ -365,7 +368,9 @@ public class Drive extends VirtualSubsystem {
 		this.rotationalSubsystem.needsPostProcessing = false;
 		this.setpointStates = states;
 		Logger.recordOutput("Drive/Swerve States/Setpoints", this.setpointStates);
-		IntStream.range(0, this.modules.length).forEach((i) -> this.modules[i].runSetpoint(this.setpointStates[i]));
+		for (int i = 0; i < this.modules.length; i++) {
+			this.modules[i].runSetpoint(this.setpointStates[i]);
+		}
 		Logger.recordOutput("Drive/Swerve States/Setpoints Optimized", this.setpointStates);
 	}
 
@@ -373,7 +378,6 @@ public class Drive extends VirtualSubsystem {
 	private static final LoggedTunable<LinearAcceleration> skidAccelLimitTunable = LoggedTunable.from("Drive/Accel Limits/Skid Accel Limit", MetersPerSecondPerSecond::of, 60);
 
 	public static final LoggedTunable<TiltAccelerationLimits> normalTiltLimitTunable = LoggedTunable.from("Drive/Accel Limits/Tilt Limits/Normal", new TiltAccelerationLimits(500, 500, 500, 500));
-	public static final LoggedTunable<TiltAccelerationLimits> extendedTiltLimitTunable = LoggedTunable.from("Drive/Accel Limits/Tilt Limits/Extended", new TiltAccelerationLimits(10, 12, 20, 20));
 	private TiltAccelerationLimits tiltLimits = normalTiltLimitTunable.get();
 
 	public void setTiltLimits(TiltAccelerationLimits tiltLimits) {

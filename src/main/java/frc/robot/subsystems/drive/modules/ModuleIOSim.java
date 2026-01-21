@@ -35,6 +35,7 @@ public class ModuleIOSim extends ModuleIOFalcon550 {
 
 	private final MutVoltage azimuthAppliedVolts = Volts.mutable(0);
 
+	@Override
 	public void updateInputs(ModuleIOInputs inputs) {
 		var driveSimState = this.driveMotor.getSimState();
 		if (DriverStation.isDisabled()) {
@@ -70,6 +71,7 @@ public class ModuleIOSim extends ModuleIOFalcon550 {
 	public void setAzimuthVolts(double volts) {
 		this.azimuthAppliedVolts.mut_replace(MathUtil.clamp(volts, -12, 12), Volts);
 	}
+	
 	@Override
 	public void setAzimuthAngleRads(double angleRads) {
 		this.setAzimuthVolts(

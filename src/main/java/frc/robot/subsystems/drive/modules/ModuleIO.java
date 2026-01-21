@@ -31,7 +31,7 @@ public interface ModuleIO {
 
 	/** Run the drive motor at the specified voltage. */
 	public default void setDriveVolts(double volts) {}
-	public default void setDriveVelocityRadPerSec(double velocityRadPerSec, double accelerationRadPerSec2, double feedforwardVolts, boolean overrideWithBrakeMode) {}
+	public default void setDriveVelocityRadPerSec(double velocityRadPerSec, double accelerationRadPerSecSqr, double feedforwardVolts, boolean overrideWithBrakeMode) {}
 
 	/** Run the turn motor at the specified voltage. */
 	public default void setAzimuthVolts(double volts) {}
@@ -40,8 +40,8 @@ public interface ModuleIO {
 	public default void stopDrive(Optional<NeutralMode> neutralMode) {}
 	public default void stopAzimuth(Optional<NeutralMode> neutralMode) {}
 
-	public default void configDrivePID(PIDGains pidConstants) {}
-	public default void configAzimuthPID(PIDGains pidConstants) {}
+	public default void configDrivePID(PIDGains pidGains) {}
+	public default void configAzimuthPID(PIDGains pidGains) {}
 
 	public default void clearDriveStickyFaults(long bitmask) {}
 	public default void clearAzimuthStickyFaults(long bitmask) {}
