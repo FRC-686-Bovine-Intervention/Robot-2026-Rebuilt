@@ -5,7 +5,7 @@ import java.util.Optional;
 import org.littletonrobotics.junction.AutoLog;
 
 import frc.util.NeutralMode;
-import frc.util.PIDConstants;
+import frc.util.PIDGains;
 import frc.util.loggerUtil.inputs.LoggedEncodedMotor;
 import frc.util.loggerUtil.inputs.LoggedEncoder;
 import frc.util.loggerUtil.inputs.LoggedFaults;
@@ -40,8 +40,8 @@ public interface ModuleIO {
 	public default void stopDrive(Optional<NeutralMode> neutralMode) {}
 	public default void stopAzimuth(Optional<NeutralMode> neutralMode) {}
 
-	public default void configDrivePID(PIDConstants pidConstants) {}
-	public default void configAzimuthPID(PIDConstants pidConstants) {}
+	public default void configDrivePID(PIDGains pidConstants) {}
+	public default void configAzimuthPID(PIDGains pidConstants) {}
 
 	public default void clearDriveStickyFaults(long bitmask) {}
 	public default void clearAzimuthStickyFaults(long bitmask) {}

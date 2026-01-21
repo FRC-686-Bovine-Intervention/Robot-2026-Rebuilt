@@ -32,7 +32,7 @@ import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
 import frc.robot.subsystems.drive.odometry.OdometryThread;
 import frc.robot.subsystems.drive.odometry.OdometryThread.DoubleBuffer;
 import frc.util.NeutralMode;
-import frc.util.PIDConstants;
+import frc.util.PIDGains;
 import frc.util.faults.DeviceFaults;
 import frc.util.faults.DeviceFaults.FaultType;
 import frc.util.loggerUtil.inputs.LoggedEncodedMotor.EncodedMotorStatusSignalCache;
@@ -146,10 +146,10 @@ public class ModuleIOFalcon550 implements ModuleIO {
 		this.driveMotor.setControl(this.driveVolts.withOutput(volts));
 	}
 	@Override
-	public void setDriveVelocityRadPerSec(double velocityRadPerSec, double accelerationRadPerSec2, double feedforwardVolts, boolean overrideWithBrakeMode) {
+	public void setDriveVelocityRadPerSec(double velocityRadPerSec, double accelerationRadPerSecSqr, double feedforwardVolts, boolean overrideWithBrakeMode) {
 		this.driveMotor.setControl(this.driveVelocity
 			.withVelocity(Units.radiansToRotations(velocityRadPerSec))
-			.withAcceleration(Units.radiansToRotations(accelerationRadPerSec2))
+			.withAcceleration(Units.radiansToRotations(accelerationRadPerSecSqr))
 			.withFeedForward(feedforwardVolts)
 			.withOverrideBrakeDurNeutral(overrideWithBrakeMode)
 		);
@@ -182,14 +182,14 @@ public class ModuleIOFalcon550 implements ModuleIO {
 	}
 
 	@Override
-	public void configDrivePID(PIDConstants pidConstants) {
+	public void configDrivePID(PIDGains pidConstants) {
 		var config = new Slot0Configs();
 		this.driveMotor.getConfigurator().refresh(config);
 		pidConstants.update(config);
 		this.driveMotor.getConfigurator().apply(config);
 	}
 	@Override
-	public void configAzimuthPID(PIDConstants pidConstants) {
+	public void configAzimuthPID(PIDGains pidConstants) {
 		pidConstants.update(this.azimuthPID);
 	}
 

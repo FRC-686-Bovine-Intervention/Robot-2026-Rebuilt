@@ -17,10 +17,10 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
 import frc.robot.subsystems.drive.odometry.OdometryThread;
-import frc.util.FFConstants;
+import frc.util.FFGains;
 import frc.util.LoggedTracer;
 import frc.util.NeutralMode;
-import frc.util.PIDConstants;
+import frc.util.PIDGains;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 
 public class Module {
@@ -38,26 +38,26 @@ public class Module {
 
 	private static final LoggedTunable<LinearVelocity> brakeModeThreshold = LoggedTunable.from("Drive/Brake Mode Threshold", InchesPerSecond::of, 1);
 
-	private static final LoggedTunable<PIDConstants> drivePIDConsts = LoggedTunable.from(
+	private static final LoggedTunable<PIDGains> drivePIDConsts = LoggedTunable.from(
 		"Drive/Module/Drive/PID",
-		new PIDConstants(
+		new PIDGains(
 			0.1,
 			0,
 			0
 		)
 	);
-	private static final LoggedTunable<FFConstants> driveFFConsts = LoggedTunable.from(
+	private static final LoggedTunable<FFGains> driveFFConsts = LoggedTunable.from(
 		"Drive/Module/Drive/FF",
-		new FFConstants(
+		new FFGains(
 			0,
 			0,
 			2.2,
 			0
 		)
 	);
-	private static final LoggedTunable<PIDConstants> azimuthPIDConsts = LoggedTunable.from(
+	private static final LoggedTunable<PIDGains> azimuthPIDConsts = LoggedTunable.from(
 		"Drive/Module/Azimuth/PID",
-		new PIDConstants(
+		new PIDGains(
 			5*2*Math.PI,
 			0*2*Math.PI,
 			0*2*Math.PI
