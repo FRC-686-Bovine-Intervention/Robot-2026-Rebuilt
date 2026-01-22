@@ -1,13 +1,79 @@
 package frc.robot.subsystems.intake.rollers;
 
+import static edu.wpi.first.units.Units.Volts;
+
+import java.util.function.DoubleSupplier;
+
+import org.littletonrobotics.junction.Logger;
+
+import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.util.NeutralMode;
+import frc.util.loggerUtil.tunables.LoggedTunable;
 
 public class Rollers extends SubsystemBase {
 	private final RollersIO io;
 	private final RollersIOInputsAutoLogged inputs = new RollersIOInputsAutoLogged();
 
+	private static final LoggedTunable<Voltage> idleVoltage = LoggedTunable.from("Intake/Rollers/Idle Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> intakeVoltage = LoggedTunable.from("Intake/Rollers/Intake Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Intake/Rollers/Eject Voltage", Volts::of, 0.0);
+
 	public Rollers(RollersIO io) {
 		super("Intake/Rollers");
 		this.io = io;
+	}
+
+	@Override
+	public void periodic() {
+		this.io.updateInputs(this.inputs);
+		Logger.processInputs("Inputs/Intake/Rollers", this.inputs);
+	}
+
+	private Command genVoltageCommand(String name, DoubleSupplier voltsSupplier) {
+		final var rollers = this;
+		return new Command() {
+			{
+				this.setName(name);
+				this.addRequirements(rollers);
+			}
+
+			@Override
+			public void initialize() {
+
+			}
+
+			@Override
+			public void execute() {
+				rollers.io.setVolts(voltsSupplier.getAsDouble());
+			}
+
+			@Override
+			public void end(boolean interrupted) {
+				rollers.io.stop(NeutralMode.DEFAULT);
+			}
+		};
+	}
+
+	public Command idle() {
+		return this.genVoltageCommand(
+			"Idle",
+			() -> idleVoltage.get().in(Volts)
+		);
+	}
+
+	public Command intake() {
+		return this.genVoltageCommand(
+			"Intake",
+			() -> intakeVoltage.get().in(Volts)
+		);
+	}
+	
+	public Command eject() {
+		return this.genVoltageCommand(
+			"Eject",
+			() -> ejectVoltage.get().in(Volts)
+		);
 	}
 }

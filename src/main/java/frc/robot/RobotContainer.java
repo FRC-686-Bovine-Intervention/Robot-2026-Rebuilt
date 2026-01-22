@@ -292,6 +292,7 @@ public class RobotContainer {
 				drive.rotationalSubsystem.stop();
 			}
 		});
+		this.intake.rollers.setDefaultCommand(this.intake.rollers.idle());
 
 		// Setup position reset command
 		// this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(
@@ -301,5 +302,7 @@ public class RobotContainer {
 		// 		Rotation2d.kZero
 		// 	)
 		// )));
+
+		this.driveController.a().whileTrue(this.intake.rollers.intake());
 	}
 }
