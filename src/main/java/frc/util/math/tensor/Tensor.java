@@ -45,46 +45,33 @@ public class Tensor {
     public int size() {
         return data.length;
     }
-
-    public Tensor times(Tensor other) {
-        int kA = this.dims[this.dims.length - 1];
-        int kB = other.dims[0];
-        if (kA != kB) throw new IllegalArgumentException("Inner dimensions must match: " + kA + " != " + kB);
-
-        int newRank = this.rank() + other.rank() - 2;
-        int[] newShape = new int[newRank];
-        System.arraycopy(this.dims, 0, newShape, 0, this.dims.length - 1);
-        System.arraycopy(other.dims, 1, newShape, this.dims.length - 1, other.dims.length - 1);
-
-        Tensor result = new Tensor(newShape);
-
-        multiplyRecursive(this, other, result, new int[newShape.length], 0, kA);
-
+    
+    public double[] toVector() {
+        if (this.dims.length > 1) {
+            throw new IllegalArgumentException("Must be a vector-shaped tensor");
+        }
+        double[] result = new double[this.dims[0]];
+        for (int i = 0; i < this.dims[0]; i++) {
+            result[i] = this.get(i);
+        }
         return result;
     }
 
-    private static void multiplyRecursive(Tensor A, Tensor B, Tensor result, int[] idxResult, int dim, int k) {
-        if (dim == idxResult.length) {
-
-            double sum = 0;
-            for (int p = 0; p < k; p++) {
-                int[] idxA = new int[A.rank()];
-                System.arraycopy(idxResult, 0, idxA, 0, A.rank() - 1);
-                idxA[idxA.length - 1] = p;
-
-                int[] idxB = new int[B.rank()];
-                idxB[0] = p;
-                System.arraycopy(idxResult, A.rank() - 1, idxB, 1, B.rank() - 1);
-
-                sum += A.get(idxA) * B.get(idxB);
-            }
-            result.set(sum, idxResult);
-            return;
+    public Tensor contractLastWith(double[] x) {
+        int n = dims[dims.length - 1];
+        if (x.length != n) {
+            throw new IllegalArgumentException(
+                "Vector length " + x.length + " does not match last tensor dimension " + n
+            );
         }
 
-        for (int i = 0; i < result.shape()[dim]; i++) {
-            idxResult[dim] = i;
-            multiplyRecursive(A, B, result, idxResult, dim + 1, k);
-        }
+        int[] newShape = new int[dims.length - 1];
+        System.arraycopy(dims, 0, newShape, 0, newShape.length);
+
+        Tensor result = new Tensor(newShape);
+
+        TensorUtils.contractRecursive(this, x, result, new int[newShape.length], 0);
+
+        return result;
     }
 }

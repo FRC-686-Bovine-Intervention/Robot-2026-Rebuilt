@@ -1,29 +1,31 @@
 package frc.util.math.tensor;
 
 public class TensorUtils {
-    
-    public static Tensor tensorPower(double[] x, int n) {
-        if (n < 1) throw new IllegalArgumentException("n must be >= 1");
+    public static void contractRecursive(
+        Tensor T,
+        double[] x,
+        Tensor result,
+        int[] idx,
+        int dim
+    ) {
+        if (dim == idx.length) {
+            double sum = 0.0;
 
-        int dim = x.length;
-        int[] shape = new int[n];
-        for (int i = 0; i < n; i++) shape[i] = dim;
+            int[] tIdx = new int[T.rank()];
+            System.arraycopy(idx, 0, tIdx, 0, idx.length);
 
-        Tensor t = new Tensor(shape);
+            for (int p = 0; p < x.length; p++) {
+                tIdx[tIdx.length - 1] = p;
+                sum += T.get(tIdx) * x[p];
+            }
 
-        fillTensorPower(t, x, n, 0, 1, new int[n]);
-
-        return t;
-    }
-
-    private static void fillTensorPower(Tensor t, double[] x, int n, int index, double accum, int[] indices) {
-        if (index == n) {
-            t.set(accum, indices);
+            result.set(sum, idx);
+            return;
         }
 
-        for (int i = 0; i < x.length; i++) {
-            indices[index] = i;
-            fillTensorPower(t, x, n, index + 1, accum * x[i], indices);
+        for (int i = 0; i < result.shape()[dim]; i++) {
+            idx[dim] = i;
+            contractRecursive(T, x, result, idx, dim + 1);
         }
     }
 }
