@@ -68,8 +68,6 @@ public class FollowTrajectoryCommand extends Command {
 		var errTheta = MathUtil.angleModulus(sample.heading - robotPose.getRotation().getRadians());
 		var distanceFromSetpointMeters = Math.hypot(errX, errY);
 
-		sample.ax;
-
 		var errXNorm = errX / distanceFromSetpointMeters;
 		var errYNorm = errY / distanceFromSetpointMeters;
 
@@ -86,31 +84,51 @@ public class FollowTrajectoryCommand extends Command {
 		var pidY = transPidOut * errYNorm;
 		var pidOmega = rotPidOut;
 
-		double ffX;
-		double ffY;
-		double ffOmega;
+		double vX;
+		double vY;
+		double omega;
+		double aX;
+		double aY;
+		double alpha;
 		if (this.trajectoryTimer.isRunning()) {
-			ffX = sample.vx;
-			ffY = sample.vy;
-			ffOmega = sample.omega;
+			vX = sample.vx;
+			vY = sample.vy;
+			omega = sample.omega;
+			aX = sample.ax;
+			aY = sample.ay;
+			alpha = sample.alpha;
 		} else {
-			ffX = 0.0;
-			ffY = 0.0;
-			ffOmega = 0.0;
+			vX = 0.0;
+			vY = 0.0;
+			omega = 0.0;
+			aX = 0.0;
+			aY = 0.0;
+			alpha = 0.0;
 		}
 
-		var fieldX = ffX + pidX;
-		var fieldY = ffY + pidY;
-		var fieldOmega = ffOmega + pidOmega;
+		var fieldVX = vX + pidX;
+		var fieldVY = vY + pidY;
+		var fieldOmega = omega + pidOmega;
 
-		var robotX = fieldX * +robotPose.getRotation().getCos() - fieldY * -robotPose.getRotation().getSin();
-		var robotY = fieldX * -robotPose.getRotation().getSin() + fieldY * +robotPose.getRotation().getCos();
+		var robotVX = fieldVX * +robotPose.getRotation().getCos() + fieldVY * +robotPose.getRotation().getSin();
+		var robotVY = fieldVX * -robotPose.getRotation().getSin() + fieldVY * +robotPose.getRotation().getCos();
 		var robotOmega = fieldOmega;
+
+		var robotAX = aX * +robotPose.getRotation().getCos() + aY * +robotPose.getRotation().getSin();
+		var robotAY = aX * -robotPose.getRotation().getSin() + aY * +robotPose.getRotation().getCos();
+		var robotAlpha = alpha;
 
 		Logger.recordOutput("Trajectory/Setpoint Pose", sample.getPose());
 		Logger.recordOutput("Trajectory/Setpoint Speeds", DriveConstants.kinematics.toSwerveModuleStates(ChassisSpeeds.fromFieldRelativeSpeeds(sample.getChassisSpeeds(), sample.getPose().getRotation())));
 
-		this.drive.runRobotSpeeds(robotX, robotY, robotOmega);
+		this.drive.runRobotSpeeds(
+			robotVX,
+			robotVY,
+			robotOmega,
+			robotAX,
+			robotAY,
+			robotAlpha
+		);
 	}
 
 	@Override

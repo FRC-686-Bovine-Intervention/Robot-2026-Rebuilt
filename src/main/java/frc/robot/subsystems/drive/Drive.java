@@ -454,6 +454,41 @@ public class Drive extends VirtualSubsystem {
 		this.runSetpoints(this.setpointStates);
 	}
 
+	public void runRobotSpeeds(
+		double vXMetersPerSecond,
+		double vYMetersPerSecond,
+		double omegaRadiansPerSecond,
+		double aXMetersPerSecondSqr,
+		double aYMetersPerSecondSqr,
+		double alphaRadiansPerSecondSqr
+	) {
+		this.translationSubsystem.needsPostProcessing = false;
+		this.rotationalSubsystem.needsPostProcessing = false;
+		for (var module : this.modules) {
+			var moduleVXMPS = vXMetersPerSecond + omegaRadiansPerSecond * module.config.moduleTranslation.getNorm() * module.config.moduleForwardDirection.getCos();
+			var moduleVYMPS = vYMetersPerSecond + omegaRadiansPerSecond * module.config.moduleTranslation.getNorm() * module.config.moduleForwardDirection.getSin();
+
+			var moduleAXMPSS = aXMetersPerSecondSqr + alphaRadiansPerSecondSqr * module.config.moduleTranslation.getNorm() * module.config.moduleForwardDirection.getCos();
+			var moduleAYMPSS = aYMetersPerSecondSqr + alphaRadiansPerSecondSqr * module.config.moduleTranslation.getNorm() * module.config.moduleForwardDirection.getSin();
+
+			var robotFFXVolts = vXMetersPerSecond * translationalFF.getKv() + aXMetersPerSecondSqr * translationalFF.getKa();
+			var robotFFYVolts = vYMetersPerSecond * translationalFF.getKv() + aYMetersPerSecondSqr * translationalFF.getKa();
+			var robotFFRotVolts = omegaRadiansPerSecond * rotationalFF.getKv() + alphaRadiansPerSecondSqr * rotationalFF.getKa();
+
+			var moduleFFXVolts = robotFFXVolts + robotFFRotVolts * module.config.moduleForwardDirection.getCos();
+			var moduleFFYVolts = robotFFYVolts + robotFFRotVolts * module.config.moduleForwardDirection.getSin();
+
+			module.runSetpoint(
+				moduleVXMPS,
+				moduleVYMPS,
+				moduleAXMPSS,
+				moduleAYMPSS,
+				moduleFFXVolts,
+				moduleFFYVolts
+			);
+		}
+	}
+
 	public void runFieldSpeeds(ChassisSpeeds fieldSpeeds) {
 		this.runRobotSpeeds(ChassisSpeeds.fromFieldRelativeSpeeds(fieldSpeeds, RobotState.getInstance().getEstimatedGlobalPose().getRotation()));
 	}

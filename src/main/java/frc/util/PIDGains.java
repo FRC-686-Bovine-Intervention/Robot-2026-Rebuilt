@@ -85,7 +85,7 @@ public record PIDGains(double kP, double kI, double kD) implements Tunable<PIDGa
 		;
 		return pid;
 	}
-	
+
 	public Slot2Configs update(Slot2Configs pid) {
 		pid
 			.withKP(this.kP())

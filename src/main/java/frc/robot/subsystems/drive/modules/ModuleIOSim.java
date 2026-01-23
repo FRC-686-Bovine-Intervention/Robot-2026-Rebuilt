@@ -71,7 +71,7 @@ public class ModuleIOSim extends ModuleIOFalcon550 {
 	public void setAzimuthVolts(double volts) {
 		this.azimuthAppliedVolts.mut_replace(MathUtil.clamp(volts, -12, 12), Volts);
 	}
-	
+
 	@Override
 	public void setAzimuthAngleRads(double angleRads) {
 		this.setAzimuthVolts(

@@ -7,7 +7,6 @@ import java.util.Optional;
 
 import org.littletonrobotics.junction.Logger;
 
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -17,7 +16,6 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
 import frc.robot.subsystems.drive.odometry.OdometryThread;
-import frc.util.FFGains;
 import frc.util.LoggedTracer;
 import frc.util.NeutralMode;
 import frc.util.PIDGains;
@@ -97,7 +95,6 @@ public class Module {
 		this.azimuthEncoderDisconnectedGlobalAlert = new Alert("Module " + this.config.name + " Azimuth Encoder Disconnected!", AlertType.kError);
 	}
 
-	/** Updates inputs and checks tunable numbers. */
 	public void periodic() {
 		LoggedTracer.logEpoch("CommandScheduler Periodic/VirtualSubsystem Periodic/Drive/Module Periodic/" + this.config.name + "/Before");
 		this.io.updateInputs(this.inputs);
@@ -171,15 +168,45 @@ public class Module {
 
 		var velocityRadPerSec = DriveConstants.driveMotorToWheelRatio.inverse().applyUnsigned(DriveConstants.wheel.metersToRadians(setpoint.speedMetersPerSecond));
 
-		var ffout = this.driveFeedforward.calculateWithVelocities(this.moduleState.speedMetersPerSecond, setpoint.speedMetersPerSecond);
-
 		var belowBrakeModeThreshold = Math.abs(setpoint.speedMetersPerSecond) < brakeModeThreshold.get().in(MetersPerSecond);
 
-		this.io.setDriveVelocityRadPerSec(velocityRadPerSec, 0.0, ffout, belowBrakeModeThreshold);
+		this.io.setDriveVelocityRadPerSec(velocityRadPerSec, 0.0, 0.0, belowBrakeModeThreshold);
 	}
 
-	public void runSetpoint() {
-		
+	public void runSetpoint(double vXMetersPerSecond, double vYMetersPerSecond, double aXMetersPerSecondSqr, double aYMetersPerSecondSqr, double ffXVolts, double ffYVolts) {
+		var currentModuleAngle = this.getAngle();
+		var veloMagnitudeMPS = Math.hypot(vXMetersPerSecond, vYMetersPerSecond);
+		var accelMagnitudeMPSS = Math.hypot(aXMetersPerSecondSqr, aYMetersPerSecondSqr);
+		var feedforwardMagnitudeVolts = Math.hypot(ffXVolts, ffYVolts);
+		double targetModuleAngleX;
+		double targetModuleAngleY;
+		if (veloMagnitudeMPS > 0.0) {
+			targetModuleAngleX = vXMetersPerSecond / veloMagnitudeMPS;
+			targetModuleAngleY = vYMetersPerSecond / veloMagnitudeMPS;
+		} else if (feedforwardMagnitudeVolts > 0.0) {
+			targetModuleAngleX = ffXVolts / feedforwardMagnitudeVolts;
+			targetModuleAngleY = ffYVolts / feedforwardMagnitudeVolts;
+		} else {
+			targetModuleAngleX = currentModuleAngle.getCos();
+			targetModuleAngleY = currentModuleAngle.getSin();
+		}
+		// Optimize target angle
+		if (targetModuleAngleX * currentModuleAngle.getCos() + targetModuleAngleY * currentModuleAngle.getSin() < 0.0) {
+			targetModuleAngleX *= -1.0;
+			targetModuleAngleY *= -1.0;
+		}
+
+		var driveVeloMPS = vXMetersPerSecond * currentModuleAngle.getCos() + vYMetersPerSecond * currentModuleAngle.getSin();
+		var driveAccelMPSS = aXMetersPerSecondSqr * currentModuleAngle.getCos() + aYMetersPerSecondSqr * currentModuleAngle.getSin();
+		var driveFFVolts = ffXVolts * currentModuleAngle.getCos() + ffYVolts * currentModuleAngle.getSin();
+
+		var driveVeloRadPerSec = DriveConstants.driveMotorToWheelRatio.inverse().applyUnsigned(DriveConstants.wheel.metersToRadians(driveVeloMPS));
+		var driveAccelRadPerSecSqr = DriveConstants.driveMotorToWheelRatio.inverse().applyUnsigned(DriveConstants.wheel.metersToRadians(driveAccelMPSS));
+
+		var belowBrakeModeThreshold = veloMagnitudeMPS < brakeModeThreshold.get().in(MetersPerSecond);
+
+		this.io.setAzimuthAngleRads(Math.atan2(targetModuleAngleY, targetModuleAngleX));
+		this.io.setDriveVelocityRadPerSec(driveVeloRadPerSec, driveAccelRadPerSecSqr, driveFFVolts, belowBrakeModeThreshold);
 	}
 
 	/**
