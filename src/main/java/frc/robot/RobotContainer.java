@@ -14,6 +14,8 @@ import java.util.Set;
 import choreo.Choreo;
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
@@ -299,13 +301,13 @@ public class RobotContainer {
 		});
 
 		// Setup position reset command
-		// this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(
-		// 	new Pose2d(
-		// 		14.45,
-		// 		5,
-		// 		Rotation2d.kZero
-		// 	)
-		// )));
+		this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(
+			new Pose2d(
+				0.0,
+				0.0,
+				Rotation2d.kZero
+			)
+		)));
 
 		Optional<Trajectory<SwerveSample>> traj = Choreo.loadTrajectory("NewPath");
 		this.driveController.povUp().whileTrue(
