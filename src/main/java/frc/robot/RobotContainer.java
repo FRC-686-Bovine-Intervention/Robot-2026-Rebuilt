@@ -249,9 +249,9 @@ public class RobotContainer {
 			Cooldown.incrementingStepper(
 				"Shooter/Flywheels/Custom",
 				"Shooter/Flywheels/Custom",
-				Seconds.of(1.0 / 8.0),
+				Seconds.of(1.0 / 16.0),
 				MetersPerSecond.of(2.0),
-				MetersPerSecond.of(0.1),
+				MetersPerSecond.of(0.2),
 				MetersPerSecond,
 				this.driveController.povUp(),
 				this.driveController.povDown()

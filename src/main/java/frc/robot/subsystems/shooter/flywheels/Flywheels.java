@@ -1,11 +1,15 @@
 package frc.robot.subsystems.shooter.flywheels;
 
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+
 import java.util.function.DoubleSupplier;
 
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.RobotConstants;
@@ -13,47 +17,41 @@ import frc.util.FFConstants;
 import frc.util.NeutralMode;
 import frc.util.PIDConstants;
 import frc.util.loggerUtil.tunables.LoggedTunable;
+import frc.util.loggerUtil.tunables.LoggedTunableNumber;
+import frc.util.mechanismUtil.GearRatio;
+import frc.util.mechanismUtil.LinearRelation;
 
 public class Flywheels extends SubsystemBase {
 	private final FlywheelsIO io;
 	private final FlywheelsIOInputsAutoLogged inputs = new FlywheelsIOInputsAutoLogged();
 
 	private static final LoggedTunable<PIDConstants> driverPIDConsts = LoggedTunable.from("Shooter/Flywheels/Driver/PID", new PIDConstants(
-		0,
+		0.5,
 		0,
 		0
 	));
 	private static final LoggedTunable<FFConstants> driverFFConsts = LoggedTunable.from("Shooter/Flywheels/Driver/FF", new FFConstants(
 		0,
 		0,
-		0,
-		0
-	));
-	private static final LoggedTunable<PIDConstants> kickerPIDConsts = LoggedTunable.from("Shooter/Flywheels/Kicker/PID", new PIDConstants(
-		0,
-		0,
-		0
-	));
-	private static final LoggedTunable<FFConstants> kickerFFConsts = LoggedTunable.from("Shooter/Flywheels/Kicker/FF", new FFConstants(
-		0,
-		0,
-		0,
+		0.75,
 		0
 	));
 	private static final LoggedTunable<TrapezoidProfile.Constraints> profileConsts = LoggedTunable.from("Shooter/Flywheels/Profile", new TrapezoidProfile.Constraints(
 		0,
 		0
 	));
+	private static final LoggedTunableNumber motorPulleyTeethCount = LoggedTunable.from("Shooter/Flywheels/Gear Ratio/Motor Pulley Teeth Count", 16);
+	private static final LoggedTunableNumber flywheelPullyTeethCount = LoggedTunable.from("Shooter/Flywheels/Gear Ratio/Flywheel Pulley Teeth Count", 33);
+	private static final LoggedTunable<Distance> flywheelRadius = LoggedTunable.from("Shooter/Flywheels/Gear Ratio/Flywheel Radius Inches", Inches::of, 2.0);
+
+	private GearRatio gearRatio = new GearRatio().sprocket(motorPulleyTeethCount.getAsDouble()).sprocket(flywheelPullyTeethCount.getAsDouble());
+	private LinearRelation flywheel = LinearRelation.wheelRadius(flywheelRadius.get());
 
 	private TrapezoidProfile driverMotionProfile = new TrapezoidProfile(profileConsts.get());
-	private TrapezoidProfile kickerMotionProfile = new TrapezoidProfile(profileConsts.get());
 	private TrapezoidProfile.State driverSetpointState = new TrapezoidProfile.State();
-	private TrapezoidProfile.State kickerSetpointState = new TrapezoidProfile.State();
 	private SimpleMotorFeedforward driverFF = new SimpleMotorFeedforward(driverFFConsts.get().kS(), driverFFConsts.get().kV(), driverFFConsts.get().kA());
-	private SimpleMotorFeedforward kickerFF = new SimpleMotorFeedforward(kickerFFConsts.get().kS(), kickerFFConsts.get().kV(), kickerFFConsts.get().kA());
 
 	private double driverSurfaceVeloMPS = 0.0;
-	private double kickerSurfaceVeloMPS = 0.0;
 
 	public Flywheels(FlywheelsIO io) {
 		super("Shooter/Flywheels");
@@ -65,21 +63,24 @@ public class Flywheels extends SubsystemBase {
 		this.io.updateInputs(this.inputs);
 		Logger.processInputs("Inputs/Shooter/Flywheels", this.inputs);
 
+		this.driverSurfaceVeloMPS = this.flywheel.radiansToMeters(this.gearRatio.applyUnsigned(this.inputs.leftDriverMotor.encoder.getVelocityRadsPerSec()));
+
+		Logger.recordOutput("Shooter/Flywheels/Measured Velo MPS", this.driverSurfaceVeloMPS, MetersPerSecond);
+
 		if (driverPIDConsts.hasChanged(this.hashCode())) {
 			this.io.configDriverPID(driverPIDConsts.get());
-		}
-		if (kickerPIDConsts.hasChanged(this.hashCode())) {
-			this.io.configKickerPID(kickerPIDConsts.get());
 		}
 		if (driverFFConsts.hasChanged(this.hashCode())) {
 			driverFFConsts.get().update(this.driverFF);
 		}
-		if (kickerFFConsts.hasChanged(this.hashCode())) {
-			kickerFFConsts.get().update(this.kickerFF);
-		}
 		if (profileConsts.hasChanged(this.hashCode())) {
 			this.driverMotionProfile = new TrapezoidProfile(profileConsts.get());
-			this.kickerMotionProfile = new TrapezoidProfile(profileConsts.get());
+		}
+		if (LoggedTunable.hasChanged(this.hashCode(), motorPulleyTeethCount, flywheelPullyTeethCount)) {
+			this.gearRatio = new GearRatio().sprocket(motorPulleyTeethCount.getAsDouble()).sprocket(flywheelPullyTeethCount.getAsDouble());
+		}
+		if (flywheelRadius.hasChanged(this.hashCode())) {
+			this.flywheel = LinearRelation.wheelRadius(flywheelRadius.get());
 		}
 	}
 
@@ -95,8 +96,6 @@ public class Flywheels extends SubsystemBase {
 			public void initialize() {
 				flywheels.driverSetpointState.position = flywheels.driverSurfaceVeloMPS;
 				flywheels.driverSetpointState.velocity = 0.0;
-				flywheels.kickerSetpointState.position = flywheels.kickerSurfaceVeloMPS;
-				flywheels.kickerSetpointState.velocity = 0.0;
 			}
 
 			@Override
@@ -106,23 +105,15 @@ public class Flywheels extends SubsystemBase {
 				var newDriverSetpoint = flywheels.driverMotionProfile.calculate(RobotConstants.rioUpdatePeriodSecs, flywheels.driverSetpointState, goalState);
 				var driverFFOut = flywheels.driverFF.calculateWithVelocities(flywheels.driverSetpointState.position, newDriverSetpoint.position);
 				flywheels.io.setDriverVelocityRadsPerSec(
-					FlywheelsConstants.driverMotorToFlywheelRatio.inverse().applyUnsigned(FlywheelsConstants.driverFlywheelWheel.metersToRadians(newDriverSetpoint.position)),
-					FlywheelsConstants.driverMotorToFlywheelRatio.inverse().applyUnsigned(FlywheelsConstants.driverFlywheelWheel.metersToRadians(newDriverSetpoint.velocity)),
+					flywheels.gearRatio.inverse().applyUnsigned(flywheels.flywheel.metersToRadians(newDriverSetpoint.position)),
+					flywheels.gearRatio.inverse().applyUnsigned(flywheels.flywheel.metersToRadians(newDriverSetpoint.velocity)),
 					driverFFOut
-				);
-				var newKickerSetpoint = flywheels.kickerMotionProfile.calculate(RobotConstants.rioUpdatePeriodSecs, flywheels.kickerSetpointState, goalState);
-				var kickerFFOut = flywheels.kickerFF.calculateWithVelocities(flywheels.kickerSetpointState.position, newKickerSetpoint.position);
-				flywheels.io.setKickerVelocityRadsPerSec(
-					FlywheelsConstants.kickerMotorToFlywheelRatio.inverse().applyUnsigned(FlywheelsConstants.kickerWheel.metersToRadians(newKickerSetpoint.position)),
-					FlywheelsConstants.kickerMotorToFlywheelRatio.inverse().applyUnsigned(FlywheelsConstants.kickerWheel.metersToRadians(newKickerSetpoint.velocity)),
-					kickerFFOut
 				);
 			}
 
 			@Override
 			public void end(boolean interrupted) {
 				flywheels.io.stopDriver(NeutralMode.DEFAULT);
-				flywheels.io.stopKicker(NeutralMode.DEFAULT);
 			}
 		};
 	}

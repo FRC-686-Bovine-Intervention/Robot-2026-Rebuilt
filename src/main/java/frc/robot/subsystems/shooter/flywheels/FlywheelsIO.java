@@ -20,12 +20,7 @@ public interface FlywheelsIO {
 
 	public default void setDriverVelocityRadsPerSec(double velocityRadsPerSec, double accelerationRadsPerSecSqr, double feedforwardVolts) {}
 
-	public default void setKickerVelocityRadsPerSec(double velocityRadsPerSec, double accelerationRadsPerSecSqr, double feedforwardVolts) {}
-
 	public default void stopDriver(Optional<NeutralMode> neutralMode) {}
-	public default void stopKicker(Optional<NeutralMode> neutralMode) {}
 
 	public default void configDriverPID(PIDConstants pidConstants) {}
-
-	public default void configKickerPID(PIDConstants pidConstants) {}
 }
