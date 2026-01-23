@@ -32,7 +32,7 @@ import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
 import frc.robot.subsystems.drive.odometry.OdometryThread;
 import frc.robot.subsystems.drive.odometry.OdometryThread.DoubleBuffer;
 import frc.util.NeutralMode;
-import frc.util.PIDConstants;
+import frc.util.PIDGains;
 import frc.util.faults.DeviceFaults;
 import frc.util.faults.DeviceFaults.FaultType;
 import frc.util.loggerUtil.inputs.LoggedEncodedMotor.EncodedMotorStatusSignalCache;
@@ -42,6 +42,8 @@ public class ModuleIOFalcon550 implements ModuleIO {
 	protected final SparkMax azimuthMotor;
 	protected final AbsoluteEncoder azimuthAbsoluteEncoder;
 
+	private final BaseStatusSignal[] refreshSignals;
+	private final BaseStatusSignal[] driveMotorConnectedSignals;
 	private final EncodedMotorStatusSignalCache driveMotorStatusSignalCache;
 
 	private final DoubleBuffer drivePositionBuffer;
@@ -101,6 +103,24 @@ public class ModuleIOFalcon550 implements ModuleIO {
 		);
 
 		this.driveMotorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.driveMotor);
+		this.refreshSignals = new BaseStatusSignal[] {
+			this.driveMotorStatusSignalCache.encoder().position(),
+			this.driveMotorStatusSignalCache.encoder().velocity(),
+			this.driveMotorStatusSignalCache.motor().appliedVoltage(),
+			this.driveMotorStatusSignalCache.motor().statorCurrent(),
+			this.driveMotorStatusSignalCache.motor().supplyCurrent(),
+			this.driveMotorStatusSignalCache.motor().torqueCurrent(),
+			this.driveMotorStatusSignalCache.motor().deviceTemperature(),
+		};
+		this.driveMotorConnectedSignals = new BaseStatusSignal[] {
+			this.driveMotorStatusSignalCache.encoder().position(),
+			this.driveMotorStatusSignalCache.encoder().velocity(),
+			this.driveMotorStatusSignalCache.motor().appliedVoltage(),
+			this.driveMotorStatusSignalCache.motor().statorCurrent(),
+			this.driveMotorStatusSignalCache.motor().supplyCurrent(),
+			this.driveMotorStatusSignalCache.motor().torqueCurrent(),
+			this.driveMotorStatusSignalCache.motor().deviceTemperature(),
+		};
 
 		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.driveMotorStatusSignalCache.encoder().getStatusSignals());
 		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency.div(2), this.driveMotorStatusSignalCache.motor().getStatusSignals());
@@ -115,20 +135,8 @@ public class ModuleIOFalcon550 implements ModuleIO {
 
 	@Override
 	public void updateInputs(ModuleIOInputs inputs) {
-		BaseStatusSignal.refreshAll(
-			this.driveMotorStatusSignalCache.encoder().position(),
-			this.driveMotorStatusSignalCache.encoder().velocity(),
-			this.driveMotorStatusSignalCache.motor().appliedVoltage(),
-			this.driveMotorStatusSignalCache.motor().statorCurrent(),
-			this.driveMotorStatusSignalCache.motor().deviceTemperature()
-		);
-		inputs.driveMotorConnected = BaseStatusSignal.isAllGood(
-			this.driveMotorStatusSignalCache.encoder().position(),
-			this.driveMotorStatusSignalCache.encoder().velocity(),
-			this.driveMotorStatusSignalCache.motor().appliedVoltage(),
-			this.driveMotorStatusSignalCache.motor().statorCurrent(),
-			this.driveMotorStatusSignalCache.motor().deviceTemperature()
-		);
+		BaseStatusSignal.refreshAll(this.refreshSignals);
+		inputs.driveMotorConnected = BaseStatusSignal.isAllGood(this.driveMotorConnectedSignals);
 		inputs.azimuthMotorConnected = true;
 		inputs.azimuthEncoderConnected = true;
 		inputs.driveMotor.updateFrom(this.driveMotorStatusSignalCache);
@@ -146,10 +154,10 @@ public class ModuleIOFalcon550 implements ModuleIO {
 		this.driveMotor.setControl(this.driveVolts.withOutput(volts));
 	}
 	@Override
-	public void setDriveVelocityRadPerSec(double velocityRadPerSec, double accelerationRadPerSec2, double feedforwardVolts, boolean overrideWithBrakeMode) {
+	public void setDriveVelocityRadPerSec(double velocityRadPerSec, double accelerationRadPerSecSqr, double feedforwardVolts, boolean overrideWithBrakeMode) {
 		this.driveMotor.setControl(this.driveVelocity
 			.withVelocity(Units.radiansToRotations(velocityRadPerSec))
-			.withAcceleration(Units.radiansToRotations(accelerationRadPerSec2))
+			.withAcceleration(Units.radiansToRotations(accelerationRadPerSecSqr))
 			.withFeedForward(feedforwardVolts)
 			.withOverrideBrakeDurNeutral(overrideWithBrakeMode)
 		);
@@ -182,14 +190,14 @@ public class ModuleIOFalcon550 implements ModuleIO {
 	}
 
 	@Override
-	public void configDrivePID(PIDConstants pidConstants) {
+	public void configDrivePID(PIDGains pidConstants) {
 		var config = new Slot0Configs();
 		this.driveMotor.getConfigurator().refresh(config);
 		pidConstants.update(config);
 		this.driveMotor.getConfigurator().apply(config);
 	}
 	@Override
-	public void configAzimuthPID(PIDConstants pidConstants) {
+	public void configAzimuthPID(PIDGains pidConstants) {
 		pidConstants.update(this.azimuthPID);
 	}
 

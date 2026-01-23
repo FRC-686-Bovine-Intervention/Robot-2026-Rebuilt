@@ -11,21 +11,21 @@ import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.loggerUtil.tunables.LoggedTunableNumber;
 import frc.util.loggerUtil.tunables.Tunable;
 
-public record PIDConstants(double kP, double kI, double kD) implements Tunable<PIDConstants> {
+public record PIDGains(double kP, double kI, double kD) implements Tunable<PIDGains> {
 	@Override
-	public LoggedTunable<PIDConstants> makeTunable(String key) {
+	public LoggedTunable<PIDGains> makeTunable(String key) {
 		final var defaultValue = this;
 		return new LoggedTunable<>() {
 			private final LoggedTunableNumber kP = LoggedTunable.from(key + "/kP", defaultValue.kP());
 			private final LoggedTunableNumber kI = LoggedTunable.from(key + "/kI", defaultValue.kI());
 			private final LoggedTunableNumber kD = LoggedTunable.from(key + "/kD", defaultValue.kD());
 
-			private PIDConstants cache = defaultValue;
+			private PIDGains cache = defaultValue;
 
 			@Override
-			public PIDConstants get() {
+			public PIDGains get() {
 				if (this.hasChanged(this.hashCode())) {
-					this.cache = new PIDConstants(
+					this.cache = new PIDGains(
 						this.kP.getAsDouble(),
 						this.kI.getAsDouble(),
 						this.kD.getAsDouble()
@@ -41,46 +41,57 @@ public record PIDConstants(double kP, double kI, double kD) implements Tunable<P
 		};
 	}
 
-	public void update(PIDController pid) {
+	public PIDController update(PIDController pid) {
 		pid.setPID(
 			this.kP(),
 			this.kI(),
 			this.kD()
 		);
+		return pid;
 	}
-	public void update(ProfiledPIDController pid) {
+
+	public ProfiledPIDController update(ProfiledPIDController pid) {
 		pid.setPID(
 			this.kP(),
 			this.kI(),
 			this.kD()
 		);
+		return pid;
 	}
-	public void update(SlotConfigs pid) {
+
+	public SlotConfigs update(SlotConfigs pid) {
 		pid
 			.withKP(this.kP())
 			.withKI(this.kI())
 			.withKD(this.kD())
 		;
+		return pid;
 	}
-	public void update(Slot0Configs pid) {
+
+	public Slot0Configs update(Slot0Configs pid) {
 		pid
 			.withKP(this.kP())
 			.withKI(this.kI())
 			.withKD(this.kD())
 		;
+		return pid;
 	}
-	public void update(Slot1Configs pid) {
+
+	public Slot1Configs update(Slot1Configs pid) {
 		pid
 			.withKP(this.kP())
 			.withKI(this.kI())
 			.withKD(this.kD())
 		;
+		return pid;
 	}
-	public void update(Slot2Configs pid) {
+
+	public Slot2Configs update(Slot2Configs pid) {
 		pid
 			.withKP(this.kP())
 			.withKI(this.kI())
 			.withKD(this.kD())
 		;
+		return pid;
 	}
 }
