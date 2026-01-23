@@ -188,8 +188,8 @@ public class Drive extends VirtualSubsystem {
 					var velocity = 0.0;
 					var voltage = 0.0;
 					for (int i = 0; i < this.modules.length; i++) {
-						position += (this.modules[i].getWheelLinearPositionMeters() - moduleInitialPositions[i]) / this.modules[i].config.moduleTranslation.getNorm() / DriveConstants.moduleConstants.length;
-						velocity += this.modules[i].getWheelLinearVelocityMetersPerSec() / this.modules[i].config.moduleTranslation.getNorm() / DriveConstants.moduleConstants.length;
+						position += (this.modules[i].getWheelLinearPositionMeters() - moduleInitialPositions[i]) / this.modules[i].config.moduleTransform.getTranslation().getNorm() / DriveConstants.moduleConstants.length;
+						velocity += this.modules[i].getWheelLinearVelocityMetersPerSec() / this.modules[i].config.moduleTransform.getTranslation().getNorm() / DriveConstants.moduleConstants.length;
 						voltage += this.modules[i].getDriveAppliedVolts() / DriveConstants.moduleConstants.length;
 					}
 					Logger.recordOutput("SysID/Drive/Rotational/Position", position, Radians);
@@ -465,18 +465,18 @@ public class Drive extends VirtualSubsystem {
 		this.translationSubsystem.needsPostProcessing = false;
 		this.rotationalSubsystem.needsPostProcessing = false;
 		for (var module : this.modules) {
-			var moduleVXMPS = vXMetersPerSecond + omegaRadiansPerSecond * module.config.moduleTranslation.getNorm() * module.config.moduleForwardDirection.getCos();
-			var moduleVYMPS = vYMetersPerSecond + omegaRadiansPerSecond * module.config.moduleTranslation.getNorm() * module.config.moduleForwardDirection.getSin();
+			var moduleVXMPS = vXMetersPerSecond + omegaRadiansPerSecond * module.config.moduleTransform.getTranslation().getNorm() * module.config.moduleTransform.getRotation().getCos();
+			var moduleVYMPS = vYMetersPerSecond + omegaRadiansPerSecond * module.config.moduleTransform.getTranslation().getNorm() * module.config.moduleTransform.getRotation().getSin();
 
-			var moduleAXMPSS = aXMetersPerSecondSqr + alphaRadiansPerSecondSqr * module.config.moduleTranslation.getNorm() * module.config.moduleForwardDirection.getCos();
-			var moduleAYMPSS = aYMetersPerSecondSqr + alphaRadiansPerSecondSqr * module.config.moduleTranslation.getNorm() * module.config.moduleForwardDirection.getSin();
+			var moduleAXMPSS = aXMetersPerSecondSqr + alphaRadiansPerSecondSqr * module.config.moduleTransform.getTranslation().getNorm() * module.config.moduleTransform.getRotation().getCos();
+			var moduleAYMPSS = aYMetersPerSecondSqr + alphaRadiansPerSecondSqr * module.config.moduleTransform.getTranslation().getNorm() * module.config.moduleTransform.getRotation().getSin();
 
 			var robotFFXVolts = vXMetersPerSecond * translationalFF.getKv() + aXMetersPerSecondSqr * translationalFF.getKa();
 			var robotFFYVolts = vYMetersPerSecond * translationalFF.getKv() + aYMetersPerSecondSqr * translationalFF.getKa();
 			var robotFFRotVolts = omegaRadiansPerSecond * rotationalFF.getKv() + alphaRadiansPerSecondSqr * rotationalFF.getKa();
 
-			var moduleFFXVolts = robotFFXVolts + robotFFRotVolts * module.config.moduleForwardDirection.getCos();
-			var moduleFFYVolts = robotFFYVolts + robotFFRotVolts * module.config.moduleForwardDirection.getSin();
+			var moduleFFXVolts = robotFFXVolts + robotFFRotVolts * module.config.moduleTransform.getRotation().getCos();
+			var moduleFFYVolts = robotFFYVolts + robotFFRotVolts * module.config.moduleTransform.getRotation().getSin();
 
 			module.runSetpoint(
 				moduleVXMPS,
