@@ -4,10 +4,84 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
+import frc.util.math.polynomial.Vector2Polynomial3rdDegree;
 
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
-
 public class ShooterConstants {
+    public static final Vector2Polynomial3rdDegree aimingPolynomial = new Vector2Polynomial3rdDegree(
+        new double[]
+        {
+            0,
+            1
+        }, 
+        new double[][]
+        {
+            {
+
+            },
+            {
+
+            }
+        },
+        new double[][][]
+        {
+            {
+                {
+
+                },
+                {
+
+                }
+            },
+            {
+                {
+
+                },
+                {
+
+                }
+            }
+        },
+        new double[][][][]
+        {
+            {
+                {
+                    {
+
+                    },
+                    {
+
+                    }
+                },
+                {
+                    {
+
+                    },
+                    {
+                        
+                    }
+                }
+            },
+            {
+                {
+                    {
+
+                    },
+                    {
+
+                    }
+                },
+                {
+                    {
+
+                    },
+                    {
+                        
+                    }
+                }
+            }
+        }
+    );
 	public static final InterpolatingDoubleTreeMap hubTargetFlyWheelVeloMPS = new InterpolatingDoubleTreeMap();
 	static {
 		hubTargetFlyWheelVeloMPS.put(Meters.of(1.1717).in(Meters), MetersPerSecond.of(20.0).in(MetersPerSecond));
