@@ -9,5 +9,5 @@ import lombok.RequiredArgsConstructor;
 public class Shooter {
 	public final Flywheels flywheels;
 	public final Hood hood;
-	public final Aiming aiming = new Aiming();
+	public final Aiming aiming;
 }

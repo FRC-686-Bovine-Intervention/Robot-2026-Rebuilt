@@ -1,6 +1,6 @@
 plugins {
 	id "java"
-	id "edu.wpi.first.GradleRIO" version "2026.1.1"
+	id "edu.wpi.first.GradleRIO" version "2026.2.1"
 	id "com.peterabeles.gversion" version "1.10"
 	id "com.diffplug.spotless" version "6.25.0"
 	id "io.freefair.lombok" version "8.4"
@@ -134,6 +134,12 @@ repositories {
 	mavenLocal()
 }
 
+// Check constants for pull request
+task(checkConstantsPullRequest, dependsOn: "classes", type: JavaExec) {
+	main = "frc.robot.constants.CheckPullRequest"
+	classpath = sourceSets.main.runtimeClasspath
+}
+
 // Create version file
 project.compileJava.dependsOn(createVersionFile)
 gversion {
@@ -144,6 +150,39 @@ gversion {
 	timeZone     = "America/New_York"
 	indent       = "	"
 }
+
+// Create commit with working changes on event branches
+task(eventDeploy) {
+	doLast {
+		if (project.gradle.startParameter.taskNames.any({ it.toLowerCase().contains("deploy") })) {
+			def branchPrefix = "event"
+			def branch = 'git branch --show-current'.execute().text.trim()
+			def commitMessage = "Update at '${new Date().toString()}'"
+
+			if (branch.startsWith(branchPrefix)) {
+				exec {
+					workingDir(projectDir)
+					executable 'git'
+					args 'add', '-A'
+				}
+				exec {
+					workingDir(projectDir)
+					executable 'git'
+					args 'commit', '-m', commitMessage
+					ignoreExitValue = true
+				}
+
+				println "Committed to branch: '$branch'"
+				println "Commit message: '$commitMessage'"
+			} else {
+				println "Not on an event branch, skipping commit"
+			}
+		} else {
+			println "Not running deploy task, skipping commit"
+		}
+	}
+}
+createVersionFile.dependsOn(eventDeploy)
 
 // Spotless formatting
 project.compileJava.dependsOn(spotlessApply)
