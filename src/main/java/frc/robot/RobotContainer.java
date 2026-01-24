@@ -307,7 +307,7 @@ public class RobotContainer {
 				0.0,
 				Rotation2d.kZero
 			)
-		)));
+		)).ignoringDisable(true));
 
 		Optional<Trajectory<SwerveSample>> traj = Choreo.loadTrajectory("NewPath");
 		this.driveController.povUp().whileTrue(

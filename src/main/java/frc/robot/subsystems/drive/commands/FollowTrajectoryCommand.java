@@ -120,6 +120,7 @@ public class FollowTrajectoryCommand extends Command {
 
 		Logger.recordOutput("Trajectory/Setpoint Pose", sample.getPose());
 		Logger.recordOutput("Trajectory/Setpoint Speeds", DriveConstants.kinematics.toSwerveModuleStates(ChassisSpeeds.fromFieldRelativeSpeeds(sample.getChassisSpeeds(), sample.getPose().getRotation())));
+		Logger.recordOutput("Trajectory/Raw sample", sample);
 
 		this.drive.runRobotSpeeds(
 			robotVX,

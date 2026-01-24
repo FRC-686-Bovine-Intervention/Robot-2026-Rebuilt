@@ -72,18 +72,18 @@ public class Drive extends VirtualSubsystem {
 
 	private static final LoggedTunable<FFGains> translationalFFGains = LoggedTunable.from("Drive/FF/Translational",
 		new FFGains(
+			0.14097,
 			0,
-			0,
-			0,
-			0
+			1.9406,
+			0.042101
 		)
 	);
 	private static final LoggedTunable<FFGains> rotationalFFGains = LoggedTunable.from("Drive/FF/Rotational",
 		new FFGains(
 			0,
 			0,
-			0,
-			0
+			0.91433,
+			0.25931
 		)
 	);
 	private final SimpleMotorFeedforward translationalFF = translationalFFGains.get().update(new SimpleMotorFeedforward(0.0, 0.0, 0.0));
@@ -215,6 +215,11 @@ public class Drive extends VirtualSubsystem {
 				sysIDCommand
 			)
 			.alongWith(this.rotationalSubsystem.idle())
+			.finallyDo(() -> {
+				for (var module : this.modules) {
+					module.stopDrive(NeutralMode.BRAKE);
+				}
+			})
 			.withName("SysID Translational Quasistatic Forward")
 		;
 		SmartDashboard.putData("SysID/Drive/Translational/Quasi Forward", translationalCommandMap.apply(translationalRoutine.quasistatic(SysIdRoutine.Direction.kForward)));
@@ -236,6 +241,11 @@ public class Drive extends VirtualSubsystem {
 				sysIDCommand
 			)
 			.alongWith(this.translationSubsystem.idle())
+			.finallyDo(() -> {
+				for (var module : this.modules) {
+					module.stopDrive(NeutralMode.BRAKE);
+				}
+			})
 			.withName("SysID Rotational Quasistatic Forward")
 		;
 		SmartDashboard.putData("SysID/Drive/Rotational/Quasi Forward", rotationalCommandMap.apply(rotationalRoutine.quasistatic(SysIdRoutine.Direction.kForward)));
