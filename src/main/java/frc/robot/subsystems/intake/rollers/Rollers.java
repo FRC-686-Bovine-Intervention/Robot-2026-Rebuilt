@@ -69,7 +69,7 @@ public class Rollers extends SubsystemBase {
 			() -> intakeVoltage.get().in(Volts)
 		);
 	}
-	
+
 	public Command eject() {
 		return this.genVoltageCommand(
 			"Eject",
