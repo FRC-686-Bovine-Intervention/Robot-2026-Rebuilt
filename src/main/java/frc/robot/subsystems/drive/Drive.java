@@ -220,7 +220,7 @@ public class Drive extends VirtualSubsystem {
 					module.stopDrive(NeutralMode.BRAKE);
 				}
 			})
-			.withName("SysID Translational Quasistatic Forward")
+			.withName("SysID Translational")
 		;
 		SmartDashboard.putData("SysID/Drive/Translational/Quasi Forward", translationalCommandMap.apply(translationalRoutine.quasistatic(SysIdRoutine.Direction.kForward)));
 		SmartDashboard.putData("SysID/Drive/Translational/Quasi Reverse", translationalCommandMap.apply(translationalRoutine.quasistatic(SysIdRoutine.Direction.kReverse)));
@@ -246,12 +246,68 @@ public class Drive extends VirtualSubsystem {
 					module.stopDrive(NeutralMode.BRAKE);
 				}
 			})
-			.withName("SysID Rotational Quasistatic Forward")
+			.withName("SysID Rotational")
 		;
 		SmartDashboard.putData("SysID/Drive/Rotational/Quasi Forward", rotationalCommandMap.apply(rotationalRoutine.quasistatic(SysIdRoutine.Direction.kForward)));
 		SmartDashboard.putData("SysID/Drive/Rotational/Quasi Reverse", rotationalCommandMap.apply(rotationalRoutine.quasistatic(SysIdRoutine.Direction.kReverse)));
 		SmartDashboard.putData("SysID/Drive/Rotational/Dynamic Forward", rotationalCommandMap.apply(rotationalRoutine.dynamic(SysIdRoutine.Direction.kForward)));
 		SmartDashboard.putData("SysID/Drive/Rotational/Dynamic Reverse", rotationalCommandMap.apply(rotationalRoutine.dynamic(SysIdRoutine.Direction.kReverse)));
+
+		var azimuthRoutine = new SysIdRoutine(
+			new SysIdRoutine.Config(
+				null,
+				null,
+				null,
+				(state) -> {
+					for (var module : this.modules) {
+						Logger.recordOutput("SysID/Drive/Azimuth/" + module.config.name + "/State", state.toString());
+					}
+				}
+			),
+			new SysIdRoutine.Mechanism(
+				(volts) -> {
+					for (var module : this.modules) {
+						module.stopDrive(NeutralMode.BRAKE);
+						module.runAzimuthVolts(volts.in(Volts));
+					}
+				},
+				(log) -> {
+					for (int i = 0; i < this.modules.length; i++) {
+						var module = this.modules[i];
+						Logger.recordOutput("SysID/Drive/Azimuth/" + module.config.name + "/Position", module.getAzimuthMotorCarriagePositionRads() - moduleInitialPositions[i], Radians);
+						Logger.recordOutput("SysID/Drive/Azimuth/" + module.config.name + "/Velocity", module.getAzimuthMotorCarriageVelocityRadsPerSec(), RadiansPerSecond);
+						Logger.recordOutput("SysID/Drive/Azimuth/" + module.config.name + "/Voltage", module.getAzimuthAppliedVolts(), Volts);
+					}
+				},
+				this.translationSubsystem
+			)
+		);
+		Function<Command, Command> azimuthCommandMap = (sysIDCommand) ->
+			Commands.sequence(
+				this.rotationalSubsystem.run(() -> {
+					for (var module : this.modules) {
+						module.runVolts(0.0, Rotation2d.kZero);
+					}
+				}).withTimeout(0.5),
+				Commands.runOnce(() -> {
+					for (int i = 0; i < DriveConstants.moduleConstants.length; i++) {
+						moduleInitialPositions[i] = this.modules[i].getAzimuthMotorCarriagePositionRads();
+					}
+				}),
+				sysIDCommand
+			)
+			.alongWith(this.rotationalSubsystem.idle())
+			.finallyDo(() -> {
+				for (var module : this.modules) {
+					module.stopDrive(NeutralMode.BRAKE);
+				}
+			})
+			.withName("SysID Azimuth")
+		;
+		SmartDashboard.putData("SysID/Drive/Azimuth/Quasi Forward", azimuthCommandMap.apply(azimuthRoutine.quasistatic(SysIdRoutine.Direction.kForward)));
+		SmartDashboard.putData("SysID/Drive/Azimuth/Quasi Reverse", azimuthCommandMap.apply(azimuthRoutine.quasistatic(SysIdRoutine.Direction.kReverse)));
+		SmartDashboard.putData("SysID/Drive/Azimuth/Dynamic Forward", azimuthCommandMap.apply(azimuthRoutine.dynamic(SysIdRoutine.Direction.kForward)));
+		SmartDashboard.putData("SysID/Drive/Azimuth/Dynamic Reverse", azimuthCommandMap.apply(azimuthRoutine.dynamic(SysIdRoutine.Direction.kReverse)));
 	}
 
 	private static final SwerveModuleState[] emptyStates = new SwerveModuleState[0];

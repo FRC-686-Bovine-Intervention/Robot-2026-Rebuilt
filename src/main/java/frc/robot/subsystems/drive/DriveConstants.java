@@ -23,6 +23,7 @@ import edu.wpi.first.units.measure.Frequency;
 import edu.wpi.first.units.measure.LinearVelocity;
 import frc.robot.constants.HardwareDevices;
 import frc.robot.constants.RobotConstants;
+import frc.util.FFGains;
 import frc.util.hardwareID.can.CANDevice;
 import frc.util.mechanismUtil.GearRatio;
 import frc.util.mechanismUtil.LinearRelation;
@@ -44,7 +45,8 @@ public final class DriveConstants {
 		public final Angle encoderZeroOffset;
 		public final Transform2d moduleTransform;
 		public final Rotation2d positiveRotVec;
-		ModuleConstants(String name, CANDevice driveMotorID, CANDevice turnMotorID, InvertedValue driveInverted, Angle encoderZeroOffset, Transform2d moduleTransform) {
+		public final FFGains azimuthFFGains;
+		ModuleConstants(String name, CANDevice driveMotorID, CANDevice turnMotorID, InvertedValue driveInverted, Angle encoderZeroOffset, Transform2d moduleTransform, FFGains azimuthFFGains) {
 			this.name = name;
 			this.driveMotorID = driveMotorID;
 			this.azimuthMotorID = turnMotorID;
@@ -52,6 +54,7 @@ public final class DriveConstants {
 			this.encoderZeroOffset = encoderZeroOffset;
 			this.moduleTransform = moduleTransform;
 			this.positiveRotVec = this.moduleTransform.getTranslation().getAngle().plus(Rotation2d.kCCW_90deg);
+			this.azimuthFFGains = azimuthFFGains;
 		}
 	}
 
@@ -67,6 +70,12 @@ public final class DriveConstants {
 					trackWidthY.div(+2)
 				),
 				Rotation2d.kCCW_90deg
+			),
+			new FFGains(
+				0.0,
+				0.0,
+				0.0,
+				0.0
 			)
 		),
 		new ModuleConstants(
@@ -80,6 +89,12 @@ public final class DriveConstants {
 					trackWidthY.div(-2)
 				),
 				Rotation2d.kZero
+			),
+			new FFGains(
+				0.0,
+				0.0,
+				0.0,
+				0.0
 			)
 		),
 		new ModuleConstants(
@@ -93,6 +108,12 @@ public final class DriveConstants {
 					trackWidthY.div(+2)
 				),
 				Rotation2d.k180deg
+			),
+			new FFGains(
+				0.0,
+				0.0,
+				0.0,
+				0.0
 			)
 		),
 		new ModuleConstants(
@@ -106,6 +127,12 @@ public final class DriveConstants {
 					trackWidthY.div(-2)
 				),
 				Rotation2d.kCW_90deg
+			),
+			new FFGains(
+				0.0,
+				0.0,
+				0.0,
+				0.0
 			)
 		),
 	};
