@@ -209,7 +209,10 @@ public class Module {
 
 		var belowBrakeModeThreshold = veloMagnitudeMPS < brakeModeThreshold.get().in(MetersPerSecond);
 
-		this.io.setAzimuthAngleRads(Math.atan2(targetModuleAngleY, targetModuleAngleX));
+		var targetAzimuthAngleX = targetModuleAngleX * +this.config.moduleTransform.getRotation().getCos() + targetModuleAngleY * +this.config.moduleTransform.getRotation().getSin();
+		var targetAzimuthAngleY = targetModuleAngleX * -this.config.moduleTransform.getRotation().getSin() + targetModuleAngleY * +this.config.moduleTransform.getRotation().getCos();
+
+		this.io.setAzimuthAngleRads(Math.atan2(targetAzimuthAngleY, targetAzimuthAngleX));
 		this.io.setDriveVelocityRadPerSec(driveVeloRadPerSec, driveAccelRadPerSecSqr, driveFFVolts, belowBrakeModeThreshold);
 
 		Logger.recordOutput("Drive/Module " + this.config.name + "/Target Angle", Rotation2d.fromRadians(Math.atan2(targetModuleAngleY, targetModuleAngleX)));
@@ -221,7 +224,40 @@ public class Module {
 		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive FFX Volts", ffXVolts, Volts);
 		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive FFY Volts", ffYVolts, Volts);
 		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive FF angle", new Rotation2d(ffXVolts, ffYVolts));
+		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive Azimuth angle", new Rotation2d(targetAzimuthAngleX, targetAzimuthAngleY));
+
+		this.driveVelo = new SwerveModuleState(
+			veloMagnitudeMPS,
+			new Rotation2d(vXMetersPerSecond, vYMetersPerSecond)
+		);
+		this.driveAccel = new SwerveModuleState(
+			accelMagnitudeMPSS,
+			new Rotation2d(aXMetersPerSecondSqr, aYMetersPerSecondSqr)
+		);
+		this.driveFF = new SwerveModuleState(
+			feedforwardMagnitudeVolts,
+			new Rotation2d(ffXVolts, ffYVolts)
+		);
+		this.driveScaledVelo = new SwerveModuleState(
+			driveVeloMPS,
+			new Rotation2d(vXMetersPerSecond, vYMetersPerSecond)
+		);
+		this.driveScaledAccel = new SwerveModuleState(
+			driveAccelRadPerSecSqr,
+			new Rotation2d(aXMetersPerSecondSqr, aYMetersPerSecondSqr)
+		);
+		this.driveScaledFF = new SwerveModuleState(
+			driveFFVolts,
+			new Rotation2d(ffXVolts, ffYVolts)
+		);
 	}
+
+	public SwerveModuleState driveVelo = new SwerveModuleState();
+	public SwerveModuleState driveAccel = new SwerveModuleState();
+	public SwerveModuleState driveFF = new SwerveModuleState();
+	public SwerveModuleState driveScaledVelo = new SwerveModuleState();
+	public SwerveModuleState driveScaledAccel = new SwerveModuleState();
+	public SwerveModuleState driveScaledFF = new SwerveModuleState();
 
 	/**
 	 * Runs the module with the specified voltage

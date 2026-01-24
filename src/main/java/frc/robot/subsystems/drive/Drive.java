@@ -497,6 +497,13 @@ public class Drive extends VirtualSubsystem {
 				moduleFFYVolts
 			);
 		}
+
+		Logger.recordOutput("Drive/FF Drive/Module Velos", this.modules[0].driveVelo, this.modules[1].driveVelo, this.modules[2].driveVelo, this.modules[3].driveVelo);
+		Logger.recordOutput("Drive/FF Drive/Module Accels", this.modules[0].driveAccel, this.modules[1].driveAccel, this.modules[2].driveAccel, this.modules[3].driveAccel);
+		Logger.recordOutput("Drive/FF Drive/Module FFs", this.modules[0].driveFF, this.modules[1].driveFF, this.modules[2].driveFF, this.modules[3].driveFF);
+		Logger.recordOutput("Drive/FF Drive/Module Scaled Velos", this.modules[0].driveScaledVelo, this.modules[1].driveScaledVelo, this.modules[2].driveScaledVelo, this.modules[3].driveScaledVelo);
+		Logger.recordOutput("Drive/FF Drive/Module Scaled Accels", this.modules[0].driveScaledAccel, this.modules[1].driveScaledAccel, this.modules[2].driveScaledAccel, this.modules[3].driveScaledAccel);
+		Logger.recordOutput("Drive/FF Drive/Module Scaled FFs", this.modules[0].driveScaledFF, this.modules[1].driveScaledFF, this.modules[2].driveScaledFF, this.modules[3].driveScaledFF);
 	}
 
 	public void runFieldSpeeds(ChassisSpeeds fieldSpeeds) {
