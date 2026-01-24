@@ -2,6 +2,10 @@ package frc.robot.subsystems.drive.modules;
 
 import static edu.wpi.first.units.Units.InchesPerSecond;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
+import static edu.wpi.first.units.Units.Volts;
 
 import java.util.Optional;
 
@@ -170,7 +174,7 @@ public class Module {
 
 		var belowBrakeModeThreshold = Math.abs(setpoint.speedMetersPerSecond) < brakeModeThreshold.get().in(MetersPerSecond);
 
-		this.io.setDriveVelocityRadPerSec(velocityRadPerSec, 0.0, 0.0, belowBrakeModeThreshold);
+		this.io.setDriveVelocityRadPerSec(velocityRadPerSec, 0.0, setpoint.speedMetersPerSecond * 2.2, belowBrakeModeThreshold);
 	}
 
 	public void runSetpoint(double vXMetersPerSecond, double vYMetersPerSecond, double aXMetersPerSecondSqr, double aYMetersPerSecondSqr, double ffXVolts, double ffYVolts) {
@@ -207,6 +211,16 @@ public class Module {
 
 		this.io.setAzimuthAngleRads(Math.atan2(targetModuleAngleY, targetModuleAngleX));
 		this.io.setDriveVelocityRadPerSec(driveVeloRadPerSec, driveAccelRadPerSecSqr, driveFFVolts, belowBrakeModeThreshold);
+
+		Logger.recordOutput("Drive/Module " + this.config.name + "/Target Angle", Rotation2d.fromRadians(Math.atan2(targetModuleAngleY, targetModuleAngleX)));
+		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive Velo MPS", driveVeloMPS, MetersPerSecond);
+		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive Velo RadPerSec", driveVeloRadPerSec, RadiansPerSecond);
+		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive Accel MPSS", driveAccelMPSS, MetersPerSecondPerSecond);
+		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive Accel RadPerSecSqr", driveAccelRadPerSecSqr, RadiansPerSecondPerSecond);
+		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive FF Volts", driveFFVolts, Volts);
+		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive FFX Volts", ffXVolts, Volts);
+		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive FFY Volts", ffYVolts, Volts);
+		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive FF angle", new Rotation2d(ffXVolts, ffYVolts));
 	}
 
 	/**
