@@ -284,7 +284,7 @@ public class Drive extends VirtualSubsystem {
 		);
 		Function<Command, Command> azimuthCommandMap = (sysIDCommand) ->
 			Commands.sequence(
-				this.rotationalSubsystem.run(() -> {
+				this.translationSubsystem.run(() -> {
 					for (var module : this.modules) {
 						module.runVolts(0.0, Rotation2d.kZero);
 					}
