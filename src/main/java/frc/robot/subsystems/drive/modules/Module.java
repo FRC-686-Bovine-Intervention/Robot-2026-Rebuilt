@@ -19,6 +19,7 @@ import edu.wpi.first.math.trajectory.ExponentialProfile;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
 import frc.robot.subsystems.drive.odometry.OdometryThread;
@@ -63,7 +64,8 @@ public class Module {
 
 	private final SimpleMotorFeedforward azimuthFF;
 	private ExponentialProfile azimuthProfile;
-	private ExponentialProfile.State azimuthState = new ExponentialProfile.State();
+	private ExponentialProfile.State azimuthGoalState = new ExponentialProfile.State();
+	private ExponentialProfile.State azimuthSetpointState = new ExponentialProfile.State();
 
 	// private final DeviceFaultAlerts driveMotorActiveFaultsAlert;
 	// private final DeviceFaultAlerts driveMotorStickyFaultsAlert;
@@ -110,11 +112,11 @@ public class Module {
 			"Drive/Module/FF/" + this.config.name,
 			this.config.azimuthFFGains
 		);
-		// this.azimuthProfile = new ExponentialProfile(ExponentialProfile.Constraints.fromCharacteristics(
-		// 	12.0,
-		// 	this.config.azimuthFFGains.kV(),
-		// 	this.config.azimuthFFGains.kA()
-		// ));
+		this.azimuthProfile = new ExponentialProfile(ExponentialProfile.Constraints.fromCharacteristics(
+			12.0,
+			this.config.azimuthFFGains.kV(),
+			this.config.azimuthFFGains.kA()
+		));
 		this.azimuthFF = this.config.azimuthFFGains.update(new SimpleMotorFeedforward(0.0, 0.0, 0.0));
 	}
 
@@ -189,7 +191,7 @@ public class Module {
 		setpoint.optimize(this.getAngle());
 
 		var turnSetpoint = setpoint.angle;
-		this.io.setAzimuthAngleRads(turnSetpoint.minus(this.config.moduleTransform.getRotation()).getRadians());
+		this.io.setAzimuthAngleRads(turnSetpoint.minus(this.config.moduleTransform.getRotation()).getRadians(), 0.0);
 
 		setpoint.speedMetersPerSecond *= turnSetpoint.minus(this.getAngle()).getCos();
 
@@ -235,7 +237,7 @@ public class Module {
 		var targetAzimuthAngleX = targetModuleAngleX * +this.config.moduleTransform.getRotation().getCos() + targetModuleAngleY * +this.config.moduleTransform.getRotation().getSin();
 		var targetAzimuthAngleY = targetModuleAngleX * -this.config.moduleTransform.getRotation().getSin() + targetModuleAngleY * +this.config.moduleTransform.getRotation().getCos();
 
-		this.io.setAzimuthAngleRads(Math.atan2(targetAzimuthAngleY, targetAzimuthAngleX));
+		this.io.setAzimuthAngleRads(Math.atan2(targetAzimuthAngleY, targetAzimuthAngleX), 0.0);
 		this.io.setDriveVelocityRadPerSec(driveVeloRadPerSec, driveAccelRadPerSecSqr, driveFFVolts, belowBrakeModeThreshold);
 
 		Logger.recordOutput("Drive/Module " + this.config.name + "/Target Angle", Rotation2d.fromRadians(Math.atan2(targetModuleAngleY, targetModuleAngleX)));
@@ -282,12 +284,22 @@ public class Module {
 	public SwerveModuleState driveScaledAccel = new SwerveModuleState();
 	public SwerveModuleState driveScaledFF = new SwerveModuleState();
 
+	private void setAzimuthRobotHeadingRads(double azimuthRobotHeadingRads) {
+		this.azimuthGoalState.position = azimuthRobotHeadingRads;
+		this.azimuthGoalState.velocity = 0.0;
+		var newSetpointState = this.azimuthProfile.calculate(RobotConstants.rioUpdatePeriodSecs, this.azimuthSetpointState, this.azimuthGoalState);
+		var ffOut = this.azimuthFF.calculateWithVelocities(this.azimuthSetpointState.velocity, newSetpointState.velocity);
+		this.io.setAzimuthAngleRads(azimuthRobotHeadingRads, azimuthRobotHeadingRads);
+
+		// TODO Continuous azimuth wrapping for expo profile
+	}
+
 	/**
 	 * Runs the module with the specified voltage
 	 * Must be called periodically.
 	 */
 	public void runVolts(double volts, Rotation2d moduleAngle) {
-		this.io.setAzimuthAngleRads(moduleAngle.minus(this.config.moduleTransform.getRotation()).getRadians());
+		this.io.setAzimuthAngleRads(moduleAngle.minus(this.config.moduleTransform.getRotation()).getRadians(), 0.0);
 		this.io.setDriveVolts(volts);
 	}
 

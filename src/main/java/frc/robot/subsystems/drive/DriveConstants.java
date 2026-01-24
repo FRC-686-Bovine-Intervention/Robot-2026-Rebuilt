@@ -72,10 +72,10 @@ public final class DriveConstants {
 				Rotation2d.kCCW_90deg
 			),
 			new FFGains(
+				0.042568,
 				0.0,
-				0.0,
-				0.0,
-				0.0
+				0.0076914,
+				0.0029688
 			)
 		),
 		new ModuleConstants(
@@ -91,10 +91,10 @@ public final class DriveConstants {
 				Rotation2d.kZero
 			),
 			new FFGains(
+				0.21949,
 				0.0,
-				0.0,
-				0.0,
-				0.0
+				0.0077296,
+				0.0015546
 			)
 		),
 		new ModuleConstants(
@@ -110,10 +110,10 @@ public final class DriveConstants {
 				Rotation2d.k180deg
 			),
 			new FFGains(
+				0.059722,
 				0.0,
-				0.0,
-				0.0,
-				0.0
+				0.0075933,
+				0.0029952
 			)
 		),
 		new ModuleConstants(
@@ -129,10 +129,10 @@ public final class DriveConstants {
 				Rotation2d.kCW_90deg
 			),
 			new FFGains(
+				0.13132,
 				0.0,
-				0.0,
-				0.0,
-				0.0
+				0.007908,
+				0.001811
 			)
 		),
 	};

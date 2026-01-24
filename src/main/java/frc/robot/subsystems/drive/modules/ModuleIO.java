@@ -35,7 +35,7 @@ public interface ModuleIO {
 
 	/** Run the turn motor at the specified voltage. */
 	public default void setAzimuthVolts(double volts) {}
-	public default void setAzimuthAngleRads(double angleRads) {}
+	public default void setAzimuthAngleRads(double angleRads, double feedforwardVolts) {}
 
 	public default void stopDrive(Optional<NeutralMode> neutralMode) {}
 	public default void stopAzimuth(Optional<NeutralMode> neutralMode) {}
