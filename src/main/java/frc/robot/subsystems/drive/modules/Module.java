@@ -166,7 +166,7 @@ public class Module {
 		setpoint.optimize(this.getAngle());
 
 		var turnSetpoint = setpoint.angle;
-		this.io.setAzimuthAngleRads(turnSetpoint.minus(this.config.moduleTransform.getRotation()).getRadians());
+		this.io.setAzimuthAngleRads(turnSetpoint.minus(this.config.moduleTransform.getRotation()).getRadians(), 0.0);
 
 		setpoint.speedMetersPerSecond *= turnSetpoint.minus(this.getAngle()).getCos();
 
@@ -212,7 +212,7 @@ public class Module {
 		var targetAzimuthAngleX = targetModuleAngleX * +this.config.moduleTransform.getRotation().getCos() + targetModuleAngleY * +this.config.moduleTransform.getRotation().getSin();
 		var targetAzimuthAngleY = targetModuleAngleX * -this.config.moduleTransform.getRotation().getSin() + targetModuleAngleY * +this.config.moduleTransform.getRotation().getCos();
 
-		this.io.setAzimuthAngleRads(Math.atan2(targetAzimuthAngleY, targetAzimuthAngleX));
+		this.io.setAzimuthAngleRads(Math.atan2(targetAzimuthAngleY, targetAzimuthAngleX), 0.0);
 		this.io.setDriveVelocityRadPerSec(driveVeloRadPerSec, driveAccelRadPerSecSqr, driveFFVolts, belowBrakeModeThreshold);
 
 		Logger.recordOutput("Drive/Module " + this.config.name + "/Target Angle", Rotation2d.fromRadians(Math.atan2(targetModuleAngleY, targetModuleAngleX)));
@@ -264,7 +264,7 @@ public class Module {
 	 * Must be called periodically.
 	 */
 	public void runVolts(double volts, Rotation2d moduleAngle) {
-		this.io.setAzimuthAngleRads(moduleAngle.minus(this.config.moduleTransform.getRotation()).getRadians());
+		this.io.setAzimuthAngleRads(moduleAngle.minus(this.config.moduleTransform.getRotation()).getRadians(), 0.0);
 		this.io.setDriveVolts(volts);
 	}
 

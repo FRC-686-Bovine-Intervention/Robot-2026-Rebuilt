@@ -168,9 +168,9 @@ public class ModuleIOFalcon550 implements ModuleIO {
 		this.azimuthMotor.setVoltage(volts);
 	}
 	@Override
-	public void setAzimuthAngleRads(double angleRads) {
+	public void setAzimuthAngleRads(double angleRads, double feedforwardVolts) {
 		this.setAzimuthVolts(
-			this.azimuthPID.calculate(
+			feedforwardVolts + this.azimuthPID.calculate(
 				this.azimuthAbsoluteEncoder.getPosition(),
 				Units.radiansToRotations(angleRads)
 			)
