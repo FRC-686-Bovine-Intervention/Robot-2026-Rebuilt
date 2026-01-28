@@ -73,7 +73,7 @@ public class ModuleIOSim extends ModuleIOFalcon550 {
 	}
 
 	@Override
-	public void setAzimuthAngleRads(double angleRads) {
+	public void setAzimuthAngleRads(double angleRads, double feedforwardVolts) {
 		this.setAzimuthVolts(
 			this.azimuthPID.calculate(
 				this.azimuthSim.getAngularPosition().in(Rotations),

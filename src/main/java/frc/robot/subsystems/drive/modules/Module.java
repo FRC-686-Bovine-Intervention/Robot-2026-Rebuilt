@@ -3,6 +3,7 @@ package frc.robot.subsystems.drive.modules;
 import static edu.wpi.first.units.Units.InchesPerSecond;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Volts;
@@ -11,6 +12,7 @@ import java.util.Optional;
 
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -55,7 +57,7 @@ public class Module {
 	private static final LoggedTunable<PIDGains> azimuthPIDGains = LoggedTunable.from(
 		"Drive/Module/Azimuth/PID",
 		new PIDGains(
-			5*2*Math.PI,
+			0*5*2*Math.PI,
 			0*2*Math.PI,
 			0*2*Math.PI
 		)
@@ -66,6 +68,7 @@ public class Module {
 	private ExponentialProfile azimuthProfile;
 	private ExponentialProfile.State azimuthGoalState = new ExponentialProfile.State();
 	private ExponentialProfile.State azimuthSetpointState = new ExponentialProfile.State();
+	private boolean azimuthMotionProfiling = false;
 
 	// private final DeviceFaultAlerts driveMotorActiveFaultsAlert;
 	// private final DeviceFaultAlerts driveMotorStickyFaultsAlert;
@@ -92,7 +95,7 @@ public class Module {
 			this.modulePositionSampleBuffer[i] = new SwerveModulePosition();
 		}
 
-		final var alertGroup = "Drive/Module " + this.config.name + "/Alerts";
+		final var alertGroup = "Drive/Modules/" + this.config.name + "/Alerts";
 
 		// this.driveMotorActiveFaultsAlert = new DeviceFaultAlerts(new Alert(alertGroup, "Drive Motor has active faults: ", AlertType.kError));
 		// this.driveMotorStickyFaultsAlert = new DeviceFaultAlerts(new Alert(alertGroup, "Drive Motor has sticky faults: ", AlertType.kWarning), FaultType.StatorCurrentLimit, FaultType.SupplyCurrentLimit);
@@ -191,7 +194,8 @@ public class Module {
 		setpoint.optimize(this.getAngle());
 
 		var turnSetpoint = setpoint.angle;
-		this.io.setAzimuthAngleRads(turnSetpoint.minus(this.config.moduleTransform.getRotation()).getRadians(), 0.0);
+		// this.io.setAzimuthAngleRads(turnSetpoint.minus(this.config.moduleTransform.getRotation()).getRadians(), 0.0);
+		this.setAzimuthRobotHeadingRads(turnSetpoint.getRadians());
 
 		setpoint.speedMetersPerSecond *= turnSetpoint.minus(this.getAngle()).getCos();
 
@@ -240,16 +244,16 @@ public class Module {
 		this.io.setAzimuthAngleRads(Math.atan2(targetAzimuthAngleY, targetAzimuthAngleX), 0.0);
 		this.io.setDriveVelocityRadPerSec(driveVeloRadPerSec, driveAccelRadPerSecSqr, driveFFVolts, belowBrakeModeThreshold);
 
-		Logger.recordOutput("Drive/Module " + this.config.name + "/Target Angle", Rotation2d.fromRadians(Math.atan2(targetModuleAngleY, targetModuleAngleX)));
-		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive Velo MPS", driveVeloMPS, MetersPerSecond);
-		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive Velo RadPerSec", driveVeloRadPerSec, RadiansPerSecond);
-		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive Accel MPSS", driveAccelMPSS, MetersPerSecondPerSecond);
-		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive Accel RadPerSecSqr", driveAccelRadPerSecSqr, RadiansPerSecondPerSecond);
-		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive FF Volts", driveFFVolts, Volts);
-		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive FFX Volts", ffXVolts, Volts);
-		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive FFY Volts", ffYVolts, Volts);
-		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive FF angle", new Rotation2d(ffXVolts, ffYVolts));
-		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive Azimuth angle", new Rotation2d(targetAzimuthAngleX, targetAzimuthAngleY));
+		Logger.recordOutput("Drive/Modules/" + this.config.name + "/Target Angle", Rotation2d.fromRadians(Math.atan2(targetModuleAngleY, targetModuleAngleX)));
+		Logger.recordOutput("Drive/Modules/" + this.config.name + "/Drive Velo MPS", driveVeloMPS, MetersPerSecond);
+		Logger.recordOutput("Drive/Modules/" + this.config.name + "/Drive Velo RadPerSec", driveVeloRadPerSec, RadiansPerSecond);
+		Logger.recordOutput("Drive/Modules/" + this.config.name + "/Drive Accel MPSS", driveAccelMPSS, MetersPerSecondPerSecond);
+		Logger.recordOutput("Drive/Modules/" + this.config.name + "/Drive Accel RadPerSecSqr", driveAccelRadPerSecSqr, RadiansPerSecondPerSecond);
+		Logger.recordOutput("Drive/Modules/" + this.config.name + "/Drive FF Volts", driveFFVolts, Volts);
+		Logger.recordOutput("Drive/Modules/" + this.config.name + "/Drive FFX Volts", ffXVolts, Volts);
+		Logger.recordOutput("Drive/Modules/" + this.config.name + "/Drive FFY Volts", ffYVolts, Volts);
+		Logger.recordOutput("Drive/Modules/" + this.config.name + "/Drive FF angle", new Rotation2d(ffXVolts, ffYVolts));
+		Logger.recordOutput("Drive/Modules/" + this.config.name + "/Drive Azimuth angle", new Rotation2d(targetAzimuthAngleX, targetAzimuthAngleY));
 
 		this.driveVelo = new SwerveModuleState(
 			veloMagnitudeMPS,
@@ -285,13 +289,43 @@ public class Module {
 	public SwerveModuleState driveScaledFF = new SwerveModuleState();
 
 	private void setAzimuthRobotHeadingRads(double azimuthRobotHeadingRads) {
-		this.azimuthGoalState.position = azimuthRobotHeadingRads;
-		this.azimuthGoalState.velocity = 0.0;
-		var newSetpointState = this.azimuthProfile.calculate(RobotConstants.rioUpdatePeriodSecs, this.azimuthSetpointState, this.azimuthGoalState);
-		var ffOut = this.azimuthFF.calculateWithVelocities(this.azimuthSetpointState.velocity, newSetpointState.velocity);
-		this.io.setAzimuthAngleRads(azimuthRobotHeadingRads, azimuthRobotHeadingRads);
+		this.setAzimuthModuleHeadingRads(azimuthRobotHeadingRads - this.config.moduleTransform.getRotation().getRadians());
+	}
 
-		// TODO Continuous azimuth wrapping for expo profile
+	private void setAzimuthModuleHeadingRads(double azimuthModuleHeadingRads) {
+		if (!this.azimuthMotionProfiling) {
+			this.azimuthSetpointState.position = MathUtil.angleModulus(DriveConstants.azimuthEncoderToCarriageRatio.applyUnsigned(this.inputs.azimuthEncoder.getPositionRads()));
+			this.azimuthSetpointState.velocity = DriveConstants.azimuthEncoderToCarriageRatio.applyUnsigned(this.inputs.azimuthEncoder.getVelocityRadsPerSec());
+		}
+		this.azimuthMotionProfiling = true;
+
+		this.azimuthGoalState.position = MathUtil.angleModulus(azimuthModuleHeadingRads);
+		this.azimuthGoalState.velocity = 0.0;
+
+		var unwrappedError = this.azimuthGoalState.position - this.azimuthSetpointState.position;
+		if (Math.abs(unwrappedError) > Math.PI) {
+			if (unwrappedError < 0.0) {
+				this.azimuthGoalState.position += 2.0 * Math.PI;
+			} else {
+				this.azimuthGoalState.position -= 2.0 * Math.PI;
+			}
+		}
+
+		var newSetpointState = this.azimuthProfile.calculate(RobotConstants.rioUpdatePeriodSecs, this.azimuthSetpointState, this.azimuthGoalState);
+
+		var ffOut = this.azimuthFF.calculateWithVelocities(this.azimuthSetpointState.velocity, newSetpointState.velocity);
+
+		Logger.recordOutput("Drive/Modules/" + this.config.name + "/Azimuth/Old Setpoint Rads", this.azimuthSetpointState.position, Radians);
+		this.azimuthSetpointState.position = MathUtil.angleModulus(newSetpointState.position);
+		this.azimuthSetpointState.velocity = newSetpointState.velocity;
+
+		this.io.setAzimuthAngleRads(this.azimuthSetpointState.position, ffOut);
+
+		Logger.recordOutput("Drive/Modules/" + this.config.name + "/Azimuth/Measured Rads", MathUtil.angleModulus(DriveConstants.azimuthEncoderToCarriageRatio.applyUnsigned(this.inputs.azimuthEncoder.getPositionRads())), Radians);
+		Logger.recordOutput("Drive/Modules/" + this.config.name + "/Azimuth/Goal Rads", this.azimuthGoalState.position, Radians);
+		Logger.recordOutput("Drive/Modules/" + this.config.name + "/Azimuth/Setpoint Rads", this.azimuthSetpointState.position, Radians);
+		Logger.recordOutput("Drive/Modules/" + this.config.name + "/Azimuth/Setpoint RadsPerSec", this.azimuthSetpointState.velocity, RadiansPerSecond);
+		Logger.recordOutput("Drive/Modules/" + this.config.name + "/Azimuth/FF Out Volts", ffOut, Volts);
 	}
 
 	/**
@@ -307,6 +341,7 @@ public class Module {
 		this.io.setDriveVolts(volts);
 	}
 	public void runAzimuthVolts(double volts) {
+		this.azimuthMotionProfiling = false;
 		this.io.setAzimuthVolts(volts);
 	}
 
@@ -314,6 +349,7 @@ public class Module {
 		this.io.stopDrive(neutralMode);
 	}
 	public void stopTurn(Optional<NeutralMode> neutralMode) {
+		this.azimuthMotionProfiling = false;
 		this.io.stopAzimuth(neutralMode);
 	}
 
