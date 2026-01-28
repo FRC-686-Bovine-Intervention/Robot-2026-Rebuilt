@@ -220,7 +220,7 @@ public class Drive extends VirtualSubsystem {
 					module.stopDrive(NeutralMode.BRAKE);
 				}
 			})
-			.withName("SysID Translational Quasistatic Forward")
+			.withName("SysID Translational")
 		;
 		SmartDashboard.putData("SysID/Drive/Translational/Quasi Forward", translationalCommandMap.apply(translationalRoutine.quasistatic(SysIdRoutine.Direction.kForward)));
 		SmartDashboard.putData("SysID/Drive/Translational/Quasi Reverse", translationalCommandMap.apply(translationalRoutine.quasistatic(SysIdRoutine.Direction.kReverse)));
@@ -246,7 +246,7 @@ public class Drive extends VirtualSubsystem {
 					module.stopDrive(NeutralMode.BRAKE);
 				}
 			})
-			.withName("SysID Rotational Quasistatic Forward")
+			.withName("SysID Rotational")
 		;
 		SmartDashboard.putData("SysID/Drive/Rotational/Quasi Forward", rotationalCommandMap.apply(rotationalRoutine.quasistatic(SysIdRoutine.Direction.kForward)));
 		SmartDashboard.putData("SysID/Drive/Rotational/Quasi Reverse", rotationalCommandMap.apply(rotationalRoutine.quasistatic(SysIdRoutine.Direction.kReverse)));

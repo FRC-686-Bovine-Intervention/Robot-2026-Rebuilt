@@ -40,7 +40,7 @@ public class Module {
 
 	private static final LoggedTunable<LinearVelocity> brakeModeThreshold = LoggedTunable.from("Drive/Brake Mode Threshold", InchesPerSecond::of, 1);
 
-	private static final LoggedTunable<PIDGains> drivePIDConsts = LoggedTunable.from(
+	private static final LoggedTunable<PIDGains> drivePIDGains = LoggedTunable.from(
 		"Drive/Module/Drive/PID",
 		new PIDGains(
 			0.1,
@@ -48,7 +48,7 @@ public class Module {
 			0
 		)
 	);
-	private static final LoggedTunable<PIDGains> azimuthPIDConsts = LoggedTunable.from(
+	private static final LoggedTunable<PIDGains> azimuthPIDGains = LoggedTunable.from(
 		"Drive/Module/Azimuth/PID",
 		new PIDGains(
 			5*2*Math.PI,
@@ -75,8 +75,8 @@ public class Module {
 		this.io = io;
 		this.config = config;
 
-		this.io.configDrivePID(drivePIDConsts.get());
-		this.io.configAzimuthPID(azimuthPIDConsts.get());
+		this.io.configDrivePID(drivePIDGains.get());
+		this.io.configAzimuthPID(azimuthPIDGains.get());
 
 		for (int i = 0; i < this.modulePositionSampleBuffer.length; i++) {
 			this.modulePositionSampleBuffer[i] = new SwerveModulePosition();
@@ -133,11 +133,11 @@ public class Module {
 		this.modulePosition.distanceMeters = DriveConstants.wheel.radiansToMeters(this.wheelAngularPositionRads);
 		this.moduleState.speedMetersPerSecond = DriveConstants.wheel.radiansToMeters(this.wheelAngularVelocityRadsPerSec);
 
-		if (drivePIDConsts.hasChanged(hashCode())) {
-			this.io.configDrivePID(drivePIDConsts.get());
+		if (drivePIDGains.hasChanged(this.hashCode())) {
+			this.io.configDrivePID(drivePIDGains.get());
 		}
-		if (azimuthPIDConsts.hasChanged(hashCode())) {
-			this.io.configAzimuthPID(azimuthPIDConsts.get());
+		if (azimuthPIDGains.hasChanged(this.hashCode())) {
+			this.io.configAzimuthPID(azimuthPIDGains.get());
 		}
 
 		// this.driveMotorActiveFaultsAlert.updateFrom(this.inputs.driveMotorFaults.activeFaults);
@@ -268,6 +268,13 @@ public class Module {
 		this.io.setDriveVolts(volts);
 	}
 
+	public void runDriveVolts(double volts) {
+		this.io.setDriveVolts(volts);
+	}
+	public void runAzimuthVolts(double volts) {
+		this.io.setAzimuthVolts(volts);
+	}
+
 	public void stopDrive(Optional<NeutralMode> neutralMode) {
 		this.io.stopDrive(neutralMode);
 	}
@@ -308,10 +315,18 @@ public class Module {
 		return this.getModuleState().speedMetersPerSecond;
 	}
 
-	public double getDriveAppliedVolts() {
-		return this.inputs.driveMotor.motor.getAppliedVolts();
-	}
-	public double getDriveStatorCurrentAmps() {
-		return this.inputs.driveMotor.motor.getStatorCurrentAmps();
-	}
+	public double getDriveAppliedVolts()        {return this.inputs.driveMotor.motor.getAppliedVolts();}
+	public double getDriveStatorCurrentAmps()   {return this.inputs.driveMotor.motor.getStatorCurrentAmps();}
+	public double getDriveSupplyCurrentAmps()   {return this.inputs.driveMotor.motor.getSupplyCurrentAmps();}
+	public double getDriveTorqueCurrentAmps()   {return this.inputs.driveMotor.motor.getTorqueCurrentAmps();}
+	public double getDriveTempCelsius()         {return this.inputs.driveMotor.motor.getDeviceTempCel();}
+
+	public double getAzimuthAppliedVolts()      {return this.inputs.azimuthMotor.motor.getAppliedVolts();}
+	public double getAzimuthStatorCurrentAmps() {return this.inputs.azimuthMotor.motor.getStatorCurrentAmps();}
+	public double getAzimuthSupplyCurrentAmps() {return this.inputs.azimuthMotor.motor.getSupplyCurrentAmps();}
+	public double getAzimuthTorqueCurrentAmps() {return this.inputs.azimuthMotor.motor.getTorqueCurrentAmps();}
+	public double getAzimuthTempCelsius()       {return this.inputs.azimuthMotor.motor.getDeviceTempCel();}
+
+	public double getAzimuthMotorCarriagePositionRads()       {return DriveConstants.azimuthMotorToCarriageRatio.applyUnsigned(this.inputs.azimuthMotor.encoder.getPositionRads());}
+	public double getAzimuthMotorCarriageVelocityRadsPerSec() {return DriveConstants.azimuthMotorToCarriageRatio.applyUnsigned(this.inputs.azimuthMotor.encoder.getVelocityRadsPerSec());}
 }
