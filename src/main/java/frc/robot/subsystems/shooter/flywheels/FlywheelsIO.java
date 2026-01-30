@@ -17,9 +17,9 @@ public interface FlywheelsIO {
 
 	public default void updateInputs(FlywheelsIOInputs inputs) {}
 
-	public default void setDriverVelocityRadsPerSec(double velocityRadsPerSec, double accelerationRadsPerSecSqr, double feedforwardVolts) {}
+	public default void setVelocityRadsPerSec(double velocityRadsPerSec, double accelerationRadsPerSecSqr, double feedforwardVolts) {}
 
-	public default void stopDriver(Optional<NeutralMode> neutralMode) {}
+	public default void stop(Optional<NeutralMode> neutralMode) {}
 
-	public default void configDriverPID(PIDConstants pidConstants) {}
+	public default void configPID(PIDConstants pidConstants) {}
 }

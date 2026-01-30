@@ -2,6 +2,8 @@ package frc.robot.subsystems.shooter.flywheels;
 
 import java.util.Optional;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -15,14 +17,14 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.util.Units;
-import frc.robot.constants.HardwareDevices;
 import frc.util.NeutralMode;
 import frc.util.PIDConstants;
+import frc.util.hardwareID.can.CANDevice;
 import frc.util.loggerUtil.inputs.LoggedEncodedMotor.EncodedMotorStatusSignalCache;
 
 public class FlywheelsIOTalonFX implements FlywheelsIO {
-	private final TalonFX leftDriverMotor = HardwareDevices.leftFlywheelMotorID.talonFX();
-	private final TalonFX rightDriverMotor = HardwareDevices.rightFlywheelMotorID.talonFX();
+	private final TalonFX leftDriverMotor;
+	private final TalonFX rightDriverMotor;
 
 	private final BaseStatusSignal[] refreshSignals;
 	private final EncodedMotorStatusSignalCache leftDriverCache;
@@ -34,7 +36,9 @@ public class FlywheelsIOTalonFX implements FlywheelsIO {
 	private final VelocityVoltage flywheelVelocityRequest = new VelocityVoltage(0.0);
 	private final StrictFollower followerRequest = new StrictFollower(0);
 
-	public FlywheelsIOTalonFX() {
+	public FlywheelsIOTalonFX(CANDevice leftMotor, CANDevice rightMotor) {
+		this.leftDriverMotor = leftMotor.talonFX();
+		this.rightDriverMotor = rightMotor.talonFX();
 		var driverConfig = new TalonFXConfiguration();
 		driverConfig.MotorOutput
 			.withNeutralMode(NeutralModeValue.Coast)
@@ -45,6 +49,9 @@ public class FlywheelsIOTalonFX implements FlywheelsIO {
 			.withInverted(InvertedValue.Clockwise_Positive)
 		;
 		this.rightDriverMotor.getConfigurator().apply(driverConfig);
+		driverConfig.MotorOutput
+			.withInverted(InvertedValue.Clockwise_Positive)
+		;
 
 		this.leftDriverCache = EncodedMotorStatusSignalCache.from(this.leftDriverMotor);
 		this.righttDriverCache = EncodedMotorStatusSignalCache.from(this.rightDriverMotor);
@@ -75,7 +82,7 @@ public class FlywheelsIOTalonFX implements FlywheelsIO {
 	}
 
 	@Override
-	public void setDriverVelocityRadsPerSec(double velocityRadsPerSec, double accelerationRadsPerSecSqr, double feedforwardVolts) {
+	public void setVelocityRadsPerSec(double velocityRadsPerSec, double accelerationRadsPerSecSqr, double feedforwardVolts) {
 		this.leftDriverMotor.setControl(this.flywheelVelocityRequest
 			.withVelocity(Units.radiansToRotations(velocityRadsPerSec))
 			.withAcceleration(Units.radiansToRotations(accelerationRadsPerSecSqr))
@@ -85,17 +92,20 @@ public class FlywheelsIOTalonFX implements FlywheelsIO {
 	}
 
 	@Override
-	public void stopDriver(Optional<NeutralMode> neutralMode) {
+	public void stop(Optional<NeutralMode> neutralMode) {
 		var controlRequest = NeutralMode.selectControlRequest(neutralMode, this.neutralRequest, this.coastRequest, this.brakeRequest);
 		this.leftDriverMotor.setControl(controlRequest);
 		this.rightDriverMotor.setControl(controlRequest);
 	}
 
 	@Override
-	public void configDriverPID(PIDConstants pidConstants) {
+	public void configPID(PIDConstants pidConstants) {
 		var config = new Slot0Configs();
 		this.leftDriverMotor.getConfigurator().refresh(config);
 		pidConstants.update(config);
 		this.leftDriverMotor.getConfigurator().apply(config);
+		Logger.recordOutput("DEBUG/flywheel pid/p", pidConstants.kP());
+		Logger.recordOutput("DEBUG/flywheel pid/i", pidConstants.kI());
+		Logger.recordOutput("DEBUG/flywheel pid/d", pidConstants.kD());
 	}
 }

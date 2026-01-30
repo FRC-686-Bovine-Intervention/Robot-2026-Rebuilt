@@ -18,12 +18,12 @@ public class Flywheels extends SubsystemBase {
 	private final FlywheelsIO io;
 	private final FlywheelsIOInputsAutoLogged inputs = new FlywheelsIOInputsAutoLogged();
 
-	private static final LoggedTunable<PIDConstants> driverPIDConsts = LoggedTunable.from("Shooter/Flywheels/Driver/PID", new PIDConstants(
+	private static final LoggedTunable<PIDConstants> pidGains = LoggedTunable.from("Shooter/Flywheels/Driver/PID", new PIDConstants(
 		0,
 		0,
 		0
 	));
-	private static final LoggedTunable<FFConstants> driverFFConsts = LoggedTunable.from("Shooter/Flywheels/Driver/FF", new FFConstants(
+	private static final LoggedTunable<FFConstants> ffGains = LoggedTunable.from("Shooter/Flywheels/Driver/FF", new FFConstants(
 		0,
 		0,
 		0,
@@ -34,15 +34,17 @@ public class Flywheels extends SubsystemBase {
 		0
 	));
 
-	private TrapezoidProfile driverMotionProfile = new TrapezoidProfile(profileConsts.get());
-	private TrapezoidProfile.State driverSetpointState = new TrapezoidProfile.State();
-	private SimpleMotorFeedforward driverFF = new SimpleMotorFeedforward(driverFFConsts.get().kS(), driverFFConsts.get().kV(), driverFFConsts.get().kA());
+	private TrapezoidProfile motionProfile = new TrapezoidProfile(profileConsts.get());
+	private TrapezoidProfile.State setpointState = new TrapezoidProfile.State();
+	private SimpleMotorFeedforward ff = new SimpleMotorFeedforward(ffGains.get().kS(), ffGains.get().kV(), ffGains.get().kA());
 
-	private double driverSurfaceVeloMPS = 0.0;
+	private double surfaceVeloMPS = 0.0;
 
 	public Flywheels(FlywheelsIO io) {
 		super("Shooter/Flywheels");
 		this.io = io;
+
+		this.io.configPID(pidGains.get());
 	}
 
 	@Override
@@ -50,14 +52,33 @@ public class Flywheels extends SubsystemBase {
 		this.io.updateInputs(this.inputs);
 		Logger.processInputs("Inputs/Shooter/Flywheels", this.inputs);
 
-		if (driverPIDConsts.hasChanged(this.hashCode())) {
-			this.io.configDriverPID(driverPIDConsts.get());
+		if (pidGains.hasChanged(this.hashCode())) {
+			var pidConsts = pidGains.get();
+
+			var fixeddriverPIDConsts = new PIDConstants(pidConsts.kP(), pidConsts.kI(), pidConsts.kD());
+			var kP = fixeddriverPIDConsts.kP();
+			var kI = fixeddriverPIDConsts.kI();
+			var kD = fixeddriverPIDConsts.kD();
+			if (kP < 0) {
+				kP = 0;
+			}
+			if (kI < 0) {
+				kI=0;
+			}
+			if (kD < 0) {
+				kD = 0;
+			}
+			var driverPIDConsts = new PIDConstants(kP, kI, kD);
+
+
+			this.io.configPID(driverPIDConsts);
 		}
-		if (driverFFConsts.hasChanged(this.hashCode())) {
-			driverFFConsts.get().update(this.driverFF);
+
+		if (ffGains.hasChanged(this.hashCode())) {
+			ffGains.get().update(this.ff);
 		}
 		if (profileConsts.hasChanged(this.hashCode())) {
-			this.driverMotionProfile = new TrapezoidProfile(profileConsts.get());
+			this.motionProfile = new TrapezoidProfile(profileConsts.get());
 		}
 	}
 
@@ -71,17 +92,17 @@ public class Flywheels extends SubsystemBase {
 
 			@Override
 			public void initialize() {
-				flywheels.driverSetpointState.position = flywheels.driverSurfaceVeloMPS;
-				flywheels.driverSetpointState.velocity = 0.0;
+				flywheels.setpointState.position = flywheels.surfaceVeloMPS;
+				flywheels.setpointState.velocity = 0.0;
 			}
 
 			@Override
 			public void execute() {
 				var goalSurfaceVeloMPS = surfaceVeloSupplierMPS.getAsDouble();
 				var goalState = new TrapezoidProfile.State(goalSurfaceVeloMPS, 0.0);
-				var newDriverSetpoint = flywheels.driverMotionProfile.calculate(RobotConstants.rioUpdatePeriodSecs, flywheels.driverSetpointState, goalState);
-				var driverFFOut = flywheels.driverFF.calculateWithVelocities(flywheels.driverSetpointState.position, newDriverSetpoint.position);
-				flywheels.io.setDriverVelocityRadsPerSec(
+				var newDriverSetpoint = flywheels.motionProfile.calculate(RobotConstants.rioUpdatePeriodSecs, flywheels.setpointState, goalState);
+				var driverFFOut = flywheels.ff.calculateWithVelocities(flywheels.setpointState.position, newDriverSetpoint.position);
+				flywheels.io.setVelocityRadsPerSec(
 					FlywheelConstants.driverMotorToFlywheelRatio.inverse().applyUnsigned(FlywheelConstants.driverFlywheelWheel.metersToRadians(newDriverSetpoint.position)),
 					FlywheelConstants.driverMotorToFlywheelRatio.inverse().applyUnsigned(FlywheelConstants.driverFlywheelWheel.metersToRadians(newDriverSetpoint.velocity)),
 					driverFFOut
@@ -90,7 +111,7 @@ public class Flywheels extends SubsystemBase {
 
 			@Override
 			public void end(boolean interrupted) {
-				flywheels.io.stopDriver(NeutralMode.DEFAULT);
+				flywheels.io.stop(NeutralMode.DEFAULT);
 			}
 		};
 	}

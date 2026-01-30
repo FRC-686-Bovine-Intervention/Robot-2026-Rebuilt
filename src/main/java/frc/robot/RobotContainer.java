@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
+import frc.robot.constants.HardwareDevices;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
@@ -42,6 +43,7 @@ import frc.robot.subsystems.rollers.indexer.IndexerIO;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.flywheels.Flywheels;
 import frc.robot.subsystems.shooter.flywheels.FlywheelsIO;
+import frc.robot.subsystems.shooter.flywheels.FlywheelsIOTalonFX;
 import frc.robot.subsystems.shooter.hood.Hood;
 import frc.robot.subsystems.shooter.hood.HoodIO;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
@@ -89,7 +91,9 @@ public class RobotContainer {
 						.toArray(ModuleIO[]::new)
 				);
 				this.shooter = new Shooter(
-					new Flywheels(new FlywheelsIO() {}),
+					new Flywheels(new FlywheelsIOTalonFX(HardwareDevices.leftFlywheelMotorMasterID, HardwareDevices.leftFlywheelMotorSlaveID)),
+					new Flywheels(new FlywheelsIOTalonFX(HardwareDevices.centerFlywheelMotorMasterID, HardwareDevices.centerFlywheelMotorSlaveID)),
+					new Flywheels(new FlywheelsIOTalonFX(HardwareDevices.rightFlywheelMotorMasterID, HardwareDevices.rightFlywheelMotorSlaveID)),
 					new Hood(new HoodIO() {})
 				);
 				this.intake = new Intake(
@@ -111,6 +115,8 @@ public class RobotContainer {
 						.toArray(ModuleIO[]::new)
 				);
 				this.shooter = new Shooter(
+					new Flywheels(new FlywheelsIO() {}),
+					new Flywheels(new FlywheelsIO() {}),
 					new Flywheels(new FlywheelsIO() {}),
 					new Hood(new HoodIO() {})
 				);
@@ -134,6 +140,8 @@ public class RobotContainer {
 					new ModuleIO(){}
 				);
 				this.shooter = new Shooter(
+					new Flywheels(new FlywheelsIO() {}),
+					new Flywheels(new FlywheelsIO() {}),
 					new Flywheels(new FlywheelsIO() {}),
 					new Hood(new HoodIO() {})
 				);
