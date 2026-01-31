@@ -27,6 +27,4 @@ public interface IntakeSlamIO {
 	public default void stop(Optional<NeutralMode> neutralMode) {}
 
 	public default void configPID(PIDConstants pidConstants) {}
-
-	public default void clearMotorStickyFaults(long bitmask) {}
 }

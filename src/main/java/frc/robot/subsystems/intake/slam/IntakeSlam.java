@@ -6,7 +6,6 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import org.littletonrobotics.junction.Logger;
 
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
@@ -29,7 +28,7 @@ public class IntakeSlam extends SubsystemBase {
 	private static final LoggedTunable<PIDConstants> pidConsts = LoggedTunable.from(
 		"Intake/Slam/PID",
 		new PIDConstants(
-			25.0,
+			0.0,
 			0.0,
 			0.0
 		)
@@ -63,8 +62,6 @@ public class IntakeSlam extends SubsystemBase {
 
 		this.resetInternalAngleRads(IntakeSlamConstants.sensorToMechanism.applyUnsigned(this.inputs.encoder.getPositionRads() + IntakeSlamConstants.cancoderZeroOffset.in(Radians)));
 		this.velocityRadsPerSec = IntakeSlamConstants.sensorToMechanism.applyUnsigned(this.inputs.encoder.getVelocityRadsPerSec());
-
-		var maxAngle = Units.degreesToRadians(80.052205);
 
 		Logger.recordOutput("Intake/Slam/Angle/Measured", this.getAngleRads(), Radians);
 		Logger.recordOutput("Intake/Slam/Velocity/Measured", this.getVelocityRadsPerSec(), RadiansPerSecond);

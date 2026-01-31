@@ -12,15 +12,15 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.util.NeutralMode;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 
-public class Rollers extends SubsystemBase {
-	private final RollersIO io;
-	private final RollersIOInputsAutoLogged inputs = new RollersIOInputsAutoLogged();
+public class IntakeRollers extends SubsystemBase {
+	private final IntakeRollersIO io;
+	private final IntakeRollersIOInputsAutoLogged inputs = new IntakeRollersIOInputsAutoLogged();
 
 	private static final LoggedTunable<Voltage> idleVoltage = LoggedTunable.from("Intake/Rollers/Idle Voltage", Volts::of, 0.0);
 	private static final LoggedTunable<Voltage> intakeVoltage = LoggedTunable.from("Intake/Rollers/Intake Voltage", Volts::of, 0.0);
 	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Intake/Rollers/Eject Voltage", Volts::of, 0.0);
 
-	public Rollers(RollersIO io) {
+	public IntakeRollers(IntakeRollersIO io) {
 		super("Intake/Rollers");
 		this.io = io;
 	}

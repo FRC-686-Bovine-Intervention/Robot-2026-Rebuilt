@@ -22,8 +22,6 @@ import frc.robot.constants.HardwareDevices;
 import frc.robot.constants.RobotConstants;
 import frc.util.NeutralMode;
 import frc.util.PIDConstants;
-import frc.util.faults.DeviceFaults;
-import frc.util.faults.DeviceFaults.FaultType;
 import frc.util.loggerUtil.inputs.LoggedEncodedMotor.EncodedMotorStatusSignalCache;
 import frc.util.loggerUtil.inputs.LoggedEncoder.EncoderStatusSignalCache;
 
@@ -102,11 +100,9 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 
 		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.encoderStatusSignalCache.getStatusSignals());
 		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.motorStatusSignalCache.encoder().getStatusSignals());
-		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency.div(2), this.motorStatusSignalCache.motor().getStatusSignals());
-		// BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.deviceFaultUpdateFrequency, FaultType.getFaultStatusSignals(this.motor));
-		// BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.deviceFaultUpdateFrequency, FaultType.getStickyFaultStatusSignals(this.motor));
-		// this.cancoder.optimizeBusUtilization();
-		// this.motor.optimizeBusUtilization();
+		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.motorStatusSignalCache.motor().getStatusSignals());
+		this.cancoder.optimizeBusUtilization();
+		this.motor.optimizeBusUtilization();
 	}
 
 	@Override
@@ -131,6 +127,7 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 			.withPosition(Units.radiansToRotations(positionRads))
 			.withVelocity(Units.radiansToRotations(velocityRadsPerSec))
 			.withFeedForward(feedforwardVolts)
+			.withSlot(0)
 		);
 	}
 
@@ -146,19 +143,5 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 		this.motor.getConfigurator().refresh(config);
 		pidConstants.update(config);
 		this.motor.getConfigurator().apply(config);
-	}
-
-	@Override
-	public void clearMotorStickyFaults(long bitmask) {
-		if (bitmask == DeviceFaults.noneMask) { return; }
-		if (bitmask == DeviceFaults.allMask) {
-			this.motor.clearStickyFaults();
-		} else {
-			for (var faultType : FaultType.possibleTalonFXFaults) {
-				if (faultType.isPartOf(bitmask)) {
-					faultType.clearStickyFaultOn(this.motor);
-				}
-			}
-		}
 	}
 }

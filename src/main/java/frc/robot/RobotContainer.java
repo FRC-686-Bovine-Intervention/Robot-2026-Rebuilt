@@ -35,7 +35,12 @@ import frc.robot.subsystems.drive.odometry.OdometryTimestampIO;
 import frc.robot.subsystems.drive.odometry.OdometryTimestampIOOdometryThread;
 import frc.robot.subsystems.drive.odometry.OdometryTimestampIOSim;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.rollers.RollersIO;
+import frc.robot.subsystems.intake.rollers.IntakeRollers;
+import frc.robot.subsystems.intake.rollers.IntakeRollersIO;
+import frc.robot.subsystems.intake.slam.IntakeSlam;
+import frc.robot.subsystems.intake.slam.IntakeSlamIO;
+import frc.robot.subsystems.intake.slam.IntakeSlamIOSim;
+import frc.robot.subsystems.intake.slam.IntakeSlamIOTalonFX;
 import frc.robot.subsystems.rollers.Rollers;
 import frc.robot.subsystems.rollers.indexer.Indexer;
 import frc.robot.subsystems.rollers.indexer.IndexerIO;
@@ -93,7 +98,8 @@ public class RobotContainer {
 					new Hood(new HoodIO() {})
 				);
 				this.intake = new Intake(
-					new frc.robot.subsystems.intake.rollers.Rollers(new RollersIO() {})
+					new IntakeRollers(new IntakeRollersIO() {}),
+					new IntakeSlam(new IntakeSlamIOTalonFX())
 				);
 				this.rollers = new Rollers(
 					new Indexer(new IndexerIO() {})
@@ -115,7 +121,8 @@ public class RobotContainer {
 					new Hood(new HoodIO() {})
 				);
 				this.intake = new Intake(
-					new frc.robot.subsystems.intake.rollers.Rollers(new RollersIO() {})
+					new IntakeRollers(new IntakeRollersIO() {}),
+					new IntakeSlam(new IntakeSlamIOSim())
 				);
 				this.rollers = new Rollers(
 					new Indexer(new IndexerIO() {})
@@ -138,7 +145,8 @@ public class RobotContainer {
 					new Hood(new HoodIO() {})
 				);
 				this.intake = new Intake(
-					new frc.robot.subsystems.intake.rollers.Rollers(new RollersIO() {})
+					new IntakeRollers(new IntakeRollersIO() {}),
+					new IntakeSlam(new IntakeSlamIO() {})
 				);
 				this.rollers = new Rollers(
 					new Indexer(new IndexerIO() {})
@@ -293,6 +301,7 @@ public class RobotContainer {
 			}
 		});
 		this.intake.rollers.setDefaultCommand(this.intake.rollers.idle());
+		this.intake.slam.setDefaultCommand(this.intake.slam.retract());
 
 		// Setup position reset command
 		// this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(
