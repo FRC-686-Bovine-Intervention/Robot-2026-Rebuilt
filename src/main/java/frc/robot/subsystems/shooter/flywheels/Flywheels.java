@@ -55,21 +55,14 @@ public class Flywheels extends SubsystemBase {
 		if (pidGains.hasChanged(this.hashCode())) {
 			var pidConsts = pidGains.get();
 
-			var fixeddriverPIDConsts = new PIDConstants(pidConsts.kP(), pidConsts.kI(), pidConsts.kD());
-			var kP = fixeddriverPIDConsts.kP();
-			var kI = fixeddriverPIDConsts.kI();
-			var kD = fixeddriverPIDConsts.kD();
-			if (kP < 0) {
-				kP = 0;
-			}
-			if (kI < 0) {
-				kI=0;
-			}
-			if (kD < 0) {
-				kD = 0;
-			}
+			var kP = Math.max(pidConsts.kP(), 0.0);
+			var kI = Math.max(pidConsts.kI(), 0.0);
+			var kD = Math.max(pidConsts.kD(), 0.0); 
+			// var kP = (0<fixeddriverPIDConsts.kP()) ? fixeddriverPIDConsts.kP()  : 0; 
+			// var kI = (0<fixeddriverPIDConsts.kI()) ? fixeddriverPIDConsts.kI()  : 0; 
+			// var kD = (0<fixeddriverPIDConsts.kD()) ? fixeddriverPIDConsts.kD()  : 0; 
+		
 			var driverPIDConsts = new PIDConstants(kP, kI, kD);
-
 
 			this.io.configPID(driverPIDConsts);
 		}
