@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.ExtensionSubsystem;
 import frc.util.LoggedTracer;
 import frc.util.NeutralMode;
 import frc.util.PIDConstants;
@@ -138,12 +139,12 @@ public class IntakeSlam extends SubsystemBase {
 		};
 	}
 
-	public Command deploy() {
+	public Command deploy(ExtensionSubsystem extension) {
 		final var slam = this;
 		return new Command() {
 			{
 				this.setName("Deploy");
-				this.addRequirements(slam);
+				this.addRequirements(slam, extension);
 			}
 
 			@Override
