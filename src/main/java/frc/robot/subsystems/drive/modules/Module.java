@@ -44,16 +44,16 @@ public class Module {
 		"Drive/Module/Drive/PID",
 		new PIDGains(
 			0.1,
-			0,
-			0
+			0.0,
+			0.0
 		)
 	);
 	private static final LoggedTunable<PIDGains> azimuthPIDGains = LoggedTunable.from(
 		"Drive/Module/Azimuth/PID",
 		new PIDGains(
-			5*2*Math.PI,
-			0*2*Math.PI,
-			0*2*Math.PI
+			5.0,
+			0.0,
+			0.0
 		)
 	);
 

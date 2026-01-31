@@ -98,9 +98,9 @@ public class GyroIOPigeon2 implements GyroIO {
 
 		inputs.odometryGyroRotation = this.quatBuffer.popAll();
 
-		inputs.yawVelocityRadsPerSec = this.yawVelocitySignal.getValueAsDouble();
-		inputs.pitchVelocityRadsPerSec = this.pitchVelocitySignal.getValueAsDouble();
-		inputs.rollVelocityRadsPerSec = this.rollVelocitySignal.getValueAsDouble();
+		inputs.yawVelocityRadsPerSec = Units.degreesToRadians(this.yawVelocitySignal.getValueAsDouble());
+		inputs.pitchVelocityRadsPerSec = Units.degreesToRadians(this.pitchVelocitySignal.getValueAsDouble());
+		inputs.rollVelocityRadsPerSec = Units.degreesToRadians(this.rollVelocitySignal.getValueAsDouble());
 	}
 
 	@Override

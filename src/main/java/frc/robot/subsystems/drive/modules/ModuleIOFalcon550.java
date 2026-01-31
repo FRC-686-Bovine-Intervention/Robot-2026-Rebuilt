@@ -19,12 +19,15 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.ClosedLoopSlot;
+import com.revrobotics.spark.FeedbackSensor;
+import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.util.Units;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -41,6 +44,8 @@ public class ModuleIOFalcon550 implements ModuleIO {
 	protected final TalonFX driveMotor;
 	protected final SparkMax azimuthMotor;
 	protected final AbsoluteEncoder azimuthAbsoluteEncoder;
+	protected final SparkClosedLoopController azimuthClosedLoopController;
+	private final SparkMaxConfig azimuthConfig;
 
 	private final BaseStatusSignal[] refreshSignals;
 	private final BaseStatusSignal[] driveMotorConnectedSignals;
@@ -55,12 +60,12 @@ public class ModuleIOFalcon550 implements ModuleIO {
 	private final CoastOut coastOutRequest = new CoastOut();
 	private final StaticBrake staticBrakeRequest = new StaticBrake();
 
-	protected final PIDController azimuthPID = new PIDController(0, 0, 0);
-
 	public ModuleIOFalcon550(ModuleConstants config) {
 		this.driveMotor = config.driveMotorID.talonFX();
 		this.azimuthMotor = config.azimuthMotorID.sparkMax(MotorType.kBrushless);
 		this.azimuthAbsoluteEncoder = this.azimuthMotor.getAbsoluteEncoder();
+		this.azimuthClosedLoopController = this.azimuthMotor.getClosedLoopController();
+		this.azimuthConfig = new SparkMaxConfig();
 
 		var driveConfig = new TalonFXConfiguration();
 		driveConfig.MotorOutput
@@ -84,23 +89,27 @@ public class ModuleIOFalcon550 implements ModuleIO {
 
 		this.driveMotor.getConfigurator().apply(driveConfig);
 
-		var azimuthConfig = new SparkMaxConfig();
-		azimuthConfig
+		this.azimuthConfig
 			.idleMode(IdleMode.kCoast)
 			.inverted(false)
 			.smartCurrentLimit(40)
 		;
-		azimuthConfig.absoluteEncoder
+		this.azimuthConfig.absoluteEncoder
 			.zeroOffset(config.encoderZeroOffset.in(Rotations))
 			.inverted(true)
 		;
-		azimuthConfig.signals.absoluteEncoderPositionPeriodMs((int) DriveConstants.odometryLoopFrequency.asPeriod().in(Milliseconds));
+		this.azimuthConfig.signals
+			.absoluteEncoderPositionPeriodMs((int) DriveConstants.odometryLoopFrequency.asPeriod().in(Milliseconds))
+		;
+		this.azimuthConfig.closedLoop
+			.positionWrappingEnabled(true)
+			.positionWrappingMinInput(0.0)
+			.positionWrappingMaxInput(1.0)
+			.feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
+			.allowedClosedLoopError(Units.degreesToRotations(1.0), ClosedLoopSlot.kSlot0)
+		;
 
-		this.azimuthMotor.configure(azimuthConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-		this.azimuthPID.enableContinuousInput(
-			0,
-			1
-		);
+		this.azimuthMotor.configure(this.azimuthConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
 		this.driveMotorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.driveMotor);
 		this.refreshSignals = new BaseStatusSignal[] {
@@ -153,6 +162,7 @@ public class ModuleIOFalcon550 implements ModuleIO {
 	public void setDriveVolts(double volts) {
 		this.driveMotor.setControl(this.driveVolts.withOutput(volts));
 	}
+
 	@Override
 	public void setDriveVelocityRadPerSec(double velocityRadPerSec, double accelerationRadPerSecSqr, double feedforwardVolts, boolean overrideWithBrakeMode) {
 		this.driveMotor.setControl(this.driveVelocity
@@ -167,13 +177,14 @@ public class ModuleIOFalcon550 implements ModuleIO {
 	public void setAzimuthVolts(double volts) {
 		this.azimuthMotor.setVoltage(volts);
 	}
+
 	@Override
 	public void setAzimuthAngleRads(double angleRads, double feedforwardVolts) {
-		this.setAzimuthVolts(
-			feedforwardVolts + this.azimuthPID.calculate(
-				this.azimuthAbsoluteEncoder.getPosition(),
-				Units.radiansToRotations(angleRads)
-			)
+		this.azimuthClosedLoopController.setSetpoint(
+			Units.radiansToRotations(angleRads),
+			ControlType.kPosition,
+			ClosedLoopSlot.kSlot0,
+			feedforwardVolts
 		);
 	}
 
@@ -182,6 +193,7 @@ public class ModuleIOFalcon550 implements ModuleIO {
 		var controlRequest = NeutralMode.selectControlRequest(neutralMode, this.neutralOutRequest, this.coastOutRequest, this.staticBrakeRequest);
 		this.driveMotor.setControl(controlRequest);
 	}
+
 	@Override
 	public void stopAzimuth(Optional<NeutralMode> neutralMode) {
 		//TODO Reimplement module turn brake mode
@@ -190,15 +202,21 @@ public class ModuleIOFalcon550 implements ModuleIO {
 	}
 
 	@Override
-	public void configDrivePID(PIDGains pidConstants) {
+	public void configDrivePID(PIDGains pidGains) {
 		var config = new Slot0Configs();
 		this.driveMotor.getConfigurator().refresh(config);
-		pidConstants.update(config);
+		pidGains.update(config);
 		this.driveMotor.getConfigurator().apply(config);
 	}
+
 	@Override
-	public void configAzimuthPID(PIDGains pidConstants) {
-		pidConstants.update(this.azimuthPID);
+	public void configAzimuthPID(PIDGains pidGains) {
+		this.azimuthConfig.closedLoop
+			.p(pidGains.kP())
+			.i(pidGains.kI())
+			.d(pidGains.kD())
+		;
+		this.azimuthMotor.configure(this.azimuthConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 	}
 
 	@Override
@@ -214,6 +232,7 @@ public class ModuleIOFalcon550 implements ModuleIO {
 			}
 		}
 	}
+
 	@Override
 	public void clearAzimuthStickyFaults(long bitmask) {
 		if (bitmask == DeviceFaults.noneMask) {return;}
