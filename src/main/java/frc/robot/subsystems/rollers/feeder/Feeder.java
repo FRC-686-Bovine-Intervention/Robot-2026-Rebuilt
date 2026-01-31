@@ -1,4 +1,4 @@
-package frc.robot.subsystems.rollers.indexer;
+package frc.robot.subsystems.rollers.feeder;
 
 import static edu.wpi.first.units.Units.Volts;
 
@@ -12,31 +12,31 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.util.NeutralMode;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 
-public class Indexer extends SubsystemBase {
-	private final IndexerIO io;
-	private final IndexerIOInputsAutoLogged inputs = new IndexerIOInputsAutoLogged();
+public class Feeder extends SubsystemBase {
+	private final FeederIO io;
+	private final FeederIOInputsAutoLogged inputs = new FeederIOInputsAutoLogged();
 
-	private static final LoggedTunable<Voltage> idleVoltage = LoggedTunable.from("Rollers/Indexer/Idle Voltage", Volts::of, 0.0);
-	private static final LoggedTunable<Voltage> indexVoltage = LoggedTunable.from("Rollers/Indexer/Index Voltage", Volts::of, 0.0);
-	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Rollers/Indexer/Eject Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> idleVoltage = LoggedTunable.from("Rollers/Feeder/Idle Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> feederVoltage = LoggedTunable.from("Rollers/Feeder/Index Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Rollers/Feeder/Eject Voltage", Volts::of, 0.0);
 
-	public Indexer(IndexerIO io) {
-		super("Rollers/Indexer");
+	public Feeder(FeederIO io) {
+		super("Rollers/Feeder");
 		this.io = io;
 	}
 
 	@Override
 	public void periodic() {
 		this.io.updateInputs(this.inputs);
-		Logger.processInputs("Inputs/Rollers/Indexer", this.inputs);
+		Logger.processInputs("Inputs/Rollers/Feeder", this.inputs);
 	}
 
 	private Command genVoltageCommand(String name, DoubleSupplier voltsSupplier) {
-		final var indexer = this;
+		final var feeder = this;
 		return new Command() {
 			{
 				this.setName(name);
-				this.addRequirements(indexer);
+				this.addRequirements(feeder);
 			}
 
 			@Override
@@ -46,12 +46,12 @@ public class Indexer extends SubsystemBase {
 
 			@Override
 			public void execute() {
-				indexer.io.setVolts(voltsSupplier.getAsDouble());
+				feeder.io.setVolts(voltsSupplier.getAsDouble());
 			}
 
 			@Override
 			public void end(boolean interrupted) {
-				indexer.io.stop(NeutralMode.DEFAULT);
+				feeder.io.stop(NeutralMode.DEFAULT);
 			}
 		};
 	}
@@ -65,8 +65,8 @@ public class Indexer extends SubsystemBase {
 
 	public Command index() {
 		return this.genVoltageCommand(
-			"Index",
-			() -> indexVoltage.get().in(Volts)
+			"Feed",
+			() -> feederVoltage.get().in(Volts)
 		);
 	}
 
