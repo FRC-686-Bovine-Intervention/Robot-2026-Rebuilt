@@ -40,6 +40,12 @@ public class HardwareDevices {
 	public static final CANDevice backRightDriveMotorID = canivore.id(4);
 	public static final CANDevice backRightTurnMotorID = rio.id(4);
 
+
+	// Climber
+	// | Hook
+	public static final CANDevice climberHookMotorID = canivore.id(5);
+
+
 	// RIO
 	public static final PWMPort ledPort = PWMPort.port(0);
 }

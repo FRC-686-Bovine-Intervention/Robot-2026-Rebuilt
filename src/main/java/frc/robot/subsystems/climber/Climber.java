@@ -1,5 +1,7 @@
 package frc.robot.subsystems.climber;
 
-public class Climber {
 
+//@RequiredArgsConstructor
+public class Climber {
+	//public final Hook hook;
 }
