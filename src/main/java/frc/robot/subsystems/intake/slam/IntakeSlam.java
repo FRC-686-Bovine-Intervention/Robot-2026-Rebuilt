@@ -8,14 +8,17 @@ import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.subsystems.ExtensionSubsystem;
+import frc.robot.subsystems.ExtensionSystem;
 import frc.util.LoggedTracer;
 import frc.util.NeutralMode;
 import frc.util.PIDConstants;
 import frc.util.loggerUtil.tunables.LoggedTunable;
+import frc.util.robotStructure.FourBarLinkage;
+import frc.util.robotStructure.angle.ArmMech;
 import lombok.Getter;
 
 public class IntakeSlam extends SubsystemBase {
@@ -38,11 +41,22 @@ public class IntakeSlam extends SubsystemBase {
 	private final Alert motorDisconnectedAlert = new Alert("Intake/Slam/Alerts", "Motor Disconnected", AlertType.kError);
 	private final Alert motorDisconnectedGlobalAlert = new Alert("Intake Slam Motor Disconnected!", AlertType.kError);
 
+	private final FourBarLinkage mechLinkage = new FourBarLinkage(
+		IntakeSlamConstants.mechDriverAxle2d,
+		IntakeSlamConstants.mechFollowerAxle2d,
+		IntakeSlamConstants.mechDriverLength,
+		IntakeSlamConstants.mechFollowerLength,
+		IntakeSlamConstants.mechCouplerLength,
+		false
+	);
+	public final ArmMech driverMech = new ArmMech(IntakeSlamConstants.mechDriverBase3d);
+	public final ArmMech followerMech = new ArmMech(IntakeSlamConstants.mechFollowerBase3d);
+	public final ArmMech couplerMech = new ArmMech(IntakeSlamConstants.mechCouplerBase3d);
+
 	@Getter
 	private double angleRads = 0.0;
 	@Getter
 	private double velocityRadsPerSec = 0.0;
-	private double motorOffsetRads = 0.0;
 
 	public IntakeSlam(IntakeSlamIO io) {
 		super("Intake/Slam");
@@ -61,11 +75,16 @@ public class IntakeSlam extends SubsystemBase {
 		Logger.processInputs("Inputs/Intake/Slam", this.inputs);
 		LoggedTracer.logEpoch("CommandScheduler Periodic/Subsystem/Intake Slam/Process Inputs");
 
-		this.resetInternalAngleRads(IntakeSlamConstants.sensorToMechanism.applyUnsigned(this.inputs.encoder.getPositionRads() + IntakeSlamConstants.cancoderZeroOffset.in(Radians)));
+		this.angleRads = IntakeSlamConstants.sensorToMechanism.applyUnsigned(this.inputs.encoder.getPositionRads() + IntakeSlamConstants.cancoderZeroOffset.in(Radians));
 		this.velocityRadsPerSec = IntakeSlamConstants.sensorToMechanism.applyUnsigned(this.inputs.encoder.getVelocityRadsPerSec());
 
 		Logger.recordOutput("Intake/Slam/Angle/Measured", this.getAngleRads(), Radians);
 		Logger.recordOutput("Intake/Slam/Velocity/Measured", this.getVelocityRadsPerSec(), RadiansPerSecond);
+
+		this.mechLinkage.setDriverAngleRads(Math.sin(Timer.getTimestamp()));
+		this.driverMech.setRads(this.mechLinkage.getHorizonBaseDriverCouplerAngleRads());
+		this.followerMech.setRads(this.mechLinkage.getHorizonBaseFollowerCouplerAngleRads());
+		this.couplerMech.setRads(this.mechLinkage.getDriverRelativeCouplerAngleRads());
 
 		if (pidConsts.hasChanged(this.hashCode())) {
 			this.io.configPID(pidConsts.get());
@@ -76,11 +95,6 @@ public class IntakeSlam extends SubsystemBase {
 
 		LoggedTracer.logEpoch("CommandScheduler Periodic/Subsystem/Intake Slam/Periodic");
 		LoggedTracer.logEpoch("CommandScheduler Periodic/Subsystem/Intake Slam");
-	}
-
-	private void resetInternalAngleRads(double angleRads) {
-		this.angleRads = angleRads;
-		this.motorOffsetRads = this.angleRads - IntakeSlamConstants.motorToMechanism.applyUnsigned(this.inputs.motor.encoder.getPositionRads());
 	}
 
 	private void setAngleGoalRads(double angleRads) {
@@ -139,7 +153,7 @@ public class IntakeSlam extends SubsystemBase {
 		};
 	}
 
-	public Command deploy(ExtensionSubsystem extension) {
+	public Command deploy(ExtensionSystem extension) {
 		final var slam = this;
 		return new Command() {
 			{

@@ -22,7 +22,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.constants.RobotConstants;
-import frc.robot.subsystems.ExtensionSubsystem;
+import frc.robot.subsystems.ExtensionSystem;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -64,7 +64,7 @@ public class RobotContainer {
 	public final Intake intake;
 	public final Rollers rollers;
 	public final Climber climber;
-	public final ExtensionSubsystem extension;
+	public final ExtensionSystem extension;
 
 	// Vision
 	public final ApriltagVision apriltagVision;
@@ -159,7 +159,7 @@ public class RobotContainer {
 			}
 		}
 
-		this.extension = new ExtensionSubsystem();
+		this.extension = new ExtensionSystem();
 
 		// Initialize vision systems with camera pipelines
 		this.apriltagVision = new ApriltagVision(
