@@ -3,6 +3,7 @@ package frc.robot.subsystems.shooter.flywheels;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 
+import java.util.Optional;
 import java.util.function.DoubleSupplier;
 
 import org.littletonrobotics.junction.Logger;
@@ -33,15 +34,15 @@ public class Flywheels extends SubsystemBase {
 	private static final LoggedTunable<FFConstants> driverFFConsts = LoggedTunable.from("Shooter/Flywheels/Driver/FF", new FFConstants(
 		0,
 		0,
-		0.75,
+		0.175,
 		0
 	));
 	private static final LoggedTunable<TrapezoidProfile.Constraints> profileConsts = LoggedTunable.from("Shooter/Flywheels/Profile", new TrapezoidProfile.Constraints(
 		0,
 		0
 	));
-	private static final LoggedTunableNumber motorPulleyTeethCount = LoggedTunable.from("Shooter/Flywheels/Gear Ratio/Motor Pulley Teeth Count", 16);
-	private static final LoggedTunableNumber flywheelPullyTeethCount = LoggedTunable.from("Shooter/Flywheels/Gear Ratio/Flywheel Pulley Teeth Count", 33);
+	private static final LoggedTunableNumber motorPulleyTeethCount = LoggedTunable.from("Shooter/Flywheels/Gear Ratio/Motor Pulley Teeth Count", 33);
+	private static final LoggedTunableNumber flywheelPullyTeethCount = LoggedTunable.from("Shooter/Flywheels/Gear Ratio/Flywheel Pulley Teeth Count", 16);
 	private static final LoggedTunable<Distance> flywheelRadius = LoggedTunable.from("Shooter/Flywheels/Gear Ratio/Flywheel Radius Inches", Inches::of, 2.0);
 
 	private GearRatio gearRatio = new GearRatio().sprocket(motorPulleyTeethCount.getAsDouble()).sprocket(flywheelPullyTeethCount.getAsDouble());
@@ -63,12 +64,12 @@ public class Flywheels extends SubsystemBase {
 		this.io.updateInputs(this.inputs);
 		Logger.processInputs("Inputs/Shooter/Flywheels", this.inputs);
 
-		this.driverSurfaceVeloMPS = this.flywheel.radiansToMeters(this.gearRatio.applyUnsigned(this.inputs.leftDriverMotor.encoder.getVelocityRadsPerSec()));
+		this.driverSurfaceVeloMPS = this.flywheel.radiansToMeters(this.gearRatio.applyUnsigned(this.inputs.masterMotor.encoder.getVelocityRadsPerSec()));
 
 		Logger.recordOutput("Shooter/Flywheels/Measured Velo MPS", this.driverSurfaceVeloMPS, MetersPerSecond);
 
 		if (driverPIDConsts.hasChanged(this.hashCode())) {
-			this.io.configDriverPID(driverPIDConsts.get());
+			this.io.configPID(driverPIDConsts.get());
 		}
 		if (driverFFConsts.hasChanged(this.hashCode())) {
 			driverFFConsts.get().update(this.driverFF);
@@ -82,6 +83,31 @@ public class Flywheels extends SubsystemBase {
 		if (flywheelRadius.hasChanged(this.hashCode())) {
 			this.flywheel = LinearRelation.wheelRadius(flywheelRadius.get());
 		}
+	}
+
+	public Command stop(Optional<NeutralMode> neutralMode) {
+		final var flywheels = this;
+		return new Command() {
+			{
+				this.setName("Stop");
+				this.addRequirements(flywheels);
+			}
+
+			@Override
+			public void initialize() {
+				flywheels.io.stop(neutralMode);
+			}
+
+			@Override
+			public void end(boolean interrupted) {
+				flywheels.io.stop(NeutralMode.DEFAULT);
+			}
+
+			@Override
+			public boolean runsWhenDisabled() {
+				return true;
+			}
+		};
 	}
 
 	public Command runAtSurfaceVelo(DoubleSupplier surfaceVeloSupplierMPS) {
@@ -104,7 +130,7 @@ public class Flywheels extends SubsystemBase {
 				var goalState = new TrapezoidProfile.State(goalSurfaceVeloMPS, 0.0);
 				var newDriverSetpoint = flywheels.driverMotionProfile.calculate(RobotConstants.rioUpdatePeriodSecs, flywheels.driverSetpointState, goalState);
 				var driverFFOut = flywheels.driverFF.calculateWithVelocities(flywheels.driverSetpointState.position, newDriverSetpoint.position);
-				flywheels.io.setDriverVelocityRadsPerSec(
+				flywheels.io.setVelocityRadsPerSec(
 					flywheels.gearRatio.inverse().applyUnsigned(flywheels.flywheel.metersToRadians(newDriverSetpoint.position)),
 					flywheels.gearRatio.inverse().applyUnsigned(flywheels.flywheel.metersToRadians(newDriverSetpoint.velocity)),
 					driverFFOut
@@ -113,7 +139,7 @@ public class Flywheels extends SubsystemBase {
 
 			@Override
 			public void end(boolean interrupted) {
-				flywheels.io.stopDriver(NeutralMode.DEFAULT);
+				flywheels.io.stop(NeutralMode.DEFAULT);
 			}
 		};
 	}

@@ -15,19 +15,18 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.util.Units;
+import frc.robot.constants.HardwareDevices;
 import frc.util.NeutralMode;
 import frc.util.PIDConstants;
 import frc.util.loggerUtil.inputs.LoggedEncodedMotor.EncodedMotorStatusSignalCache;
 
 public class FlywheelsIOTalonFX implements FlywheelsIO {
-	private final TalonFX leftDriverMotor = new TalonFX(11);
-	private final TalonFX rightDriverMotor = new TalonFX(13);
-	private final TalonFX slaveleftDriverMotor = new TalonFX(12);
-	private final TalonFX slaverightDriverMotor = new TalonFX(14);
+	private final TalonFX masterMotor = HardwareDevices.shooterMasterMotorID.talonFX();
+	private final TalonFX slave1Motor = HardwareDevices.shooterSlave1MotorID.talonFX();
 
 	private final BaseStatusSignal[] refreshSignals;
-	private final EncodedMotorStatusSignalCache leftDriverCache;
-	private final EncodedMotorStatusSignalCache rightDriverCache;
+	private final EncodedMotorStatusSignalCache masterCache;
+	private final EncodedMotorStatusSignalCache slave1Cache;
 
 	private final NeutralOut neutralRequest = new NeutralOut();
 	private final CoastOut coastRequest = new CoastOut();
@@ -39,71 +38,62 @@ public class FlywheelsIOTalonFX implements FlywheelsIO {
 		var driverConfig = new TalonFXConfiguration();
 		driverConfig.MotorOutput
 			.withNeutralMode(NeutralModeValue.Coast)
-			.withInverted(InvertedValue.Clockwise_Positive)
-		;
-		this.leftDriverMotor.getConfigurator().apply(driverConfig);
-		this.slaveleftDriverMotor.getConfigurator().apply(driverConfig);
-		driverConfig.MotorOutput
 			.withInverted(InvertedValue.CounterClockwise_Positive)
 		;
-		this.rightDriverMotor.getConfigurator().apply(driverConfig);
-		this.slaverightDriverMotor.getConfigurator().apply(driverConfig);
+		this.masterMotor.getConfigurator().apply(driverConfig);
+		this.slave1Motor.getConfigurator().apply(driverConfig);
 
-		this.leftDriverCache = EncodedMotorStatusSignalCache.from(this.leftDriverMotor);
-		this.rightDriverCache = EncodedMotorStatusSignalCache.from(this.rightDriverMotor);
+		this.masterCache = EncodedMotorStatusSignalCache.from(this.masterMotor);
+		this.slave1Cache = EncodedMotorStatusSignalCache.from(this.slave1Motor);
 
 		this.refreshSignals = new BaseStatusSignal[] {
-			this.leftDriverCache.encoder().position(),
-			this.leftDriverCache.encoder().velocity(),
-			this.leftDriverCache.motor().appliedVoltage(),
-			this.leftDriverCache.motor().statorCurrent(),
-			this.leftDriverCache.motor().supplyCurrent(),
-			this.leftDriverCache.motor().torqueCurrent(),
-			this.leftDriverCache.motor().deviceTemperature(),
-			this.rightDriverCache.encoder().position(),
-			this.rightDriverCache.encoder().velocity(),
-			this.rightDriverCache.motor().appliedVoltage(),
-			this.rightDriverCache.motor().statorCurrent(),
-			this.rightDriverCache.motor().supplyCurrent(),
-			this.rightDriverCache.motor().torqueCurrent(),
-			this.rightDriverCache.motor().deviceTemperature(),
+			this.masterCache.encoder().position(),
+			this.masterCache.encoder().velocity(),
+			this.masterCache.motor().appliedVoltage(),
+			this.masterCache.motor().statorCurrent(),
+			this.masterCache.motor().supplyCurrent(),
+			this.masterCache.motor().torqueCurrent(),
+			this.masterCache.motor().deviceTemperature(),
+			this.slave1Cache.encoder().position(),
+			this.slave1Cache.encoder().velocity(),
+			this.slave1Cache.motor().appliedVoltage(),
+			this.slave1Cache.motor().statorCurrent(),
+			this.slave1Cache.motor().supplyCurrent(),
+			this.slave1Cache.motor().torqueCurrent(),
+			this.slave1Cache.motor().deviceTemperature(),
 		};
 	}
 
 	@Override
 	public void updateInputs(FlywheelsIOInputs inputs) {
 		BaseStatusSignal.refreshAll(this.refreshSignals);
-		inputs.leftDriverMotor.updateFrom(this.leftDriverCache);
-		inputs.rightDriverMotor.updateFrom(this.rightDriverCache);
+		inputs.masterMotor.updateFrom(this.masterCache);
+		inputs.slave1Motor.updateFrom(this.slave1Cache);
 	}
 
 	@Override
-	public void setDriverVelocityRadsPerSec(double velocityRadsPerSec, double accelerationRadsPerSecSqr, double feedforwardVolts) {
-		this.leftDriverMotor.setControl(this.flywheelVelocityRequest
+	public void setVelocityRadsPerSec(double velocityRadsPerSec, double accelerationRadsPerSecSqr, double feedforwardVolts) {
+		this.masterMotor.setControl(this.flywheelVelocityRequest
 			.withVelocity(Units.radiansToRotations(velocityRadsPerSec))
 			.withAcceleration(Units.radiansToRotations(accelerationRadsPerSecSqr))
 			.withFeedForward(feedforwardVolts)
 		);
-		this.followerRequest.withLeaderID(this.leftDriverMotor.getDeviceID());
-		this.rightDriverMotor.setControl(this.followerRequest);
-		this.slaveleftDriverMotor.setControl(this.followerRequest);
-		this.slaverightDriverMotor.setControl(this.followerRequest);
+		this.followerRequest.withLeaderID(this.masterMotor.getDeviceID());
+		this.slave1Motor.setControl(this.followerRequest);
 	}
 
 	@Override
-	public void stopDriver(Optional<NeutralMode> neutralMode) {
+	public void stop(Optional<NeutralMode> neutralMode) {
 		var controlRequest = NeutralMode.selectControlRequest(neutralMode, this.neutralRequest, this.coastRequest, this.brakeRequest);
-		this.leftDriverMotor.setControl(controlRequest);
-		this.rightDriverMotor.setControl(controlRequest);
-		this.slaveleftDriverMotor.setControl(controlRequest);
-		this.slaverightDriverMotor.setControl(controlRequest);
+		this.masterMotor.setControl(controlRequest);
+		this.slave1Motor.setControl(controlRequest);
 	}
 
 	@Override
-	public void configDriverPID(PIDConstants pidConstants) {
+	public void configPID(PIDConstants pidConstants) {
 		var config = new Slot0Configs();
-		this.leftDriverMotor.getConfigurator().refresh(config);
+		this.masterMotor.getConfigurator().refresh(config);
 		pidConstants.update(config);
-		this.leftDriverMotor.getConfigurator().apply(config);
+		this.masterMotor.getConfigurator().apply(config);
 	}
 }

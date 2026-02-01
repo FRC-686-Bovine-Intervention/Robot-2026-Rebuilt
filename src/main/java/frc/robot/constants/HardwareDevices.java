@@ -40,6 +40,13 @@ public class HardwareDevices {
 	public static final CANDevice backRightDriveMotorID = rio.id(4);
 	public static final CANDevice backRightTurnMotorID = rio.id(4);
 
+	// Shooter
+	public static final CANDevice shooterMasterMotorID = rio.id(11);
+	public static final CANDevice shooterSlave1MotorID = rio.id(12);
+
+	// Feeder
+	public static final CANDevice feederMotorID = rio.id(10);
+
 	// RIO
 	public static final PWMPort ledPort = PWMPort.port(0);
 }

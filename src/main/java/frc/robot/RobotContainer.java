@@ -9,7 +9,6 @@ package frc.robot;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 
-
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.event.EventLoop;
@@ -17,6 +16,10 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.constants.RobotConstants;
+import frc.robot.subsystems.rollers.Rollers;
+import frc.robot.subsystems.rollers.feeder.Feeder;
+import frc.robot.subsystems.rollers.feeder.FeederIO;
+import frc.robot.subsystems.rollers.feeder.FeederIOTalonFX;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.flywheels.Flywheels;
 import frc.robot.subsystems.shooter.flywheels.FlywheelsIO;
@@ -24,6 +27,7 @@ import frc.robot.subsystems.shooter.flywheels.FlywheelsIOTalonFX;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.robot.subsystems.vision.object.ObjectVision;
 import frc.util.Cooldown;
+import frc.util.NeutralMode;
 import frc.util.controllers.XboxController;
 import frc.util.robotStructure.Mechanism3d;
 
@@ -31,6 +35,7 @@ public class RobotContainer {
 	// Subsystems
 	// public final Drive drive;
 	public final Shooter shooter;
+	public final Rollers rollers;
 
 	// Vision
 	public final ApriltagVision apriltagVision;
@@ -64,6 +69,9 @@ public class RobotContainer {
 				this.shooter = new Shooter(
 					new Flywheels(new FlywheelsIOTalonFX())
 				);
+				this.rollers = new Rollers(
+					new Feeder(new FeederIOTalonFX())
+				);
 			}
 			case SIM -> {
 				// this.drive = new Drive(
@@ -75,6 +83,9 @@ public class RobotContainer {
 				// );
 				this.shooter = new Shooter(
 					new Flywheels(new FlywheelsIO() {})
+				);
+				this.rollers = new Rollers(
+					new Feeder(new FeederIO() {})
 				);
 			}
 			default -> {
@@ -88,6 +99,9 @@ public class RobotContainer {
 				// );
 				this.shooter = new Shooter(
 					new Flywheels(new FlywheelsIO() {})
+				);
+				this.rollers = new Rollers(
+					new Feeder(new FeederIO() {})
 				);
 			}
 		}
@@ -245,6 +259,9 @@ public class RobotContainer {
 		// 	)
 		// )));
 
+		this.shooter.flywheels.setDefaultCommand(this.shooter.flywheels.stop(NeutralMode.DEFAULT));
+		this.rollers.feeder.setDefaultCommand(this.rollers.feeder.idle());
+
 		this.driveController.y().toggleOnTrue(this.shooter.flywheels.runAtSurfaceVelo(
 			Cooldown.incrementingStepper(
 				"Shooter/Flywheels/Custom",
@@ -257,5 +274,7 @@ public class RobotContainer {
 				this.driveController.povDown()
 			)
 		));
+
+		this.driveController.x().whileTrue(this.rollers.feeder.feed());
 	}
 }
