@@ -25,4 +25,6 @@ public final class FieldConstants {
 		}
 		apriltagLayout = a;
 	}
+
+	public static final Distance fuelHeight = Inches.of(5.91);
 }
