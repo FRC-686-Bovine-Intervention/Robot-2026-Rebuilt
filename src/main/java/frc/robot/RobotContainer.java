@@ -12,6 +12,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
@@ -307,7 +309,14 @@ public class RobotContainer {
 		// )));
 
 		this.driveController.rightBumper().onTrue(new Command() {
-			Cluster cluster;
+			{
+				setName("Auto Intake");
+				addRequirements(drive.translationSubsystem, drive.rotationalSubsystem);
+			}
+
+			Cluster chosenCluster;
+			Translation2d start;
+			boolean hasReachedStart = false;
 
 			@Override
 			public void initialize() {
@@ -317,11 +326,53 @@ public class RobotContainer {
 					fuelPoints.add(ball.fieldPos);
 				}
 				var clusters = Cluster.formClusters(fuelPoints, 0.3);
+				var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
+				double chosenClusterScore = 0;
+				for (var cluster : clusters) {
+					var center = cluster.getWeightedCenter();
+					double dist = robotPose.getTranslation().getDistance(center);
+					double density = cluster.getDensity();
+					double count = cluster.getMemberCount();
+					double score = (density * count)/dist; 	//Will end up changing
+
+					if (score > chosenClusterScore) {
+						chosenCluster = cluster;
+						chosenClusterScore = score;
+					}
+				}
+
+				start = chosenCluster.getClosest(robotPose.getTranslation());
 			}
 
 			@Override
 			public void execute() {
-
+				var pose = RobotState.getInstance().getEstimatedGlobalPose();
+				if (!hasReachedStart) {
+					var startRobotRelative = new Pose2d(start, Rotation2d.kZero).relativeTo(pose).getTranslation();
+					var angle = new Rotation2d(Math.atan2(startRobotRelative.getY(), startRobotRelative.getX()));
+					drive.translationSubsystem.simplePIDTo(() -> startRobotRelative);
+					drive.rotationalSubsystem.pidControlledHeading(() -> angle);
+				} else {
+					chosenCluster.resetReduction();
+					chosenCluster.reduceToAllAheadOf(pose);
+					Translation2d[] line = chosenCluster.getLineOfBestFit();
+					Translation2d closestLinePoint;
+					Translation2d farthestLinePoint;
+					if (line[0].getDistance(pose.getTranslation()) < line[1].getDistance(pose.getTranslation())) {
+						closestLinePoint = line[0];
+						farthestLinePoint = line[1];
+					} else {
+						closestLinePoint = line[1];
+						farthestLinePoint = line[0];
+					}
+					closestLinePoint = new Pose2d(closestLinePoint, Rotation2d.kZero).relativeTo(pose).getTranslation();
+					farthestLinePoint = new Pose2d(farthestLinePoint, Rotation2d.kZero).relativeTo(pose).getTranslation();
+					var velocity = farthestLinePoint.minus(closestLinePoint);
+					velocity = velocity.div(velocity.getNorm()).times(3);
+					var angle = new Rotation2d(Math.atan2(velocity.getY(), velocity.getX()));
+					drive.translationSubsystem.driveVelocity(velocity.getX(), velocity.getY());
+					drive.rotationalSubsystem.pidControlledHeading(() -> angle);
+				}
 			}
 		});
 	}

@@ -1,12 +1,16 @@
 package frc.util.misc;
 
 import java.util.*;
+
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 
 public class Cluster {
 	private final double density;
 	private final int memberCount;
-	private final List<Translation2d> members;
+	private List<Translation2d> members;
+	private List<Translation2d> hiddenMembers;
 	private final List<Translation2d> hull;
 	private final Translation2d center;
 	private final Translation2d weightedCenter;
@@ -19,6 +23,7 @@ public class Cluster {
 
 		this.center = center(hull);
 		this.weightedCenter = weightedCenter(members);
+		this.hiddenMembers = new ArrayList<>();
 	}
 
 	public double getDensity() {
@@ -73,6 +78,66 @@ public class Cluster {
 		return weightedCenter;
 	}
 
+	public void reduceToAllAheadOf(Pose2d pose) {
+		for (var point : members) {
+			Pose2d pointPose = new Pose2d(point, Rotation2d.kZero);
+			if (pointPose.relativeTo(pose).getX() <= 0) {
+				hiddenMembers.add(point);
+				members.remove(point);
+			}
+		}
+	}
+
+	public void resetReduction() {
+		for (var point : hiddenMembers) {
+			members.add(point);
+			hiddenMembers.remove(point);
+		}
+	}
+
+	/**
+	 *
+	 * @return the line of best fit between all the points in field space, denoted as p1 and p2.
+	 */
+	public Translation2d[] getLineOfBestFit() {
+		if (memberCount < 2) {
+			throw new IllegalArgumentException("Need at least 2 points");
+		}
+
+		double meanX = weightedCenter.getX();
+		double meanY = weightedCenter.getY();
+
+		double sxx = 0;
+		double syy = 0;
+		double sxy = 0;
+
+		for (Translation2d p : members) {
+			double dx = p.getX() - meanX;
+			double dy = p.getY() - meanY;
+			sxx += dx * dx;
+			syy += dy * dy;
+			sxy += dx * dy;
+		}
+
+		double theta = 0.5 * Math.atan2(2 * sxy, sxx - syy);
+		Translation2d direction = new Translation2d(Math.cos(theta), Math.sin(theta));
+
+		double tMin = Double.POSITIVE_INFINITY;
+		double tMax = Double.NEGATIVE_INFINITY;
+
+		for (Translation2d p : members) {
+			Translation2d v = p.minus(weightedCenter);
+			double t = v.getX() * direction.getX() + v.getY() * direction.getY();
+
+			tMin = Math.min(tMin, t);
+			tMax = Math.max(tMax, t);
+		}
+
+		Translation2d start = center.plus(direction.times(tMin));
+		Translation2d end   = center.plus(direction.times(tMax));
+
+		return new Translation2d[]{start, end};
+	}
 
 	public static List<Cluster> formClusters(List<Translation2d> points, double absorbRadius) {
 		int n = points.size();
