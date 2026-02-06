@@ -33,11 +33,15 @@ public class ObjectVision {
 	private static final LoggedTunableNumber confidenceDecayPerSecond =    LoggedTunable.from("Vision/Object/Confidence/Decay Per Second", 3);
 	private static final LoggedTunableNumber detargetConfidenceThreshold = LoggedTunable.from("Vision/Object/Target Threshold/Detarget", 0.5);
 
-	private List<TrackedObject> trackedObjects = new ArrayList<>(0);
+	private List<List<TrackedObject>> allTrackedObjects = new ArrayList<>(0);
 
 	public ObjectVision(ObjectPipeline... pipelines) {
 		System.out.println("[Init ObjectVision] Instantiating ObjectVision");
 		this.pipelines = pipelines;
+
+		for (int i = 0; i < ObjectVisionConstants.trackableObjects.length; i++) {
+			allTrackedObjects.add(new ArrayList<>());
+		}
 	}
 
 	public void periodic() {
@@ -46,43 +50,58 @@ public class ObjectVision {
 			var frames = pipeline.getFrames();
 			var loggingKey = "Vision/Objects/Results/" + pipeline.pipelineIndex + "/";
 			for (var frame : frames) {
-				List<TrackedObject> frameTargets = new ArrayList<>();
+				List<List<TrackedObject>> allFrameTargets = new ArrayList<>();
+				for (int i = 0; i < ObjectVisionConstants.trackableObjects.length; i++) {
+					allFrameTargets.add(new ArrayList<>());
+				}
+
 				for (int i = 0; i < frame.targets.length; i++) {
 					var target = TrackedObject.from(pipeline.camera.mount, frame.targets[i]);
 					if (target.isPresent()) {
-						frameTargets.add(target.get());
+						allFrameTargets.get(target.get().type.classId).add(target.get());
 					}
 				}
 
-				for (var trackedObject : trackedObjects) {
-					trackedObject.resetUpdated();
-				}
-				// Update tracked objects
-				for (var frameTarget : frameTargets) {
+
+				for (var trackedObjects : allTrackedObjects) {
 					for (var trackedObject : trackedObjects) {
+						trackedObject.resetUpdated();
 						trackedObject.decayConfidence(confidenceDecayPerSecond.getAsDouble());
-
-						if (trackedObject.fieldPos.getDistance(frameTarget.fieldPos) < updateDistanceThreshold.get().in(Meters) && !trackedObject.updated) {
-							trackedObject.updateWithFiltering(frameTarget);
-						} else {
-							trackedObjects.add(frameTarget);
+					}
+				}
+				for (int i = 0; i < allFrameTargets.size(); i++) {
+					var frameTargets = allFrameTargets.get(i);
+					var trackedObjects = allTrackedObjects.get(i);
+					for (int j = 0; j < frameTargets.size(); j++) {
+						var frameTarget = frameTargets.get(j);
+						for (var trackedObject : trackedObjects) {
+							if (trackedObject.fieldPos.getDistance(frameTarget.fieldPos) < updateDistanceThreshold.get().in(Meters) && !trackedObject.updated) {
+								trackedObject.updateWithFiltering(frameTarget);
+							} else {
+								trackedObjects.add(frameTarget);
+							}
 						}
+					}
+				}
 
+				List<List<Pose3d>> allLoggedTargets = new ArrayList<>();
+				for (int i = 0; i < ObjectVisionConstants.trackableObjects.length; i++) {
+					allLoggedTargets.add(new ArrayList<>());
+				}
+				for (int i = 0; i < allTrackedObjects.size(); i++) {
+					var trackedObjects = allTrackedObjects.get(i);
+					var loggedTargets = allLoggedTargets.get(i);
+					
+					for (var trackedObject : trackedObjects) {
 						if (trackedObject.confidence < detargetConfidenceThreshold.getAsDouble()) {
 							trackedObjects.remove(trackedObject);
 						}
+
+						loggedTargets.add(trackedObject.toASPose());
 					}
 				}
-
-				List<List<Pose3d>> loggedTargets = new ArrayList<>();
 				for (int i = 0; i < ObjectVisionConstants.trackableObjects.length; i++) {
-					loggedTargets.add(new ArrayList<>());
-				}
-				for (int i = 0; i < trackedObjects.size(); i++) {
-					loggedTargets.get(i).add(trackedObjects.get(i).toASPose());
-				}
-				for (int i = 0; i < ObjectVisionConstants.trackableObjects.length; i++) {
-					Logger.recordOutput(loggingKey + "Targets/" + ObjectVisionConstants.trackableObjects[i].className, (Pose3d[]) loggedTargets.get(i).toArray());
+					Logger.recordOutput(loggingKey + "Targets/" + ObjectVisionConstants.trackableObjects[i].className, (Pose3d[]) allLoggedTargets.get(i).toArray());
 				}
 			}
 		}
