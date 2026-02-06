@@ -7,9 +7,12 @@ package frc.robot;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
@@ -17,6 +20,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import frc.robot.auto.AutoManager;
@@ -50,6 +54,8 @@ import frc.util.Perspective;
 import frc.util.controllers.Joystick;
 import frc.util.controllers.XboxController;
 import frc.util.robotStructure.Mechanism3d;
+import frc.util.misc.Cluster;
+import frc.robot.subsystems.vision.object.ObjectVision.TrackedObject;
 
 public class RobotContainer {
 	// Subsystems
@@ -301,5 +307,24 @@ public class RobotContainer {
 		// 		Rotation2d.kZero
 		// 	)
 		// )));
+
+		this.driveController.rightBumper().onTrue(new Command() {
+			Cluster cluster;
+
+			@Override
+			public void initialize() {
+				var fuel = objectVision.getTrackedObjectsOfType(0);
+				List<Translation2d> fuelPoints = new ArrayList<>();
+				for (var ball : fuel) {
+					fuelPoints.add(ball.fieldPos);
+				}
+				var clusters = Cluster.formClusters(fuelPoints, 0.3);
+			}
+
+			@Override
+			public void execute() {
+
+			}
+		});
 	}
 }

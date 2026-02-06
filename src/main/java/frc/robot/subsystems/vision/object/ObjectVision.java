@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import javax.sound.midi.Track;
+
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.geometry.Pose3d;
@@ -105,6 +107,18 @@ public class ObjectVision {
 				}
 			}
 		}
+	}
+
+	public List<List<TrackedObject>> getAllTrackedObjects() {
+		return allTrackedObjects;
+	}
+
+	public List<TrackedObject> getTrackedObjectsOfType(TrackableObject type) {
+		return allTrackedObjects.get(type.classId);
+	}
+
+	public List<TrackedObject> getTrackedObjectsOfType(int classId) {
+		return allTrackedObjects.get(classId);
 	}
 
 	public static class TrackedObject {
