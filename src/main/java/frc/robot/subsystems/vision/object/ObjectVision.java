@@ -91,7 +91,7 @@ public class ObjectVision {
 				for (int i = 0; i < allTrackedObjects.size(); i++) {
 					var trackedObjects = allTrackedObjects.get(i);
 					var loggedTargets = allLoggedTargets.get(i);
-					
+
 					for (var trackedObject : trackedObjects) {
 						if (trackedObject.confidence < detargetConfidenceThreshold.getAsDouble()) {
 							trackedObjects.remove(trackedObject);
