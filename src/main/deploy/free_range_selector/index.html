@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Free Range Auto Selector</title>
+    <link rel="icon" href="./media/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="./styles/main.css" />
+    <link rel="stylesheet" href="./styles/field.css" />
+    <link rel="stylesheet" href="./styles/slider.css" />
+    <link rel="stylesheet" href="./styles/controls.css" />
+  </head>
+  <body>
+    <div id="left" class="controls">
+        <div class="logo">
+            <img src="./media/logo.svg" alt="main logo" id="main_logo"/>
+            <!-- <img src="./media/seal.svg" alt="seal" id="seal_logo"/> -->
+        </div>
+        <div class="toggle">
+            <p>Respect Keep Out Box</p>
+            <label class="switch">
+                <input id="respect_keepout" type="checkbox"/>
+                <span class="slider round"></span>
+            </label>
+            <p>Disrespect Keep Out Box</p>
+        </div>
+        <div class="toggle">
+            <p>No Climb</p>
+            <label class="switch">
+                <input id="climb" type="checkbox"/>
+                <span class="slider round"></span>
+            </label>
+            <p>Climb</p>
+        </div>
+        <div class="toggle">
+            <p>No Neutral Zone</p>
+            <label class="switch">
+                <input id="neutralzone" type="checkbox"/>
+                <span class="slider round"></span>
+            </label>
+            <p>Neutral Zone</p>
+        </div>
+		<div class="toggle">
+            <p>Allow Bump</p>
+            <label class="switch">
+                <input id="bump" type="checkbox"/>
+                <span class="slider round"></span>
+            </label>
+            <p>Avoid Bump</p>
+        </div>
+		<div class="toggle">
+            <p>Auto Intake</p>
+            <label class="switch">
+                <input id="autointake" type="checkbox"/>
+                <span class="slider round"></span>
+            </label>
+            <p>Fixed Intake</p>
+        </div>
+		<div class="toggle">
+            <p>Shoot On-The-Move</p>
+            <label class="switch">
+                <input id="sotm" type="checkbox"/>
+                <span class="slider round"></span>
+            </label>
+            <p>Stop To Shoot</p>
+        </div>
+    </div>
+    <div id="field">
+        <div id="keepout">
+            <div class="handle nw"></div>
+            <div class="handle n"></div>
+            <div class="handle ne"></div>
+            <div class="handle e"></div>
+            <div class="handle se"></div>
+            <div class="handle s"></div>
+            <div class="handle sw"></div>
+            <div class="handle w"></div>
+        </div>
+        <div id="fieldbounds">
+            
+        </div>
+    </div>
+    <script src="./scripts/index.js" type="module" defer></script>
+  </body>
+</html>

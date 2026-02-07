@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 844.906">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #603913;
+      }
+
+      .cls-2 {
+        font-family: FreestyleScript-Regular, 'Freestyle Script';
+        font-size: 96.223px;
+      }
+
+      .cls-2, .cls-3 {
+        fill: #fff;
+      }
+
+      .cls-3 {
+        font-family: Impact, Impact;
+        font-size: 186.785px;
+      }
+    </style>
+  </defs>
+  <rect class="cls-1" y="112.594" width="1024" height="492.981"/>
+  <ellipse class="cls-1" cx="512" cy="112.594" rx="512" ry="112.594"/>
+  <ellipse class="cls-1" cx="512" cy="605.575" rx="512" ry="112.594"/>
+  <text class="cls-3" transform="translate(346.921 319.689)"><tspan x="0" y="0">FREE</tspan><tspan x="-73.51" y="224.142">RANGE</tspan></text>
+  <text class="cls-2" transform="translate(240.716 119.289)"><tspan x="0" y="0">100% Farm to Table</tspan></text>
+  <text class="cls-2" transform="translate(265.899 658.32)"><tspan x="0" y="0">Autonomous Routines</tspan></text>
+</svg>
