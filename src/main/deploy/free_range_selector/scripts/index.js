@@ -2,11 +2,15 @@ import { NT4_Client } from "../lib/NT4.js";
 
 const toRobotPrefix = "/FreeRangeSelector/ToRobot/";
 
-const shouldKeepOutName = "KeepOut/ShouldKeepOut";
+const shouldKeepOutName = "KeepOut/ShouldNotKeepOut";
 const keepOutTopLeftName = "KeepOut/TopLeft";
 const keepOutBottomRightName = "KeepOut/BottomRight";
 
 const shouldClimbName = "ShouldClimb";
+const shouldNeutralZoneName = "ShouldNeutralZone";
+const shouldAvoidBumpName = "ShouldAvoidBump";
+const shouldNotAutoIntakeName = "ShouldNotAutoIntake";
+const shouldStopToShootName = "ShouldStopToShoot";
 
 let shouldKeepOut = true;
 let topLeftX = 0;
@@ -34,15 +38,25 @@ window.addEventListener("load", () => {
   );
 
   ntClient.publishTopic(toRobotPrefix + shouldKeepOutName, "boolean");
-  ntClient.publishTopic(toRobotPrefix + keepOutTopLeftName, "double[]");
-  ntClient.publishTopic(toRobotPrefix + keepOutBottomRightName, "double[]");
+  ntClient.publishTopic(toRobotPrefix + keepOutTopLeftName + "X", "double");
+  ntClient.publishTopic(toRobotPrefix + keepOutTopLeftName + "Y", "double");
+  ntClient.publishTopic(toRobotPrefix + keepOutBottomRightName + "X", "double");
+  ntClient.publishTopic(toRobotPrefix + keepOutBottomRightName + "Y", "double");
   ntClient.publishTopic(toRobotPrefix + shouldClimbName, "boolean");
+  ntClient.publishTopic(toRobotPrefix + shouldNeutralZoneName, "boolean");
+  ntClient.publishTopic(toRobotPrefix + shouldAvoidBumpName, "boolean");
+  ntClient.publishTopic(toRobotPrefix + shouldNotAutoIntakeName, "boolean");
+  ntClient.publishTopic(toRobotPrefix + shouldStopToShootName, "boolean");
   ntClient.connect();
 });
 
 const keepOutBoxDOM = document.getElementById("keepout");
 const shouldKeepOutDOM = document.getElementById("respect_keepout");
 const shouldClimbDOM = document.getElementById("climb");
+const shouldNeutralZoneDOM = document.getElementById("neutralzone");
+const shouldAvoidBumpDOM = document.getElementById("bump");
+const shouldNotAutoIntakeDOM = document.getElementById("autointake");
+const shouldStopToShootDOM = document.getElementById("sotm");
 
 window.addEventListener("load", () => {
   bind(shouldKeepOutDOM, () => {
@@ -52,6 +66,22 @@ window.addEventListener("load", () => {
   bind(shouldClimbDOM, () => {
     ntClient.addSample(toRobotPrefix + shouldClimbName, shouldClimbDOM.checked);
     console.log(shouldClimbDOM.checked);
+  });
+  bind(shouldNeutralZoneDOM, () => {
+	ntClient.addSample(toRobotPrefix + shouldNeutralZoneName, shouldNeutralZoneDOM.checked);
+	console.log(shouldNeutralZoneDOM.checked);
+  });
+  bind(shouldAvoidBumpDOM, () => {
+	ntClient.addSample(toRobotPrefix + shouldAvoidBumpName, shouldAvoidBumpDOM.checked);
+	console.log(shouldAvoidBumpDOM.checked);
+  });
+  bind(shouldNotAutoIntakeDOM, () => {
+	ntClient.addSample(toRobotPrefix + shouldNotAutoIntakeName, shouldNotAutoIntakeDOM.checked);
+	console.log(shouldNotAutoIntakeDOM.checked);
+  });
+  bind(shouldStopToShootDOM, () => {
+	ntClient.addSample(toRobotPrefix + shouldStopToShootName, shouldStopToShootDOM.checked);
+	console.log(shouldStopToShootDOM.checked);
   });
 });
 
@@ -105,8 +135,10 @@ function onMove(e) {
   keepOutBoxDOM.style.height = newH + "px";
 
   const corners = getBoxRelativePositions();
-  ntClient.addSample(toRobotPrefix + keepOutTopLeftName, packInt(corners.topLeft, 2));
-  ntClient.addSample(toRobotPrefix + keepOutBottomRightName, packInt(corners.bottomRight, 2));
+  ntClient.addSample(toRobotPrefix + keepOutTopLeftName + "X", corners.topLeft.x);
+  ntClient.addSample(toRobotPrefix + keepOutTopLeftName + "Y", corners.topLeft.y);
+  ntClient.addSample(toRobotPrefix + keepOutBottomRightName + "X", corners.bottomRight.x);
+  ntClient.addSample(toRobotPrefix + keepOutBottomRightName + "Y", corners.bottomRight.y);
 // console.log("Top-left corner (fraction):", corners.topLeft);
 // console.log("Bottom-right corner (fraction):", corners.bottomRight);
 
