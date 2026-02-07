@@ -274,7 +274,7 @@ public class RobotContainer {
 		}).whileTrue(this.drive.rotationalSubsystem.pidControlledHeading(() -> {
 			var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
 			var robotRotation = robotPose.getRotation().getRadians();
-			
+
 			var targetAngleOffset = targetAngle.get().getRadians();
 			var targetAngles = new double[] {
 				0 - targetAngleOffset,
@@ -297,7 +297,7 @@ public class RobotContainer {
 				}
 			}
 
-			return new Rotation2d(targetAngleRads); 
+			return new Rotation2d(targetAngleRads);
 		}));
 
 		// Setup position reset command
