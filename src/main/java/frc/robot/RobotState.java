@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj.Timer;
 import frc.robot.constants.FieldConstants;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.util.loggerUtil.tunables.LoggedTunable;
+import frc.util.misc.ApriltagUtil.AprilTagPair;
 
 public class RobotState {
 	private static RobotState instance;
@@ -202,6 +203,102 @@ public class RobotState {
 		}
 
 		return Optional.of(observation.pose().plus(new Transform2d(odometrySample.get(), this.odometryPose)));
+	}
+
+	public Optional<Pose2d> getRobotPoseFromTags(AprilTagPair pair) {
+		var firstPoseOpt = this.getRobotPoseFromTag(pair.primaryTag);
+		var secondPoseOpt = this.getRobotPoseFromTag(pair.secondaryTag);
+
+		if (firstPoseOpt.isEmpty() && secondPoseOpt.isEmpty()) {
+			return Optional.empty();
+		} else if (firstPoseOpt.isPresent() && secondPoseOpt.isPresent()) {
+			var firstPose = firstPoseOpt.get();
+			var secondPose = secondPoseOpt.get();
+
+			var averagedPose = new Pose2d(
+				firstPose.getTranslation().plus(secondPose.getTranslation()).div(2.0),
+				new Rotation2d(
+					Math.atan2(
+						firstPose.getRotation().getSin() + secondPose.getRotation().getSin(),
+						firstPose.getRotation().getCos() + secondPose.getRotation().getCos()
+					)
+				)
+			);
+
+			return Optional.of(averagedPose);
+		} else if (firstPoseOpt.isPresent()) {
+			return firstPoseOpt;
+		} else {
+			return secondPoseOpt;
+		}
+	}
+
+	public Optional<Pose2d> getRobotPoseFromTags(int... tagIDs) {
+		Pose2d accumulatedPose = new Pose2d();
+		int validPoses = 0;
+
+		for (var tagID : tagIDs) {
+			var poseOpt = this.getRobotPoseFromTag(tagID);
+			if (poseOpt.isPresent()) {
+				var pose = poseOpt.get();
+				accumulatedPose = new Pose2d(
+					accumulatedPose.getTranslation().plus(pose.getTranslation()),
+					new Rotation2d(
+						accumulatedPose.getRotation().getCos() + pose.getRotation().getCos(),
+						accumulatedPose.getRotation().getSin() + pose.getRotation().getSin()
+					)
+				);
+				validPoses++;
+			}
+		}
+
+		if (validPoses == 0) {
+			return Optional.empty();
+		}
+
+		var averagedPose = new Pose2d(
+			accumulatedPose.getTranslation().div(validPoses),
+			new Rotation2d(
+				accumulatedPose.getRotation().getCos() / validPoses,
+				accumulatedPose.getRotation().getSin() / validPoses
+			)
+		);
+
+		return Optional.of(averagedPose);
+	}
+
+	public Optional<Pose2d> getRobotPoseFromTags(AprilTagPair... pairs) {
+		Pose2d accumulatedPose = new Pose2d();
+		int validPoses = 0;
+
+		for (var pair : pairs) {
+			var poseOpt = this.getRobotPoseFromTags(pair);
+			if (poseOpt.isPresent()) {
+				var pose = poseOpt.get();
+				accumulatedPose = new Pose2d(
+					accumulatedPose.getTranslation().plus(pose.getTranslation()),
+					new Rotation2d(
+						accumulatedPose.getRotation().getCos() + pose.getRotation().getCos(),
+						accumulatedPose.getRotation().getSin() + pose.getRotation().getSin()
+					)
+				);
+				validPoses++;
+			}
+		}
+
+		if (validPoses == 0) {
+			return Optional.empty();
+		}
+
+		var averagedPose = new Pose2d(
+			accumulatedPose.getTranslation().div(validPoses),
+			new Rotation2d(
+				accumulatedPose.getRotation().getCos() / validPoses,
+				accumulatedPose.getRotation().getSin() / validPoses
+			)
+		);
+
+		return Optional.of(averagedPose);
 	}
 
 	public static record OdometryObservation(

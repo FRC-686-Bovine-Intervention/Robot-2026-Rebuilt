@@ -7,14 +7,18 @@ import static edu.wpi.first.units.Units.Radians;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import frc.util.flipping.AllianceFlipped;
 import frc.util.geometry.PoseBoundingBoxUtil.BoundingBox;
 import frc.util.geometry.PoseBoundingBoxUtil.OrBox;
 import frc.util.geometry.PoseBoundingBoxUtil.RectangularBoundingBox;
 import frc.util.geometry.PoseBoundingBoxUtil.VerticalLine;
+import frc.util.misc.ApriltagUtil.AprilTagPair;
 
 public final class FieldConstants {
 	public static final Distance fieldLength = Inches.of(651.2);
@@ -87,4 +91,24 @@ public final class FieldConstants {
 		)
 	));
 	public static final AllianceFlipped<OrBox> anyBump = AllianceFlipped.fromFunction((alliance) -> bottomBump.get(alliance).or(topBump.get(alliance)));
+
+	public static final AllianceFlipped<AprilTagPair> hubLeft = new AllianceFlipped<AprilTagPair>(
+		new AprilTagPair(21, 24),
+		new AprilTagPair(5, 8)
+	);
+
+	public static final AllianceFlipped<AprilTagPair> hubRight = new AllianceFlipped<AprilTagPair>(
+		new AprilTagPair(18, 27),
+		new AprilTagPair(2, 11)
+	);
+
+	public static final AllianceFlipped<AprilTagPair> hubFront = new AllianceFlipped<AprilTagPair>(
+		new AprilTagPair(26, 25),
+		new AprilTagPair(10, 9)
+	);
+
+	public static final AllianceFlipped<AprilTagPair> hubRear = new AllianceFlipped<AprilTagPair>(
+		new AprilTagPair(20, 19),
+		new AprilTagPair(4, 3)
+	);
 }
