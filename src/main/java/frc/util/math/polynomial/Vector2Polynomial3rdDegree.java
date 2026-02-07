@@ -1,5 +1,12 @@
 package frc.util.math.polynomial;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonSyntaxException;
+
 public class Vector2Polynomial3rdDegree {
 	private final double[] b;
 	private final double[][] A1;
@@ -49,5 +56,27 @@ public class Vector2Polynomial3rdDegree {
 			result[1] = x[1] + y[1];
 		}
 		return result;
+	}
+
+	public static Vector2Polynomial3rdDegree from(String jsonPath) {
+		Gson parser = new Gson();
+
+		try {
+			System.out.println("Loading polynomial from " + jsonPath);
+			return parser.fromJson(new FileReader(jsonPath), Vector2Polynomial3rdDegree.class);
+		} catch (JsonSyntaxException e) {
+			// TODO Auto-generated catch block
+			System.out.println("Failed to load polynomial from " + jsonPath);
+			e.printStackTrace();
+		} catch (JsonIOException e) {
+			System.out.println("Failed to load polynomial from " + jsonPath);
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			System.out.println("Failed to load polynomial from " + jsonPath);
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
 	}
 }

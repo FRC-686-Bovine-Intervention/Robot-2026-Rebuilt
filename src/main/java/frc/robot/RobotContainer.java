@@ -16,9 +16,11 @@ import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -350,5 +352,7 @@ public class RobotContainer {
 		// 		Rotation2d.kZero
 		// 	)
 		// )));
+
+		this.driveController.rightBumper().whileTrue(shooter.aimingSystem.aimAtHub(RobotState.getInstance()::getEstimatedGlobalPose, drive::getFieldMeasuredSpeeds, () -> new Translation3d(FieldConstants.hubCenter.get(Alliance.Blue))).alongWith(drive.rotationalSubsystem.pidControlledHeading(() -> new Rotation2d(shooter.aimingSystem.shootingCalc.getTargetAzimuthHeadingRads()))));
 	}
 }
