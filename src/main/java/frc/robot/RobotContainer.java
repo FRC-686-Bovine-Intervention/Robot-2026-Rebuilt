@@ -271,7 +271,34 @@ public class RobotContainer {
 				this.drive.getFieldMeasuredSpeeds().vyMetersPerSecond * lookahead.get().in(Seconds)
 			));
 			return FieldConstants.anyBump.getOurs().withinBounds(robotPose.getTranslation()) || FieldConstants.anyBump.getOurs().withinBounds(lookaheadTrans);
-		}).whileTrue(this.drive.rotationalSubsystem.pidControlledHeading(targetAngle::get));
+		}).whileTrue(this.drive.rotationalSubsystem.pidControlledHeading(() -> {
+			var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
+			var robotRotation = robotPose.getRotation().getRadians();
+			
+			var targetAngleOffset = targetAngle.get().getRadians();
+			var targetAngles = new double[] {
+				0 - targetAngleOffset,
+				0 + targetAngleOffset,
+				Math.PI/2 - targetAngleOffset,
+				Math.PI/2 + targetAngleOffset,
+				Math.PI - targetAngleOffset,
+				Math.PI + targetAngleOffset,
+				-Math.PI/2 - targetAngleOffset,
+				-Math.PI/2 + targetAngleOffset,
+			};
+
+			double targetAngleRads = 0;
+			double lowestOffset = Math.PI;
+			for (double targetAngleCandidate : targetAngles) {
+				double candidateOffset = Math.abs(targetAngleCandidate - robotRotation);
+				if (candidateOffset < lowestOffset) {
+					targetAngleRads = targetAngleCandidate;
+					lowestOffset = candidateOffset;
+				}
+			}
+
+			return new Rotation2d(targetAngleRads); 
+		}));
 
 		// Setup position reset command
 		// this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(
