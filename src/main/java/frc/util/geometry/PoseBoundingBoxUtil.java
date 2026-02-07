@@ -2,7 +2,6 @@ package frc.util.geometry;
 
 import static edu.wpi.first.units.Units.Meters;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Distance;
 import frc.util.flipping.AllianceFlipUtil;
@@ -11,9 +10,9 @@ import frc.util.flipping.AllianceFlippable;
 
 public class PoseBoundingBoxUtil {
 	public static interface BoundingBox<Self extends BoundingBox<Self>> extends AllianceFlippable<Self> {
-		public boolean withinBounds(Translation2d trans);
-		public default boolean withinBounds(Pose2d pose) {
-			return withinBounds(pose.getTranslation());
+		public boolean withinBounds(double xMeters, double yMeters);
+		public default boolean withinBounds(Translation2d trans) {
+			return this.withinBounds(trans.getX(), trans.getY());
 		}
 
 		public static RectangularBoundingBox rectangle(Translation2d corner1, Translation2d corner2) {
@@ -47,8 +46,8 @@ public class PoseBoundingBoxUtil {
 		}
 
 		@Override
-		public boolean withinBounds(Translation2d trans) {
-			return (trans.getX() - this.xPosMeters) * this.side >= 0.0;
+		public boolean withinBounds(double xMeters, double yMeters) {
+			return (xMeters - this.xPosMeters) * this.side >= 0.0;
 		}
 
 		@Override
@@ -69,12 +68,12 @@ public class PoseBoundingBoxUtil {
 		}
 
 		@Override
-		public boolean withinBounds(Translation2d trans) {
+		public boolean withinBounds(double xMeters, double yMeters) {
 			return
-				trans.getX() >= this.bottomLeftCorner.getX()
-				&& trans.getX() <= this.topRightCorner.getX()
-				&& trans.getY() >= this.bottomLeftCorner.getY()
-				&& trans.getY() <= this.topRightCorner.getY()
+				xMeters >= this.bottomLeftCorner.getX()
+				&& xMeters <= this.topRightCorner.getX()
+				&& yMeters >= this.bottomLeftCorner.getY()
+				&& yMeters <= this.topRightCorner.getY()
 			;
 		}
 
@@ -99,8 +98,8 @@ public class PoseBoundingBoxUtil {
 		}
 
 		@Override
-		public boolean withinBounds(Translation2d trans) {
-			return this.center.getDistance(trans) <= this.radiusMeters;
+		public boolean withinBounds(double xMeters, double yMeters) {
+			return Math.hypot(xMeters - this.center.getX(), yMeters - this.center.getY()) <= this.radiusMeters;
 		}
 
 		@Override
@@ -120,6 +119,15 @@ public class PoseBoundingBoxUtil {
 			this.boxes = boxes;
 		}
 
+		@Override
+		public boolean withinBounds(double xMeters, double yMeters) {
+			for (var box : this.boxes) {
+				if (box.withinBounds(xMeters, yMeters)) {
+					return true;
+				}
+			}
+			return false;
+		}
 		@Override
 		public boolean withinBounds(Translation2d trans) {
 			for (var box : this.boxes) {
@@ -155,6 +163,15 @@ public class PoseBoundingBoxUtil {
 		}
 
 		@Override
+		public boolean withinBounds(double xMeters, double yMeters) {
+			for (var box : this.boxes) {
+				if (!box.withinBounds(xMeters, yMeters)) {
+					return false;
+				}
+			}
+			return true;
+		}
+		@Override
 		public boolean withinBounds(Translation2d trans) {
 			for (var box : this.boxes) {
 				if (!box.withinBounds(trans)) {
@@ -188,6 +205,10 @@ public class PoseBoundingBoxUtil {
 			this.box = box;
 		}
 
+		@Override
+		public boolean withinBounds(double xMeters, double yMeters) {
+			return !this.box.withinBounds(xMeters, yMeters);
+		}
 		@Override
 		public boolean withinBounds(Translation2d trans) {
 			return !this.box.withinBounds(trans);
