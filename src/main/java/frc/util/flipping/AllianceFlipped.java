@@ -1,5 +1,7 @@
 package frc.util.flipping;
 
+import static edu.wpi.first.units.Units.Meters;
+
 import java.util.function.Function;
 
 import choreo.trajectory.SwerveSample;
@@ -13,6 +15,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import frc.util.flipping.AllianceFlipUtil.FieldFlipType;
 
@@ -60,6 +63,32 @@ public class AllianceFlipped<T> {
 
 	public static <T> AllianceFlipped<T> fromFunction(Function<Alliance, T> generator) {
 		return new AllianceFlipped<>(generator.apply(Alliance.Blue), generator.apply(Alliance.Red));
+	}
+
+	public static AllianceFlipped<Distance> fromBlueXPos(Distance blue) {
+		return AllianceFlipped.fromBlueXPos(blue, AllianceFlipUtil.defaultFlipType);
+	}
+	public static AllianceFlipped<Distance> fromBlueXPos(Distance blue, FieldFlipType flipType) {
+		return new AllianceFlipped<>(Meters.of(blue.in(Meters)), Meters.of(AllianceFlipUtil.flipXPosMeters(blue.in(Meters), flipType)));
+	}
+	public static AllianceFlipped<Distance> fromRedXPos(Distance blue) {
+		return AllianceFlipped.fromRedXPos(blue, AllianceFlipUtil.defaultFlipType);
+	}
+	public static AllianceFlipped<Distance> fromRedXPos(Distance blue, FieldFlipType flipType) {
+		return new AllianceFlipped<>(Meters.of(AllianceFlipUtil.flipXPosMeters(blue.in(Meters), flipType)), Meters.of(blue.in(Meters)));
+	}
+
+	public static AllianceFlipped<Distance> fromBlueYPos(Distance blue) {
+		return AllianceFlipped.fromBlueXPos(blue, AllianceFlipUtil.defaultFlipType);
+	}
+	public static AllianceFlipped<Distance> fromBlueYPos(Distance blue, FieldFlipType flipType) {
+		return new AllianceFlipped<>(Meters.of(blue.in(Meters)), Meters.of(AllianceFlipUtil.flipYPosMeters(blue.in(Meters), flipType)));
+	}
+	public static AllianceFlipped<Distance> fromRedYPos(Distance blue) {
+		return AllianceFlipped.fromRedXPos(blue, AllianceFlipUtil.defaultFlipType);
+	}
+	public static AllianceFlipped<Distance> fromRedYPos(Distance blue, FieldFlipType flipType) {
+		return new AllianceFlipped<>(Meters.of(AllianceFlipUtil.flipYPosMeters(blue.in(Meters), flipType)), Meters.of(blue.in(Meters)));
 	}
 
 	public static <T extends AllianceFlippable<T>> AllianceFlipped<T> fromBlue(T blue) {

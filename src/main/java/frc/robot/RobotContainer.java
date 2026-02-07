@@ -4,12 +4,18 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Seconds;
 
 import java.util.Arrays;
 import java.util.Set;
 
+import org.littletonrobotics.junction.Logger;
+
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
@@ -19,8 +25,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
+import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
@@ -49,6 +57,7 @@ import frc.robot.subsystems.vision.object.ObjectVision;
 import frc.util.Perspective;
 import frc.util.controllers.Joystick;
 import frc.util.controllers.XboxController;
+import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.robotStructure.Mechanism3d;
 
 public class RobotContainer {
@@ -292,6 +301,31 @@ public class RobotContainer {
 				drive.rotationalSubsystem.stop();
 			}
 		});
+
+		this.automationsLoop.bind(() -> {
+			var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
+
+			var flCorner = robotPose.getTranslation().plus(RobotConstants.flBumperCorner.rotateBy(robotPose.getRotation()));
+			var frCorner = robotPose.getTranslation().plus(RobotConstants.frBumperCorner.rotateBy(robotPose.getRotation()));
+			var blCorner = robotPose.getTranslation().plus(RobotConstants.blBumperCorner.rotateBy(robotPose.getRotation()));
+			var brCorner = robotPose.getTranslation().plus(RobotConstants.brBumperCorner.rotateBy(robotPose.getRotation()));
+
+			Logger.recordOutput("CORNER DETECT/alliance zone/FL", FieldConstants.allianceZone.getOurs().withinBounds(flCorner));
+			Logger.recordOutput("CORNER DETECT/alliance zone/FR", FieldConstants.allianceZone.getOurs().withinBounds(frCorner));
+			Logger.recordOutput("CORNER DETECT/alliance zone/BL", FieldConstants.allianceZone.getOurs().withinBounds(blCorner));
+			Logger.recordOutput("CORNER DETECT/alliance zone/BR", FieldConstants.allianceZone.getOurs().withinBounds(brCorner));
+		});
+
+		var lookahead = LoggedTunable.from("Automations/Bump Mitigation/Lookahead Time", Seconds::of, 0.5);
+		var targetAngle = LoggedTunable.from("Automations/Bump Mitigation/Target Angle", Degrees, Rotation2d.fromDegrees(15.0));
+		new Trigger(this.automationsLoop, () -> {
+			var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
+			var lookaheadTrans = robotPose.getTranslation().plus(new Translation2d(
+				this.drive.getFieldMeasuredSpeeds().vxMetersPerSecond * lookahead.get().in(Seconds),
+				this.drive.getFieldMeasuredSpeeds().vyMetersPerSecond * lookahead.get().in(Seconds)
+			));
+			return FieldConstants.anyBump.getOurs().withinBounds(robotPose.getTranslation()) || FieldConstants.anyBump.getOurs().withinBounds(lookaheadTrans);
+		}).whileTrue(this.drive.rotationalSubsystem.pidControlledHeading(targetAngle::get));
 
 		// Setup position reset command
 		// this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(
