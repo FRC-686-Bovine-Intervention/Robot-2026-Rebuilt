@@ -40,6 +40,9 @@ import frc.robot.subsystems.rollers.Rollers;
 import frc.robot.subsystems.rollers.indexer.Indexer;
 import frc.robot.subsystems.rollers.indexer.IndexerIO;
 import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.aiming.AimingSystem;
+import frc.robot.subsystems.shooter.aiming.passing.InterpolationPassingCalc;
+import frc.robot.subsystems.shooter.aiming.shooting.InterpolationShootingCalc;
 import frc.robot.subsystems.shooter.flywheels.Flywheels;
 import frc.robot.subsystems.shooter.flywheels.FlywheelsIO;
 import frc.robot.subsystems.shooter.hood.Hood;
@@ -90,7 +93,11 @@ public class RobotContainer {
 				);
 				this.shooter = new Shooter(
 					new Flywheels(new FlywheelsIO() {}),
-					new Hood(new HoodIO() {})
+					new Hood(new HoodIO() {}),
+					new AimingSystem(
+						new InterpolationShootingCalc(),
+						new InterpolationPassingCalc()
+					)
 				);
 				this.intake = new Intake(
 					new frc.robot.subsystems.intake.rollers.Rollers(new RollersIO() {})
@@ -112,7 +119,11 @@ public class RobotContainer {
 				);
 				this.shooter = new Shooter(
 					new Flywheels(new FlywheelsIO() {}),
-					new Hood(new HoodIO() {})
+					new Hood(new HoodIO() {}),
+					new AimingSystem(
+						new InterpolationShootingCalc(),
+						new InterpolationPassingCalc()
+					)
 				);
 				this.intake = new Intake(
 					new frc.robot.subsystems.intake.rollers.Rollers(new RollersIO() {})
@@ -135,7 +146,11 @@ public class RobotContainer {
 				);
 				this.shooter = new Shooter(
 					new Flywheels(new FlywheelsIO() {}),
-					new Hood(new HoodIO() {})
+					new Hood(new HoodIO() {}),
+					new AimingSystem(
+						new InterpolationShootingCalc(),
+						new InterpolationPassingCalc()
+					)
 				);
 				this.intake = new Intake(
 					new frc.robot.subsystems.intake.rollers.Rollers(new RollersIO() {})
