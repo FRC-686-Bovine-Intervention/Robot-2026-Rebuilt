@@ -20,7 +20,6 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -53,7 +52,6 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.aiming.AimingSystem;
 import frc.robot.subsystems.shooter.aiming.passing.InterpolationPassingCalc;
 import frc.robot.subsystems.shooter.aiming.shooting.PhysicsShootingCalc;
-import frc.robot.subsystems.shooter.aiming.shooting.InterpolationShootingCalc;
 import frc.robot.subsystems.shooter.flywheels.Flywheels;
 import frc.robot.subsystems.shooter.flywheels.FlywheelsIO;
 import frc.robot.subsystems.shooter.hood.Hood;
@@ -354,6 +352,20 @@ public class RobotContainer {
 		// 	)
 		// )));
 
-		this.driveController.rightBumper().whileTrue(shooter.aimingSystem.aimAtHub(RobotState.getInstance()::getEstimatedGlobalPose, drive::getFieldMeasuredSpeeds, () -> new Translation3d(FieldConstants.hubCenter.get(Alliance.Blue))).alongWith(drive.rotationalSubsystem.pidControlledHeading(() -> new Rotation2d(shooter.aimingSystem.shootingCalc.getTargetAzimuthHeadingRads()))));
+		// this.driveController.rightBumper().whileTrue(shooter.aimingSystem.aimAtHub(RobotState.getInstance()::getEstimatedGlobalPose, drive::getFieldMeasuredSpeeds, () -> new Translation3d(FieldConstants.hubCenter.get(Alliance.Blue))).alongWith(drive.rotationalSubsystem.pidControlledHeading(() -> new Rotation2d(shooter.aimingSystem.shootingCalc.getTargetAzimuthHeadingRads()))));
+
+		var lookaheadTimeAutoScore = LoggedTunable.from("Automations/Auto Score/Lookahead Time", Seconds::of, 0.5);
+		new Trigger(this.automationsLoop, () -> {
+			var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
+			var lookaheadTrans = robotPose.getTranslation().plus(new Translation2d(
+				this.drive.getFieldMeasuredSpeeds().vxMetersPerSecond * lookaheadTimeAutoScore.get().in(Seconds),
+				this.drive.getFieldMeasuredSpeeds().vyMetersPerSecond * lookaheadTimeAutoScore.get().in(Seconds)
+			));
+			return FieldConstants.allianceZone.getOurs().withinBounds(robotPose.getTranslation()) || FieldConstants.allianceZone.getOurs().withinBounds(lookaheadTrans);
+		}
+		).whileTrue(
+			this.shooter.aimingSystem.aimAtHub(RobotState.getInstance()::getEstimatedGlobalPose, this.drive::getFieldMeasuredSpeeds, () -> new Translation3d(FieldConstants.hubCenter.getOurs()))
+			.alongWith(this.drive.rotationalSubsystem.pidControlledHeading(() -> new Rotation2d(shooter.aimingSystem.shootingCalc.getTargetAzimuthHeadingRads())))
+		);
 	}
 }
