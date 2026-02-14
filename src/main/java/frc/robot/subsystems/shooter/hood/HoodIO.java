@@ -28,7 +28,7 @@ public interface HoodIO {
 	public default void configPID(PIDConstants pidConstants) {}
 
 	public default void configFF(FFConstants ffConstants) {}
-	
+
 	public default void configProfile(double kV, double kA, double maxVelocity) {}
 
 	public default void resetMotorPositionRads(double positionRads) {}
