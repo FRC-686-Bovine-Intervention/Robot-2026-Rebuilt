@@ -333,7 +333,17 @@ public class RobotContainer {
 					double dist = robotPose.getTranslation().getDistance(center);
 					double density = cluster.getDensity();
 					double count = cluster.getMemberCount();
-					double score = (density * count)/dist; 	//Will end up changing
+					ChassisSpeeds robotRelative = drive.getRobotMeasuredSpeeds();
+					
+					Translation2d clusterToRobot = new Pose2d(center, Rotation2d.kZero).relativeTo(robotPose).getTranslation();
+					clusterToRobot = clusterToRobot.div(clusterToRobot.getNorm());
+					
+					Translation2d robotVelocity = new Translation2d(robotRelative.vxMetersPerSecond, robotRelative.vyMetersPerSecond);
+					clusterToRobot = clusterToRobot.div(clusterToRobot.getNorm());
+
+					double angleScore = Math.acos(clusterToRobot.dot(robotVelocity));
+
+					double score = (density * count)/(dist * angleScore); 	//Will end up changing
 
 					if (score > chosenClusterScore) {
 						chosenCluster = cluster;
