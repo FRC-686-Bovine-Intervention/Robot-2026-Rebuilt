@@ -334,10 +334,10 @@ public class RobotContainer {
 					double density = cluster.getDensity();
 					double count = cluster.getMemberCount();
 					ChassisSpeeds robotRelative = drive.getRobotMeasuredSpeeds();
-					
+
 					Translation2d clusterToRobot = new Pose2d(center, Rotation2d.kZero).relativeTo(robotPose).getTranslation();
 					clusterToRobot = clusterToRobot.div(clusterToRobot.getNorm());
-					
+
 					Translation2d robotVelocity = new Translation2d(robotRelative.vxMetersPerSecond, robotRelative.vyMetersPerSecond);
 					clusterToRobot = clusterToRobot.div(clusterToRobot.getNorm());
 
