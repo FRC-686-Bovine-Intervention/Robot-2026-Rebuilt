@@ -1,5 +1,4 @@
 package frc.robot.subsystems.shooter.flywheels;
-
 import java.util.function.DoubleSupplier;
 
 import org.littletonrobotics.junction.Logger;
@@ -18,12 +17,12 @@ public class Flywheels extends SubsystemBase {
 	private final FlywheelsIO io;
 	private final FlywheelsIOInputsAutoLogged inputs = new FlywheelsIOInputsAutoLogged();
 
-	private static final LoggedTunable<PIDConstants> pidGains = LoggedTunable.from("Shooter/Flywheels/Driver/PID", new PIDConstants(
+	private static final LoggedTunable<PIDConstants> pidGains = LoggedTunable.from("Shooter/Flywheels/PID", new PIDConstants(
 		0,
 		0,
 		0
 	));
-	private static final LoggedTunable<FFConstants> ffGains = LoggedTunable.from("Shooter/Flywheels/Driver/FF", new FFConstants(
+	private static final LoggedTunable<FFConstants> ffGains = LoggedTunable.from("Shooter/Flywheels/FF", new FFConstants(
 		0,
 		0,
 		0,
@@ -42,6 +41,8 @@ public class Flywheels extends SubsystemBase {
 
 	public Flywheels(FlywheelsIO io) {
 		super("Shooter/Flywheels");
+
+		System.out.println("[Init Flywheel] Instantiating Flywheel with " + io.getClass().getSimpleName());
 		this.io = io;
 
 		this.io.configPID(pidGains.get());
@@ -53,18 +54,7 @@ public class Flywheels extends SubsystemBase {
 		Logger.processInputs("Inputs/Shooter/Flywheels", this.inputs);
 
 		if (pidGains.hasChanged(this.hashCode())) {
-			var pidConsts = pidGains.get();
-
-			var kP = Math.max(pidConsts.kP(), 0.0);
-			var kI = Math.max(pidConsts.kI(), 0.0);
-			var kD = Math.max(pidConsts.kD(), 0.0);
-			// var kP = (0<fixeddriverPIDConsts.kP()) ? fixeddriverPIDConsts.kP()  : 0;
-			// var kI = (0<fixeddriverPIDConsts.kI()) ? fixeddriverPIDConsts.kI()  : 0;
-			// var kD = (0<fixeddriverPIDConsts.kD()) ? fixeddriverPIDConsts.kD()  : 0;
-
-			var driverPIDConsts = new PIDConstants(kP, kI, kD);
-
-			this.io.configPID(driverPIDConsts);
+			this.io.configPID(pidGains.get());
 		}
 
 		if (ffGains.hasChanged(this.hashCode())) {

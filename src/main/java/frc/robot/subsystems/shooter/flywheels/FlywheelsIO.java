@@ -11,11 +11,15 @@ import frc.util.loggerUtil.inputs.LoggedEncodedMotor;
 public interface FlywheelsIO {
 	@AutoLog
 	public static class FlywheelsIOInputs {
-		LoggedEncodedMotor leftDriverMotor = new LoggedEncodedMotor();
-		LoggedEncodedMotor rightDriverMotor = new LoggedEncodedMotor();
+		boolean masterMotorConnected = false;
+		boolean slaveMotorConnected = false;
+		LoggedEncodedMotor masterMotor = new LoggedEncodedMotor();
+		LoggedEncodedMotor slaveMotor = new LoggedEncodedMotor();
 	}
 
 	public default void updateInputs(FlywheelsIOInputs inputs) {}
+
+	public default void setVolts(double volts) {}
 
 	public default void setVelocityRadsPerSec(double velocityRadsPerSec, double accelerationRadsPerSecSqr, double feedforwardVolts) {}
 
