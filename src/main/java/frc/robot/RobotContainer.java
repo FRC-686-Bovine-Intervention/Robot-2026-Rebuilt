@@ -354,14 +354,16 @@ public class RobotContainer {
 
 		// this.driveController.rightBumper().whileTrue(shooter.aimingSystem.aimAtHub(RobotState.getInstance()::getEstimatedGlobalPose, drive::getFieldMeasuredSpeeds, () -> new Translation3d(FieldConstants.hubCenter.get(Alliance.Blue))).alongWith(drive.rotationalSubsystem.pidControlledHeading(() -> new Rotation2d(shooter.aimingSystem.shootingCalc.getTargetAzimuthHeadingRads()))));
 
-		var lookaheadTimeAutoScore = LoggedTunable.from("Automations/Auto Score/Lookahead Time", Seconds::of, 0.5);
+		// var lookaheadTimeAutoScore = LoggedTunable.from("Automations/Auto Score/Lookahead Time", Seconds::of, 0.5);
 		new Trigger(this.automationsLoop, () -> {
 			var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
-			var lookaheadTrans = robotPose.getTranslation().plus(new Translation2d(
-				this.drive.getFieldMeasuredSpeeds().vxMetersPerSecond * lookaheadTimeAutoScore.get().in(Seconds),
-				this.drive.getFieldMeasuredSpeeds().vyMetersPerSecond * lookaheadTimeAutoScore.get().in(Seconds)
-			));
-			return FieldConstants.allianceZone.getOurs().withinBounds(robotPose.getTranslation()) || FieldConstants.allianceZone.getOurs().withinBounds(lookaheadTrans);
+
+			var flCorner = robotPose.getTranslation().plus(RobotConstants.flBumperCorner.rotateBy(robotPose.getRotation()));
+			var frCorner = robotPose.getTranslation().plus(RobotConstants.frBumperCorner.rotateBy(robotPose.getRotation()));
+			var blCorner = robotPose.getTranslation().plus(RobotConstants.blBumperCorner.rotateBy(robotPose.getRotation()));
+			var brCorner = robotPose.getTranslation().plus(RobotConstants.brBumperCorner.rotateBy(robotPose.getRotation()));
+
+			return FieldConstants.allianceZone.getOurs().withinBounds(robotPose.getTranslation()) || FieldConstants.allianceZone.getOurs().withinBounds(flCorner) || FieldConstants.allianceZone.getOurs().withinBounds(frCorner) || FieldConstants.allianceZone.getOurs().withinBounds(blCorner) || FieldConstants.allianceZone.getOurs().withinBounds(brCorner);
 		}
 		).whileTrue(
 			this.shooter.aimingSystem.aimAtHub(RobotState.getInstance()::getEstimatedGlobalPose, this.drive::getFieldMeasuredSpeeds, () -> new Translation3d(FieldConstants.hubCenter.getOurs()))
