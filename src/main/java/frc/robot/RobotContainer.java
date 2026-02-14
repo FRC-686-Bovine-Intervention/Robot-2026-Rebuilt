@@ -6,6 +6,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 
@@ -17,6 +18,7 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.Timer;
@@ -200,6 +202,7 @@ public class RobotContainer {
 	}
 
 	private void configureCommands() {
+		Joystick.Axis turnAxis = driveController.leftTrigger.add(driveController.rightTrigger.invert()).smoothDeadband(0.05).sensitivity(0.5);
 		// Setup joystick driving as default command for drivetrain
 		this.drive.translationSubsystem.setDefaultCommand(new Command() {
 			{
@@ -235,10 +238,9 @@ public class RobotContainer {
 				this.setName("Drive Controlled");
 				this.addRequirements(drive.rotationalSubsystem);
 			}
-			private final Joystick.Axis axis = driveController.leftTrigger.add(driveController.rightTrigger.invert()).smoothDeadband(0.05).sensitivity(0.5);
 			@Override
 			public void execute() {
-				var omega = this.axis.getAsDouble() * DriveConstants.maxTurnRate.in(RadiansPerSecond);
+				var omega = turnAxis.getAsDouble() * DriveConstants.maxTurnRate.in(RadiansPerSecond);
 
 				drive.rotationalSubsystem.driveVelocity(omega);
 			}
@@ -262,30 +264,55 @@ public class RobotContainer {
 			Logger.recordOutput("CORNER DETECT/alliance zone/BR", FieldConstants.allianceZone.getOurs().withinBounds(brCorner));
 		});
 
+		LoggedTunable<double[]> targetAnglesTunable = new LoggedTunable<>() {
+			private final LoggedTunable<Angle> targetAngleOffset = LoggedTunable.from("Automations/Bump Mitigation/Target Angle", Degrees::of, 15.0);
+
+			private double[] cache = this.calculateTargetAngles(this.targetAngleOffset.get().in(Radians));
+
+			@Override
+			public boolean hasChanged(int id) {
+				return this.targetAngleOffset.hasChanged(id);
+			}
+
+			@Override
+			public double[] get() {
+				if (this.targetAngleOffset.hasChanged(this.hashCode())) {
+					this.cache = this.calculateTargetAngles(this.targetAngleOffset.get().in(Radians));
+				}
+				return this.cache;
+			}
+
+			private double[] calculateTargetAngles(double offset) {
+				return new double[] {
+					0 - offset,
+					0 + offset,
+					Math.PI/2 - offset,
+					Math.PI/2 + offset,
+					Math.PI - offset,
+					Math.PI + offset,
+					-Math.PI/2 - offset,
+					-Math.PI/2 + offset,
+				};
+			}
+		};
+
 		var lookahead = LoggedTunable.from("Automations/Bump Mitigation/Lookahead Time", Seconds::of, 0.5);
-		var targetAngle = LoggedTunable.from("Automations/Bump Mitigation/Target Angle", Degrees, Rotation2d.fromDegrees(15.0));
 		new Trigger(this.automationsLoop, () -> {
 			var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
 			var lookaheadTrans = robotPose.getTranslation().plus(new Translation2d(
 				this.drive.getFieldMeasuredSpeeds().vxMetersPerSecond * lookahead.get().in(Seconds),
 				this.drive.getFieldMeasuredSpeeds().vyMetersPerSecond * lookahead.get().in(Seconds)
 			));
-			return FieldConstants.anyBump.getOurs().withinBounds(robotPose.getTranslation()) || FieldConstants.anyBump.getOurs().withinBounds(lookaheadTrans);
+			return (FieldConstants.anyBump.getOurs().withinBounds(robotPose.getTranslation()) ||
+			FieldConstants.anyBump.getOurs().withinBounds(lookaheadTrans) ||
+			FieldConstants.anyBump.getTheirs().withinBounds(robotPose.getTranslation()) ||
+			FieldConstants.anyBump.getTheirs().withinBounds(lookaheadTrans))
+			&& Math.abs(turnAxis.getAsDouble()) <= 0.0;
 		}).whileTrue(this.drive.rotationalSubsystem.pidControlledHeading(() -> {
 			var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
 			var robotRotation = robotPose.getRotation().getRadians();
 
-			var targetAngleOffset = targetAngle.get().getRadians();
-			var targetAngles = new double[] {
-				0 - targetAngleOffset,
-				0 + targetAngleOffset,
-				Math.PI/2 - targetAngleOffset,
-				Math.PI/2 + targetAngleOffset,
-				Math.PI - targetAngleOffset,
-				Math.PI + targetAngleOffset,
-				-Math.PI/2 - targetAngleOffset,
-				-Math.PI/2 + targetAngleOffset,
-			};
+			var targetAngles = targetAnglesTunable.get();
 
 			double targetAngleRads = 0;
 			double lowestOffset = Math.PI;
