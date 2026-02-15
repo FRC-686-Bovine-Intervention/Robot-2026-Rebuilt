@@ -46,9 +46,4 @@ public final class RobotConstants {
 	public static final Time rioUpdatePeriod = Seconds.of(rioUpdatePeriodSecs);
 	public static final Frequency rioUpdateFrequency = rioUpdatePeriod.asFrequency();
 	public static final double rioUpdateFrequencyHz = rioUpdateFrequency.in(Hertz);
-
-	// public static final double deviceFaultUpdatePeriodSecs = 0.25;
-	// public static final Time deviceFaultUpdatePeriod = Seconds.of(deviceFaultUpdatePeriodSecs);
-	public static final double deviceFaultUpdateFrequencyHz = 0;
-	public static final Frequency deviceFaultUpdateFrequency = Hertz.of(deviceFaultUpdateFrequencyHz);
 }

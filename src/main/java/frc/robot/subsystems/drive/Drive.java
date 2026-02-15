@@ -350,11 +350,11 @@ public class Drive extends VirtualSubsystem {
 		// Logger.recordOutput("Drive/Skid Detection/Largest From Average", maxDistanceFromAverage);
 
 		// Clearing log fields
-		Logger.recordOutput("Drive/Chassis Speeds/Setpoint", emptySpeeds);
-		Logger.recordOutput("Drive/Swerve States/Setpoints", emptyStates);
-		Logger.recordOutput("Drive/Swerve States/Setpoints Optimized", emptyStates);
+		// Logger.recordOutput("Drive/Chassis Speeds/Setpoint", emptySpeeds);
+		// Logger.recordOutput("Drive/Swerve States/Setpoints", emptyStates);
+		// Logger.recordOutput("Drive/Swerve States/Setpoints Optimized", emptyStates);
 
-		LoggedTracer.logEpoch("CommandScheduler Periodic/VirtualSubsystem Periodic/Drive/Clear Log Fields");
+		// LoggedTracer.logEpoch("CommandScheduler Periodic/VirtualSubsystem Periodic/Drive/Clear Log Fields");
 		LoggedTracer.logEpoch("CommandScheduler Periodic/VirtualSubsystem Periodic/Drive");
 	}
 

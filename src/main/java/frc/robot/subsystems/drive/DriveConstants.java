@@ -58,9 +58,9 @@ public final class DriveConstants {
 	public static final ModuleConstants[] moduleConstants = {
 		new ModuleConstants(
 			"Front Left",
-			HardwareDevices.frontLeftDriveMotorID, HardwareDevices.frontLeftTurnMotorID,
+			HardwareDevices.frontLeftDriveMotorID, HardwareDevices.frontLeftAzimuthMotorID,
 			InvertedValue.CounterClockwise_Positive,
-			Rotations.of(0.7326218),
+			Rotations.of(0.32772794),
 			new Transform2d(
 				new Translation2d(
 					trackWidthX.div(+2),
@@ -71,9 +71,9 @@ public final class DriveConstants {
 		),
 		new ModuleConstants(
 			"Front Right",
-			HardwareDevices.frontRightDriveMotorID, HardwareDevices.frontRightTurnMotorID,
+			HardwareDevices.frontRightDriveMotorID, HardwareDevices.frontRightAzimuthMotorID,
 			InvertedValue.CounterClockwise_Positive,
-			Rotations.of(0.7325910),
+			Rotations.of(0.847839),
 			new Transform2d(
 				new Translation2d(
 					trackWidthX.div(+2),
@@ -84,9 +84,9 @@ public final class DriveConstants {
 		),
 		new ModuleConstants(
 			"Back Left",
-			HardwareDevices.backLeftDriveMotorID, HardwareDevices.backLeftTurnMotorID,
+			HardwareDevices.backLeftDriveMotorID, HardwareDevices.backLeftAzimuthMotorID,
 			InvertedValue.CounterClockwise_Positive,
-			Rotations.of(0.6857859),
+			Rotations.of(0.0038220799),
 			new Transform2d(
 				new Translation2d(
 					trackWidthX.div(-2),
@@ -97,9 +97,9 @@ public final class DriveConstants {
 		),
 		new ModuleConstants(
 			"Back Right",
-			HardwareDevices.backRightDriveMotorID, HardwareDevices.backRightTurnMotorID,
+			HardwareDevices.backRightDriveMotorID, HardwareDevices.backRightAzimuthMotorID,
 			InvertedValue.CounterClockwise_Positive,
-			Rotations.of(0.8681977),
+			Rotations.of(0.5912357),
 			new Transform2d(
 				new Translation2d(
 					trackWidthX.div(-2),

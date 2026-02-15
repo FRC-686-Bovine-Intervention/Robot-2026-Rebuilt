@@ -82,7 +82,7 @@ public class Module {
 			this.modulePositionSampleBuffer[i] = new SwerveModulePosition();
 		}
 
-		final var alertGroup = "Drive/Module " + this.config.name + "/Alerts";
+		final var alertGroup = "Drive/Modules/" + this.config.name + "/Alerts";
 
 		// this.driveMotorActiveFaultsAlert = new DeviceFaultAlerts(new Alert(alertGroup, "Drive Motor has active faults: ", AlertType.kError));
 		// this.driveMotorStickyFaultsAlert = new DeviceFaultAlerts(new Alert(alertGroup, "Drive Motor has sticky faults: ", AlertType.kWarning), FaultType.StatorCurrentLimit, FaultType.SupplyCurrentLimit);
@@ -103,10 +103,10 @@ public class Module {
 		LoggedTracer.logEpoch("CommandScheduler Periodic/VirtualSubsystem Periodic/Drive/Module Periodic/" + this.config.name + "/Before");
 		this.io.updateInputs(this.inputs);
 		LoggedTracer.logEpoch("CommandScheduler Periodic/VirtualSubsystem Periodic/Drive/Module Periodic/" + this.config.name + "/Update Inputs");
-		Logger.processInputs("Inputs/Drive/Module " + this.config.name, this.inputs);
+		Logger.processInputs("Inputs/Drive/Modules/" + this.config.name, this.inputs);
 		LoggedTracer.logEpoch("CommandScheduler Periodic/VirtualSubsystem Periodic/Drive/Module Periodic/" + this.config.name + "/Process Inputs");
 
-		this.modulePositionSamples = new SwerveModulePosition[this.inputs.odometryDriveRads.length];
+		this.modulePositionSamples = new SwerveModulePosition[this.inputs.odometrySampleCount];
 		for (int i = 0; i < this.modulePositionSamples.length; i++) {
 			var angle = this.config.moduleTransform.getRotation().plus(
 				Rotation2d.fromRadians(
@@ -174,6 +174,7 @@ public class Module {
 
 		var belowBrakeModeThreshold = Math.abs(setpoint.speedMetersPerSecond) < brakeModeThreshold.get().in(MetersPerSecond);
 
+		new Alert("TEMP NORMAL DRIVE CONST FF", AlertType.kError).set(true);
 		this.io.setDriveVelocityRadPerSec(velocityRadPerSec, 0.0, setpoint.speedMetersPerSecond * 2.2, belowBrakeModeThreshold);
 	}
 
@@ -215,16 +216,16 @@ public class Module {
 		this.io.setAzimuthAngleRads(Math.atan2(targetAzimuthAngleY, targetAzimuthAngleX), 0.0);
 		this.io.setDriveVelocityRadPerSec(driveVeloRadPerSec, driveAccelRadPerSecSqr, driveFFVolts, belowBrakeModeThreshold);
 
-		Logger.recordOutput("Drive/Module " + this.config.name + "/Target Angle", Rotation2d.fromRadians(Math.atan2(targetModuleAngleY, targetModuleAngleX)));
-		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive Velo MPS", driveVeloMPS, MetersPerSecond);
-		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive Velo RadPerSec", driveVeloRadPerSec, RadiansPerSecond);
-		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive Accel MPSS", driveAccelMPSS, MetersPerSecondPerSecond);
-		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive Accel RadPerSecSqr", driveAccelRadPerSecSqr, RadiansPerSecondPerSecond);
-		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive FF Volts", driveFFVolts, Volts);
-		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive FFX Volts", ffXVolts, Volts);
-		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive FFY Volts", ffYVolts, Volts);
-		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive FF angle", new Rotation2d(ffXVolts, ffYVolts));
-		Logger.recordOutput("Drive/Module " + this.config.name + "/Drive Azimuth angle", new Rotation2d(targetAzimuthAngleX, targetAzimuthAngleY));
+		Logger.recordOutput("Drive/Module/" + this.config.name + "/Target Angle", Rotation2d.fromRadians(Math.atan2(targetModuleAngleY, targetModuleAngleX)));
+		Logger.recordOutput("Drive/Module/" + this.config.name + "/Drive Velo MPS", driveVeloMPS, MetersPerSecond);
+		Logger.recordOutput("Drive/Module/" + this.config.name + "/Drive Velo RadPerSec", driveVeloRadPerSec, RadiansPerSecond);
+		Logger.recordOutput("Drive/Module/" + this.config.name + "/Drive Accel MPSS", driveAccelMPSS, MetersPerSecondPerSecond);
+		Logger.recordOutput("Drive/Module/" + this.config.name + "/Drive Accel RadPerSecSqr", driveAccelRadPerSecSqr, RadiansPerSecondPerSecond);
+		Logger.recordOutput("Drive/Module/" + this.config.name + "/Drive FF Volts", driveFFVolts, Volts);
+		Logger.recordOutput("Drive/Module/" + this.config.name + "/Drive FFX Volts", ffXVolts, Volts);
+		Logger.recordOutput("Drive/Module/" + this.config.name + "/Drive FFY Volts", ffYVolts, Volts);
+		Logger.recordOutput("Drive/Module/" + this.config.name + "/Drive FF angle", new Rotation2d(ffXVolts, ffYVolts));
+		Logger.recordOutput("Drive/Module/" + this.config.name + "/Drive Azimuth angle", new Rotation2d(targetAzimuthAngleX, targetAzimuthAngleY));
 
 		this.driveVelo = new SwerveModuleState(
 			veloMagnitudeMPS,

@@ -4,11 +4,11 @@ import java.util.Optional;
 
 import org.littletonrobotics.junction.AutoLog;
 
+import frc.robot.subsystems.drive.odometry.OdometryThread;
 import frc.util.NeutralMode;
 import frc.util.PIDGains;
 import frc.util.loggerUtil.inputs.LoggedEncodedMotor;
 import frc.util.loggerUtil.inputs.LoggedEncoder;
-import frc.util.loggerUtil.inputs.LoggedFaults;
 
 public interface ModuleIO {
 	@AutoLog
@@ -19,11 +19,10 @@ public interface ModuleIO {
 		LoggedEncodedMotor driveMotor = new LoggedEncodedMotor();
 		LoggedEncodedMotor azimuthMotor = new LoggedEncodedMotor();
 		LoggedEncoder azimuthEncoder = new LoggedEncoder();
-		LoggedFaults driveMotorFaults = new LoggedFaults();
-		LoggedFaults azimuthMotorFaults = new LoggedFaults();
 
-		double[] odometryDriveRads = new double[0];
-		double[] odometryAzimuthRads = new double[0];
+		int odometrySampleCount = 0;
+		double[] odometryDriveRads = new double[OdometryThread.MAX_BUFFER_SIZE];
+		double[] odometryAzimuthRads = new double[OdometryThread.MAX_BUFFER_SIZE];
 	}
 
 	/** Updates the set of loggable inputs. */
@@ -42,7 +41,4 @@ public interface ModuleIO {
 
 	public default void configDrivePID(PIDGains pidGains) {}
 	public default void configAzimuthPID(PIDGains pidGains) {}
-
-	public default void clearDriveStickyFaults(long bitmask) {}
-	public default void clearAzimuthStickyFaults(long bitmask) {}
 }

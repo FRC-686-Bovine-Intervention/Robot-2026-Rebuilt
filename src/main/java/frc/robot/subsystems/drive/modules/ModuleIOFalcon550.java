@@ -36,8 +36,6 @@ import frc.robot.subsystems.drive.odometry.OdometryThread;
 import frc.robot.subsystems.drive.odometry.OdometryThread.DoubleBuffer;
 import frc.util.NeutralMode;
 import frc.util.PIDGains;
-import frc.util.faults.DeviceFaults;
-import frc.util.faults.DeviceFaults.FaultType;
 import frc.util.loggerUtil.inputs.LoggedEncodedMotor.EncodedMotorStatusSignalCache;
 
 public class ModuleIOFalcon550 implements ModuleIO {
@@ -133,8 +131,6 @@ public class ModuleIOFalcon550 implements ModuleIO {
 
 		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.driveMotorStatusSignalCache.encoder().getStatusSignals());
 		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency.div(2), this.driveMotorStatusSignalCache.motor().getStatusSignals());
-		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.deviceFaultUpdateFrequency, FaultType.getFaultStatusSignals(this.driveMotor));
-		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.deviceFaultUpdateFrequency, FaultType.getStickyFaultStatusSignals(this.driveMotor));
 		BaseStatusSignal.setUpdateFrequencyForAll(DriveConstants.odometryLoopFrequency, this.driveMotorStatusSignalCache.encoder().position());
 		this.driveMotor.optimizeBusUtilization();
 
@@ -152,10 +148,9 @@ public class ModuleIOFalcon550 implements ModuleIO {
 		inputs.azimuthMotor.updateFrom(this.azimuthMotor);
 		inputs.azimuthEncoder.updateFrom(this.azimuthAbsoluteEncoder);
 
-		inputs.odometryDriveRads = this.drivePositionBuffer.popAll();
-		inputs.odometryAzimuthRads = this.azimuthPositionBuffer.popAll();
-		// inputs.driveMotorFaults.updateFrom(this.driveMotor);
-		// inputs.azimuthMotorFaults.updateFrom(this.azimuthMotor);
+		inputs.odometrySampleCount = this.drivePositionBuffer.getSize();
+		System.arraycopy(this.drivePositionBuffer.getInternalBuffer(), 0, inputs.odometryDriveRads, 0, inputs.odometrySampleCount);
+		System.arraycopy(this.azimuthPositionBuffer.getInternalBuffer(), 0, inputs.odometryAzimuthRads, 0, inputs.odometrySampleCount);
 	}
 
 	@Override
@@ -217,25 +212,5 @@ public class ModuleIOFalcon550 implements ModuleIO {
 			.d(pidGains.kD())
 		;
 		this.azimuthMotor.configure(this.azimuthConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-	}
-
-	@Override
-	public void clearDriveStickyFaults(long bitmask) {
-		if (bitmask == DeviceFaults.noneMask) {return;}
-		if (bitmask == DeviceFaults.allMask) {
-			this.driveMotor.clearStickyFaults();
-		} else {
-			for (var faultType : FaultType.possibleTalonFXFaults) {
-				if (faultType.isPartOf(bitmask)) {
-					faultType.clearStickyFaultOn(this.driveMotor);
-				}
-			}
-		}
-	}
-
-	@Override
-	public void clearAzimuthStickyFaults(long bitmask) {
-		if (bitmask == DeviceFaults.noneMask) {return;}
-		this.azimuthMotor.clearFaults();
 	}
 }
