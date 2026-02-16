@@ -280,16 +280,16 @@ public class Drive extends VirtualSubsystem {
 
 		OdometryThread.getInstance().odometryLock.unlock();
 
-		var sampleTimestamps = this.odometryTimestamps.timestamps;
+		var sampleCount = this.odometryTimestamps.odometrySampleCount;
 		var modulePositions = new SwerveModulePosition[this.modules.length];
-		for (int sampleI = 0; sampleI < sampleTimestamps.length; sampleI++) {
+		for (int sampleI = 0; sampleI < sampleCount; sampleI++) {
 			for (int i = 0; i < this.modules.length; i++) {
 				modulePositions[i] = this.modules[i].getModulePositionSamples()[sampleI];
 			}
 
 			if (this.lastMeasuredPositions != null) {
 				RobotState.getInstance().addOdometryObservation(new OdometryObservation(
-					sampleTimestamps[sampleI],
+					this.odometryTimestamps.timestamps[sampleI],
 					(this.gyroInputs.connected) ? (
 						Optional.of(this.gyroInputs.odometryGyroRotation[sampleI])
 					) : (

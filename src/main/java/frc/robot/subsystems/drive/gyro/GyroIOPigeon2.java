@@ -21,6 +21,8 @@ import frc.robot.subsystems.drive.odometry.OdometryThread.Buffer;
 public class GyroIOPigeon2 implements GyroIO {
 	private final Pigeon2 pigeon = HardwareDevices.pigeonID.pigeon2();
 
+	private final BaseStatusSignal[] refreshSignals;
+	private final BaseStatusSignal[] connectedSignals;
 	private final StatusSignal<Double> quatWSignal;
 	private final StatusSignal<Double> quatXSignal;
 	private final StatusSignal<Double> quatYSignal;
@@ -47,6 +49,21 @@ public class GyroIOPigeon2 implements GyroIO {
 		this.yawVelocitySignal = this.pigeon.getAngularVelocityZWorld();
 		this.pitchVelocitySignal = this.pigeon.getAngularVelocityYWorld();
 		this.rollVelocitySignal = this.pigeon.getAngularVelocityXWorld();
+
+		this.refreshSignals = new BaseStatusSignal[] {
+			this.yawVelocitySignal,
+			this.pitchVelocitySignal,
+			this.rollVelocitySignal,
+		};
+		this.connectedSignals = new BaseStatusSignal[] {
+			this.quatWSignal,
+			this.quatXSignal,
+			this.quatYSignal,
+			this.quatZSignal,
+			this.yawVelocitySignal,
+			this.pitchVelocitySignal,
+			this.rollVelocitySignal,
+		};
 
 		BaseStatusSignal.setUpdateFrequencyForAll(
 			DriveConstants.odometryLoopFrequency,
@@ -81,22 +98,11 @@ public class GyroIOPigeon2 implements GyroIO {
 
 	@Override
 	public void updateInputs(GyroIOInputs inputs) {
-		BaseStatusSignal.refreshAll(
-			this.yawVelocitySignal,
-			this.pitchVelocitySignal,
-			this.rollVelocitySignal
-		);
-		inputs.connected = BaseStatusSignal.isAllGood(
-			this.quatWSignal,
-			this.quatXSignal,
-			this.quatYSignal,
-			this.quatZSignal,
-			this.yawVelocitySignal,
-			this.pitchVelocitySignal,
-			this.rollVelocitySignal
-		);
+		BaseStatusSignal.refreshAll(this.refreshSignals);
+		inputs.connected = BaseStatusSignal.isAllGood(this.connectedSignals);
 
-		inputs.odometryGyroRotation = this.quatBuffer.popAll();
+		inputs.odometrySampleCount = this.quatBuffer.getSize();
+		System.arraycopy(this.quatBuffer.getInternalBuffer(), 0, inputs.odometryGyroRotation, 0, inputs.odometrySampleCount);
 
 		inputs.yawVelocityRadsPerSec = Units.degreesToRadians(this.yawVelocitySignal.getValueAsDouble());
 		inputs.pitchVelocityRadsPerSec = Units.degreesToRadians(this.pitchVelocitySignal.getValueAsDouble());
