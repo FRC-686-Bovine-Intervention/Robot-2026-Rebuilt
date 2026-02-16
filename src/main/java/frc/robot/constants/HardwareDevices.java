@@ -55,6 +55,15 @@ public class HardwareDevices {
 	// Hood
 	public static final CANDevice hoodMotorID = canivore.id(11);
 
+
+	// Intake
+	// | Slam
+	public static final CANDevice intakeSlamMotorID = canivore.id(5);
+	public static final CANDevice intakeSlamEncoderID = canivore.id(6);
+	// | Rollers
+	public static final CANDevice intakeRollerMotorID = canivore.id(7);
+
+
 	// RIO
 	public static final PWMPort ledPort = PWMPort.port(0);
 }
