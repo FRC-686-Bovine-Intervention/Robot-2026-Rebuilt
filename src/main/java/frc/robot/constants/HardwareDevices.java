@@ -40,6 +40,21 @@ public class HardwareDevices {
 	public static final CANDevice backRightDriveMotorID = canivore.id(4);
 	public static final CANDevice backRightTurnMotorID = rio.id(4);
 
+	// Shooter
+	// | Flywheels
+	// | | Left Flywheel System
+	public static final CANDevice leftFlywheelMotorMasterID = canivore.id(5);
+	public static final CANDevice leftFlywheelMotorSlaveID = canivore.id(6);
+	// | | Center Flywheel System
+	public static final CANDevice centerFlywheelMotorMasterID = canivore.id(7);
+	public static final CANDevice centerFlywheelMotorSlaveID = canivore.id(8);
+	// | | Right Flywheel System
+	public static final CANDevice rightFlywheelMotorMasterID = canivore.id(9);
+	public static final CANDevice rightFlywheelMotorSlaveID = canivore.id(10);
+
+	// Hood
+	public static final CANDevice hoodMotorID = canivore.id(11);
+
 	// RIO
 	public static final PWMPort ledPort = PWMPort.port(0);
 }
