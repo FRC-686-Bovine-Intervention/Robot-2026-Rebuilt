@@ -4,13 +4,21 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Seconds;
 
 import java.util.Arrays;
 import java.util.Set;
 
+import org.littletonrobotics.junction.Logger;
+
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.Timer;
@@ -19,8 +27,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
+import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
@@ -49,6 +59,7 @@ import frc.robot.subsystems.vision.object.ObjectVision;
 import frc.util.Perspective;
 import frc.util.controllers.Joystick;
 import frc.util.controllers.XboxController;
+import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.robotStructure.Mechanism3d;
 
 public class RobotContainer {
@@ -245,6 +256,7 @@ public class RobotContainer {
 	}
 
 	private void configureCommands() {
+		Joystick.Axis turnAxis = driveController.leftTrigger.add(driveController.rightTrigger.invert()).smoothDeadband(0.05).sensitivity(0.5);
 		// Setup joystick driving as default command for drivetrain
 		this.drive.translationSubsystem.setDefaultCommand(new Command() {
 			{
@@ -280,10 +292,9 @@ public class RobotContainer {
 				this.setName("Drive Controlled");
 				this.addRequirements(drive.rotationalSubsystem);
 			}
-			private final Joystick.Axis axis = driveController.leftTrigger.add(driveController.rightTrigger.invert()).smoothDeadband(0.05).sensitivity(0.5);
 			@Override
 			public void execute() {
-				var omega = this.axis.getAsDouble() * DriveConstants.maxTurnRate.in(RadiansPerSecond);
+				var omega = turnAxis.getAsDouble() * DriveConstants.maxTurnRate.in(RadiansPerSecond);
 
 				drive.rotationalSubsystem.driveVelocity(omega);
 			}
@@ -292,6 +303,83 @@ public class RobotContainer {
 				drive.rotationalSubsystem.stop();
 			}
 		});
+
+		this.automationsLoop.bind(() -> {
+			var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
+
+			var flCorner = robotPose.getTranslation().plus(RobotConstants.flBumperCorner.rotateBy(robotPose.getRotation()));
+			var frCorner = robotPose.getTranslation().plus(RobotConstants.frBumperCorner.rotateBy(robotPose.getRotation()));
+			var blCorner = robotPose.getTranslation().plus(RobotConstants.blBumperCorner.rotateBy(robotPose.getRotation()));
+			var brCorner = robotPose.getTranslation().plus(RobotConstants.brBumperCorner.rotateBy(robotPose.getRotation()));
+
+			Logger.recordOutput("CORNER DETECT/alliance zone/FL", FieldConstants.allianceZone.getOurs().withinBounds(flCorner));
+			Logger.recordOutput("CORNER DETECT/alliance zone/FR", FieldConstants.allianceZone.getOurs().withinBounds(frCorner));
+			Logger.recordOutput("CORNER DETECT/alliance zone/BL", FieldConstants.allianceZone.getOurs().withinBounds(blCorner));
+			Logger.recordOutput("CORNER DETECT/alliance zone/BR", FieldConstants.allianceZone.getOurs().withinBounds(brCorner));
+		});
+
+		LoggedTunable<double[]> targetAnglesTunable = new LoggedTunable<>() {
+			private final LoggedTunable<Angle> targetAngleOffset = LoggedTunable.from("Automations/Bump Mitigation/Target Angle", Degrees::of, 15.0);
+
+			private double[] cache = this.calculateTargetAngles(this.targetAngleOffset.get().in(Radians));
+
+			@Override
+			public boolean hasChanged(int id) {
+				return this.targetAngleOffset.hasChanged(id);
+			}
+
+			@Override
+			public double[] get() {
+				if (this.targetAngleOffset.hasChanged(this.hashCode())) {
+					this.cache = this.calculateTargetAngles(this.targetAngleOffset.get().in(Radians));
+				}
+				return this.cache;
+			}
+
+			private double[] calculateTargetAngles(double offset) {
+				return new double[] {
+					0 - offset,
+					0 + offset,
+					Math.PI/2 - offset,
+					Math.PI/2 + offset,
+					Math.PI - offset,
+					Math.PI + offset,
+					-Math.PI/2 - offset,
+					-Math.PI/2 + offset,
+				};
+			}
+		};
+
+		var lookahead = LoggedTunable.from("Automations/Bump Mitigation/Lookahead Time", Seconds::of, 0.5);
+		new Trigger(this.automationsLoop, () -> {
+			var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
+			var lookaheadTrans = robotPose.getTranslation().plus(new Translation2d(
+				this.drive.getFieldMeasuredSpeeds().vxMetersPerSecond * lookahead.get().in(Seconds),
+				this.drive.getFieldMeasuredSpeeds().vyMetersPerSecond * lookahead.get().in(Seconds)
+			));
+			return (FieldConstants.anyBump.getOurs().withinBounds(robotPose.getTranslation()) ||
+			FieldConstants.anyBump.getOurs().withinBounds(lookaheadTrans) ||
+			FieldConstants.anyBump.getTheirs().withinBounds(robotPose.getTranslation()) ||
+			FieldConstants.anyBump.getTheirs().withinBounds(lookaheadTrans))
+			&& Math.abs(turnAxis.getAsDouble()) <= 0.0;
+		}).whileTrue(this.drive.rotationalSubsystem.pidControlledHeading(() -> {
+			var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
+			var robotRotation = robotPose.getRotation().getRadians();
+
+			var targetAngles = targetAnglesTunable.get();
+
+			double targetAngleRads = 0;
+			double lowestOffset = Math.PI;
+			for (double targetAngleCandidate : targetAngles) {
+				double candidateOffset = Math.abs(targetAngleCandidate - robotRotation);
+				if (candidateOffset < lowestOffset) {
+					targetAngleRads = targetAngleCandidate;
+					lowestOffset = candidateOffset;
+				}
+			}
+
+			return new Rotation2d(targetAngleRads);
+		}));
 
 		// Setup position reset command
 		// this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(
