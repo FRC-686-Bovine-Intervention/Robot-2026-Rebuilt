@@ -87,4 +87,31 @@ public final class FieldConstants {
 		)
 	));
 	public static final AllianceFlipped<OrBox> anyBump = AllianceFlipped.fromFunction((alliance) -> bottomBump.get(alliance).or(topBump.get(alliance)));
+
+	private static final Distance bottomTrenchTopY = bottomBumpBottomY;
+	private static final Distance bottomTrenchBottomY = Inches.of(0);
+	private static final Distance topTrenchBottomY = topBumpTopY;
+	private static final Distance topTrenchTopY = fieldWidth;
+
+	public static final AllianceFlipped<RectangularBoundingBox> bottomTrench = AllianceFlipped.fromBlue(BoundingBox.rectangle(
+		new Translation2d(
+			barrierCenterX.getBlue().minus(bumpLength.div(2.0)),
+			bottomTrenchBottomY
+
+		), new Translation2d(
+			barrierCenterX.getBlue().plus(bumpLength.div(2.0)),
+			bottomTrenchTopY
+		)
+	));
+	public static final AllianceFlipped<RectangularBoundingBox> topTrench = AllianceFlipped.fromBlue(BoundingBox.rectangle(
+		new Translation2d(
+			barrierCenterX.getBlue().minus(bumpLength.div(2.0)),
+			topTrenchBottomY
+		),
+		new Translation2d(
+			barrierCenterX.getBlue().plus(bumpLength.div(2.0)),
+			topTrenchTopY
+		)
+	));
+	public static final AllianceFlipped<OrBox> anyTrench = AllianceFlipped.fromFunction((alliance) -> bottomTrench.get(alliance).or(topTrench.get(alliance)));
 }

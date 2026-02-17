@@ -21,6 +21,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -67,6 +68,7 @@ import frc.robot.subsystems.vision.object.ObjectVision;
 import frc.util.Perspective;
 import frc.util.controllers.Joystick;
 import frc.util.controllers.XboxController;
+import frc.util.flipping.AllianceFlipUtil;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.robotStructure.Mechanism3d;
 
@@ -372,12 +374,12 @@ public class RobotContainer {
 			}
 		};
 
-		var lookahead = LoggedTunable.from("Automations/Bump Mitigation/Lookahead Time", Seconds::of, 0.5);
+		var bumpLookahead = LoggedTunable.from("Automations/Bump Mitigation/Lookahead Time", Seconds::of, 0.5);
 		new Trigger(this.automationsLoop, () -> {
 			var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
 			var lookaheadTrans = robotPose.getTranslation().plus(new Translation2d(
-				this.drive.getFieldMeasuredSpeeds().vxMetersPerSecond * lookahead.get().in(Seconds),
-				this.drive.getFieldMeasuredSpeeds().vyMetersPerSecond * lookahead.get().in(Seconds)
+				this.drive.getFieldMeasuredSpeeds().vxMetersPerSecond * bumpLookahead.get().in(Seconds),
+				this.drive.getFieldMeasuredSpeeds().vyMetersPerSecond * bumpLookahead.get().in(Seconds)
 			));
 			return (FieldConstants.anyBump.getOurs().withinBounds(robotPose.getTranslation()) ||
 			FieldConstants.anyBump.getOurs().withinBounds(lookaheadTrans) ||
@@ -402,6 +404,25 @@ public class RobotContainer {
 
 			return new Rotation2d(targetAngleRads);
 		}));
+
+		var trenchLookahead = LoggedTunable.from("Automations/Trench Mitigation/Lookahead Time", Seconds::of, 0.5);
+		new Trigger(this.automationsLoop, () -> {
+			var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
+			var lookaheadTrans = robotPose.getTranslation().plus(new Translation2d(
+				this.drive.getFieldMeasuredSpeeds().vxMetersPerSecond * trenchLookahead.get().in(Seconds),
+				this.drive.getFieldMeasuredSpeeds().vyMetersPerSecond * trenchLookahead.get().in(Seconds)
+			));
+			return /*(*/(FieldConstants.anyTrench.getOurs().withinBounds(robotPose.getTranslation()) ||
+			FieldConstants.anyTrench.getOurs().withinBounds(lookaheadTrans)) //||
+			// FieldConstants.anyTrench.getTheirs().withinBounds(robotPose.getTranslation()) ||
+			// FieldConstants.anyTrench.getTheirs().withinBounds(lookaheadTrans))
+			&& Math.abs(turnAxis.getAsDouble()) <= 0.0
+			&& this.drive.getFieldMeasuredSpeeds().vxMetersPerSecond * (AllianceFlipUtil.getAlliance() == Alliance.Blue ? 1 : -1) < 0;
+		}).whileTrue(this.drive.rotationalSubsystem.pidControlledHeading(() -> {
+			return new Rotation2d(AllianceFlipUtil.getAlliance() == Alliance.Blue ? 0 : Math.PI);
+		}).alongWith(this.shooter.hood.idle())
+		.alongWith(this.intake.slam.idle())
+		);
 
 		// Setup position reset command
 		// this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(
