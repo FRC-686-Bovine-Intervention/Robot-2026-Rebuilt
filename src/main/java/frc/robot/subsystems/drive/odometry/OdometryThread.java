@@ -245,6 +245,10 @@ public class OdometryThread extends Thread {
 		public double[] getInternalBuffer() {
 			return this.buffer;
 		}
+
+		public void clear() {
+			this.size = 0;
+		}
 	}
 	public static class Buffer<T> {
 		private final T[] buffer;
@@ -287,6 +291,10 @@ public class OdometryThread extends Thread {
 
 		public T[] getInternalBuffer() {
 			return this.buffer;
+		}
+
+		public void clear() {
+			this.size = 0;
 		}
 	}
 }

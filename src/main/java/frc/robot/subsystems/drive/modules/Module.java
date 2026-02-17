@@ -174,7 +174,7 @@ public class Module {
 
 		var belowBrakeModeThreshold = Math.abs(setpoint.speedMetersPerSecond) < brakeModeThreshold.get().in(MetersPerSecond);
 
-		new Alert("TEMP NORMAL DRIVE CONST FF", AlertType.kError).set(true);
+		// new Alert("TEMP NORMAL DRIVE CONST FF", AlertType.kError).set(true);
 		this.io.setDriveVelocityRadPerSec(velocityRadPerSec, 0.0, setpoint.speedMetersPerSecond * 2.2, belowBrakeModeThreshold);
 	}
 

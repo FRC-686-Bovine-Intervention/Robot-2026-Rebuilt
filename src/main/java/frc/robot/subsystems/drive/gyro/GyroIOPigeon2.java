@@ -103,6 +103,7 @@ public class GyroIOPigeon2 implements GyroIO {
 
 		inputs.odometrySampleCount = this.quatBuffer.getSize();
 		System.arraycopy(this.quatBuffer.getInternalBuffer(), 0, inputs.odometryGyroRotation, 0, inputs.odometrySampleCount);
+		this.quatBuffer.clear();
 
 		inputs.yawVelocityRadsPerSec = Units.degreesToRadians(this.yawVelocitySignal.getValueAsDouble());
 		inputs.pitchVelocityRadsPerSec = Units.degreesToRadians(this.pitchVelocitySignal.getValueAsDouble());

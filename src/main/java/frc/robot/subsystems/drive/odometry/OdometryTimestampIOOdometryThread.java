@@ -13,5 +13,6 @@ public class OdometryTimestampIOOdometryThread implements OdometryTimestampIO {
 	public void updateInputs(OdometryTimestampIOInputs inputs) {
 		inputs.odometrySampleCount = this.timestampBuffer.getSize();
 		System.arraycopy(this.timestampBuffer.getInternalBuffer(), 0, inputs.timestamps, 0, inputs.odometrySampleCount);
+		this.timestampBuffer.clear();
 	}
 }

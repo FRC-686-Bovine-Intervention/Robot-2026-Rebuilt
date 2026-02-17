@@ -22,13 +22,12 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Frequency;
 import edu.wpi.first.units.measure.LinearVelocity;
 import frc.robot.constants.HardwareDevices;
-import frc.robot.constants.RobotConstants;
 import frc.util.hardwareID.can.CANDevice;
 import frc.util.mechanismUtil.GearRatio;
 import frc.util.mechanismUtil.LinearRelation;
 
 public final class DriveConstants {
-	public static final double odometryLoopFrequencyHz = RobotConstants.rioUpdateFrequencyHz;
+	public static final double odometryLoopFrequencyHz = 250.0;
 	public static final Frequency odometryLoopFrequency = Hertz.of(odometryLoopFrequencyHz);
 
 	/**Distance between the front and back wheels*/

@@ -7,7 +7,7 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.wpilibj.Timer;
 
 public class LoggedTracer {
-	private static final boolean enabled = true;
+	private static final boolean enabled = false;
 
 	private static double[] startTimes = new double[1];
 

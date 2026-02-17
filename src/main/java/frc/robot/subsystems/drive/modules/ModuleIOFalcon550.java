@@ -145,12 +145,14 @@ public class ModuleIOFalcon550 implements ModuleIO {
 		inputs.azimuthMotorConnected = true;
 		inputs.azimuthEncoderConnected = true;
 		inputs.driveMotor.updateFrom(this.driveMotorStatusSignalCache);
-		inputs.azimuthMotor.updateFrom(this.azimuthMotor);
+		// inputs.azimuthMotor.updateFrom(this.azimuthMotor);
 		inputs.azimuthEncoder.updateFrom(this.azimuthAbsoluteEncoder);
 
 		inputs.odometrySampleCount = this.drivePositionBuffer.getSize();
 		System.arraycopy(this.drivePositionBuffer.getInternalBuffer(), 0, inputs.odometryDriveRads, 0, inputs.odometrySampleCount);
 		System.arraycopy(this.azimuthPositionBuffer.getInternalBuffer(), 0, inputs.odometryAzimuthRads, 0, inputs.odometrySampleCount);
+		this.drivePositionBuffer.clear();
+		this.azimuthPositionBuffer.clear();
 	}
 
 	@Override
