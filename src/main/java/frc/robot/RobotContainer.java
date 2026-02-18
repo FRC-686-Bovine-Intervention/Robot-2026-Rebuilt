@@ -12,6 +12,7 @@ import java.util.Set;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
@@ -19,9 +20,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
-import frc.robot.constants.HardwareDevices;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.ExtensionSystem;
 import frc.robot.subsystems.climber.Climber;
@@ -39,6 +40,7 @@ import frc.robot.subsystems.drive.odometry.OdometryTimestampIOSim;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.rollers.IntakeRollers;
 import frc.robot.subsystems.intake.rollers.IntakeRollersIO;
+import frc.robot.subsystems.intake.rollers.IntakeRollersIOTalonFX;
 import frc.robot.subsystems.intake.slam.IntakeSlam;
 import frc.robot.subsystems.intake.slam.IntakeSlamIO;
 import frc.robot.subsystems.intake.slam.IntakeSlamIOSim;
@@ -104,7 +106,7 @@ public class RobotContainer {
 					new Hood(new HoodIO() {})
 				);
 				this.intake = new Intake(
-					new IntakeRollers(new IntakeRollersIO() {}),
+					new IntakeRollers(new IntakeRollersIOTalonFX()),
 					new IntakeSlam(new IntakeSlamIOTalonFX())
 				);
 				this.rollers = new Rollers(
@@ -181,13 +183,15 @@ public class RobotContainer {
 				.addChild(this.intake.slam.couplerMech)
 			)
 			.addChild(this.intake.slam.followerMech)
+			.addChild(this.shooter.hood.mech)
 		;
 
 		// Register Mechanism3ds
 		Mechanism3d.registerMechs(
 			this.intake.slam.driverMech,
 			this.intake.slam.followerMech,
-			this.intake.slam.couplerMech
+			this.intake.slam.couplerMech,
+			this.shooter.hood.mech
 		);
 
 		System.out.println("[Init RobotContainer] Configuring Commands");
@@ -315,8 +319,16 @@ public class RobotContainer {
 				drive.rotationalSubsystem.stop();
 			}
 		});
+
 		this.intake.rollers.setDefaultCommand(this.intake.rollers.idle());
 		this.intake.slam.setDefaultCommand(this.intake.slam.retract());
+
+		this.shooter.leftFlywheel.setDefaultCommand(this.shooter.leftFlywheel.idle());
+		this.shooter.rightFlywheel.setDefaultCommand(this.shooter.rightFlywheel.idle());
+		this.shooter.hood.setDefaultCommand(this.shooter.hood.idle());
+
+		// Auto calibrate hood if not calibrated
+		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 
 		// Setup position reset command
 		// this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(

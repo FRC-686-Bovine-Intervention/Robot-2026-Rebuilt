@@ -13,6 +13,7 @@ import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.StaticBrake;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFXS;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.ReverseLimitValue;
@@ -65,6 +66,9 @@ public class HoodIOTalonFXS implements HoodIO {
 		// 	.withReverseLimitType(ReverseLimitTypeValue.NormallyOpen)
 		// 	.withForwardLimitEnable(false)
 		// ;
+		motorConfig.Slot0
+			.withGravityType(GravityTypeValue.Arm_Cosine)
+		;
 
 		this.motor.getConfigurator().apply(motorConfig);
 
@@ -156,9 +160,11 @@ public class HoodIOTalonFXS implements HoodIO {
 	public void configProfile(double kV, double kA, double maxVelocity) {
 		var config = new MotionMagicConfigs();
 		this.motor.getConfigurator().refresh(config);
-		config.MotionMagicExpo_kA = kA;
-		config.MotionMagicExpo_kV = kV;
-		config.MotionMagicCruiseVelocity = maxVelocity;
+		config
+			.withMotionMagicExpo_kV(kV)
+			.withMotionMagicExpo_kA(kA)
+			.withMotionMagicCruiseVelocity(maxVelocity)
+		;
 		this.motor.getConfigurator().apply(config);
 	}
 

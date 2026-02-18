@@ -169,7 +169,7 @@ public class Hood extends SubsystemBase {
 				this.setName("Calibrate");
 				this.addRequirements(hood);
 			}
-			
+
 			@Override
 			public void execute() {
 				hood.io.setVolts(calibrationVoltage.get().in(Volts));

@@ -3,13 +3,14 @@ package frc.robot.subsystems.shooter.flywheel;
 import java.util.Optional;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
+import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.StaticBrake;
 import com.ctre.phoenix6.controls.StrictFollower;
-import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -18,6 +19,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.util.Units;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.shooter.flywheel.FlywheelConstants.FlywheelConfig;
+import frc.util.FFConstants;
 import frc.util.NeutralMode;
 import frc.util.PIDConstants;
 import frc.util.loggerUtil.inputs.LoggedEncodedMotor.EncodedMotorStatusSignalCache;
@@ -42,7 +44,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 	private final CoastOut coastRequest = new CoastOut();
 	private final StaticBrake brakeRequest = new StaticBrake();
 	private final VoltageOut voltageRequest = new VoltageOut(0.0);
-	private final VelocityVoltage velocityRequest = new VelocityVoltage(0.0);
+	private final MotionMagicVelocityVoltage velocityRequest = new MotionMagicVelocityVoltage(0.0);
 	private final StrictFollower followerRequest = new StrictFollower(0);
 
 	public FlywheelIOTalonFX(FlywheelConfig config) {
@@ -142,6 +144,25 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 		var controlRequest = NeutralMode.selectControlRequest(neutralMode, this.neutralRequest, this.coastRequest, this.brakeRequest);
 		this.masterMotor.setControl(controlRequest);
 		this.slaveMotor.setControl(controlRequest);
+	}
+
+	@Override
+	public void configProfile(double maxAccelerationRadsPerSecSec, double maxJerkRadsPerSecSecSec) {
+		var config = new MotionMagicConfigs();
+		this.masterMotor.getConfigurator().refresh(config);
+		config
+			.withMotionMagicAcceleration(Units.radiansToRotations(maxAccelerationRadsPerSecSec))
+			.withMotionMagicJerk(Units.radiansToRotations(maxJerkRadsPerSecSecSec))
+		;
+		this.masterMotor.getConfigurator().apply(config);
+	}
+
+	@Override
+	public void configFF(FFConstants ffConstants) {
+		var config = new Slot0Configs();
+		this.masterMotor.getConfigurator().refresh(config);
+		ffConstants.update(config);
+		this.masterMotor.getConfigurator().apply(config);
 	}
 
 	@Override

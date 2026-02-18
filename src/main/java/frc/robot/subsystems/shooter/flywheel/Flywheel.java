@@ -1,24 +1,27 @@
 package frc.robot.subsystems.shooter.flywheel;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+
 import java.util.function.DoubleSupplier;
 
 import org.littletonrobotics.junction.Logger;
 
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.shooter.flywheel.FlywheelConstants.FlywheelConfig;
-import frc.robot.subsystems.shooter.flywheels.FlywheelsIOInputsAutoLogged;
 import frc.util.FFConstants;
 import frc.util.NeutralMode;
 import frc.util.PIDConstants;
 import frc.util.loggerUtil.tunables.LoggedTunable;
+import lombok.Getter;
 
 public class Flywheel extends SubsystemBase {
 	public final FlywheelConfig config;
 	private final FlywheelIO io;
-	private final FlywheelsIOInputsAutoLogged inputs = new FlywheelsIOInputsAutoLogged();
+	private final FlywheelIOInputsAutoLogged inputs = new FlywheelIOInputsAutoLogged();
+
+	private static final LoggedTunable<LinearVelocity> spinupSurfaceVelo = LoggedTunable.from("Shooter/Flyhweels/Spinup Velocity", MetersPerSecond::of, +20.0);
 
 	private static final LoggedTunable<PIDConstants> pidGains = LoggedTunable.from("Shooter/Flywheels/PID", new PIDConstants(
 		0,
@@ -31,16 +34,19 @@ public class Flywheel extends SubsystemBase {
 		0,
 		0
 	));
-	private static final LoggedTunable<TrapezoidProfile.Constraints> profileConsts = LoggedTunable.from("Shooter/Flywheels/Profile", new TrapezoidProfile.Constraints(
-		0,
-		0
-	));
+	private static final LoggedTunable<TrapezoidProfile.Constraints> profileConsts = LoggedTunable.from("Shooter/Flywheels/Profile",
+		new TrapezoidProfile.Constraints(
+			0.0,
+			0.0
+		)
+	);
 
-	private TrapezoidProfile motionProfile = new TrapezoidProfile(profileConsts.get());
-	private TrapezoidProfile.State setpointState = new TrapezoidProfile.State();
-	private SimpleMotorFeedforward ff = new SimpleMotorFeedforward(ffGains.get().kS(), ffGains.get().kV(), ffGains.get().kA());
-
-	private double surfaceVeloMPS = 0.0;
+	@Getter
+	private double measuredSurfaceVeloMPS = 0.0;
+	@Getter
+	private double setpointSurfaceVeloMPS = 0.0;
+	@Getter
+	private double setpointSurfaceAccelMPSS = 0.0;
 
 	public Flywheel(FlywheelConfig config, FlywheelIO io) {
 		super("Shooter/Flywheels/" + config.name);
@@ -50,6 +56,11 @@ public class Flywheel extends SubsystemBase {
 		System.out.println("[Init Flywheel] Instantiating Flywheel " + this.config.name + " with " + io.getClass().getSimpleName());
 		this.io = io;
 
+		this.io.configProfile(
+			profileConsts.get().maxVelocity,
+			profileConsts.get().maxAcceleration
+		);
+		this.io.configFF(ffGains.get());
 		this.io.configPID(pidGains.get());
 	}
 
@@ -58,49 +69,68 @@ public class Flywheel extends SubsystemBase {
 		this.io.updateInputs(this.inputs);
 		Logger.processInputs("Inputs/Shooter/Flywheels/" + this.config.name, this.inputs);
 
-		if (pidGains.hasChanged(this.hashCode())) {
-			this.io.configPID(pidGains.get());
+		this.measuredSurfaceVeloMPS = FlywheelConstants.driverFlywheelWheel.radiansToMeters(FlywheelConstants.driverMotorToFlywheelRatio.applyUnsigned(this.inputs.masterMotor.encoder.getVelocityRadsPerSec()));
+		this.setpointSurfaceVeloMPS = FlywheelConstants.driverFlywheelWheel.radiansToMeters(FlywheelConstants.driverMotorToFlywheelRatio.applyUnsigned(this.inputs.motorProfilePositionRads));
+		this.setpointSurfaceAccelMPSS = FlywheelConstants.driverFlywheelWheel.radiansToMeters(FlywheelConstants.driverMotorToFlywheelRatio.applyUnsigned(this.inputs.motorProfileVelocityRadsPerSec));
+
+		if (profileConsts.hasChanged(this.hashCode())) {
+			this.io.configProfile(
+				profileConsts.get().maxVelocity,
+				profileConsts.get().maxAcceleration
+			);
 		}
 
 		if (ffGains.hasChanged(this.hashCode())) {
-			ffGains.get().update(this.ff);
+			this.io.configFF(ffGains.get());
 		}
-		if (profileConsts.hasChanged(this.hashCode())) {
-			this.motionProfile = new TrapezoidProfile(profileConsts.get());
+
+		if (pidGains.hasChanged(this.hashCode())) {
+			this.io.configPID(pidGains.get());
 		}
 	}
 
-	public Command runAtSurfaceVelo(DoubleSupplier surfaceVeloSupplierMPS) {
-		final var flywheels = this;
+	public Command idle() {
+		final var flywheel = this;
 		return new Command() {
 			{
-				this.setName("Run At Velo");
-				this.addRequirements(flywheels);
+				this.setName("Idle");
+				this.addRequirements(flywheel);
 			}
 
 			@Override
 			public void initialize() {
-				flywheels.setpointState.position = flywheels.surfaceVeloMPS;
-				flywheels.setpointState.velocity = 0.0;
+				flywheel.io.stop(NeutralMode.DEFAULT);
+			}
+		};
+	}
+
+	public Command runAtSurfaceVeloMPS(DoubleSupplier surfaceVeloSupplierMPS) {
+		final var flywheel = this;
+		return new Command() {
+			{
+				this.setName("Run At Velo");
+				this.addRequirements(flywheel);
 			}
 
 			@Override
 			public void execute() {
 				var goalSurfaceVeloMPS = surfaceVeloSupplierMPS.getAsDouble();
-				var goalState = new TrapezoidProfile.State(goalSurfaceVeloMPS, 0.0);
-				var newDriverSetpoint = flywheels.motionProfile.calculate(RobotConstants.rioUpdatePeriodSecs, flywheels.setpointState, goalState);
-				var driverFFOut = flywheels.ff.calculateWithVelocities(flywheels.setpointState.position, newDriverSetpoint.position);
-				flywheels.io.setVelocityRadsPerSec(
-					FlywheelConstants.driverMotorToFlywheelRatio.inverse().applyUnsigned(FlywheelConstants.driverFlywheelWheel.metersToRadians(newDriverSetpoint.position)),
-					FlywheelConstants.driverMotorToFlywheelRatio.inverse().applyUnsigned(FlywheelConstants.driverFlywheelWheel.metersToRadians(newDriverSetpoint.velocity)),
-					driverFFOut
+				var goalAngularVeloRadsPerSec = FlywheelConstants.driverFlywheelWheel.metersToRadians(goalSurfaceVeloMPS);
+				flywheel.io.setVelocityRadsPerSec(
+					FlywheelConstants.driverMotorToFlywheelRatio.inverse().applyUnsigned(goalAngularVeloRadsPerSec),
+					0.0,
+					0.0
 				);
 			}
 
 			@Override
 			public void end(boolean interrupted) {
-				flywheels.io.stop(NeutralMode.DEFAULT);
+				flywheel.io.stop(NeutralMode.DEFAULT);
 			}
 		};
+	}
+
+	public Command spinup() {
+		return this.runAtSurfaceVeloMPS(() -> spinupSurfaceVelo.get().in(MetersPerSecond));
 	}
 }

@@ -26,10 +26,10 @@ public class HoodConstants {
 	// Ascope Mech Constants
 	public static final Transform3d hoodBase = new Transform3d(
 		new Translation3d(
-			
+
 		),
 		GeomUtil.rotation3dBuilder()
-		
+
 		.build()
 	);
 }
