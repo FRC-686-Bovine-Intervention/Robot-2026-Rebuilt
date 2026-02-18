@@ -9,15 +9,27 @@ import frc.util.geometry.GeomUtil;
 import frc.util.mechanismUtil.GearRatio;
 
 public class HoodConstants {
-	public static final GearRatio motorToMechanism = new GearRatio(1);
-
-	public static final Angle maxAngle = Degrees.of(30);
+	// Physical Limits
 	public static final Angle minAngle = Degrees.of(0);
+	public static final Angle maxAngle = Degrees.of(30);
 
+	// Sensor Offsets
+	public static final Angle limitSwitchAngle = Degrees.of(0.0);
+
+	// Gear Ratios
+	public static final GearRatio motorToMechanism = new GearRatio()
+		.planetary(GearRatio.ULTRAPLANETARY_5_1)
+		.planetary(GearRatio.ULTRAPLANETARY_5_1)
+	;
+
+
+	// Ascope Mech Constants
 	public static final Transform3d hoodBase = new Transform3d(
 		new Translation3d(
-
+			
 		),
-		GeomUtil.rotation3dBuilder().yaw(0).build()
+		GeomUtil.rotation3dBuilder()
+		
+		.build()
 	);
 }

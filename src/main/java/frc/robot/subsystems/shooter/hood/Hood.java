@@ -16,7 +16,6 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.util.EdgeDetector;
 import frc.util.FFConstants;
 import frc.util.LoggedTracer;
 import frc.util.NeutralMode;
@@ -24,13 +23,13 @@ import frc.util.PIDConstants;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.loggerUtil.tunables.LoggedTunableNumber;
 import frc.util.robotStructure.angle.ArmMech;
+import lombok.Getter;
 
 public class Hood extends SubsystemBase {
 	private final HoodIO io;
 	private final HoodIOInputsAutoLogged inputs = new HoodIOInputsAutoLogged();
 
 	private static final LoggedTunable<Angle> idleAngle = LoggedTunable.from("Shooter/Hood/Idle Angle", Degrees::of, HoodConstants.minAngle.in(Degrees));
-	private static final LoggedTunable<Angle> rezeroThreshold = LoggedTunable.from("Shooter/Hood/Rezero Threshold", Degrees::of, 2.0);
 
 	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Shooter/Hood/Profile/kV", 24.0);
 	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Shooter/Hood/Profile/kA", 24.0);
@@ -55,12 +54,13 @@ public class Hood extends SubsystemBase {
 		)
 	);
 
+	@Getter
 	private double angleRads = 0.0;
+	@Getter
 	private double velocityRadsPerSec = 0.0;
-	private double motorOffsetRads = 0.0;
-	private boolean calibrated = false;
 
-	private final EdgeDetector limitSwitchEdgeDetector = new EdgeDetector(false);
+	@Getter
+	private boolean calibrated = false;
 
 	public final ArmMech mech = new ArmMech(HoodConstants.hoodBase);
 
@@ -89,17 +89,11 @@ public class Hood extends SubsystemBase {
 		Logger.processInputs("Inputs/Shooter/Hood", this.inputs);
 		LoggedTracer.logEpoch("CommandScheduler Periodic/Subsystem/Shooter Hood/Process Inputs");
 
-		this.limitSwitchEdgeDetector.update(this.inputs.limitSwitch);
-		if (this.limitSwitchEdgeDetector.risingEdge()) {
-			this.resetInternalAngleRads(HoodConstants.minAngle.in(Radians));
-			if (!this.calibrated || Math.abs(this.motorOffsetRads) >= rezeroThreshold.get().in(Radians)) {
-				this.io.resetMotorPositionRads(HoodConstants.motorToMechanism.inverse().applyUnsigned(this.angleRads));
-				this.motorOffsetRads = 0.0;
-			}
+		if (this.inputs.limitSwitch) {
 			this.calibrated = true;
 		}
 
-		this.angleRads = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motor.encoder.getPositionRads()) + this.motorOffsetRads;
+		this.angleRads = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motor.encoder.getPositionRads());
 		this.velocityRadsPerSec = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motor.encoder.getVelocityRadsPerSec());
 
 		this.mech.setRads(this.getAngleRads());
@@ -129,26 +123,13 @@ public class Hood extends SubsystemBase {
 		LoggedTracer.logEpoch("CommandScheduler Periodic/Subsystem/Shooter Hood");
 	}
 
-	private void resetInternalAngleRads(double angleRads) {
-		this.angleRads = angleRads;
-		this.motorOffsetRads = this.angleRads - HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motor.encoder.getPositionRads());
-	}
-
-	public double getAngleRads() {
-		return this.angleRads;
-	}
-
-	public double getVelocityRadsPerSec() {
-		return this.velocityRadsPerSec;
-	}
-
 	private void stop(Optional<NeutralMode> neutralMode) {
 		this.io.stop(neutralMode);
 	}
 
 	private void setAngleGoalRads(double angleRads) {
 		this.io.setPositionRads(
-			HoodConstants.motorToMechanism.inverse().applyUnsigned(angleRads - this.motorOffsetRads)
+			HoodConstants.motorToMechanism.inverse().applyUnsigned(angleRads)
 		);
 		Logger.recordOutput("Shooter/Hood/Angle/Goal", angleRads);
 	}
