@@ -71,13 +71,13 @@ public class Flywheel extends SubsystemBase {
 		Logger.processInputs("Inputs/Shooter/Flywheels/" + this.config.name, this.inputs);
 
 		this.measuredSurfaceVeloMPS = FlywheelConstants.driverFlywheelWheel.radiansToMeters(FlywheelConstants.driverMotorToFlywheelRatio.applyUnsigned(this.inputs.masterMotor.encoder.getVelocityRadsPerSec()));
-		
+
 		this.setpointSurfaceVeloMPS = FlywheelConstants.driverFlywheelWheel.radiansToMeters(FlywheelConstants.driverMotorToFlywheelRatio.applyUnsigned(this.inputs.motorProfilePositionRads));
 		this.setpointSurfaceAccelMPSS = FlywheelConstants.driverFlywheelWheel.radiansToMeters(FlywheelConstants.driverMotorToFlywheelRatio.applyUnsigned(this.inputs.motorProfileVelocityRadsPerSec));
 
-		Logger.recordOutput("Inputs/Shooter/Flywheels/" + this.config.name + "/Surface Velocity/Measured", this.getMeasuredSurfaceVeloMPS(), MetersPerSecond);
-		Logger.recordOutput("Inputs/Shooter/Flywheels/" + this.config.name + "/Surface Velocity/Setpoint", this.getSetpointSurfaceVeloMPS(), MetersPerSecond);
-		Logger.recordOutput("Inputs/Shooter/Flywheels/" + this.config.name + "/Surface Acceleration/Setpoint", this.getSetpointSurfaceAccelMPSS(), MetersPerSecondPerSecond);
+		Logger.recordOutput("Shooter/Flywheels/" + this.config.name + "/Surface Velocity/Measured", this.getMeasuredSurfaceVeloMPS(), MetersPerSecond);
+		Logger.recordOutput("Shooter/Flywheels/" + this.config.name + "/Surface Velocity/Setpoint", this.getSetpointSurfaceVeloMPS(), MetersPerSecond);
+		Logger.recordOutput("Shooter/Flywheels/" + this.config.name + "/Surface Acceleration/Setpoint", this.getSetpointSurfaceAccelMPSS(), MetersPerSecondPerSecond);
 
 		if (profileConsts.hasChanged(this.hashCode())) {
 			this.io.configProfile(
@@ -110,11 +110,11 @@ public class Flywheel extends SubsystemBase {
 		};
 	}
 
-	public Command runAtSurfaceVeloMPS(DoubleSupplier surfaceVeloSupplierMPS) {
+	public Command genSurfaceVeloCommand(String name, DoubleSupplier surfaceVeloSupplierMPS) {
 		final var flywheel = this;
 		return new Command() {
 			{
-				this.setName("Run At Velo");
+				this.setName(name);
 				this.addRequirements(flywheel);
 			}
 
@@ -137,6 +137,6 @@ public class Flywheel extends SubsystemBase {
 	}
 
 	public Command spinup() {
-		return this.runAtSurfaceVeloMPS(() -> spinupSurfaceVelo.get().in(MetersPerSecond));
+		return this.genSurfaceVeloCommand("Spinup", () -> spinupSurfaceVelo.get().in(MetersPerSecond));
 	}
 }
