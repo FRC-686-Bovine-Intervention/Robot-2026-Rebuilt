@@ -32,6 +32,7 @@ import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
+import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.commands.WheelRadiusCalibration;
@@ -43,6 +44,16 @@ import frc.robot.subsystems.drive.modules.ModuleIOSim;
 import frc.robot.subsystems.drive.odometry.OdometryTimestampIO;
 import frc.robot.subsystems.drive.odometry.OdometryTimestampIOOdometryThread;
 import frc.robot.subsystems.drive.odometry.OdometryTimestampIOSim;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.rollers.RollersIO;
+import frc.robot.subsystems.rollers.Rollers;
+import frc.robot.subsystems.rollers.indexer.Indexer;
+import frc.robot.subsystems.rollers.indexer.IndexerIO;
+import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.flywheels.Flywheels;
+import frc.robot.subsystems.shooter.flywheels.FlywheelsIO;
+import frc.robot.subsystems.shooter.hood.Hood;
+import frc.robot.subsystems.shooter.hood.HoodIO;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.robot.subsystems.vision.object.ObjectVision;
 import frc.util.Perspective;
@@ -54,6 +65,10 @@ import frc.util.robotStructure.Mechanism3d;
 public class RobotContainer {
 	// Subsystems
 	public final Drive drive;
+	public final Shooter shooter;
+	public final Intake intake;
+	public final Rollers rollers;
+	public final Climber climber;
 
 	// Vision
 	public final ApriltagVision apriltagVision;
@@ -84,6 +99,19 @@ public class RobotContainer {
 						.map(ModuleIOFalcon550::new)
 						.toArray(ModuleIO[]::new)
 				);
+				this.shooter = new Shooter(
+					new Flywheels(new FlywheelsIO() {}),
+					new Hood(new HoodIO() {})
+				);
+				this.intake = new Intake(
+					new frc.robot.subsystems.intake.rollers.Rollers(new RollersIO() {})
+				);
+				this.rollers = new Rollers(
+					new Indexer(new IndexerIO() {})
+				);
+				this.climber = new Climber(
+
+				);
 			}
 			case SIM -> {
 				this.drive = new Drive(
@@ -92,6 +120,19 @@ public class RobotContainer {
 					Arrays.stream(DriveConstants.moduleConstants)
 						.map(ModuleIOSim::new)
 						.toArray(ModuleIO[]::new)
+				);
+				this.shooter = new Shooter(
+					new Flywheels(new FlywheelsIO() {}),
+					new Hood(new HoodIO() {})
+				);
+				this.intake = new Intake(
+					new frc.robot.subsystems.intake.rollers.Rollers(new RollersIO() {})
+				);
+				this.rollers = new Rollers(
+					new Indexer(new IndexerIO() {})
+				);
+				this.climber = new Climber(
+
 				);
 			}
 			default -> {
@@ -102,6 +143,19 @@ public class RobotContainer {
 					new ModuleIO(){},
 					new ModuleIO(){},
 					new ModuleIO(){}
+				);
+				this.shooter = new Shooter(
+					new Flywheels(new FlywheelsIO() {}),
+					new Hood(new HoodIO() {})
+				);
+				this.intake = new Intake(
+					new frc.robot.subsystems.intake.rollers.Rollers(new RollersIO() {})
+				);
+				this.rollers = new Rollers(
+					new Indexer(new IndexerIO() {})
+				);
+				this.climber = new Climber(
+
 				);
 			}
 		}
