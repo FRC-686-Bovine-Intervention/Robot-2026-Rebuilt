@@ -24,7 +24,7 @@ public class IntakeSlamIOSim extends IntakeSlamIOTalonFX {
 	@Override
 	public void updateInputs(IntakeSlamIOInputs inputs) {
 		var motorSimState = this.motor.getSimState();
-		var encoderSimState = this.cancoder.getSimState();
+		var encoderSimState = this.encoder.getSimState();
 
 		this.slamSim.setInputVoltage(-motorSimState.getMotorVoltage());
 		this.slamSim.update(RobotConstants.rioUpdatePeriodSecs);
