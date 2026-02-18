@@ -24,15 +24,20 @@ import frc.util.loggerUtil.inputs.LoggedEncodedMotor.EncodedMotorStatusSignalCac
 
 public class FlywheelIOTalonFX implements FlywheelIO {
 	private final FlywheelConfig config;
-	private final TalonFX masterMotor;
-	private final TalonFX slaveMotor;
+	// Hardware devices
+	protected final TalonFX masterMotor;
+	protected final TalonFX slaveMotor;
 
-	private final BaseStatusSignal[] refreshSignals;
-	private final BaseStatusSignal[] masterMotorConnectedSignals;
-	private final BaseStatusSignal[] slaveMotorConnectedSignals;
+	// Status Signal caches
 	private final EncodedMotorStatusSignalCache masterMotorStatusSignalCache;
 	private final EncodedMotorStatusSignalCache slaveMotorStatusSignalCache;
 
+	// Quick reference arrays
+	private final BaseStatusSignal[] refreshSignals;
+	private final BaseStatusSignal[] masterMotorConnectedSignals;
+	private final BaseStatusSignal[] slaveMotorConnectedSignals;
+
+	// Control Requests
 	private final NeutralOut neutralRequest = new NeutralOut();
 	private final CoastOut coastRequest = new CoastOut();
 	private final StaticBrake brakeRequest = new StaticBrake();
@@ -46,7 +51,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 		this.masterMotor = this.config.masterMotorID.talonFX();
 		this.slaveMotor = this.config.slaveMotorID.talonFX();
 
-		// Configure motors
+		// Motor Configuration
 		var motorConfig = new TalonFXConfiguration();
 		motorConfig.MotorOutput
 			.withNeutralMode(NeutralModeValue.Coast)
@@ -58,9 +63,11 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 		;
 		this.slaveMotor.getConfigurator().apply(motorConfig);
 
+		// Cache Status Signals
 		this.masterMotorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.masterMotor);
 		this.slaveMotorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.slaveMotor);
 
+		// Make quick reference arrays
 		this.refreshSignals = new BaseStatusSignal[] {
 			this.masterMotorStatusSignalCache.encoder().position(),
 			this.masterMotorStatusSignalCache.encoder().velocity(),
