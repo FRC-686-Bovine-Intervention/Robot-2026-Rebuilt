@@ -170,13 +170,18 @@ public class RobotContainer {
 		);
 
 		// Setup robot structure
-		// this.drive.structureRoot
-
-		// ;
+		this.drive.structureRoot
+			.addChild(this.intake.slam.driverMech
+				.addChild(this.intake.slam.couplerMech)
+			)
+			.addChild(this.intake.slam.followerMech)
+		;
 
 		// Register Mechanism3ds
 		Mechanism3d.registerMechs(
-
+			this.intake.slam.driverMech,
+			this.intake.slam.followerMech,
+			this.intake.slam.couplerMech
 		);
 
 		System.out.println("[Init RobotContainer] Configuring Commands");
