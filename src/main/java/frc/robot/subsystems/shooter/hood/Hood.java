@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.DegreesPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Volts;
 
 import java.util.Optional;
 import java.util.function.DoubleSupplier;
@@ -12,6 +13,7 @@ import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -30,6 +32,7 @@ public class Hood extends SubsystemBase {
 	private final HoodIOInputsAutoLogged inputs = new HoodIOInputsAutoLogged();
 
 	private static final LoggedTunable<Angle> idleAngle = LoggedTunable.from("Shooter/Hood/Idle Angle", Degrees::of, HoodConstants.minAngle.in(Degrees));
+	private static final LoggedTunable<Voltage> calibrationVoltage = LoggedTunable.from("Shooter/Hood/Calibration Voltage", Volts::of, -2.0);
 
 	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Shooter/Hood/Profile/kV", 24.0);
 	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Shooter/Hood/Profile/kA", 24.0);
@@ -155,6 +158,31 @@ public class Hood extends SubsystemBase {
 			@Override
 			public boolean runsWhenDisabled() {
 				return true;
+			}
+		};
+	}
+
+	public Command calibrate() {
+		final var hood = this;
+		return new Command() {
+			{
+				this.setName("Calibrate");
+				this.addRequirements(hood);
+			}
+			
+			@Override
+			public void execute() {
+				hood.io.setVolts(calibrationVoltage.get().in(Volts));
+			}
+
+			@Override
+			public void end(boolean interrupted) {
+				hood.stop(NeutralMode.DEFAULT);
+			}
+
+			@Override
+			public InterruptionBehavior getInterruptionBehavior() {
+				return InterruptionBehavior.kCancelIncoming;
 			}
 		};
 	}
