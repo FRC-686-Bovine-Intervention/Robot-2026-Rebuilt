@@ -6,6 +6,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Seconds;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -18,6 +19,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -60,6 +62,7 @@ import frc.robot.subsystems.vision.object.ObjectVision;
 import frc.util.Perspective;
 import frc.util.controllers.Joystick;
 import frc.util.controllers.XboxController;
+import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.robotStructure.Mechanism3d;
 
 public class RobotContainer {
@@ -320,12 +323,21 @@ public class RobotContainer {
 			}
 		});
 
-		this.intake.rollers.setDefaultCommand(this.intake.rollers.idle());
-		this.intake.slam.setDefaultCommand(this.intake.slam.retract());
+		final var intakeRollersIdleCommand = this.intake.rollers.idle();
+		final var intakeRollersIntakeCommand = this.intake.rollers.intake();
+		final var intakeRetractCommand = this.intake.slam.retract();
+		final var intakeDeployCommand = this.intake.slam.deploy(this.extensionSystem);
 
-		this.shooter.leftFlywheel.setDefaultCommand(this.shooter.leftFlywheel.idle());
-		this.shooter.rightFlywheel.setDefaultCommand(this.shooter.rightFlywheel.idle());
-		this.shooter.hood.setDefaultCommand(this.shooter.hood.idle());
+		this.intake.rollers.setDefaultCommand(intakeRollersIdleCommand);
+		this.intake.slam.setDefaultCommand(intakeRetractCommand);
+
+		final var leftFlywheelIdleCommand = this.shooter.leftFlywheel.idle();
+		final var rightFlywheelIdleCommand = this.shooter.rightFlywheel.idle();
+		final var hoodIdleCommand = this.shooter.hood.idle();
+
+		this.shooter.leftFlywheel.setDefaultCommand(leftFlywheelIdleCommand);
+		this.shooter.rightFlywheel.setDefaultCommand(rightFlywheelIdleCommand);
+		this.shooter.hood.setDefaultCommand(hoodIdleCommand);
 
 		// Auto calibrate hood if not calibrated
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
@@ -339,6 +351,34 @@ public class RobotContainer {
 		// 	)
 		// )));
 
-		this.driveController.a().whileTrue(this.intake.intake(this.extensionSystem));
+		/*
+		 * (A)
+		 *  | Press: Deploy intake (if not deployed) and roll in
+		 *  | Double Press: Retract intake
+		 */
+		final var intakeDoublePressThreshold = LoggedTunable.from("Controls/Intake/Double Press Threshold", Seconds::of, 0.25);
+		final var intakeDoublePressTimer = new Timer();
+		CommandScheduler.getInstance().getDefaultButtonLoop().bind(() -> {
+			if (this.driveController.hid.getAButtonPressed()) {
+				CommandScheduler.getInstance().schedule(intakeRollersIntakeCommand);
+				CommandScheduler.getInstance().schedule(intakeDeployCommand);
+			}
+			if (this.driveController.hid.getAButtonReleased()) {
+				CommandScheduler.getInstance().cancel(intakeRollersIntakeCommand);
+				if (intakeDoublePressTimer.isRunning()) {
+					if (!intakeDoublePressTimer.hasElapsed(intakeDoublePressThreshold.get().in(Seconds))) {
+						CommandScheduler.getInstance().schedule(intakeRetractCommand);
+					}
+				} else {
+					intakeDoublePressTimer.start();
+				}
+			}
+			if (intakeDoublePressTimer.hasElapsed(intakeDoublePressThreshold.get().in(Seconds))) {
+				intakeDoublePressTimer.stop();
+				intakeDoublePressTimer.reset();
+			}
+		});
+
+		
 	}
 }
