@@ -58,9 +58,14 @@ public class Hood extends SubsystemBase {
 	);
 
 	@Getter
-	private double angleRads = 0.0;
+	private double measuredAngleRads = 0.0;
 	@Getter
-	private double velocityRadsPerSec = 0.0;
+	private double measuredVelocityRadsPerSec = 0.0;
+
+	@Getter
+	private double setpointAngleRads = 0.0;
+	@Getter
+	private double setpointVelocityRadsPerSec = 0.0;
 
 	@Getter
 	private boolean calibrated = false;
@@ -96,13 +101,18 @@ public class Hood extends SubsystemBase {
 			this.calibrated = true;
 		}
 
-		this.angleRads = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motor.encoder.getPositionRads());
-		this.velocityRadsPerSec = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motor.encoder.getVelocityRadsPerSec());
+		this.measuredAngleRads = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motor.encoder.getPositionRads());
+		this.measuredVelocityRadsPerSec = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motor.encoder.getVelocityRadsPerSec());
+		
+		this.setpointAngleRads = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motorProfilePositionRads);
+		this.setpointVelocityRadsPerSec = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motorProfileVelocityRadsPerSec);
 
-		this.mech.setRads(this.getAngleRads());
+		Logger.recordOutput("Shooter/Hood/Angle/Measured", this.getMeasuredAngleRads(), Radians);
+		Logger.recordOutput("Shooter/Hood/Velocity/Measured", this.getMeasuredVelocityRadsPerSec(), RadiansPerSecond);
+		Logger.recordOutput("Shooter/Hood/Angle/Setpoint", this.getSetpointAngleRads(), Radians);
+		Logger.recordOutput("Shooter/Hood/Velocity/Setpoint", this.getSetpointVelocityRadsPerSec(), RadiansPerSecond);
 
-		Logger.recordOutput("Shooter/Hood/Angle/Measured", this.getAngleRads());
-		Logger.recordOutput("Shooter/Hood/Velocity/Measured", this.getVelocityRadsPerSec());
+		this.mech.setRads(this.getMeasuredAngleRads());
 
 		if (pidConsts.hasChanged(hashCode())) {
 			this.io.configPID(pidConsts.get());

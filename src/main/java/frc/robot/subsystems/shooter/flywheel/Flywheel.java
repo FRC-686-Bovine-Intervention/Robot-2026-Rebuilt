@@ -1,5 +1,6 @@
 package frc.robot.subsystems.shooter.flywheel;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
 
 import java.util.function.DoubleSupplier;
 
@@ -70,8 +71,13 @@ public class Flywheel extends SubsystemBase {
 		Logger.processInputs("Inputs/Shooter/Flywheels/" + this.config.name, this.inputs);
 
 		this.measuredSurfaceVeloMPS = FlywheelConstants.driverFlywheelWheel.radiansToMeters(FlywheelConstants.driverMotorToFlywheelRatio.applyUnsigned(this.inputs.masterMotor.encoder.getVelocityRadsPerSec()));
+		
 		this.setpointSurfaceVeloMPS = FlywheelConstants.driverFlywheelWheel.radiansToMeters(FlywheelConstants.driverMotorToFlywheelRatio.applyUnsigned(this.inputs.motorProfilePositionRads));
 		this.setpointSurfaceAccelMPSS = FlywheelConstants.driverFlywheelWheel.radiansToMeters(FlywheelConstants.driverMotorToFlywheelRatio.applyUnsigned(this.inputs.motorProfileVelocityRadsPerSec));
+
+		Logger.recordOutput("Inputs/Shooter/Flywheels/" + this.config.name + "/Surface Velocity/Measured", this.getMeasuredSurfaceVeloMPS(), MetersPerSecond);
+		Logger.recordOutput("Inputs/Shooter/Flywheels/" + this.config.name + "/Surface Velocity/Setpoint", this.getSetpointSurfaceVeloMPS(), MetersPerSecond);
+		Logger.recordOutput("Inputs/Shooter/Flywheels/" + this.config.name + "/Surface Acceleration/Setpoint", this.getSetpointSurfaceAccelMPSS(), MetersPerSecondPerSecond);
 
 		if (profileConsts.hasChanged(this.hashCode())) {
 			this.io.configProfile(
