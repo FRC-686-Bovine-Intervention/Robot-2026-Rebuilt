@@ -23,6 +23,7 @@ import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.constants.HardwareDevices;
 import frc.robot.constants.RobotConstants;
+import frc.robot.subsystems.ExtensionSystem;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -36,7 +37,12 @@ import frc.robot.subsystems.drive.odometry.OdometryTimestampIO;
 import frc.robot.subsystems.drive.odometry.OdometryTimestampIOOdometryThread;
 import frc.robot.subsystems.drive.odometry.OdometryTimestampIOSim;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.rollers.RollersIO;
+import frc.robot.subsystems.intake.rollers.IntakeRollers;
+import frc.robot.subsystems.intake.rollers.IntakeRollersIO;
+import frc.robot.subsystems.intake.slam.IntakeSlam;
+import frc.robot.subsystems.intake.slam.IntakeSlamIO;
+import frc.robot.subsystems.intake.slam.IntakeSlamIOSim;
+import frc.robot.subsystems.intake.slam.IntakeSlamIOTalonFX;
 import frc.robot.subsystems.rollers.Rollers;
 import frc.robot.subsystems.rollers.indexer.Indexer;
 import frc.robot.subsystems.rollers.indexer.IndexerIO;
@@ -60,6 +66,7 @@ public class RobotContainer {
 	public final Intake intake;
 	public final Rollers rollers;
 	public final Climber climber;
+	public final ExtensionSystem extension;
 
 	// Vision
 	public final ApriltagVision apriltagVision;
@@ -97,7 +104,8 @@ public class RobotContainer {
 					new Hood(new HoodIO() {})
 				);
 				this.intake = new Intake(
-					new frc.robot.subsystems.intake.rollers.Rollers(new RollersIO() {})
+					new IntakeRollers(new IntakeRollersIO() {}),
+					new IntakeSlam(new IntakeSlamIOTalonFX())
 				);
 				this.rollers = new Rollers(
 					new Indexer(new IndexerIO() {})
@@ -121,7 +129,8 @@ public class RobotContainer {
 					new Hood(new HoodIO() {})
 				);
 				this.intake = new Intake(
-					new frc.robot.subsystems.intake.rollers.Rollers(new RollersIO() {})
+					new IntakeRollers(new IntakeRollersIO() {}),
+					new IntakeSlam(new IntakeSlamIOSim())
 				);
 				this.rollers = new Rollers(
 					new Indexer(new IndexerIO() {})
@@ -146,7 +155,8 @@ public class RobotContainer {
 					new Hood(new HoodIO() {})
 				);
 				this.intake = new Intake(
-					new frc.robot.subsystems.intake.rollers.Rollers(new RollersIO() {})
+					new IntakeRollers(new IntakeRollersIO() {}),
+					new IntakeSlam(new IntakeSlamIO() {})
 				);
 				this.rollers = new Rollers(
 					new Indexer(new IndexerIO() {})
@@ -157,6 +167,8 @@ public class RobotContainer {
 			}
 		}
 
+		this.extension = new ExtensionSystem();
+
 		// Initialize vision systems with camera pipelines
 		this.apriltagVision = new ApriltagVision(
 
@@ -166,13 +178,18 @@ public class RobotContainer {
 		);
 
 		// Setup robot structure
-		// this.drive.structureRoot
-
-		// ;
+		this.drive.structureRoot
+			.addChild(this.intake.slam.driverMech
+				.addChild(this.intake.slam.couplerMech)
+			)
+			.addChild(this.intake.slam.followerMech)
+		;
 
 		// Register Mechanism3ds
 		Mechanism3d.registerMechs(
-
+			this.intake.slam.driverMech,
+			this.intake.slam.followerMech,
+			this.intake.slam.couplerMech
 		);
 
 		System.out.println("[Init RobotContainer] Configuring Commands");
@@ -300,6 +317,8 @@ public class RobotContainer {
 				drive.rotationalSubsystem.stop();
 			}
 		});
+		this.intake.rollers.setDefaultCommand(this.intake.rollers.idle());
+		this.intake.slam.setDefaultCommand(this.intake.slam.retract());
 
 		// Setup position reset command
 		// this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(
@@ -309,5 +328,7 @@ public class RobotContainer {
 		// 		Rotation2d.kZero
 		// 	)
 		// )));
+
+		this.driveController.a().whileTrue(this.intake.intake(this.extension));
 	}
 }

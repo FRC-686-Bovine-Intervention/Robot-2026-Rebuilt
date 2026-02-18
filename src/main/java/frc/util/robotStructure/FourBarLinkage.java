@@ -1,66 +1,124 @@
 package frc.util.robotStructure;
 
+import static edu.wpi.first.units.Units.Meters;
+
+import org.littletonrobotics.junction.Logger;
+
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.units.measure.Distance;
+
 public class FourBarLinkage {
-	private final double frameLength;
 	private final double driverLength;
 	private final double followerLength;
 	private final double couplerLength;
 	private final boolean useNegative;
 
-	private double driverAngleRads = 0.0;
-	private double followerAngleRads = 0.0;
-	private double couplerAngleRads = 0.0;
+	private final double baseFollowerJointX;
+	private final double baseFollowerJointY;
+
+	private double driverCouplerJointX;
+	private double driverCouplerJointY;
+	private double followerCouplerJointX;
+	private double followerCouplerJointY;
 
 	public FourBarLinkage(
-		double frameLength,
-		double driverLength,
-		double followerLength,
-		double couplerLength,
-		boolean driverOnTop,
+		Translation2d baseDriverJoint,
+		Translation2d baseFollowerJoint,
+		Distance driverLength,
+		Distance followerLength,
+		Distance couplerLength,
 		boolean useNegative
 	) {
-		this.frameLength = (driverOnTop ? -1.0 : 1.0) *  frameLength;
-		this.driverLength = driverLength;
-		this.followerLength = followerLength;
-		this.couplerLength = couplerLength;
-		this.useNegative = useNegative ^ driverOnTop;
+		this.baseFollowerJointX = baseFollowerJoint.getX() - baseDriverJoint.getX();
+		this.baseFollowerJointY = baseFollowerJoint.getY() - baseDriverJoint.getY();
+
+		this.driverLength = driverLength.in(Meters);
+		this.followerLength = followerLength.in(Meters);
+		this.couplerLength = couplerLength.in(Meters);
+
+		this.useNegative = useNegative;
+	}
+
+	public FourBarLinkage(
+		Translation2d baseDriverJoint,
+		Translation2d baseFollowerJoint,
+		Translation2d driverCouplerJoint,
+		Translation2d followerCouplerJoint,
+		boolean useNegative
+	) {
+		this(
+			baseDriverJoint,
+			baseFollowerJoint,
+			Meters.of(baseDriverJoint.getDistance(driverCouplerJoint)),
+			Meters.of(baseFollowerJoint.getDistance(followerCouplerJoint)),
+			Meters.of(driverCouplerJoint.getDistance(followerCouplerJoint)),
+			useNegative
+		);
+
+		this.driverCouplerJointX = driverCouplerJoint.getX() - baseDriverJoint.getX();
+		this.driverCouplerJointY = driverCouplerJoint.getY() - baseDriverJoint.getY();
+		this.followerCouplerJointX = followerCouplerJoint.getX() - baseDriverJoint.getX();
+		this.followerCouplerJointY = followerCouplerJoint.getY() - baseDriverJoint.getY();
 	}
 
 	public void setDriverAngleRads(double driverRads) {
-		this.driverAngleRads = driverRads;
+		this.driverCouplerJointX = Math.cos(driverRads) * this.driverLength;
+		this.driverCouplerJointY = Math.sin(driverRads) * this.driverLength;
 
-		var driverX = Math.cos(this.driverAngleRads) * this.driverLength;
-		var driverY = Math.sin(this.driverAngleRads) * this.driverLength;
+		var baseFollowerJointToDriverCouplerJointDistance = Math.hypot(
+			this.driverCouplerJointX - this.baseFollowerJointX,
+			this.driverCouplerJointY - this.baseFollowerJointY
+		);
 
-		var frameToDriverDistance = Math.hypot(driverX, driverY - this.frameLength);
-
-		var f = (2.0 / frameToDriverDistance) * Math.sqrt(
+		var f = (2.0 / baseFollowerJointToDriverCouplerJointDistance) * Math.sqrt(
 			0.0625
-			* (+frameToDriverDistance + this.followerLength + this.couplerLength)
-			* (-frameToDriverDistance + this.followerLength + this.couplerLength)
-			* (+frameToDriverDistance - this.followerLength + this.couplerLength)
-			* (+frameToDriverDistance + this.followerLength - this.couplerLength)
+			* (+baseFollowerJointToDriverCouplerJointDistance + this.followerLength + this.couplerLength)
+			* (-baseFollowerJointToDriverCouplerJointDistance + this.followerLength + this.couplerLength)
+			* (+baseFollowerJointToDriverCouplerJointDistance - this.followerLength + this.couplerLength)
+			* (+baseFollowerJointToDriverCouplerJointDistance + this.followerLength - this.couplerLength)
 		);
 
 		var asin = (this.useNegative ? -1.0 : 1.0) *  Math.asin(f / this.followerLength);
 
-		var atan = Math.atan2(driverY - this.frameLength, driverX);
+		var atan = Math.atan2(
+			this.driverCouplerJointY - this.baseFollowerJointY,
+			this.driverCouplerJointX - this.baseFollowerJointX
+		);
 
-		this.followerAngleRads = asin + atan;
+		var followerAngleRads = asin + atan;
 
-		var followerX = Math.cos(this.followerAngleRads) * this.followerLength;
-		var followerY = Math.sin(this.followerAngleRads) * this.followerLength + this.frameLength;
+		this.followerCouplerJointX = Math.cos(followerAngleRads) * this.followerLength + this.baseFollowerJointX;
+		this.followerCouplerJointY = Math.sin(followerAngleRads) * this.followerLength + this.baseFollowerJointY;
 
-		this.couplerAngleRads = Math.atan2(followerY - driverY, followerX - driverX);
+
+		Logger.recordOutput("DEBUG/FOURBAR/box", new Translation2d(), new Translation2d(this.driverCouplerJointX, this.driverCouplerJointY), new Translation2d(this.followerCouplerJointX, this.followerCouplerJointY), new Translation2d(this.baseFollowerJointX, this.baseFollowerJointY), new Translation2d());
 	}
 
-	public double getDriverAngleRads() {
-		return this.driverAngleRads;
+	public double getHorizonBaseDriverCouplerAngleRads() {
+		return Math.atan2(
+			this.driverCouplerJointY,
+			this.driverCouplerJointX
+		);
 	}
-	public double getFollowerAngleRads() {
-		return this.followerAngleRads;
+
+	public double getHorizonBaseFollowerCouplerAngleRads() {
+		return Math.atan2(
+			this.followerCouplerJointY - this.baseFollowerJointY,
+			this.followerCouplerJointX - this.baseFollowerJointX
+		);
 	}
-	public double getCouplerAngleRads() {
-		return this.couplerAngleRads;
+
+	/**
+	 * Use this to get the angle for a coupler arm mech if it is attached to the driver arm mech
+	 */
+	public double getDriverRelativeCouplerAngleRads() {
+		// Complex multiply vectors to rotate, the scaling effect doesn't matter because angle is unaffected
+		// Implicitly negate the driverCouplerJoint's angle to achieve angle subtraction
+		var driverRelFollowerCouplerJointX = +this.followerCouplerJointX * this.driverCouplerJointX + this.followerCouplerJointY * this.driverCouplerJointY;
+		var driverRelFollowerCouplerJointY = -this.followerCouplerJointX * this.driverCouplerJointY + this.followerCouplerJointY * this.driverCouplerJointX;
+		return Math.atan2(
+			driverRelFollowerCouplerJointY,
+			driverRelFollowerCouplerJointX
+		);
 	}
 }
