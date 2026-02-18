@@ -1,4 +1,4 @@
-package frc.robot.subsystems.shooter.flywheels;
+package frc.robot.subsystems.shooter.flywheel;
 import java.util.function.DoubleSupplier;
 
 import org.littletonrobotics.junction.Logger;
@@ -8,13 +8,16 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.RobotConstants;
+import frc.robot.subsystems.shooter.flywheel.FlywheelConstants.FlywheelConfig;
+import frc.robot.subsystems.shooter.flywheels.FlywheelsIOInputsAutoLogged;
 import frc.util.FFConstants;
 import frc.util.NeutralMode;
 import frc.util.PIDConstants;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 
-public class Flywheels extends SubsystemBase {
-	private final FlywheelsIO io;
+public class Flywheel extends SubsystemBase {
+	public final FlywheelConfig config;
+	private final FlywheelIO io;
 	private final FlywheelsIOInputsAutoLogged inputs = new FlywheelsIOInputsAutoLogged();
 
 	private static final LoggedTunable<PIDConstants> pidGains = LoggedTunable.from("Shooter/Flywheels/PID", new PIDConstants(
@@ -39,10 +42,12 @@ public class Flywheels extends SubsystemBase {
 
 	private double surfaceVeloMPS = 0.0;
 
-	public Flywheels(FlywheelsIO io) {
-		super("Shooter/Flywheels");
+	public Flywheel(FlywheelConfig config, FlywheelIO io) {
+		super("Shooter/Flywheels/" + config.name);
 
-		System.out.println("[Init Flywheel] Instantiating Flywheel with " + io.getClass().getSimpleName());
+		this.config = config;
+
+		System.out.println("[Init Flywheel] Instantiating Flywheel " + this.config.name + " with " + io.getClass().getSimpleName());
 		this.io = io;
 
 		this.io.configPID(pidGains.get());
@@ -51,7 +56,7 @@ public class Flywheels extends SubsystemBase {
 	@Override
 	public void periodic() {
 		this.io.updateInputs(this.inputs);
-		Logger.processInputs("Inputs/Shooter/Flywheels", this.inputs);
+		Logger.processInputs("Inputs/Shooter/Flywheels/" + this.config.name, this.inputs);
 
 		if (pidGains.hasChanged(this.hashCode())) {
 			this.io.configPID(pidGains.get());

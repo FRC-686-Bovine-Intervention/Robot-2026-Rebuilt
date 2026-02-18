@@ -1,4 +1,4 @@
-package frc.robot.subsystems.shooter.flywheels;
+package frc.robot.subsystems.shooter.flywheel;
 
 import java.util.Optional;
 
@@ -8,16 +8,16 @@ import frc.util.NeutralMode;
 import frc.util.PIDConstants;
 import frc.util.loggerUtil.inputs.LoggedEncodedMotor;
 
-public interface FlywheelsIO {
+public interface FlywheelIO {
 	@AutoLog
-	public static class FlywheelsIOInputs {
+	public static class FlywheelIOInputs {
 		boolean masterMotorConnected = false;
 		boolean slaveMotorConnected = false;
 		LoggedEncodedMotor masterMotor = new LoggedEncodedMotor();
 		LoggedEncodedMotor slaveMotor = new LoggedEncodedMotor();
 	}
 
-	public default void updateInputs(FlywheelsIOInputs inputs) {}
+	public default void updateInputs(FlywheelIOInputs inputs) {}
 
 	public default void setVolts(double volts) {}
 

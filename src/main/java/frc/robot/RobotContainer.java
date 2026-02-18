@@ -47,9 +47,10 @@ import frc.robot.subsystems.rollers.Rollers;
 import frc.robot.subsystems.rollers.indexer.Indexer;
 import frc.robot.subsystems.rollers.indexer.IndexerIO;
 import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.shooter.flywheels.Flywheels;
-import frc.robot.subsystems.shooter.flywheels.FlywheelsIO;
-import frc.robot.subsystems.shooter.flywheels.FlywheelsIOTalonFX;
+import frc.robot.subsystems.shooter.flywheel.Flywheel;
+import frc.robot.subsystems.shooter.flywheel.FlywheelConstants;
+import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
+import frc.robot.subsystems.shooter.flywheel.FlywheelIOTalonFX;
 import frc.robot.subsystems.shooter.hood.Hood;
 import frc.robot.subsystems.shooter.hood.HoodIO;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
@@ -66,7 +67,7 @@ public class RobotContainer {
 	public final Intake intake;
 	public final Rollers rollers;
 	public final Climber climber;
-	public final ExtensionSystem extension;
+	public final ExtensionSystem extensionSystem;
 
 	// Vision
 	public final ApriltagVision apriltagVision;
@@ -98,9 +99,8 @@ public class RobotContainer {
 						.toArray(ModuleIO[]::new)
 				);
 				this.shooter = new Shooter(
-					new Flywheels(new FlywheelsIOTalonFX(HardwareDevices.leftFlywheelMotorMasterID, HardwareDevices.leftFlywheelMotorSlaveID)),
-					new Flywheels(new FlywheelsIOTalonFX(HardwareDevices.centerFlywheelMotorMasterID, HardwareDevices.centerFlywheelMotorSlaveID)),
-					new Flywheels(new FlywheelsIOTalonFX(HardwareDevices.rightFlywheelMotorMasterID, HardwareDevices.rightFlywheelMotorSlaveID)),
+					new Flywheel(FlywheelConstants.leftFlywheelConfig, new FlywheelIOTalonFX(FlywheelConstants.leftFlywheelConfig)),
+					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIOTalonFX(FlywheelConstants.rightFlywheelConfig)),
 					new Hood(new HoodIO() {})
 				);
 				this.intake = new Intake(
@@ -123,9 +123,8 @@ public class RobotContainer {
 						.toArray(ModuleIO[]::new)
 				);
 				this.shooter = new Shooter(
-					new Flywheels(new FlywheelsIO() {}),
-					new Flywheels(new FlywheelsIO() {}),
-					new Flywheels(new FlywheelsIO() {}),
+					new Flywheel(FlywheelConstants.leftFlywheelConfig, new FlywheelIO() {}),
+					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIO() {}),
 					new Hood(new HoodIO() {})
 				);
 				this.intake = new Intake(
@@ -149,9 +148,8 @@ public class RobotContainer {
 					new ModuleIO(){}
 				);
 				this.shooter = new Shooter(
-					new Flywheels(new FlywheelsIO() {}),
-					new Flywheels(new FlywheelsIO() {}),
-					new Flywheels(new FlywheelsIO() {}),
+					new Flywheel(FlywheelConstants.leftFlywheelConfig, new FlywheelIO() {}),
+					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIO() {}),
 					new Hood(new HoodIO() {})
 				);
 				this.intake = new Intake(
@@ -167,7 +165,7 @@ public class RobotContainer {
 			}
 		}
 
-		this.extension = new ExtensionSystem();
+		this.extensionSystem = new ExtensionSystem();
 
 		// Initialize vision systems with camera pipelines
 		this.apriltagVision = new ApriltagVision(
@@ -329,6 +327,6 @@ public class RobotContainer {
 		// 	)
 		// )));
 
-		this.driveController.a().whileTrue(this.intake.intake(this.extension));
+		this.driveController.a().whileTrue(this.intake.intake(this.extensionSystem));
 	}
 }

@@ -52,9 +52,6 @@ public class HardwareDevices {
 	// | | Left Flywheel System
 	public static final CANDevice leftFlywheelMotorMasterID = canivore.id(5);
 	public static final CANDevice leftFlywheelMotorSlaveID = canivore.id(6);
-	// | | Center Flywheel System
-	public static final CANDevice centerFlywheelMotorMasterID = canivore.id(7);
-	public static final CANDevice centerFlywheelMotorSlaveID = canivore.id(8);
 	// | | Right Flywheel System
 	public static final CANDevice rightFlywheelMotorMasterID = canivore.id(9);
 	public static final CANDevice rightFlywheelMotorSlaveID = canivore.id(10);
