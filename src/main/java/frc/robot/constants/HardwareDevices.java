@@ -51,8 +51,10 @@ public class HardwareDevices {
 	// Rollers
 	// | Indexer
 	public static final CANDevice indexerMotorID = canivore.id(8);
+	// | Agitator
+	public static final CANDevice agitatorMotorID = canivore.id(9);
 	// | Feeder
-	public static final CANDevice feederMotorID = canivore.id(9);
+	public static final CANDevice feederMotorID = canivore.id(10);
 
 	// Shooter
 	// | Flywheels

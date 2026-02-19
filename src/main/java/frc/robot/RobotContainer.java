@@ -47,8 +47,15 @@ import frc.robot.subsystems.intake.slam.IntakeSlamIO;
 import frc.robot.subsystems.intake.slam.IntakeSlamIOSim;
 import frc.robot.subsystems.intake.slam.IntakeSlamIOTalonFX;
 import frc.robot.subsystems.rollers.Rollers;
+import frc.robot.subsystems.rollers.agitator.Agitator;
+import frc.robot.subsystems.rollers.agitator.AgitatorIO;
+import frc.robot.subsystems.rollers.agitator.AgitatorIOTalonFX;
+import frc.robot.subsystems.rollers.feeder.Feeder;
+import frc.robot.subsystems.rollers.feeder.FeederIO;
+import frc.robot.subsystems.rollers.feeder.FeederIOTalonFX;
 import frc.robot.subsystems.rollers.indexer.Indexer;
 import frc.robot.subsystems.rollers.indexer.IndexerIO;
+import frc.robot.subsystems.rollers.indexer.IndexerIOTalonFX;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.aiming.AimingSystem;
 import frc.robot.subsystems.shooter.aiming.passing.InterpolationPassingCalc;
@@ -119,7 +126,9 @@ public class RobotContainer {
 					new IntakeSlam(new IntakeSlamIOTalonFX())
 				);
 				this.rollers = new Rollers(
-					new Indexer(new IndexerIO() {})
+					new Indexer(new IndexerIOTalonFX()),
+					new Agitator(new AgitatorIOTalonFX()),
+					new Feeder(new FeederIOTalonFX())
 				);
 				this.climber = new Climber(
 
@@ -147,7 +156,9 @@ public class RobotContainer {
 					new IntakeSlam(new IntakeSlamIOSim())
 				);
 				this.rollers = new Rollers(
-					new Indexer(new IndexerIO() {})
+					new Indexer(new IndexerIO() {}),
+					new Agitator(new AgitatorIO() {}),
+					new Feeder(new FeederIO() {})
 				);
 				this.climber = new Climber(
 
@@ -176,7 +187,9 @@ public class RobotContainer {
 					new IntakeSlam(new IntakeSlamIO() {})
 				);
 				this.rollers = new Rollers(
-					new Indexer(new IndexerIO() {})
+					new Indexer(new IndexerIO() {}),
+					new Agitator(new AgitatorIO() {}),
+					new Feeder(new FeederIO() {})
 				);
 				this.climber = new Climber(
 
