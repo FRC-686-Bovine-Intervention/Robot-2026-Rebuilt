@@ -25,7 +25,7 @@ public class Intake {
 			this.rollers.eject()
 		).withName("Eject");
 	}
-	
+
 	public Command retract() {
 		return Commands.parallel(
 			this.slam.retract(),
