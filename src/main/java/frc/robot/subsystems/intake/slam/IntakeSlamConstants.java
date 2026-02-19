@@ -56,9 +56,9 @@ public class IntakeSlamConstants {
 	);
 	public static final Transform3d mechFollowerBase3d = new Transform3d(
 		new Translation3d(
-			mechDriverAxle2d.getMeasureX(),
+			mechFollowerAxle2d.getMeasureX(),
 			Inches.of(0.0),
-			mechDriverAxle2d.getMeasureY()
+			mechFollowerAxle2d.getMeasureY()
 		),
 		GeomUtil.rotation3dBuilder()
 

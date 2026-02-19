@@ -11,9 +11,9 @@ import static edu.wpi.first.units.Units.Seconds;
 import java.util.Arrays;
 import java.util.Set;
 
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
@@ -22,7 +22,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.constants.RobotConstants;
@@ -51,6 +50,9 @@ import frc.robot.subsystems.rollers.Rollers;
 import frc.robot.subsystems.rollers.indexer.Indexer;
 import frc.robot.subsystems.rollers.indexer.IndexerIO;
 import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.aiming.AimingSystem;
+import frc.robot.subsystems.shooter.aiming.passing.InterpolationPassingCalc;
+import frc.robot.subsystems.shooter.aiming.shooting.InterpolationShootingCalc;
 import frc.robot.subsystems.shooter.flywheel.Flywheel;
 import frc.robot.subsystems.shooter.flywheel.FlywheelConstants;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
@@ -106,7 +108,11 @@ public class RobotContainer {
 				this.shooter = new Shooter(
 					new Flywheel(FlywheelConstants.leftFlywheelConfig, new FlywheelIOTalonFX(FlywheelConstants.leftFlywheelConfig)),
 					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIOTalonFX(FlywheelConstants.rightFlywheelConfig)),
-					new Hood(new HoodIO() {})
+					new Hood(new HoodIO() {}),
+					new AimingSystem(
+						new InterpolationShootingCalc(),
+						new InterpolationPassingCalc()
+					)
 				);
 				this.intake = new Intake(
 					new IntakeRollers(new IntakeRollersIOTalonFX()),
@@ -130,7 +136,11 @@ public class RobotContainer {
 				this.shooter = new Shooter(
 					new Flywheel(FlywheelConstants.leftFlywheelConfig, new FlywheelIO() {}),
 					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIO() {}),
-					new Hood(new HoodIO() {})
+					new Hood(new HoodIO() {}),
+					new AimingSystem(
+						new InterpolationShootingCalc(),
+						new InterpolationPassingCalc()
+					)
 				);
 				this.intake = new Intake(
 					new IntakeRollers(new IntakeRollersIO() {}),
@@ -155,7 +165,11 @@ public class RobotContainer {
 				this.shooter = new Shooter(
 					new Flywheel(FlywheelConstants.leftFlywheelConfig, new FlywheelIO() {}),
 					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIO() {}),
-					new Hood(new HoodIO() {})
+					new Hood(new HoodIO() {}),
+					new AimingSystem(
+						new InterpolationShootingCalc(),
+						new InterpolationPassingCalc()
+					)
 				);
 				this.intake = new Intake(
 					new IntakeRollers(new IntakeRollersIO() {}),
@@ -334,13 +348,35 @@ public class RobotContainer {
 		final var leftFlywheelIdleCommand = this.shooter.leftFlywheel.idle();
 		final var rightFlywheelIdleCommand = this.shooter.rightFlywheel.idle();
 		final var hoodIdleCommand = this.shooter.hood.idle();
+		final var aimAtHubCommand = Commands.parallel(
+			this.shooter.aimingSystem.aimAtHub(
+				RobotState.getInstance()::getEstimatedGlobalPose,
+				this.drive::getFieldMeasuredSpeeds,
+				() -> Translation3d.kZero
+			).repeatedly(),
+			this.shooter.aimLeftFlywheelAtHub(),
+			this.shooter.aimRightFlywheelAtHub(),
+			this.shooter.aimHoodAtHub(),
+			this.shooter.aimDriveAtHub(this.drive.rotationalSubsystem)
+		).withName("Aim at Hub");
+		final var aimToPassCommand = Commands.parallel(
+			this.shooter.aimingSystem.aimToPass(
+				RobotState.getInstance()::getEstimatedGlobalPose,
+				this.drive::getFieldMeasuredSpeeds,
+				() -> Translation3d.kZero
+			).repeatedly(),
+			this.shooter.aimLeftFlywheelToPass(),
+			this.shooter.aimRightFlywheelToPass(),
+			this.shooter.aimHoodToPass(),
+			this.shooter.aimDriveToPass(this.drive.rotationalSubsystem)
+		).withName("Aim to Pass");
 
 		this.shooter.leftFlywheel.setDefaultCommand(leftFlywheelIdleCommand);
 		this.shooter.rightFlywheel.setDefaultCommand(rightFlywheelIdleCommand);
 		this.shooter.hood.setDefaultCommand(hoodIdleCommand);
 
 		// Auto calibrate hood if not calibrated
-		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
+		// new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 
 		// Setup position reset command
 		// this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(
@@ -379,6 +415,13 @@ public class RobotContainer {
 			}
 		});
 
-		
+		CommandScheduler.getInstance().getDefaultButtonLoop().bind(() -> {
+			if (this.driveController.hid.getRightBumperButtonPressed()) {
+				CommandScheduler.getInstance().schedule(aimAtHubCommand);
+			}
+			if (this.driveController.hid.getRightBumperButtonReleased()) {
+				CommandScheduler.getInstance().cancel(aimAtHubCommand);
+			}
+		});
 	}
 }

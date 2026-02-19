@@ -114,8 +114,10 @@ public class FourBarLinkage {
 	public double getDriverRelativeCouplerAngleRads() {
 		// Complex multiply vectors to rotate, the scaling effect doesn't matter because angle is unaffected
 		// Implicitly negate the driverCouplerJoint's angle to achieve angle subtraction
-		var driverRelFollowerCouplerJointX = +this.followerCouplerJointX * this.driverCouplerJointX + this.followerCouplerJointY * this.driverCouplerJointY;
-		var driverRelFollowerCouplerJointY = -this.followerCouplerJointX * this.driverCouplerJointY + this.followerCouplerJointY * this.driverCouplerJointX;
+		var driverCouplerJointRelFollowerCouplerJointX = this.followerCouplerJointX - this.driverCouplerJointX;
+		var driverCouplerJointRelFollowerCouplerJointY = this.followerCouplerJointY - this.driverCouplerJointY;
+		var driverRelFollowerCouplerJointX = +driverCouplerJointRelFollowerCouplerJointX * this.driverCouplerJointX + driverCouplerJointRelFollowerCouplerJointY * this.driverCouplerJointY;
+		var driverRelFollowerCouplerJointY = -driverCouplerJointRelFollowerCouplerJointX * this.driverCouplerJointY + driverCouplerJointRelFollowerCouplerJointY * this.driverCouplerJointX;
 		return Math.atan2(
 			driverRelFollowerCouplerJointY,
 			driverRelFollowerCouplerJointX
