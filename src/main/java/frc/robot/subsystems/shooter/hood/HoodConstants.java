@@ -18,8 +18,9 @@ public class HoodConstants {
 
 	// Gear Ratios
 	public static final GearRatio motorToMechanism = new GearRatio()
-		.planetary(GearRatio.ULTRAPLANETARY_5_1)
-		.planetary(GearRatio.ULTRAPLANETARY_5_1)
+		.planetary(GearRatio.ULTRAPLANETARY_3_1)
+		.planetary(GearRatio.ULTRAPLANETARY_3_1)
+		.gear(10).gear(160).axle()
 	;
 
 
