@@ -1,4 +1,4 @@
-package frc.robot.subsystems.rollers.indexer;
+package frc.robot.subsystems.rollers.agitator;
 
 import static edu.wpi.first.units.Units.Volts;
 
@@ -12,23 +12,23 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.util.NeutralMode;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 
-public class Indexer extends SubsystemBase {
-	private final IndexerIO io;
-	private final IndexerIOInputsAutoLogged inputs = new IndexerIOInputsAutoLogged();
+public class Agitator extends SubsystemBase {
+	private final AgitatorIO io;
+	private final AgitatorIOInputsAutoLogged inputs = new AgitatorIOInputsAutoLogged();
 
-	private static final LoggedTunable<Voltage> idleVoltage = LoggedTunable.from("Rollers/Indexer/Idle Voltage", Volts::of, 0.0);
-	private static final LoggedTunable<Voltage> indexVoltage = LoggedTunable.from("Rollers/Indexer/Index Voltage", Volts::of, 0.0);
-	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Rollers/Indexer/Eject Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> idleVoltage = LoggedTunable.from("Rollers/Agitiator/Idle Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> indexVoltage = LoggedTunable.from("Rollers/Agitiator/Index Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Rollers/Agitiator/Eject Voltage", Volts::of, 0.0);
 
-	public Indexer(IndexerIO io) {
-		super("Rollers/Indexer");
+	public Agitator(AgitatorIO io) {
+		super("Rollers/Agitator");
 		this.io = io;
 	}
 
 	@Override
 	public void periodic() {
 		this.io.updateInputs(this.inputs);
-		Logger.processInputs("Inputs/Rollers/Indexer", this.inputs);
+		Logger.processInputs("Inputs/Rollers/Agitator", this.inputs);
 	}
 
 	private Command genVoltageCommand(String name, DoubleSupplier voltsSupplier) {

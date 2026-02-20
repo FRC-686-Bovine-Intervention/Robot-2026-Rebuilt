@@ -11,9 +11,9 @@ public class GearRatio {
 	public static double planetaryReduction(int sunCount, int ringCount) {
 		return (double)(sunCount + ringCount) / sunCount;
 	}
-	public static final double ULTRAPLANETARY_3_1 = planetaryReduction(29, 55);
-	public static final double ULTRAPLANETARY_4_1 = planetaryReduction(21, 55);
-	public static final double ULTRAPLANETARY_5_1 = planetaryReduction(13, 55);
+	public static final double ULTRAPLANETARY_3_1 = GearRatio.planetaryReduction(29, 55); // 84:29 reduction
+	public static final double ULTRAPLANETARY_4_1 = GearRatio.planetaryReduction(21, 55); // 76:21 reduction
+	public static final double ULTRAPLANETARY_5_1 = GearRatio.planetaryReduction(13, 55); // 68:13 reduction
 
 	private final double reduction;
 	private final GearRatio inverse;

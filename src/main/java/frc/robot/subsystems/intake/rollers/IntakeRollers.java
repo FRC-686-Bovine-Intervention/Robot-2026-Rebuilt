@@ -1,4 +1,4 @@
-package frc.robot.subsystems.rollers.indexer;
+package frc.robot.subsystems.intake.rollers;
 
 import static edu.wpi.first.units.Units.Volts;
 
@@ -12,31 +12,31 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.util.NeutralMode;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 
-public class Indexer extends SubsystemBase {
-	private final IndexerIO io;
-	private final IndexerIOInputsAutoLogged inputs = new IndexerIOInputsAutoLogged();
+public class IntakeRollers extends SubsystemBase {
+	private final IntakeRollersIO io;
+	private final IntakeRollersIOInputsAutoLogged inputs = new IntakeRollersIOInputsAutoLogged();
 
-	private static final LoggedTunable<Voltage> idleVoltage = LoggedTunable.from("Rollers/Indexer/Idle Voltage", Volts::of, 0.0);
-	private static final LoggedTunable<Voltage> indexVoltage = LoggedTunable.from("Rollers/Indexer/Index Voltage", Volts::of, 0.0);
-	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Rollers/Indexer/Eject Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> idleVoltage = LoggedTunable.from("Intake/Rollers/Idle Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> intakeVoltage = LoggedTunable.from("Intake/Rollers/Intake Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Intake/Rollers/Eject Voltage", Volts::of, 0.0);
 
-	public Indexer(IndexerIO io) {
-		super("Rollers/Indexer");
+	public IntakeRollers(IntakeRollersIO io) {
+		super("Intake/Rollers");
 		this.io = io;
 	}
 
 	@Override
 	public void periodic() {
 		this.io.updateInputs(this.inputs);
-		Logger.processInputs("Inputs/Rollers/Indexer", this.inputs);
+		Logger.processInputs("Inputs/Intake/Rollers", this.inputs);
 	}
 
 	private Command genVoltageCommand(String name, DoubleSupplier voltsSupplier) {
-		final var indexer = this;
+		final var rollers = this;
 		return new Command() {
 			{
 				this.setName(name);
-				this.addRequirements(indexer);
+				this.addRequirements(rollers);
 			}
 
 			@Override
@@ -46,12 +46,12 @@ public class Indexer extends SubsystemBase {
 
 			@Override
 			public void execute() {
-				indexer.io.setVolts(voltsSupplier.getAsDouble());
+				rollers.io.setVolts(voltsSupplier.getAsDouble());
 			}
 
 			@Override
 			public void end(boolean interrupted) {
-				indexer.io.stop(NeutralMode.DEFAULT);
+				rollers.io.stop(NeutralMode.DEFAULT);
 			}
 		};
 	}
@@ -63,10 +63,10 @@ public class Indexer extends SubsystemBase {
 		);
 	}
 
-	public Command index() {
+	public Command intake() {
 		return this.genVoltageCommand(
-			"Index",
-			() -> indexVoltage.get().in(Volts)
+			"Intake",
+			() -> intakeVoltage.get().in(Volts)
 		);
 	}
 
