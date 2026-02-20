@@ -205,10 +205,10 @@ public class RobotContainer {
 
 		// Register Mechanism3ds
 		Mechanism3d.registerMechs(
-			this.intake.slam.driverMech,
+			this.shooter.hood.mech,
 			this.intake.slam.followerMech,
-			this.intake.slam.couplerMech,
-			this.shooter.hood.mech
+			this.intake.slam.driverMech,
+			this.intake.slam.couplerMech
 		);
 
 		System.out.println("[Init RobotContainer] Configuring Commands");
