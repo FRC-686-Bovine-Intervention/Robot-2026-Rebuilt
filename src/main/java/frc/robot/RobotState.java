@@ -19,6 +19,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
@@ -46,6 +47,9 @@ public class RobotState {
 	private static final LoggedTunable<Time> txtyStaleTime = LoggedTunable.from("RobotState/TxTy Stale Time", Seconds::of, 0.2);
 	private final Map<Integer, TxTyObservation> txtyObservations = new HashMap<>(FieldConstants.apriltagLayout.getTags().size());
 
+	private ChassisSpeeds robotMeasuredVelocity = new ChassisSpeeds();
+	private ChassisSpeeds fieldGlobalMeasuredVelocity = new ChassisSpeeds();
+
 	private RobotState() {
 		this.qStdDevs = new Matrix<>(Nat.N3(), Nat.N1());
 		for (int i = 0; i < 3; i++) {
@@ -71,6 +75,10 @@ public class RobotState {
 
 	public Pose2d getEstimatedGlobalPose() {
 		return this.estimatedGlobalPose;
+	}
+
+	public ChassisSpeeds getFieldGlobalMeasuredVelocity() {
+		return this.fieldGlobalMeasuredVelocity;
 	}
 
 	public void resetPose(Pose2d pose) {
@@ -129,6 +137,11 @@ public class RobotState {
 		this.estimatedGlobalPose = this.estimatedGlobalPose.exp(finalTwist);
 	}
 
+	public void addVelocityObservation(ChassisSpeeds robotMeasuredVelocity) {
+		this.robotMeasuredVelocity = robotMeasuredVelocity;
+		this.fieldGlobalMeasuredVelocity = ChassisSpeeds.fromRobotRelativeSpeeds(this.robotMeasuredVelocity, this.getEstimatedGlobalPose().getRotation());
+	}
+
 	public void addVisionObservation(VisionObservation observation) {
 		try {
 			if (this.poseBuffer.getInternalBuffer().lastKey() - poseBufferSizeSecs > observation.timestamp()) {
@@ -138,7 +151,9 @@ public class RobotState {
 			return;
 		}
 		var sample = this.poseBuffer.getSample(observation.timestamp());
-		if (sample.isEmpty()) {return;}
+		if (sample.isEmpty()) {
+			return;
+		}
 
 		var sampleToOdometryTransform = new Transform2d(sample.get(), this.odometryPose);
 		var odometryToSampleTransform = new Transform2d(this.odometryPose, sample.get());
@@ -174,6 +189,7 @@ public class RobotState {
 		);
 
 		this.estimatedGlobalPose = globalEstimateAtTime.plus(scaledTransform).plus(sampleToOdometryTransform);
+		this.fieldGlobalMeasuredVelocity = ChassisSpeeds.fromRobotRelativeSpeeds(this.robotMeasuredVelocity, this.getEstimatedGlobalPose().getRotation());
 	}
 
 	public void addTxTyObservation(TxTyObservation observation) {
