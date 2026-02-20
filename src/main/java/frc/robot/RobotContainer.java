@@ -27,6 +27,7 @@ import frc.robot.auto.AutoSelector;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.ExtensionSystem;
 import frc.robot.subsystems.climber.Climber;
+import frc.robot.subsystems.commonDevices.CommonCANdi;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.commands.WheelRadiusCalibration;
@@ -46,9 +47,18 @@ import frc.robot.subsystems.intake.slam.IntakeSlam;
 import frc.robot.subsystems.intake.slam.IntakeSlamIO;
 import frc.robot.subsystems.intake.slam.IntakeSlamIOSim;
 import frc.robot.subsystems.intake.slam.IntakeSlamIOTalonFX;
+import frc.robot.subsystems.rollers.RollerSensorsIO;
+import frc.robot.subsystems.rollers.RollerSensorsIOCANdi;
 import frc.robot.subsystems.rollers.Rollers;
+import frc.robot.subsystems.rollers.agitator.Agitator;
+import frc.robot.subsystems.rollers.agitator.AgitatorIO;
+import frc.robot.subsystems.rollers.agitator.AgitatorIOTalonFX;
+import frc.robot.subsystems.rollers.feeder.Feeder;
+import frc.robot.subsystems.rollers.feeder.FeederIO;
+import frc.robot.subsystems.rollers.feeder.FeederIOTalonFX;
 import frc.robot.subsystems.rollers.indexer.Indexer;
 import frc.robot.subsystems.rollers.indexer.IndexerIO;
+import frc.robot.subsystems.rollers.indexer.IndexerIOTalonFX;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.aiming.AimingSystem;
 import frc.robot.subsystems.shooter.aiming.passing.InterpolationPassingCalc;
@@ -98,6 +108,7 @@ public class RobotContainer {
 		// Initialize subsystems with appropriate IO
 		switch (RobotType.getMode()) {
 			case REAL -> {
+				var commonCANdi = new CommonCANdi();
 				this.drive = new Drive(
 					new OdometryTimestampIOOdometryThread(),
 					new GyroIOPigeon2(),
@@ -119,13 +130,17 @@ public class RobotContainer {
 					new IntakeSlam(new IntakeSlamIOTalonFX())
 				);
 				this.rollers = new Rollers(
-					new Indexer(new IndexerIO() {})
+					new Indexer(new IndexerIOTalonFX()),
+					new Agitator(new AgitatorIOTalonFX()),
+					new Feeder(new FeederIOTalonFX()),
+					new RollerSensorsIOCANdi(commonCANdi.candi)
 				);
 				this.climber = new Climber(
 
 				);
 			}
 			case SIM -> {
+				var commonCANdi = new CommonCANdi();
 				this.drive = new Drive(
 					new OdometryTimestampIOSim(),
 					new GyroIO() {},
@@ -147,7 +162,10 @@ public class RobotContainer {
 					new IntakeSlam(new IntakeSlamIOSim())
 				);
 				this.rollers = new Rollers(
-					new Indexer(new IndexerIO() {})
+					new Indexer(new IndexerIO() {}),
+					new Agitator(new AgitatorIO() {}),
+					new Feeder(new FeederIO() {}),
+					new RollerSensorsIOCANdi(commonCANdi.candi)
 				);
 				this.climber = new Climber(
 
@@ -176,7 +194,10 @@ public class RobotContainer {
 					new IntakeSlam(new IntakeSlamIO() {})
 				);
 				this.rollers = new Rollers(
-					new Indexer(new IndexerIO() {})
+					new Indexer(new IndexerIO() {}),
+					new Agitator(new AgitatorIO() {}),
+					new Feeder(new FeederIO() {}),
+					new RollerSensorsIO() {}
 				);
 				this.climber = new Climber(
 
