@@ -67,6 +67,9 @@ public class HardwareDevices {
 	// | Hood
 	public static final CANDevice hoodMotorID = canivore.id(11);
 
+	// CANdi
+	public static final CANDevice candiID = canivore.id(0);
+
 	// RIO
 	public static final PWMPort ledPort = PWMPort.port(0);
 }

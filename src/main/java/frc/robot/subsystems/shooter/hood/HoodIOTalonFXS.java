@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.DigitalInputsConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXSConfiguration;
@@ -12,11 +13,15 @@ import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.StaticBrake;
 import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.hardware.CANdi;
 import com.ctre.phoenix6.hardware.TalonFXS;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.signals.ReverseLimitValue;
+import com.ctre.phoenix6.signals.ReverseLimitSourceValue;
+import com.ctre.phoenix6.signals.ReverseLimitTypeValue;
+import com.ctre.phoenix6.signals.S1CloseStateValue;
+import com.ctre.phoenix6.signals.S1FloatStateValue;
 
 import edu.wpi.first.math.util.Units;
 import frc.robot.constants.HardwareDevices;
@@ -34,7 +39,7 @@ public class HoodIOTalonFXS implements HoodIO {
 	private final EncodedMotorStatusSignalCache motorStatusSignalCache;
 	private final StatusSignal<Double> motorProfilePositionStatusSignal;
 	private final StatusSignal<Double> motorProfileVelocityStatusSignal;
-	private final StatusSignal<ReverseLimitValue> limitSwitchStatusSignal;
+	private final StatusSignal<Boolean> limitSwitchStatusSignal;
 
 	// Quick reference arrays
 	private final BaseStatusSignal[] refreshSignals;
@@ -47,7 +52,7 @@ public class HoodIOTalonFXS implements HoodIO {
 	private final VoltageOut voltageRequest = new VoltageOut(0.0).withEnableFOC(true);
 	private final MotionMagicExpoVoltage positionRequest = new MotionMagicExpoVoltage(0.0).withEnableFOC(false);
 
-	public HoodIOTalonFXS() {
+	public HoodIOTalonFXS(CANdi candi) {
 		var motorConfig = new TalonFXSConfiguration();
 
 		motorConfig.MotorOutput
@@ -59,23 +64,33 @@ public class HoodIOTalonFXS implements HoodIO {
 			.withForwardSoftLimitEnable(true)
 			.withForwardSoftLimitThreshold(HoodConstants.motorToMechanism.inverse().applyUnsigned(HoodConstants.maxAngle))
 		;
-		// motorConfig.HardwareLimitSwitch
-		// 	.withReverseLimitEnable(true)
-		// 	.withReverseLimitSource(ReverseLimitSourceValue.RemoteCANdiS1)
-		// 	.withReverseLimitRemoteSensorID(HardwareDevices.candiID.id)
-		// 	.withReverseLimitType(ReverseLimitTypeValue.NormallyOpen)
-		// 	.withForwardLimitEnable(false)
-		// ;
+		motorConfig.HardwareLimitSwitch
+			.withReverseLimitEnable(true)
+			.withReverseLimitSource(ReverseLimitSourceValue.RemoteCANdiS1)
+			.withReverseLimitRemoteSensorID(candi.getDeviceID())
+			.withReverseLimitType(ReverseLimitTypeValue.NormallyOpen)
+			.withForwardLimitEnable(false)
+		;
 		motorConfig.Slot0
 			.withGravityType(GravityTypeValue.Arm_Cosine)
 		;
 
 		this.motor.getConfigurator().apply(motorConfig);
 
+		var candiConfig = new DigitalInputsConfigs();
+		candi.getConfigurator().refresh(candiConfig);
+
+		candiConfig
+			.withS1FloatState(S1FloatStateValue.FloatDetect)
+			.withS1CloseState(S1CloseStateValue.CloseWhenLow)
+		;
+
+		candi.getConfigurator().apply(candiConfig);
+
 		this.motorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.motor);
 		this.motorProfilePositionStatusSignal = this.motor.getClosedLoopReference();
 		this.motorProfileVelocityStatusSignal = this.motor.getClosedLoopReferenceSlope();
-		this.limitSwitchStatusSignal = this.motor.getReverseLimit();
+		this.limitSwitchStatusSignal = this.motor.getFault_ReverseHardLimit();
 
 		this.refreshSignals = new BaseStatusSignal[] {
 			this.motorStatusSignalCache.encoder().position(),
@@ -117,7 +132,7 @@ public class HoodIOTalonFXS implements HoodIO {
 		inputs.motorProfilePositionRads = Units.rotationsToRadians(this.motorProfilePositionStatusSignal.getValueAsDouble());
 		inputs.motorProfileVelocityRadsPerSec = Units.rotationsToRadians(this.motorProfileVelocityStatusSignal.getValueAsDouble());
 
-		inputs.limitSwitch = this.limitSwitchStatusSignal.getValue() == ReverseLimitValue.ClosedToGround;
+		inputs.limitSwitch = this.limitSwitchStatusSignal.getValue();
 	}
 
 	@Override
