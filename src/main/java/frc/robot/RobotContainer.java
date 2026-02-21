@@ -15,6 +15,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -22,11 +23,16 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.ExtensionSystem;
 import frc.robot.subsystems.climber.Climber;
+import frc.robot.subsystems.climber.hook.Hook;
+import frc.robot.subsystems.climber.hook.HookIO;
+import frc.robot.subsystems.climber.hook.HookIOSim;
+import frc.robot.subsystems.climber.hook.HookIOTalonFX;
 import frc.robot.subsystems.commonDevices.CommonCANdi;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -136,7 +142,7 @@ public class RobotContainer {
 					new RollerSensorsIOCANdi(commonCANdi.candi)
 				);
 				this.climber = new Climber(
-
+					new Hook(new HookIOTalonFX())
 				);
 			}
 			case SIM -> {
@@ -168,7 +174,7 @@ public class RobotContainer {
 					new RollerSensorsIOCANdi(commonCANdi.candi)
 				);
 				this.climber = new Climber(
-
+					new Hook(new HookIOSim())
 				);
 			}
 			default -> {
@@ -200,7 +206,7 @@ public class RobotContainer {
 					new RollerSensorsIO() {}
 				);
 				this.climber = new Climber(
-
+					new Hook(new HookIO() {})
 				);
 			}
 		}
@@ -222,6 +228,7 @@ public class RobotContainer {
 			)
 			.addChild(this.intake.slam.followerMech)
 			.addChild(this.shooter.hood.mech)
+			.addChild(this.climber.hook.mech)
 		;
 
 		// Register Mechanism3ds
@@ -229,7 +236,8 @@ public class RobotContainer {
 			this.intake.slam.driverMech,
 			this.intake.slam.followerMech,
 			this.intake.slam.couplerMech,
-			this.shooter.hood.mech
+			this.shooter.hood.mech,
+			this.climber.hook.mech
 		);
 
 		System.out.println("[Init RobotContainer] Configuring Commands");
@@ -396,8 +404,17 @@ public class RobotContainer {
 		this.shooter.rightFlywheel.setDefaultCommand(rightFlywheelIdleCommand);
 		this.shooter.hood.setDefaultCommand(hoodIdleCommand);
 
+		final var climberRetractCommand = this.climber.hook.retract();
+		final var climberDeployCommand = this.climber.hook.deploy();
+		final var climberClimbCommand = this.climber.hook.climb();
+
+		this.climber.hook.setDefaultCommand(climberRetractCommand);
+
 		// Auto calibrate hood if not calibrated
 		// new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
+
+		// Auto calibrate hook if not calibrated
+		new Trigger(this.automationsLoop, () -> /* !this.climber.hook.isCalibrated() &&  */DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
 
 		// Setup position reset command
 		// this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(

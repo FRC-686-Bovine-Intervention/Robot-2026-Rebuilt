@@ -2,8 +2,6 @@ package frc.util.robotStructure;
 
 import static edu.wpi.first.units.Units.Meters;
 
-import org.littletonrobotics.junction.Logger;
-
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Distance;
 
@@ -89,9 +87,6 @@ public class FourBarLinkage {
 
 		this.followerCouplerJointX = Math.cos(followerAngleRads) * this.followerLength + this.baseFollowerJointX;
 		this.followerCouplerJointY = Math.sin(followerAngleRads) * this.followerLength + this.baseFollowerJointY;
-
-
-		Logger.recordOutput("DEBUG/FOURBAR/box", new Translation2d(), new Translation2d(this.driverCouplerJointX, this.driverCouplerJointY), new Translation2d(this.followerCouplerJointX, this.followerCouplerJointY), new Translation2d(this.baseFollowerJointX, this.baseFollowerJointY), new Translation2d());
 	}
 
 	public double getHorizonBaseDriverCouplerAngleRads() {

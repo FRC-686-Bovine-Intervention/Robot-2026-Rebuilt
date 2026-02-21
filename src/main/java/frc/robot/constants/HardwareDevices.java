@@ -40,7 +40,6 @@ public class HardwareDevices {
 	public static final CANDevice backRightDriveMotorID = canivore.id(4);
 	public static final CANDevice backRightTurnMotorID = rio.id(4);
 
-
 	// Intake
 	// | Slam
 	public static final CANDevice intakeSlamMotorID = canivore.id(5);
@@ -66,6 +65,10 @@ public class HardwareDevices {
 	public static final CANDevice rightFlywheelMotorSlaveID = canivore.id(10);
 	// | Hood
 	public static final CANDevice hoodMotorID = canivore.id(11);
+
+	// Climber
+	// | Hook
+	public static final CANDevice climberHookMotorID = canivore.id(20);
 
 	// CANdi
 	public static final CANDevice candiID = canivore.id(0);
