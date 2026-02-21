@@ -1,11 +1,15 @@
 package frc.robot.automations;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Seconds;
 
+import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -22,8 +26,43 @@ public class BumpMitigation implements Runnable {
 	private final Axis turnAxis;
 	private final Command command;
 
+	private final double[] staticBoxTopBlue = new double[] {
+		FieldConstants.bumpInnerX.getBlue().in(Meters),
+		FieldConstants.bumpOuterX.getBlue().in(Meters),
+		FieldConstants.topBumpBottomY.in(Meters),
+		FieldConstants.topBumpTopY.in(Meters)
+	};
+
+	private final double[] staticBoxBottomBlue = new double[] {
+		FieldConstants.bumpInnerX.getBlue().in(Meters),
+		FieldConstants.bumpOuterX.getBlue().in(Meters),
+		FieldConstants.bottomBumpTopY.in(Meters),
+		FieldConstants.bottomBumpBottomY.in(Meters)
+	};
+
+	private final double[] staticBoxTopRed = new double[] {
+		FieldConstants.bumpOuterX.getRed().in(Meters),
+		FieldConstants.bumpInnerX.getRed().in(Meters),
+		FieldConstants.topBumpBottomY.in(Meters),
+		FieldConstants.topBumpTopY.in(Meters)
+	};
+
+	private final double[] staticBoxBottomRed = new double[] {
+		FieldConstants.bumpOuterX.getRed().in(Meters),
+		FieldConstants.bumpInnerX.getRed().in(Meters),
+		FieldConstants.bottomBumpTopY.in(Meters),
+		FieldConstants.bottomBumpBottomY.in(Meters)
+	};
+
+	// Dynamic boxes should be independent copies of the static boxes so
+	// we don't accidentally mutate the static originals.
+	private double[] dynamicBoxTopBlue = java.util.Arrays.copyOf(staticBoxTopBlue, staticBoxTopBlue.length);
+	private double[] dynamicBoxBottomBlue = java.util.Arrays.copyOf(staticBoxBottomBlue, staticBoxBottomBlue.length);
+	private double[] dynamicBoxTopRed = java.util.Arrays.copyOf(staticBoxTopRed, staticBoxTopRed.length);
+	private double[] dynamicBoxBottomRed = java.util.Arrays.copyOf(staticBoxBottomRed, staticBoxBottomRed.length);
+
 	private static final LoggedTunable<double[]> targetAnglesTunable = new LoggedTunable<>() {
-		private final LoggedTunable<Angle> targetAngleOffset = LoggedTunable.from("Automations/Bump Mitigation/Target Angle", Degrees::of, 15.0);
+		private final LoggedTunable<Angle> targetAngleOffset = LoggedTunable.from("Automations/Bump Mitigation/Target Angle", Degrees::of, 45.0);
 
 		private double[] cache = this.calculateTargetAngles(this.targetAngleOffset.get().in(Radians));
 
@@ -53,7 +92,9 @@ public class BumpMitigation implements Runnable {
 			};
 		}
 	};
-	private static final LoggedTunable<Time> lookahead = LoggedTunable.from("Automations/Bump Mitigation/Lookahead Time", Seconds::of, 0.5);
+
+	//Meters per meters per second
+	private static final LoggedTunable<Time> boxScalingFactor = LoggedTunable.from("Automations/Bump Mitigation/Box Scaling Factor", Seconds::of, 0.5);
 
 	private final EdgeDetector edgeDetector = new EdgeDetector(false);
 
@@ -83,16 +124,17 @@ public class BumpMitigation implements Runnable {
 	@Override
 	public void run() {
 		var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
-		var lookaheadTrans = robotPose.getTranslation().plus(new Translation2d(
-			this.drive.getFieldMeasuredSpeeds().vxMetersPerSecond * lookahead.get().in(Seconds),
-			this.drive.getFieldMeasuredSpeeds().vyMetersPerSecond * lookahead.get().in(Seconds)
-		));
+		var fieldSpeeds = drive.getFieldMeasuredSpeeds();
+		updateBoundingBox(dynamicBoxTopBlue, staticBoxTopBlue, fieldSpeeds);
+		updateBoundingBox(dynamicBoxBottomBlue, staticBoxBottomBlue, fieldSpeeds);
+		updateBoundingBox(dynamicBoxTopRed, staticBoxTopRed, fieldSpeeds);
+		updateBoundingBox(dynamicBoxBottomRed, staticBoxBottomRed, fieldSpeeds);
 		this.edgeDetector.update(
 			(
-				FieldConstants.anyBump.getOurs().withinBounds(robotPose.getTranslation())
-				|| FieldConstants.anyBump.getOurs().withinBounds(lookaheadTrans)
-				|| FieldConstants.anyBump.getTheirs().withinBounds(robotPose.getTranslation())
-				|| FieldConstants.anyBump.getTheirs().withinBounds(lookaheadTrans)
+				withinBounds(dynamicBoxTopBlue, robotPose.getTranslation())
+				|| withinBounds(dynamicBoxBottomBlue, robotPose.getTranslation())
+				|| withinBounds(dynamicBoxTopRed, robotPose.getTranslation())
+				|| withinBounds(dynamicBoxBottomRed, robotPose.getTranslation())
 			)
 			&& this.turnAxis.getAsDouble() == 0.0
 		);
@@ -102,5 +144,32 @@ public class BumpMitigation implements Runnable {
 		} else if (this.edgeDetector.fallingEdge() && this.command.isScheduled()) {
 			CommandScheduler.getInstance().cancel(this.command);
 		}
+	}
+
+	private void updateBoundingBox(double[] box, double[] original, ChassisSpeeds fieldSpeeds) {
+		//Left
+		//Right
+		//Top
+		//Bottom
+		Logger.recordOutput("DEBUG/Bump Mitigation", fieldSpeeds.vxMetersPerSecond);
+
+		if (fieldSpeeds.vxMetersPerSecond < 0) {
+			box[1] = original[1] + fieldSpeeds.vxMetersPerSecond * boxScalingFactor.get().in(Seconds);
+		} else if (fieldSpeeds.vxMetersPerSecond > 0) {
+			box[0] = original[0] - fieldSpeeds.vxMetersPerSecond * boxScalingFactor.get().in(Seconds);
+		} else {
+			// Reset the contents of the dynamic box back to the original
+			// values. Assigning to the parameter (box = original) only
+			// changes the local reference and does not mutate the caller's
+			// array; use element-wise copies instead.
+			box[0] = original[0];
+			box[1] = original[1];
+			box[2] = original[2];
+			box[3] = original[3];
+		}
+	}
+
+	private boolean withinBounds(double[] box, Translation2d position) {
+		return (box[0] < position.getX()) && (position.getX() < box[1]) && (box[2] > position.getY()) && (position.getY() > box[3]);
 	}
 }

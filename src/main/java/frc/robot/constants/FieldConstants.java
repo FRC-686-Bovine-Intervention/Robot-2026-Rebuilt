@@ -61,10 +61,10 @@ public final class FieldConstants {
 
 	public static final Distance hubWidth = Inches.of(47.0);
 
-	private static final Distance bottomBumpTopY = fieldWidth.div(2.0).minus(hubWidth.div(2.0));
-	private static final Distance bottomBumpBottomY = bottomBumpTopY.minus(bumpWidth);
-	private static final Distance topBumpTopY = fieldWidth.div(2.0).plus(hubWidth.div(2.0));
-	private static final Distance topBumpBottomY = topBumpTopY.plus(bumpWidth);
+	public static final Distance bottomBumpTopY = fieldWidth.div(2.0).minus(hubWidth.div(2.0));
+	public static final Distance bottomBumpBottomY = bottomBumpTopY.minus(bumpWidth);
+	public static final Distance topBumpTopY = fieldWidth.div(2.0).plus(hubWidth.div(2.0));
+	public static final Distance topBumpBottomY = topBumpTopY.plus(bumpWidth);
 
 	public static final AllianceFlipped<RectangularBoundingBox> bottomBump = AllianceFlipped.fromBlue(BoundingBox.rectangle(
 		new Translation2d(
@@ -86,5 +86,16 @@ public final class FieldConstants {
 			topBumpTopY
 		)
 	));
+
 	public static final AllianceFlipped<OrBox> anyBump = AllianceFlipped.fromFunction((alliance) -> bottomBump.get(alliance).or(topBump.get(alliance)));
+
+	public static final AllianceFlipped<Distance> bumpInnerX = new AllianceFlipped<Distance>(
+		barrierCenterX.getBlue().minus(bumpLength.div(2.0)),
+		barrierCenterX.getRed().plus(bumpLength.div(2.0))
+	);
+
+	public static final AllianceFlipped<Distance> bumpOuterX = new AllianceFlipped<Distance>(
+		barrierCenterX.getBlue().plus(bumpLength.div(2.0)),
+		barrierCenterX.getRed().minus(bumpLength.div(2.0))
+	);
 }
