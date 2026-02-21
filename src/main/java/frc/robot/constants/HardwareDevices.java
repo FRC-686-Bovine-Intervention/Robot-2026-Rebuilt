@@ -68,7 +68,7 @@ public class HardwareDevices {
 
 	// Climber
 	// | Hook
-	public static final CANDevice climberHookMotorID = canivore.id(5);
+	public static final CANDevice climberHookMotorID = canivore.id(20);
 
 	// CANdi
 	public static final CANDevice candiID = canivore.id(0);

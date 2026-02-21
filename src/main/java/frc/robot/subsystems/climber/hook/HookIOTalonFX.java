@@ -41,9 +41,9 @@ public class HookIOTalonFX implements HookIO {
 	private final BaseStatusSignal[] motorConnectionSignals;
 
 	// Control Requests
-	private final VoltageOut voltageRequest = new VoltageOut(0);
-	private final DynamicMotionMagicExpoVoltage unloadedPositionRequest = new DynamicMotionMagicExpoVoltage(0.0, 0.0, 0.0);
-	private final DynamicMotionMagicExpoVoltage climbingPositionRequest = new DynamicMotionMagicExpoVoltage(0.0, 0.0, 0.0);
+	private final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(true);
+	private final DynamicMotionMagicExpoVoltage unloadedPositionRequest = new DynamicMotionMagicExpoVoltage(0.0, 0.0, 0.0).withEnableFOC(true);
+	private final DynamicMotionMagicExpoVoltage climbingPositionRequest = new DynamicMotionMagicExpoVoltage(0.0, 0.0, 0.0).withEnableFOC(true);
 	private final NeutralOut neutralOutRequest = new NeutralOut();
 	private final CoastOut coastOutRequest = new CoastOut();
 	private final StaticBrake staticBrakeRequest = new StaticBrake();
@@ -52,7 +52,7 @@ public class HookIOTalonFX implements HookIO {
 		var motorConfig = new TalonFXConfiguration();
 
 		motorConfig.MotorOutput
-			.withInverted(InvertedValue.Clockwise_Positive)
+			.withInverted(InvertedValue.CounterClockwise_Positive)
 			.withNeutralMode(NeutralModeValue.Brake)
 		;
 		motorConfig.SoftwareLimitSwitch

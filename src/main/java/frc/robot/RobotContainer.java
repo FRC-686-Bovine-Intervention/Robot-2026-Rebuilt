@@ -15,6 +15,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -22,6 +23,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.constants.RobotConstants;
@@ -29,6 +31,7 @@ import frc.robot.subsystems.ExtensionSystem;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.climber.hook.Hook;
 import frc.robot.subsystems.climber.hook.HookIO;
+import frc.robot.subsystems.climber.hook.HookIOSim;
 import frc.robot.subsystems.climber.hook.HookIOTalonFX;
 import frc.robot.subsystems.commonDevices.CommonCANdi;
 import frc.robot.subsystems.drive.Drive;
@@ -171,7 +174,7 @@ public class RobotContainer {
 					new RollerSensorsIOCANdi(commonCANdi.candi)
 				);
 				this.climber = new Climber(
-					new Hook(new HookIO() {})
+					new Hook(new HookIOSim())
 				);
 			}
 			default -> {
@@ -411,7 +414,7 @@ public class RobotContainer {
 		// new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 
 		// Auto calibrate hook if not calibrated
-		// new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
+		new Trigger(this.automationsLoop, () -> /* !this.climber.hook.isCalibrated() &&  */DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
 
 		// Setup position reset command
 		// this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(
