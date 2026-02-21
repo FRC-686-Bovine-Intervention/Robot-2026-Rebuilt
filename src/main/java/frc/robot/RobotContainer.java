@@ -401,6 +401,12 @@ public class RobotContainer {
 		this.shooter.rightFlywheel.setDefaultCommand(rightFlywheelIdleCommand);
 		this.shooter.hood.setDefaultCommand(hoodIdleCommand);
 
+		final var climberRetractCommand = this.climber.hook.retract();
+		final var climberDeployCommand = this.climber.hook.deploy();
+		final var climberClimbCommand = this.climber.hook.climb();
+
+		this.climber.hook.setDefaultCommand(climberRetractCommand);
+
 		// Auto calibrate hood if not calibrated
 		// new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 
