@@ -18,12 +18,10 @@ import frc.robot.RobotState;
 import frc.robot.constants.FieldConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.util.EdgeDetector;
-import frc.util.controllers.Joystick.Axis;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 
 public class BumpMitigation implements Runnable {
 	private final Drive drive;
-	private final Axis turnAxis;
 	private final Command command;
 
 	private final double[] staticBoxTopBlue = new double[] {
@@ -54,8 +52,6 @@ public class BumpMitigation implements Runnable {
 		FieldConstants.bottomBumpBottomY.in(Meters)
 	};
 
-	// Dynamic boxes should be independent copies of the static boxes so
-	// we don't accidentally mutate the static originals.
 	private double[] dynamicBoxTopBlue = java.util.Arrays.copyOf(staticBoxTopBlue, staticBoxTopBlue.length);
 	private double[] dynamicBoxBottomBlue = java.util.Arrays.copyOf(staticBoxBottomBlue, staticBoxBottomBlue.length);
 	private double[] dynamicBoxTopRed = java.util.Arrays.copyOf(staticBoxTopRed, staticBoxTopRed.length);
@@ -93,14 +89,12 @@ public class BumpMitigation implements Runnable {
 		}
 	};
 
-	//Meters per meters per second
 	private static final LoggedTunable<Time> boxScalingFactor = LoggedTunable.from("Automations/Bump Mitigation/Box Scaling Factor", Seconds::of, 0.5);
 
 	private final EdgeDetector edgeDetector = new EdgeDetector(false);
 
-	public BumpMitigation(Drive drive, Axis turnAxis) {
+	public BumpMitigation(Drive drive) {
 		this.drive = drive;
-		this.turnAxis = turnAxis;
 		this.command = this.drive.rotationalSubsystem.pidControlledHeading(() -> {
 			var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
 			var robotRotation = robotPose.getRotation().getRadians();
@@ -136,7 +130,7 @@ public class BumpMitigation implements Runnable {
 				|| withinBounds(dynamicBoxTopRed, robotPose.getTranslation())
 				|| withinBounds(dynamicBoxBottomRed, robotPose.getTranslation())
 			)
-			&& this.turnAxis.getAsDouble() == 0.0
+			&& this.drive.rotationalSubsystem.getCurrentCommand() == null
 		);
 
 		if (this.edgeDetector.risingEdge() && !this.command.isScheduled()) {
@@ -158,10 +152,6 @@ public class BumpMitigation implements Runnable {
 		} else if (fieldSpeeds.vxMetersPerSecond > 0) {
 			box[0] = original[0] - fieldSpeeds.vxMetersPerSecond * boxScalingFactor.get().in(Seconds);
 		} else {
-			// Reset the contents of the dynamic box back to the original
-			// values. Assigning to the parameter (box = original) only
-			// changes the local reference and does not mutate the caller's
-			// array; use element-wise copies instead.
 			box[0] = original[0];
 			box[1] = original[1];
 			box[2] = original[2];

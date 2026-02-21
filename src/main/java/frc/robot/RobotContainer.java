@@ -19,8 +19,10 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.automations.BumpMitigation;
@@ -280,7 +282,10 @@ public class RobotContainer {
 				drive.translationSubsystem.stop();
 			}
 		});
-		this.drive.rotationalSubsystem.setDefaultCommand(new Command() {
+		new Trigger(CommandScheduler.getInstance().getActiveButtonLoop(), () -> {
+			return Math.abs(turnAxis.getAsDouble()) > 0;
+		}).whileTrue(
+			new Command() {
 			{
 				this.setName("Drive Controlled");
 				this.addRequirements(drive.rotationalSubsystem);
@@ -311,7 +316,7 @@ public class RobotContainer {
 			Logger.recordOutput("CORNER DETECT/alliance zone/BR", FieldConstants.allianceZone.getOurs().withinBounds(brCorner));
 		});
 
-		this.automationsLoop.bind(new BumpMitigation(this.drive, turnAxis));
+		this.automationsLoop.bind(new BumpMitigation(this.drive));
 
 		// Setup position reset command
 		// this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(
