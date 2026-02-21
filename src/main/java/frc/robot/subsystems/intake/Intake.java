@@ -18,12 +18,14 @@ public class Intake {
 			this.slam.deploy(extension)
 		).withName("Intake");
 	}
+
 	public Command eject(ExtensionSystem extension) {
 		return Commands.parallel(
 			this.slam.deploy(extension),
 			this.rollers.eject()
 		).withName("Eject");
 	}
+
 	public Command retract() {
 		return Commands.parallel(
 			this.slam.retract(),

@@ -8,7 +8,6 @@ import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -75,13 +74,13 @@ public class IntakeSlam extends SubsystemBase {
 		Logger.processInputs("Inputs/Intake/Slam", this.inputs);
 		LoggedTracer.logEpoch("CommandScheduler Periodic/Subsystem/Intake Slam/Process Inputs");
 
-		this.angleRads = IntakeSlamConstants.sensorToMechanism.applyUnsigned(this.inputs.encoder.getPositionRads() + IntakeSlamConstants.cancoderZeroOffset.in(Radians));
+		this.angleRads = IntakeSlamConstants.sensorToMechanism.applyUnsigned(this.inputs.encoder.getPositionRads() + IntakeSlamConstants.encoderZeroOffset.in(Radians));
 		this.velocityRadsPerSec = IntakeSlamConstants.sensorToMechanism.applyUnsigned(this.inputs.encoder.getVelocityRadsPerSec());
 
 		Logger.recordOutput("Intake/Slam/Angle/Measured", this.getAngleRads(), Radians);
 		Logger.recordOutput("Intake/Slam/Velocity/Measured", this.getVelocityRadsPerSec(), RadiansPerSecond);
 
-		this.mechLinkage.setDriverAngleRads(Math.sin(Timer.getTimestamp()));
+		this.mechLinkage.setDriverAngleRads(this.getAngleRads());
 		this.driverMech.setRads(this.mechLinkage.getHorizonBaseDriverCouplerAngleRads());
 		this.followerMech.setRads(this.mechLinkage.getHorizonBaseFollowerCouplerAngleRads());
 		this.couplerMech.setRads(this.mechLinkage.getDriverRelativeCouplerAngleRads());
@@ -100,11 +99,11 @@ public class IntakeSlam extends SubsystemBase {
 	private void setAngleGoalRads(double angleRads) {
 		this.io.setPositionRads(
 			// IntakeSlamConstants.motorToMechanism.inverse().applyUnsigned(angleRads - this.motorOffsetRads),
-			angleRads - IntakeSlamConstants.cancoderZeroOffset.in(Radians),
+			angleRads - IntakeSlamConstants.encoderZeroOffset.in(Radians),
 			0.0,
 			0.0
 		);
-		Logger.recordOutput("Intake/Slam/Angle/Goal", angleRads - IntakeSlamConstants.cancoderZeroOffset.in(Radians));
+		Logger.recordOutput("Intake/Slam/Angle/Goal", angleRads - IntakeSlamConstants.encoderZeroOffset.in(Radians));
 		Logger.recordOutput("Intake/Slam/Velocity/Goal", 0.0);
 	}
 

@@ -13,6 +13,7 @@ import static edu.wpi.first.units.Units.Seconds;
 import java.util.Arrays;
 import java.util.Set;
 
+import edu.wpi.first.math.geometry.Translation3d;
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -26,6 +27,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -50,6 +52,7 @@ import frc.robot.subsystems.drive.odometry.OdometryTimestampIOSim;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.rollers.IntakeRollers;
 import frc.robot.subsystems.intake.rollers.IntakeRollersIO;
+import frc.robot.subsystems.intake.rollers.IntakeRollersIOTalonFX;
 import frc.robot.subsystems.intake.slam.IntakeSlam;
 import frc.robot.subsystems.intake.slam.IntakeSlamIO;
 import frc.robot.subsystems.intake.slam.IntakeSlamIOSim;
@@ -58,9 +61,13 @@ import frc.robot.subsystems.rollers.Rollers;
 import frc.robot.subsystems.rollers.indexer.Indexer;
 import frc.robot.subsystems.rollers.indexer.IndexerIO;
 import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.shooter.flywheels.Flywheels;
-import frc.robot.subsystems.shooter.flywheels.FlywheelsIO;
-import frc.robot.subsystems.shooter.flywheels.FlywheelsIOTalonFX;
+import frc.robot.subsystems.shooter.aiming.AimingSystem;
+import frc.robot.subsystems.shooter.aiming.passing.InterpolationPassingCalc;
+import frc.robot.subsystems.shooter.aiming.shooting.InterpolationShootingCalc;
+import frc.robot.subsystems.shooter.flywheel.Flywheel;
+import frc.robot.subsystems.shooter.flywheel.FlywheelConstants;
+import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
+import frc.robot.subsystems.shooter.flywheel.FlywheelIOTalonFX;
 import frc.robot.subsystems.shooter.hood.Hood;
 import frc.robot.subsystems.shooter.hood.HoodIO;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
@@ -79,7 +86,7 @@ public class RobotContainer {
 	public final Intake intake;
 	public final Rollers rollers;
 	public final Climber climber;
-	public final ExtensionSystem extension;
+	public final ExtensionSystem extensionSystem;
 
 	// Vision
 	public final ApriltagVision apriltagVision;
@@ -111,13 +118,16 @@ public class RobotContainer {
 						.toArray(ModuleIO[]::new)
 				);
 				this.shooter = new Shooter(
-					new Flywheels(new FlywheelsIOTalonFX(HardwareDevices.leftFlywheelMotorMasterID, HardwareDevices.leftFlywheelMotorSlaveID)),
-					new Flywheels(new FlywheelsIOTalonFX(HardwareDevices.centerFlywheelMotorMasterID, HardwareDevices.centerFlywheelMotorSlaveID)),
-					new Flywheels(new FlywheelsIOTalonFX(HardwareDevices.rightFlywheelMotorMasterID, HardwareDevices.rightFlywheelMotorSlaveID)),
-					new Hood(new HoodIO() {})
+					new Flywheel(FlywheelConstants.leftFlywheelConfig, new FlywheelIOTalonFX(FlywheelConstants.leftFlywheelConfig)),
+					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIOTalonFX(FlywheelConstants.rightFlywheelConfig)),
+					new Hood(new HoodIO() {}),
+					new AimingSystem(
+						new InterpolationShootingCalc(),
+						new InterpolationPassingCalc()
+					)
 				);
 				this.intake = new Intake(
-					new IntakeRollers(new IntakeRollersIO() {}),
+					new IntakeRollers(new IntakeRollersIOTalonFX()),
 					new IntakeSlam(new IntakeSlamIOTalonFX())
 				);
 				this.rollers = new Rollers(
@@ -136,10 +146,13 @@ public class RobotContainer {
 						.toArray(ModuleIO[]::new)
 				);
 				this.shooter = new Shooter(
-					new Flywheels(new FlywheelsIO() {}),
-					new Flywheels(new FlywheelsIO() {}),
-					new Flywheels(new FlywheelsIO() {}),
-					new Hood(new HoodIO() {})
+					new Flywheel(FlywheelConstants.leftFlywheelConfig, new FlywheelIO() {}),
+					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIO() {}),
+					new Hood(new HoodIO() {}),
+					new AimingSystem(
+						new InterpolationShootingCalc(),
+						new InterpolationPassingCalc()
+					)
 				);
 				this.intake = new Intake(
 					new IntakeRollers(new IntakeRollersIO() {}),
@@ -162,10 +175,13 @@ public class RobotContainer {
 					new ModuleIO(){}
 				);
 				this.shooter = new Shooter(
-					new Flywheels(new FlywheelsIO() {}),
-					new Flywheels(new FlywheelsIO() {}),
-					new Flywheels(new FlywheelsIO() {}),
-					new Hood(new HoodIO() {})
+					new Flywheel(FlywheelConstants.leftFlywheelConfig, new FlywheelIO() {}),
+					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIO() {}),
+					new Hood(new HoodIO() {}),
+					new AimingSystem(
+						new InterpolationShootingCalc(),
+						new InterpolationPassingCalc()
+					)
 				);
 				this.intake = new Intake(
 					new IntakeRollers(new IntakeRollersIO() {}),
@@ -180,7 +196,7 @@ public class RobotContainer {
 			}
 		}
 
-		this.extension = new ExtensionSystem();
+		this.extensionSystem = new ExtensionSystem();
 
 		// Initialize vision systems with camera pipelines
 		this.apriltagVision = new ApriltagVision(
@@ -191,13 +207,20 @@ public class RobotContainer {
 		);
 
 		// Setup robot structure
-		// this.drive.structureRoot
-
-		// ;
+		this.drive.structureRoot
+			.addChild(this.intake.slam.driverMech
+				.addChild(this.intake.slam.couplerMech)
+			)
+			.addChild(this.intake.slam.followerMech)
+			.addChild(this.shooter.hood.mech)
+		;
 
 		// Register Mechanism3ds
 		Mechanism3d.registerMechs(
-
+			this.shooter.hood.mech,
+			this.intake.slam.followerMech,
+			this.intake.slam.driverMech,
+			this.intake.slam.couplerMech
 		);
 
 		System.out.println("[Init RobotContainer] Configuring Commands");
@@ -325,8 +348,47 @@ public class RobotContainer {
 				drive.rotationalSubsystem.stop();
 			}
 		});
-		this.intake.rollers.setDefaultCommand(this.intake.rollers.idle());
-		this.intake.slam.setDefaultCommand(this.intake.slam.retract());
+
+		final var intakeRollersIdleCommand = this.intake.rollers.idle();
+		final var intakeRollersIntakeCommand = this.intake.rollers.intake();
+		final var intakeRetractCommand = this.intake.slam.retract();
+		final var intakeDeployCommand = this.intake.slam.deploy(this.extensionSystem);
+
+		this.intake.rollers.setDefaultCommand(intakeRollersIdleCommand);
+		this.intake.slam.setDefaultCommand(intakeRetractCommand);
+
+		final var leftFlywheelIdleCommand = this.shooter.leftFlywheel.idle();
+		final var rightFlywheelIdleCommand = this.shooter.rightFlywheel.idle();
+		final var hoodIdleCommand = this.shooter.hood.idle();
+		final var aimAtHubCommand = Commands.parallel(
+			this.shooter.aimingSystem.aimAtHub(
+				RobotState.getInstance()::getEstimatedGlobalPose,
+				this.drive::getFieldMeasuredSpeeds,
+				() -> Translation3d.kZero
+			).repeatedly(),
+			this.shooter.aimLeftFlywheelAtHub(),
+			this.shooter.aimRightFlywheelAtHub(),
+			this.shooter.aimHoodAtHub(),
+			this.shooter.aimDriveAtHub(this.drive.rotationalSubsystem)
+		).withName("Aim at Hub");
+		final var aimToPassCommand = Commands.parallel(
+			this.shooter.aimingSystem.aimToPass(
+				RobotState.getInstance()::getEstimatedGlobalPose,
+				this.drive::getFieldMeasuredSpeeds,
+				() -> Translation3d.kZero
+			).repeatedly(),
+			this.shooter.aimLeftFlywheelToPass(),
+			this.shooter.aimRightFlywheelToPass(),
+			this.shooter.aimHoodToPass(),
+			this.shooter.aimDriveToPass(this.drive.rotationalSubsystem)
+		).withName("Aim to Pass");
+
+		this.shooter.leftFlywheel.setDefaultCommand(leftFlywheelIdleCommand);
+		this.shooter.rightFlywheel.setDefaultCommand(rightFlywheelIdleCommand);
+		this.shooter.hood.setDefaultCommand(hoodIdleCommand);
+
+		// Auto calibrate hood if not calibrated
+		// new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 
 		this.automationsLoop.bind(() -> {
 			var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
@@ -433,6 +495,41 @@ public class RobotContainer {
 		// 	)
 		// )));
 
-		this.driveController.a().whileTrue(this.intake.intake(this.extension));
+		/*
+		 * (A)
+		 *  | Press: Deploy intake (if not deployed) and roll in
+		 *  | Double Press: Retract intake
+		 */
+		final var intakeDoublePressThreshold = LoggedTunable.from("Controls/Intake/Double Press Threshold", Seconds::of, 0.25);
+		final var intakeDoublePressTimer = new Timer();
+		CommandScheduler.getInstance().getDefaultButtonLoop().bind(() -> {
+			if (this.driveController.hid.getAButtonPressed()) {
+				CommandScheduler.getInstance().schedule(intakeRollersIntakeCommand);
+				CommandScheduler.getInstance().schedule(intakeDeployCommand);
+			}
+			if (this.driveController.hid.getAButtonReleased()) {
+				CommandScheduler.getInstance().cancel(intakeRollersIntakeCommand);
+				if (intakeDoublePressTimer.isRunning()) {
+					if (!intakeDoublePressTimer.hasElapsed(intakeDoublePressThreshold.get().in(Seconds))) {
+						CommandScheduler.getInstance().schedule(intakeRetractCommand);
+					}
+				} else {
+					intakeDoublePressTimer.start();
+				}
+			}
+			if (intakeDoublePressTimer.hasElapsed(intakeDoublePressThreshold.get().in(Seconds))) {
+				intakeDoublePressTimer.stop();
+				intakeDoublePressTimer.reset();
+			}
+		});
+
+		CommandScheduler.getInstance().getDefaultButtonLoop().bind(() -> {
+			if (this.driveController.hid.getRightBumperButtonPressed()) {
+				CommandScheduler.getInstance().schedule(aimAtHubCommand);
+			}
+			if (this.driveController.hid.getRightBumperButtonReleased()) {
+				CommandScheduler.getInstance().cancel(aimAtHubCommand);
+			}
+		});
 	}
 }

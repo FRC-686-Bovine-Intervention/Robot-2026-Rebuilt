@@ -26,16 +26,20 @@ import frc.util.loggerUtil.inputs.LoggedEncodedMotor.EncodedMotorStatusSignalCac
 import frc.util.loggerUtil.inputs.LoggedEncoder.EncoderStatusSignalCache;
 
 public class IntakeSlamIOTalonFX implements IntakeSlamIO {
+	// Hardware devices
 	protected final TalonFX motor = HardwareDevices.intakeSlamMotorID.talonFX();
-	protected final CANcoder cancoder = HardwareDevices.intakeSlamEncoderID.cancoder();
+	protected final CANcoder encoder = HardwareDevices.intakeSlamEncoderID.cancoder();
 
+	// Status Signal caches
 	private final EncoderStatusSignalCache encoderStatusSignalCache;
 	private final EncodedMotorStatusSignalCache motorStatusSignalCache;
 
+	// Quick reference arrays
 	private final BaseStatusSignal[] refreshSignals;
 	private final BaseStatusSignal[] encoderConnectedSignals;
 	private final BaseStatusSignal[] motorConnectedSignals;
 
+	// Control Requests
 	private final VoltageOut voltageRequest = new VoltageOut(0);
 	private final PositionVoltage positionRequest = new PositionVoltage(0);
 	private final NeutralOut neutralOutRequest = new NeutralOut();
@@ -43,36 +47,40 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 	private final StaticBrake staticBrakeRequest = new StaticBrake();
 
 	public IntakeSlamIOTalonFX() {
-		var encoderConfig = new CANcoderConfiguration();
-		this.cancoder.getConfigurator().refresh(encoderConfig.MagnetSensor);
-		encoderConfig.MagnetSensor
-			.withSensorDirection(SensorDirectionValue.CounterClockwise_Positive)
-		;
-		this.cancoder.getConfigurator().apply(encoderConfig);
-
+		// Motor Configuration
 		var motorConfig = new TalonFXConfiguration();
 		motorConfig.MotorOutput
 			.withInverted(InvertedValue.Clockwise_Positive)
 			.withNeutralMode(NeutralModeValue.Brake)
 		;
 		motorConfig.Feedback
-			.withRemoteCANcoder(this.cancoder)
+			.withRemoteCANcoder(this.encoder)
 			.withRotorToSensorRatio(IntakeSlamConstants.motorToMechanism.then(IntakeSlamConstants.sensorToMechanism.inverse()).reductionUnsigned())
 			.withSensorToMechanismRatio(IntakeSlamConstants.sensorToMechanism.reductionUnsigned())
 		;
 		motorConfig.SoftwareLimitSwitch
 			.withReverseSoftLimitEnable(true)
 			// .withReverseSoftLimitThreshold(IntakeSlamConstants.motorToMechanism.inverse().applyUnsigned(IntakeSlamConstants.minAngle))
-			.withReverseSoftLimitThreshold(IntakeSlamConstants.minAngle.minus(IntakeSlamConstants.cancoderZeroOffset))
+			.withReverseSoftLimitThreshold(IntakeSlamConstants.minAngle.minus(IntakeSlamConstants.encoderZeroOffset))
 			.withForwardSoftLimitEnable(true)
 			// .withForwardSoftLimitThreshold(IntakeSlamConstants.motorToMechanism.inverse().applyUnsigned(IntakeSlamConstants.maxAngle))
-			.withForwardSoftLimitThreshold(IntakeSlamConstants.maxAngle.minus(IntakeSlamConstants.cancoderZeroOffset))
+			.withForwardSoftLimitThreshold(IntakeSlamConstants.maxAngle.minus(IntakeSlamConstants.encoderZeroOffset))
 		;
 		this.motor.getConfigurator().apply(motorConfig);
 
-		this.encoderStatusSignalCache = EncoderStatusSignalCache.from(this.cancoder);
-		this.motorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.motor);
+		// Encoder Configuration
+		var encoderConfig = new CANcoderConfiguration();
+		this.encoder.getConfigurator().refresh(encoderConfig.MagnetSensor);
+		encoderConfig.MagnetSensor
+			.withSensorDirection(SensorDirectionValue.CounterClockwise_Positive)
+		;
+		this.encoder.getConfigurator().apply(encoderConfig);
 
+		// Cache Status Signals
+		this.motorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.motor);
+		this.encoderStatusSignalCache = EncoderStatusSignalCache.from(this.encoder);
+
+		// Make quick reference arrays
 		this.refreshSignals = new BaseStatusSignal[] {
 			this.encoderStatusSignalCache.position(),
 			this.encoderStatusSignalCache.velocity(),
@@ -82,11 +90,7 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 			this.motorStatusSignalCache.motor().statorCurrent(),
 			this.motorStatusSignalCache.motor().supplyCurrent(),
 			this.motorStatusSignalCache.motor().torqueCurrent(),
-			this.motorStatusSignalCache.motor().deviceTemperature()
-		};
-		this.encoderConnectedSignals = new BaseStatusSignal[] {
-			this.encoderStatusSignalCache.position(),
-			this.encoderStatusSignalCache.velocity()
+			this.motorStatusSignalCache.motor().deviceTemperature(),
 		};
 		this.motorConnectedSignals = new BaseStatusSignal[] {
 			this.motorStatusSignalCache.encoder().position(),
@@ -95,14 +99,19 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 			this.motorStatusSignalCache.motor().statorCurrent(),
 			this.motorStatusSignalCache.motor().supplyCurrent(),
 			this.motorStatusSignalCache.motor().torqueCurrent(),
-			this.motorStatusSignalCache.motor().deviceTemperature()
+			this.motorStatusSignalCache.motor().deviceTemperature(),
+		};
+		this.encoderConnectedSignals = new BaseStatusSignal[] {
+			this.encoderStatusSignalCache.position(),
+			this.encoderStatusSignalCache.velocity(),
 		};
 
-		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.encoderStatusSignalCache.getStatusSignals());
+		// Set Status Signal update frequency
 		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.motorStatusSignalCache.encoder().getStatusSignals());
 		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.motorStatusSignalCache.motor().getStatusSignals());
-		this.cancoder.optimizeBusUtilization();
+		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.encoderStatusSignalCache.getStatusSignals());
 		this.motor.optimizeBusUtilization();
+		this.encoder.optimizeBusUtilization();
 	}
 
 	@Override

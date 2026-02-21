@@ -12,9 +12,12 @@ import frc.util.loggerUtil.inputs.LoggedEncodedMotor;
 public interface HoodIO {
 	@AutoLog
 	public static class HoodIOInputs {
-		boolean limitSwitch = false;
 		boolean motorConnected = false;
 		LoggedEncodedMotor motor = new LoggedEncodedMotor();
+		double motorProfilePositionRads = 0.0;
+		double motorProfileVelocityRadsPerSec = 0.0;
+
+		boolean limitSwitch = false;
 	}
 
 	public default void updateInputs(HoodIOInputs inputs) {}
@@ -25,11 +28,9 @@ public interface HoodIO {
 
 	public default void stop(Optional<NeutralMode> neutralMode) {}
 
-	public default void configPID(PIDConstants pidConstants) {}
-
-	public default void configFF(FFConstants ffConstants) {}
-
 	public default void configProfile(double kV, double kA, double maxVelocity) {}
+	public default void configFF(FFConstants ffConstants) {}
+	public default void configPID(PIDConstants pidConstants) {}
 
 	public default void resetMotorPositionRads(double positionRads) {}
 }

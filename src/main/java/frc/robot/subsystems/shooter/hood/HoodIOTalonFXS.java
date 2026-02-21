@@ -13,10 +13,9 @@ import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.StaticBrake;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFXS;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-// import com.ctre.phoenix6.signals.ReverseLimitSourceValue;
-// import com.ctre.phoenix6.signals.ReverseLimitTypeValue;
 import com.ctre.phoenix6.signals.ReverseLimitValue;
 
 import edu.wpi.first.math.util.Units;
@@ -28,19 +27,25 @@ import frc.util.PIDConstants;
 import frc.util.loggerUtil.inputs.LoggedEncodedMotor.EncodedMotorStatusSignalCache;
 
 public class HoodIOTalonFXS implements HoodIO {
+	// Hardware devices
 	protected final TalonFXS motor = HardwareDevices.hoodMotorID.talonFXS();
 
+	// Status Signal caches
 	private final EncodedMotorStatusSignalCache motorStatusSignalCache;
+	private final StatusSignal<Double> motorProfilePositionStatusSignal;
+	private final StatusSignal<Double> motorProfileVelocityStatusSignal;
 	private final StatusSignal<ReverseLimitValue> limitSwitchStatusSignal;
 
+	// Quick reference arrays
 	private final BaseStatusSignal[] refreshSignals;
 	private final BaseStatusSignal[] motorConnectionSignals;
 
-	private final VoltageOut voltageRequest = new VoltageOut(0);
-	private final MotionMagicExpoVoltage positionRequest = new MotionMagicExpoVoltage(0);
+	// Control Requests
 	private final NeutralOut neutralOutRequest = new NeutralOut();
 	private final CoastOut coastOutRequest = new CoastOut();
 	private final StaticBrake staticBrakeRequest = new StaticBrake();
+	private final VoltageOut voltageRequest = new VoltageOut(0.0).withEnableFOC(true);
+	private final MotionMagicExpoVoltage positionRequest = new MotionMagicExpoVoltage(0.0).withEnableFOC(false);
 
 	public HoodIOTalonFXS() {
 		var motorConfig = new TalonFXSConfiguration();
@@ -55,16 +60,21 @@ public class HoodIOTalonFXS implements HoodIO {
 			.withForwardSoftLimitThreshold(HoodConstants.motorToMechanism.inverse().applyUnsigned(HoodConstants.maxAngle))
 		;
 		// motorConfig.HardwareLimitSwitch
-			// .withReverseLimitEnable(true)
-			// .withReverseLimitSource(ReverseLimitSourceValue.RemoteCANdiS1)
-			// .withReverseLimitRemoteSensorID(HardwareDevices.candiID.id)
-			// .withReverseLimitType(ReverseLimitTypeValue.NormallyOpen)
-			// .withForwardLimitEnable(false)
+		// 	.withReverseLimitEnable(true)
+		// 	.withReverseLimitSource(ReverseLimitSourceValue.RemoteCANdiS1)
+		// 	.withReverseLimitRemoteSensorID(HardwareDevices.candiID.id)
+		// 	.withReverseLimitType(ReverseLimitTypeValue.NormallyOpen)
+		// 	.withForwardLimitEnable(false)
 		// ;
+		motorConfig.Slot0
+			.withGravityType(GravityTypeValue.Arm_Cosine)
+		;
 
 		this.motor.getConfigurator().apply(motorConfig);
 
 		this.motorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.motor);
+		this.motorProfilePositionStatusSignal = this.motor.getClosedLoopReference();
+		this.motorProfileVelocityStatusSignal = this.motor.getClosedLoopReferenceSlope();
 		this.limitSwitchStatusSignal = this.motor.getReverseLimit();
 
 		this.refreshSignals = new BaseStatusSignal[] {
@@ -75,7 +85,9 @@ public class HoodIOTalonFXS implements HoodIO {
 			this.motorStatusSignalCache.motor().supplyCurrent(),
 			this.motorStatusSignalCache.motor().torqueCurrent(),
 			this.motorStatusSignalCache.motor().deviceTemperature(),
-			this.limitSwitchStatusSignal
+			this.motorProfilePositionStatusSignal,
+			this.motorProfileVelocityStatusSignal,
+			this.limitSwitchStatusSignal,
 		};
 		this.motorConnectionSignals = new BaseStatusSignal[] {
 			this.motorStatusSignalCache.encoder().position(),
@@ -85,14 +97,15 @@ public class HoodIOTalonFXS implements HoodIO {
 			this.motorStatusSignalCache.motor().supplyCurrent(),
 			this.motorStatusSignalCache.motor().torqueCurrent(),
 			this.motorStatusSignalCache.motor().deviceTemperature(),
-			this.limitSwitchStatusSignal
+			this.motorProfilePositionStatusSignal,
+			this.motorProfileVelocityStatusSignal,
+			this.limitSwitchStatusSignal,
 		};
 
 		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.motorStatusSignalCache.encoder().getStatusSignals());
-		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.limitSwitchStatusSignal);
+		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.motorProfilePositionStatusSignal, this.motorProfileVelocityStatusSignal);
 		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency.div(2), this.motorStatusSignalCache.motor().getStatusSignals());
-		// BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.deviceFaultUpdateFrequency, FaultType.getFaultStatusSignals(this.motor));
-		// BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.deviceFaultUpdateFrequency, FaultType.getStickyFaultStatusSignals(this.motor));
+		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.limitSwitchStatusSignal);
 		this.motor.optimizeBusUtilization();
 	}
 
@@ -101,6 +114,9 @@ public class HoodIOTalonFXS implements HoodIO {
 		BaseStatusSignal.refreshAll(this.refreshSignals);
 		inputs.motorConnected = BaseStatusSignal.isAllGood(this.motorConnectionSignals);
 		inputs.motor.updateFrom(this.motorStatusSignalCache);
+		inputs.motorProfilePositionRads = Units.rotationsToRadians(this.motorProfilePositionStatusSignal.getValueAsDouble());
+		inputs.motorProfileVelocityRadsPerSec = Units.rotationsToRadians(this.motorProfileVelocityStatusSignal.getValueAsDouble());
+
 		inputs.limitSwitch = this.limitSwitchStatusSignal.getValue() == ReverseLimitValue.ClosedToGround;
 	}
 
@@ -115,7 +131,6 @@ public class HoodIOTalonFXS implements HoodIO {
 	public void setPositionRads(double positionRads) {
 		this.motor.setControl(this.positionRequest
 			.withPosition(Units.radiansToRotations(positionRads))
-			.withEnableFOC(true)
 		);
 	}
 
@@ -145,9 +160,11 @@ public class HoodIOTalonFXS implements HoodIO {
 	public void configProfile(double kV, double kA, double maxVelocity) {
 		var config = new MotionMagicConfigs();
 		this.motor.getConfigurator().refresh(config);
-		config.MotionMagicExpo_kA = kA;
-		config.MotionMagicExpo_kV = kV;
-		config.MotionMagicCruiseVelocity = maxVelocity;
+		config
+			.withMotionMagicExpo_kV(kV)
+			.withMotionMagicExpo_kA(kA)
+			.withMotionMagicCruiseVelocity(maxVelocity)
+		;
 		this.motor.getConfigurator().apply(config);
 	}
 
