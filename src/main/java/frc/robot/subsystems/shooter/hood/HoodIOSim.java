@@ -1,5 +1,6 @@
 package frc.robot.subsystems.shooter.hood;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
@@ -15,12 +16,12 @@ import frc.robot.subsystems.climber.hook.HookConstants;
 
 public class HoodIOSim extends HoodIOTalonFXS {
 	private final SingleJointedArmSim hoodSim = new SingleJointedArmSim(
-		LinearSystemId.identifyPositionSystem(12, 12),
-		DCMotor.getNeo550(1),
-		HoodConstants.motorToMechanism.reductionUnsigned(),
+		LinearSystemId.identifyPositionSystem(3, 3),
+		DCMotor.getNeo550(1).withReduction(HoodConstants.motorToMechanism.reductionUnsigned()),
+		1.0,
 		0.5,
 		HoodConstants.minAngle.in(Radians),
-		HoodConstants.maxAngle.in(Radians),
+		HoodConstants.maxAngle.plus(Degrees.of(180)).in(Radians),
 		false,
 		HoodConstants.minAngle.in(Radians)
 	);
@@ -35,7 +36,7 @@ public class HoodIOSim extends HoodIOTalonFXS {
 	@Override
 	public void updateInputs(HoodIOInputs inputs) {
 		var motorSimState = this.motor.getSimState();
-		var candiSimState = candi.getSimState();
+		var candiSimState = this.candi.getSimState();
 
 		this.hoodSim.setInputVoltage(motorSimState.getMotorVoltage());
 		this.hoodSim.update(RobotConstants.rioUpdatePeriodSecs);
@@ -57,5 +58,7 @@ public class HoodIOSim extends HoodIOTalonFXS {
 		);
 
 		super.updateInputs(inputs);
+
+		inputs.limitSwitch = this.hoodSim.hasHitLowerLimit();
 	}
 }

@@ -8,8 +8,8 @@
     "cameras": [],
     "components": [
         {
-            "zeroedRotations": [{ "axis": "z", "degrees": 90 }, { "axis" : "y", "degrees": 90}],
-            "zeroedPosition": [0.103427, 0, -0.492469]
+            "zeroedRotations": [{ "axis": "z", "degrees": 90 }, { "axis" : "y", "degrees": 90}, { "axis" : "y", "degrees": -10.1511642166}],
+            "zeroedPosition": [0.18860357, 0, -0.46653141]
         },
         {
             "zeroedRotations": [{ "axis": "z", "degrees": 90 },{ "axis": "y", "degrees": 90 },{ "axis": "y", "degrees": 77.606461691456901932073109190622 }],
