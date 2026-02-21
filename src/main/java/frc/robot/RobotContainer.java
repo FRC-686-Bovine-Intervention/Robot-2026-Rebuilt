@@ -4,11 +4,8 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.Seconds;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -16,10 +13,7 @@ import java.util.Set;
 import edu.wpi.first.math.geometry.Translation3d;
 import org.littletonrobotics.junction.Logger;
 
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -30,9 +24,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
+import frc.robot.automations.BumpMitigation;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.ExtensionSystem;
@@ -74,8 +68,6 @@ import frc.robot.subsystems.vision.object.ObjectVision;
 import frc.util.Perspective;
 import frc.util.controllers.Joystick;
 import frc.util.controllers.XboxController;
-import frc.util.flipping.AllianceFlipUtil;
-import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.robotStructure.Mechanism3d;
 
 public class RobotContainer {
@@ -300,7 +292,7 @@ public class RobotContainer {
 	}
 
 	private void configureCommands() {
-		Joystick.Axis turnAxis = driveController.leftTrigger.add(driveController.rightTrigger.invert()).smoothDeadband(0.05).sensitivity(0.5);
+		Joystick.Axis turnAxis = this.driveController.leftTrigger.add(this.driveController.rightTrigger.invert()).smoothDeadband(0.05).sensitivity(0.5);
 		// Setup joystick driving as default command for drivetrain
 		this.drive.translationSubsystem.setDefaultCommand(new Command() {
 			{
@@ -403,8 +395,7 @@ public class RobotContainer {
 			Logger.recordOutput("CORNER DETECT/alliance zone/BR", FieldConstants.allianceZone.getOurs().withinBounds(brCorner));
 		});
 
-		LoggedTunable<double[]> targetAnglesTunable = new LoggedTunable<>() {
-			private final LoggedTunable<Angle> targetAngleOffset = LoggedTunable.from("Automations/Bump Mitigation/Target Angle", Degrees::of, 15.0);
+		this.automationsLoop.bind(new BumpMitigation(this.drive, turnAxis));
 
 			private double[] cache = this.calculateTargetAngles(this.targetAngleOffset.get().in(Radians));
 
