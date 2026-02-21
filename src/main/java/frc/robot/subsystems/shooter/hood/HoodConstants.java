@@ -1,6 +1,7 @@
 package frc.robot.subsystems.shooter.hood;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Meters;
 
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -27,7 +28,9 @@ public class HoodConstants {
 	// Ascope Mech Constants
 	public static final Transform3d hoodBase = new Transform3d(
 		new Translation3d(
-
+			Meters.of(-0.103427),
+			Meters.of(0),
+			Meters.of(0.492469)
 		),
 		GeomUtil.rotation3dBuilder()
 
