@@ -99,10 +99,20 @@ public final class FieldConstants {
 		barrierCenterX.getRed().minus(bumpLength.div(2.0))
 	);
 
-	private static final Distance bottomTrenchTopY = fieldWidth.div(2.0).minus(hubWidth.div(2.0)).minus(bumpWidth);
-	private static final Distance bottomTrenchBottomY = Inches.of(-60);
-	private static final Distance topTrenchBottomY = fieldWidth.div(2.0).plus(hubWidth.div(2.0)).plus(bumpWidth);
-	private static final Distance topTrenchTopY = fieldWidth.plus(Inches.of(60));
+	public static final AllianceFlipped<Distance> trenchInnerX = new AllianceFlipped<Distance>(
+		barrierCenterX.getBlue().minus(bumpLength.div(2.0)),
+		barrierCenterX.getRed().plus(bumpLength.div(2.0))
+	);
+
+	public static final AllianceFlipped<Distance> trenchOuterX = new AllianceFlipped<Distance>(
+		barrierCenterX.getBlue().plus(bumpLength.div(2.0)),
+		barrierCenterX.getRed().minus(bumpLength.div(2.0))
+	);
+
+	public static final Distance bottomTrenchTopY = fieldWidth.div(2.0).minus(hubWidth.div(2.0)).minus(bumpWidth);
+	public static final Distance bottomTrenchBottomY = Inches.of(-60);
+	public static final Distance topTrenchTopY = fieldWidth.div(2.0).plus(hubWidth.div(2.0)).plus(bumpWidth);
+	public static final Distance topTrenchBottomY = fieldWidth.plus(Inches.of(60));
 
 	public static final AllianceFlipped<RectangularBoundingBox> bottomTrench = AllianceFlipped.fromBlue(BoundingBox.rectangle(
 		new Translation2d(

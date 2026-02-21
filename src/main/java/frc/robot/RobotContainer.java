@@ -6,6 +6,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Seconds;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -16,7 +17,6 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -27,6 +27,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.automations.BumpMitigation;
+import frc.robot.automations.TrenchMitigation;
+import frc.robot.constants.FieldConstants;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.ExtensionSystem;
@@ -68,6 +70,7 @@ import frc.robot.subsystems.vision.object.ObjectVision;
 import frc.util.Perspective;
 import frc.util.controllers.Joystick;
 import frc.util.controllers.XboxController;
+import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.robotStructure.Mechanism3d;
 
 public class RobotContainer {
@@ -396,85 +399,7 @@ public class RobotContainer {
 		});
 
 		this.automationsLoop.bind(new BumpMitigation(this.drive, turnAxis));
-
-			private double[] cache = this.calculateTargetAngles(this.targetAngleOffset.get().in(Radians));
-
-			@Override
-			public boolean hasChanged(int id) {
-				return this.targetAngleOffset.hasChanged(id);
-			}
-
-			@Override
-			public double[] get() {
-				if (this.targetAngleOffset.hasChanged(this.hashCode())) {
-					this.cache = this.calculateTargetAngles(this.targetAngleOffset.get().in(Radians));
-				}
-				return this.cache;
-			}
-
-			private double[] calculateTargetAngles(double offset) {
-				return new double[] {
-					0 - offset,
-					0 + offset,
-					Math.PI/2 - offset,
-					Math.PI/2 + offset,
-					Math.PI - offset,
-					Math.PI + offset,
-					-Math.PI/2 - offset,
-					-Math.PI/2 + offset,
-				};
-			}
-		};
-
-		var bumpLookahead = LoggedTunable.from("Automations/Bump Mitigation/Lookahead Time", Seconds::of, 0.5);
-		new Trigger(this.automationsLoop, () -> {
-			var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
-			var lookaheadTrans = robotPose.getTranslation().plus(new Translation2d(
-				this.drive.getFieldMeasuredSpeeds().vxMetersPerSecond * bumpLookahead.get().in(Seconds),
-				this.drive.getFieldMeasuredSpeeds().vyMetersPerSecond * bumpLookahead.get().in(Seconds)
-			));
-			return (FieldConstants.anyBump.getOurs().withinBounds(robotPose.getTranslation()) ||
-			FieldConstants.anyBump.getOurs().withinBounds(lookaheadTrans) ||
-			FieldConstants.anyBump.getTheirs().withinBounds(robotPose.getTranslation()) ||
-			FieldConstants.anyBump.getTheirs().withinBounds(lookaheadTrans))
-			&& Math.abs(turnAxis.getAsDouble()) <= 0.0;
-		}).whileTrue(this.drive.rotationalSubsystem.pidControlledHeading(() -> {
-			var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
-			var robotRotation = robotPose.getRotation().getRadians();
-
-			var targetAngles = targetAnglesTunable.get();
-
-			double targetAngleRads = 0;
-			double lowestOffset = Math.PI;
-			for (double targetAngleCandidate : targetAngles) {
-				double candidateOffset = Math.abs(targetAngleCandidate - robotRotation);
-				if (candidateOffset < lowestOffset) {
-					targetAngleRads = targetAngleCandidate;
-					lowestOffset = candidateOffset;
-				}
-			}
-
-			return new Rotation2d(targetAngleRads);
-		}));
-
-		var trenchLookahead = LoggedTunable.from("Automations/Trench Mitigation/Lookahead Time", Seconds::of, 0.5);
-		new Trigger(this.automationsLoop, () -> {
-			var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
-			var lookaheadTrans = robotPose.getTranslation().plus(new Translation2d(
-				this.drive.getFieldMeasuredSpeeds().vxMetersPerSecond * trenchLookahead.get().in(Seconds),
-				this.drive.getFieldMeasuredSpeeds().vyMetersPerSecond * trenchLookahead.get().in(Seconds)
-			));
-			return /*(*/(FieldConstants.anyTrench.getOurs().withinBounds(robotPose.getTranslation()) ||
-			FieldConstants.anyTrench.getOurs().withinBounds(lookaheadTrans)) //||
-			// FieldConstants.anyTrench.getTheirs().withinBounds(robotPose.getTranslation()) ||
-			// FieldConstants.anyTrench.getTheirs().withinBounds(lookaheadTrans))
-			&& Math.abs(turnAxis.getAsDouble()) <= 0.0
-			&& this.drive.getFieldMeasuredSpeeds().vxMetersPerSecond * (AllianceFlipUtil.getAlliance() == Alliance.Blue ? 1 : -1) < 0;
-		}).whileTrue(this.drive.rotationalSubsystem.pidControlledHeading(() -> {
-			return new Rotation2d(AllianceFlipUtil.getAlliance() == Alliance.Blue ? 0 : Math.PI);
-		}).alongWith(this.shooter.hood.idle())
-		.alongWith(this.intake.slam.deploy(extensionSystem))
-		);
+		this.automationsLoop.bind(new TrenchMitigation(this.drive, this.intake.slam, this.extensionSystem, this.shooter.hood));
 
 		// Setup position reset command
 		// this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(
