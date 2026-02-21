@@ -60,11 +60,11 @@ public class HardwareDevices {
 
 
 	// Intake
-	// | Slam
-	public static final CANDevice intakeSlamMotorID = canivore.id(5);
-	public static final CANDevice intakeSlamEncoderID = canivore.id(6);
-	// | Rollers
-	public static final CANDevice intakeRollerMotorID = canivore.id(7);
+	// // | Slam
+	// public static final CANDevice intakeSlamMotorID = canivore.id(5);
+	// public static final CANDevice intakeSlamEncoderID = canivore.id(6);
+	// // | Rollers
+	// public static final CANDevice intakeRollerMotorID = canivore.id(7);
 
 
 	// RIO

@@ -33,7 +33,6 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
-import frc.robot.constants.HardwareDevices;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.ExtensionSystem;
@@ -483,7 +482,7 @@ public class RobotContainer {
 		}).whileTrue(this.drive.rotationalSubsystem.pidControlledHeading(() -> {
 			return new Rotation2d(AllianceFlipUtil.getAlliance() == Alliance.Blue ? 0 : Math.PI);
 		}).alongWith(this.shooter.hood.idle())
-		.alongWith(this.intake.slam.idle())
+		.alongWith(this.intake.slam.deploy(extensionSystem))
 		);
 
 		// Setup position reset command

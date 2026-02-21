@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Meters;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,11 +16,6 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.net.WebServer;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.event.EventLoop;
@@ -30,13 +23,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
-import frc.robot.constants.FieldConstants;
 import frc.robot.subsystems.leds.Leds;
 import frc.util.Environment;
 import frc.util.LoggedTracer;
 import frc.util.Perspective;
 import frc.util.VirtualSubsystem;
-import frc.util.flipping.AllianceFlipped;
 import frc.util.robotStructure.Mechanism3d;
 
 public class Robot extends LoggedRobot {
