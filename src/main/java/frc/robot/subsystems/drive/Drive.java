@@ -212,7 +212,7 @@ public class Drive extends VirtualSubsystem {
 		Logger.recordOutput("Drive/Chassis Speeds/Measured", this.robotMeasuredSpeeds);
 		// RobotState.getInstance().addDriveMeasurement(this.gyroAngle, this.getModulePositions());
 
-		// this.fieldMeasuredSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(this.robotMeasuredSpeeds, this.gyroAngle);
+		this.fieldMeasuredSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(this.robotMeasuredSpeeds, RobotState.getInstance().getEstimatedGlobalPose().getRotation());
 
 		// Skid Detection
 		// SwerveModuleState[] rotationalStates = new SwerveModuleState[DriveConstants.modules.length];

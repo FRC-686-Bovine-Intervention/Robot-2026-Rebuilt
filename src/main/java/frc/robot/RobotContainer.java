@@ -11,6 +11,7 @@ import static edu.wpi.first.units.Units.Seconds;
 import java.util.Arrays;
 import java.util.Set;
 
+import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
@@ -26,6 +27,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
+import frc.robot.automations.BumpMitigation;
+import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.ExtensionSystem;
 import frc.robot.subsystems.climber.Climber;
@@ -318,6 +321,7 @@ public class RobotContainer {
 	}
 
 	private void configureCommands() {
+		Joystick.Axis turnAxis = this.driveController.leftTrigger.add(this.driveController.rightTrigger.invert()).smoothDeadband(0.05).sensitivity(0.5);
 		// Setup joystick driving as default command for drivetrain
 		this.drive.translationSubsystem.setDefaultCommand(new Command() {
 			{
@@ -348,15 +352,17 @@ public class RobotContainer {
 				drive.translationSubsystem.stop();
 			}
 		});
-		this.drive.rotationalSubsystem.setDefaultCommand(new Command() {
+		new Trigger(CommandScheduler.getInstance().getActiveButtonLoop(), () -> {
+			return Math.abs(turnAxis.getAsDouble()) > 0;
+		}).whileTrue(
+			new Command() {
 			{
 				this.setName("Drive Controlled");
 				this.addRequirements(drive.rotationalSubsystem);
 			}
-			private final Joystick.Axis axis = driveController.leftTrigger.add(driveController.rightTrigger.invert()).smoothDeadband(0.05).sensitivity(0.5);
 			@Override
 			public void execute() {
-				var omega = this.axis.getAsDouble() * DriveConstants.maxTurnRate.in(RadiansPerSecond);
+				var omega = turnAxis.getAsDouble() * DriveConstants.maxTurnRate.in(RadiansPerSecond);
 
 				drive.rotationalSubsystem.driveVelocity(omega);
 			}
@@ -415,6 +421,22 @@ public class RobotContainer {
 
 		// Auto calibrate hook if not calibrated
 		new Trigger(this.automationsLoop, () -> /* !this.climber.hook.isCalibrated() &&  */DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
+
+		this.automationsLoop.bind(() -> {
+			var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
+
+			var flCorner = robotPose.getTranslation().plus(RobotConstants.flBumperCorner.rotateBy(robotPose.getRotation()));
+			var frCorner = robotPose.getTranslation().plus(RobotConstants.frBumperCorner.rotateBy(robotPose.getRotation()));
+			var blCorner = robotPose.getTranslation().plus(RobotConstants.blBumperCorner.rotateBy(robotPose.getRotation()));
+			var brCorner = robotPose.getTranslation().plus(RobotConstants.brBumperCorner.rotateBy(robotPose.getRotation()));
+
+			Logger.recordOutput("CORNER DETECT/alliance zone/FL", FieldConstants.allianceZone.getOurs().withinBounds(flCorner));
+			Logger.recordOutput("CORNER DETECT/alliance zone/FR", FieldConstants.allianceZone.getOurs().withinBounds(frCorner));
+			Logger.recordOutput("CORNER DETECT/alliance zone/BL", FieldConstants.allianceZone.getOurs().withinBounds(blCorner));
+			Logger.recordOutput("CORNER DETECT/alliance zone/BR", FieldConstants.allianceZone.getOurs().withinBounds(brCorner));
+		});
+
+		this.automationsLoop.bind(new BumpMitigation(this.drive));
 
 		// Setup position reset command
 		// this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(
