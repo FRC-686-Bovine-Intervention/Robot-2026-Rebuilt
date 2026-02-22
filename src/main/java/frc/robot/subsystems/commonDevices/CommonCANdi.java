@@ -7,10 +7,14 @@ import frc.robot.constants.HardwareDevices;
 
 public class CommonCANdi {
 	public final CANdi candi = HardwareDevices.candiID.candi();
+	public final CANdiConfiguration candiConfig = new CANdiConfiguration();
 
 	public CommonCANdi() {
-		var config = new CANdiConfiguration();
 
-		this.candi.getConfigurator().apply(config);
+	}
+
+	public void configSend() {
+		this.candi.getConfigurator().apply(this.candiConfig);
+		this.candi.optimizeBusUtilization();
 	}
 }

@@ -28,9 +28,8 @@ public interface HoodIO {
 
 	public default void stop(Optional<NeutralMode> neutralMode) {}
 
-	public default void configProfile(double kV, double kA, double maxVelocity) {}
+	public default void configProfile(double kVVoltSecsPerRad, double kAVoltSecsSqrPerRad, double maxVelocityRadsPerSec) {}
 	public default void configFF(FFConstants ffConstants) {}
 	public default void configPID(PIDConstants pidConstants) {}
-
-	public default void resetMotorPositionRads(double positionRads) {}
+	public default void configSend() {}
 }

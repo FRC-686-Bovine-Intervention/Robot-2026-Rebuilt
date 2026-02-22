@@ -4,9 +4,10 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.DegreesPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
-import java.util.Optional;
 import java.util.function.DoubleSupplier;
 
 import org.littletonrobotics.junction.Logger;
@@ -16,8 +17,10 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.util.FFConstants;
 import frc.util.LoggedTracer;
 import frc.util.NeutralMode;
@@ -84,9 +87,34 @@ public class Hood extends SubsystemBase {
 		System.out.println("[Init Hood] Instantiating Hood with " + io.getClass().getSimpleName());
 		this.io = io;
 
-		this.io.configPID(pidConsts.get());
-		this.io.configFF(ffConsts.get());
-		this.io.configProfile(profilekV.getAsDouble(), profilekA.getAsDouble(), profileMaxVel.get().in(RadiansPerSecond));
+		final var sysidRoutine = new SysIdRoutine(
+			new SysIdRoutine.Config(
+				Volts.of(1.0).per(Second),
+				Volts.of(7.0),
+				Seconds.of(10.0),
+				(state) -> {
+					Logger.recordOutput("SysID/Shooter-Hood/State", state.toString());
+				}
+			),
+			new SysIdRoutine.Mechanism(
+				(voltage) -> {
+					this.io.setVolts(voltage.in(Volts));
+				},
+				(log) -> {
+					Logger.recordOutput("SysID/Shooter-Hood/Voltage", this.inputs.motor.motor.getAppliedVolts());
+					Logger.recordOutput("SysID/Shooter-Hood/Position Rads", this.getMeasuredAngleRads());
+					Logger.recordOutput("SysID/Shooter-Hood/Velocity RadsPerSec", this.getMeasuredVelocityRadsPerSec());
+				},
+				this,
+				"shooter-hood"
+			)
+		);
+		SmartDashboard.putData("SysID/Shooter/Hood/Quasi Forward", sysidRoutine.quasistatic(SysIdRoutine.Direction.kForward).until(() -> this.getMeasuredAngleRads() >= HoodConstants.maxAngle.in(Radians)));
+		SmartDashboard.putData("SysID/Shooter/Hood/Quasi Reverse", sysidRoutine.quasistatic(SysIdRoutine.Direction.kReverse).until(() -> this.getMeasuredAngleRads() <= HoodConstants.minAngle.in(Radians)));
+		SmartDashboard.putData("SysID/Shooter/Hood/Dynamic Forward", sysidRoutine.dynamic(SysIdRoutine.Direction.kForward).until(() -> this.getMeasuredAngleRads() >= HoodConstants.maxAngle.in(Radians)));
+		SmartDashboard.putData("SysID/Shooter/Hood/Dynamic Reverse", sysidRoutine.dynamic(SysIdRoutine.Direction.kReverse).until(() -> this.getMeasuredAngleRads() <= HoodConstants.minAngle.in(Radians)));
+
+		this.periodic();
 	}
 
 	@Override
@@ -114,16 +142,29 @@ public class Hood extends SubsystemBase {
 
 		this.mech.setRads(this.getMeasuredAngleRads());
 
-		if (pidConsts.hasChanged(hashCode())) {
-			this.io.configPID(pidConsts.get());
+		var configChanged = false;
+		if (
+			Hood.profilekV.hasChanged(this.hashCode())
+			| Hood.profilekA.hasChanged(this.hashCode())
+			| Hood.profileMaxVel.hasChanged(this.hashCode())
+		) {
+			this.io.configProfile(
+				Hood.profilekV.getAsDouble(),
+				Hood.profilekA.getAsDouble(),
+				Hood.profileMaxVel.get().in(RadiansPerSecond)
+			);
+			configChanged = true;
 		}
-
-		if (ffConsts.hasChanged(hashCode())) {
-			this.io.configFF(ffConsts.get());
+		if (Hood.ffConsts.hasChanged(this.hashCode())) {
+			this.io.configFF(Hood.ffConsts.get());
+			configChanged = true;
 		}
-
-		if (profilekV.hasChanged(hashCode()) | profilekA.hasChanged(hashCode()) | profileMaxVel.hasChanged(hashCode())) {
-			this.io.configProfile(profilekV.getAsDouble(), profilekA.getAsDouble(), profileMaxVel.get().in(RadiansPerSecond));
+		if (Hood.pidConsts.hasChanged(this.hashCode())) {
+			this.io.configPID(Hood.pidConsts.get());
+			configChanged = true;
+		}
+		if (configChanged) {
+			this.io.configSend();
 		}
 
 		this.motorDisconnectedAlert.set(!this.inputs.motorConnected);
@@ -134,10 +175,6 @@ public class Hood extends SubsystemBase {
 
 		LoggedTracer.logEpoch("CommandScheduler Periodic/Subsystem/Shooter Hood/Periodic");
 		LoggedTracer.logEpoch("CommandScheduler Periodic/Subsystem/Shooter Hood");
-	}
-
-	private void stop(Optional<NeutralMode> neutralMode) {
-		this.io.stop(neutralMode);
 	}
 
 	private void setAngleGoalRads(double angleRads) {
@@ -157,12 +194,12 @@ public class Hood extends SubsystemBase {
 
 			@Override
 			public void initialize() {
-				hood.stop(NeutralMode.COAST);
+				hood.io.stop(NeutralMode.COAST);
 			}
 
 			@Override
 			public void end(boolean interrupted) {
-				hood.stop(NeutralMode.DEFAULT);
+				hood.io.stop(NeutralMode.DEFAULT);
 			}
 
 			@Override
@@ -187,7 +224,7 @@ public class Hood extends SubsystemBase {
 
 			@Override
 			public void end(boolean interrupted) {
-				hood.stop(NeutralMode.DEFAULT);
+				hood.io.stop(NeutralMode.DEFAULT);
 			}
 
 			@Override
@@ -212,7 +249,7 @@ public class Hood extends SubsystemBase {
 
 			@Override
 			public void end(boolean interrupted) {
-				hood.stop(NeutralMode.DEFAULT);
+				hood.io.stop(NeutralMode.DEFAULT);
 			}
 		};
 	}

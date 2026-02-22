@@ -115,6 +115,7 @@ public class RobotContainer {
 		switch (RobotType.getMode()) {
 			case REAL -> {
 				var commonCANdi = new CommonCANdi();
+
 				this.drive = new Drive(
 					new OdometryTimestampIOOdometryThread(),
 					new GyroIOPigeon2(),
@@ -139,14 +140,17 @@ public class RobotContainer {
 					new Indexer(new IndexerIOTalonFX()),
 					new Agitator(new AgitatorIOTalonFX()),
 					new Feeder(new FeederIOTalonFX()),
-					new RollerSensorsIOCANdi(commonCANdi.candi)
+					new RollerSensorsIOCANdi(commonCANdi)
 				);
 				this.climber = new Climber(
 					new Hook(new HookIOTalonFX())
 				);
+
+				commonCANdi.configSend();
 			}
 			case SIM -> {
 				var commonCANdi = new CommonCANdi();
+
 				this.drive = new Drive(
 					new OdometryTimestampIOSim(),
 					new GyroIO() {},
@@ -171,11 +175,13 @@ public class RobotContainer {
 					new Indexer(new IndexerIO() {}),
 					new Agitator(new AgitatorIO() {}),
 					new Feeder(new FeederIO() {}),
-					new RollerSensorsIOCANdi(commonCANdi.candi)
+					new RollerSensorsIOCANdi(commonCANdi)
 				);
 				this.climber = new Climber(
 					new Hook(new HookIOSim())
 				);
+
+				commonCANdi.configSend();
 			}
 			default -> {
 				this.drive = new Drive(
