@@ -29,8 +29,9 @@ public interface HookIO {
 
 	public default void stop(Optional<NeutralMode> neutralMode) {}
 
-	public default void configUnloadedProfile(double kV, double kA, double maxVelocityRadsPerSec) {}
-	public default void configClimbingProfile(double kV, double kA, double maxVelocityRadsPerSec) {}
+	public default void setUnloadedProfile(double kVVoltSecsPerRad, double kAVoltSecsSqrPerRad, double maxVelocityRadsPerSec) {}
+	public default void setClimbingProfile(double kVVoltSecsPerRad, double kAVoltSecsSqrPerRad, double maxVelocityRadsPerSec) {}
 	public default void configFF(FFConstants ffConstants) {}
 	public default void configPID(PIDConstants pidConstants) {}
+	public default void configSend() {}
 }

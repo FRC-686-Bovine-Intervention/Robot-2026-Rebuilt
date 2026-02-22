@@ -15,7 +15,6 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
-import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.net.WebServer;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.event.EventLoop;
@@ -164,11 +163,6 @@ public class Robot extends LoggedRobot {
 			LoggedTracer.logEpoch("CommandScheduler Periodic/Triggers");
 		});
 		CommandScheduler.getInstance().setActiveButtonLoop(activeButtonLoop);
-
-
-
-		//TODO DELETE AAOPIFJEPOIFJEOPIFJESPOIFJEPOSIFJEPISOWFJOIJ
-		Logger.recordOutput("ASCOPE HELP/Zero mechs", Transform3d.kZero,Transform3d.kZero,Transform3d.kZero,Transform3d.kZero,Transform3d.kZero);
 	}
 
 	@Override

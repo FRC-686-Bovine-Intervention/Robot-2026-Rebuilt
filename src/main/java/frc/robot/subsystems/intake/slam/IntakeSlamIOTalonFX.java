@@ -4,11 +4,10 @@ import java.util.Optional;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
-import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
+import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
 import com.ctre.phoenix6.controls.NeutralOut;
-import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.StaticBrake;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
@@ -20,6 +19,7 @@ import com.ctre.phoenix6.signals.SensorDirectionValue;
 import edu.wpi.first.math.util.Units;
 import frc.robot.constants.HardwareDevices;
 import frc.robot.constants.RobotConstants;
+import frc.util.FFConstants;
 import frc.util.NeutralMode;
 import frc.util.PIDConstants;
 import frc.util.loggerUtil.inputs.LoggedEncodedMotor.EncodedMotorStatusSignalCache;
@@ -30,51 +30,50 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 	protected final TalonFX motor = HardwareDevices.intakeSlamMotorID.talonFX();
 	protected final CANcoder encoder = HardwareDevices.intakeSlamEncoderID.cancoder();
 
+	// Device configuration
+	private final TalonFXConfiguration motorConfig = new TalonFXConfiguration();
+	private final CANcoderConfiguration encoderConfig = new CANcoderConfiguration();
+
 	// Status Signal caches
-	private final EncoderStatusSignalCache encoderStatusSignalCache;
 	private final EncodedMotorStatusSignalCache motorStatusSignalCache;
+	private final EncoderStatusSignalCache encoderStatusSignalCache;
 
 	// Quick reference arrays
 	private final BaseStatusSignal[] refreshSignals;
-	private final BaseStatusSignal[] encoderConnectedSignals;
 	private final BaseStatusSignal[] motorConnectedSignals;
+	private final BaseStatusSignal[] encoderConnectedSignals;
 
 	// Control Requests
 	private final VoltageOut voltageRequest = new VoltageOut(0);
-	private final PositionVoltage positionRequest = new PositionVoltage(0);
+	private final MotionMagicExpoVoltage positionRequest = new MotionMagicExpoVoltage(0);
 	private final NeutralOut neutralOutRequest = new NeutralOut();
 	private final CoastOut coastOutRequest = new CoastOut();
 	private final StaticBrake staticBrakeRequest = new StaticBrake();
 
 	public IntakeSlamIOTalonFX() {
 		// Motor Configuration
-		var motorConfig = new TalonFXConfiguration();
-		motorConfig.MotorOutput
+		this.motorConfig.MotorOutput
 			.withInverted(InvertedValue.Clockwise_Positive)
 			.withNeutralMode(NeutralModeValue.Brake)
 		;
-		motorConfig.Feedback
+		this.motorConfig.Feedback
 			.withRemoteCANcoder(this.encoder)
 			.withRotorToSensorRatio(IntakeSlamConstants.motorToMechanism.then(IntakeSlamConstants.sensorToMechanism.inverse()).reductionUnsigned())
 			.withSensorToMechanismRatio(IntakeSlamConstants.sensorToMechanism.reductionUnsigned())
 		;
-		motorConfig.SoftwareLimitSwitch
+		this.motorConfig.SoftwareLimitSwitch
 			.withReverseSoftLimitEnable(true)
-			// .withReverseSoftLimitThreshold(IntakeSlamConstants.motorToMechanism.inverse().applyUnsigned(IntakeSlamConstants.minAngle))
 			.withReverseSoftLimitThreshold(IntakeSlamConstants.minAngle.minus(IntakeSlamConstants.encoderZeroOffset))
 			.withForwardSoftLimitEnable(true)
-			// .withForwardSoftLimitThreshold(IntakeSlamConstants.motorToMechanism.inverse().applyUnsigned(IntakeSlamConstants.maxAngle))
 			.withForwardSoftLimitThreshold(IntakeSlamConstants.maxAngle.minus(IntakeSlamConstants.encoderZeroOffset))
 		;
-		this.motor.getConfigurator().apply(motorConfig);
 
 		// Encoder Configuration
-		var encoderConfig = new CANcoderConfiguration();
-		this.encoder.getConfigurator().refresh(encoderConfig.MagnetSensor);
-		encoderConfig.MagnetSensor
+		this.encoder.getConfigurator().refresh(this.encoderConfig.MagnetSensor);
+
+		this.encoderConfig.MagnetSensor
 			.withSensorDirection(SensorDirectionValue.CounterClockwise_Positive)
 		;
-		this.encoder.getConfigurator().apply(encoderConfig);
 
 		// Cache Status Signals
 		this.motorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.motor);
@@ -131,12 +130,9 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 	}
 
 	@Override
-	public void setPositionRads(double positionRads, double velocityRadsPerSec, double feedforwardVolts) {
+	public void setPositionRads(double positionRads) {
 		this.motor.setControl(this.positionRequest
 			.withPosition(Units.radiansToRotations(positionRads))
-			.withVelocity(Units.radiansToRotations(velocityRadsPerSec))
-			.withFeedForward(feedforwardVolts)
-			.withSlot(0)
 		);
 	}
 
@@ -147,10 +143,27 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 	}
 
 	@Override
+	public void configProfile(double kVVoltSecsPerRad, double kAVoltSecsSqrPerRad, double maxVelocityRadsPerSec) {
+		this.motorConfig.MotionMagic
+			.withMotionMagicExpo_kV(Units.rotationsToRadians(kVVoltSecsPerRad))
+			.withMotionMagicExpo_kA(Units.rotationsToRadians(kAVoltSecsSqrPerRad))
+			.withMotionMagicCruiseVelocity(Units.radiansToRotations(maxVelocityRadsPerSec))
+		;
+	}
+
+	@Override
+	public void configFF(FFConstants ffConstants) {
+		ffConstants.update(this.motorConfig.Slot0);
+	}
+
+	@Override
 	public void configPID(PIDConstants pidConstants) {
-		var config = new Slot0Configs();
-		this.motor.getConfigurator().refresh(config);
-		pidConstants.update(config);
-		this.motor.getConfigurator().apply(config);
+		pidConstants.update(this.motorConfig.Slot0);
+	}
+
+	@Override
+	public void configSend() {
+		this.motor.getConfigurator().apply(this.motorConfig);
+		this.encoder.getConfigurator().apply(this.encoderConfig);
 	}
 }

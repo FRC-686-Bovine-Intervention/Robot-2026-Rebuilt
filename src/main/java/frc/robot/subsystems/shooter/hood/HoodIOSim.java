@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.climber.hook.HookConstants;
+import frc.robot.subsystems.commonDevices.CommonCANdi;
 
 public class HoodIOSim extends HoodIOTalonFXS {
 	private final SingleJointedArmSim hoodSim = new SingleJointedArmSim(
@@ -28,9 +29,9 @@ public class HoodIOSim extends HoodIOTalonFXS {
 
 	private final CANdi candi;
 
-	public HoodIOSim(CANdi candi) {
+	public HoodIOSim(CommonCANdi candi) {
 		super(candi);
-		this.candi = candi;
+		this.candi = candi.candi;
 	}
 
 	@Override

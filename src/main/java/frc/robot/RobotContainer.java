@@ -119,6 +119,7 @@ public class RobotContainer {
 		switch (RobotType.getMode()) {
 			case REAL -> {
 				var commonCANdi = new CommonCANdi();
+
 				this.drive = new Drive(
 					new OdometryTimestampIOOdometryThread(),
 					new GyroIOPigeon2(),
@@ -129,7 +130,7 @@ public class RobotContainer {
 				this.shooter = new Shooter(
 					new Flywheel(FlywheelConstants.leftFlywheelConfig, new FlywheelIOTalonFX(FlywheelConstants.leftFlywheelConfig)),
 					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIOTalonFX(FlywheelConstants.rightFlywheelConfig)),
-					new Hood(new HoodIOTalonFXS(commonCANdi.candi)),
+					new Hood(new HoodIOTalonFXS(commonCANdi)),
 					new AimingSystem(
 						new InterpolationShootingCalc(),
 						new InterpolationPassingCalc()
@@ -143,14 +144,17 @@ public class RobotContainer {
 					new Indexer(new IndexerIOTalonFX()),
 					new Agitator(new AgitatorIOTalonFX()),
 					new Feeder(new FeederIOTalonFX()),
-					new RollerSensorsIOCANdi(commonCANdi.candi)
+					new RollerSensorsIOCANdi(commonCANdi)
 				);
 				this.climber = new Climber(
 					new Hook(new HookIOTalonFX())
 				);
+
+				commonCANdi.configSend();
 			}
 			case SIM -> {
 				var commonCANdi = new CommonCANdi();
+
 				this.drive = new Drive(
 					new OdometryTimestampIOSim(),
 					new GyroIO() {},
@@ -161,7 +165,7 @@ public class RobotContainer {
 				this.shooter = new Shooter(
 					new Flywheel(FlywheelConstants.leftFlywheelConfig, new FlywheelIO() {}),
 					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIO() {}),
-					new Hood(new HoodIOSim(commonCANdi.candi)),
+					new Hood(new HoodIOSim(commonCANdi)),
 					new AimingSystem(
 						new InterpolationShootingCalc(),
 						new InterpolationPassingCalc()
@@ -175,11 +179,13 @@ public class RobotContainer {
 					new Indexer(new IndexerIO() {}),
 					new Agitator(new AgitatorIO() {}),
 					new Feeder(new FeederIO() {}),
-					new RollerSensorsIOCANdi(commonCANdi.candi)
+					new RollerSensorsIOCANdi(commonCANdi)
 				);
 				this.climber = new Climber(
 					new Hook(new HookIOSim())
 				);
+
+				commonCANdi.configSend();
 			}
 			default -> {
 				this.drive = new Drive(
@@ -418,7 +424,7 @@ public class RobotContainer {
 		// new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 
 		// Auto calibrate hook if not calibrated
-		new Trigger(this.automationsLoop, () -> /* !this.climber.hook.isCalibrated() &&  */DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
+		new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
 
 		// Setup position reset command
 		// this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(
