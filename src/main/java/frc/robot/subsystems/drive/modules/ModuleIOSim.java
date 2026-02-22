@@ -21,11 +21,11 @@ public class ModuleIOSim extends ModuleIOFalcon550 {
 	private final DCMotor azimuthMotorModel = DCMotor.getNeo550(1);
 
 	private final DCMotorSim driveSim = new DCMotorSim(
-		LinearSystemId.createDCMotorSystem(this.driveMotorModel, 0.025, DriveConstants.driveMotorToWheelRatio.reductionUnsigned()),
+		LinearSystemId.createDCMotorSystem(this.driveMotorModel, 0.0025, DriveConstants.driveMotorToWheelRatio.reductionUnsigned()),
 		this.azimuthMotorModel
 	);
 	private final DCMotorSim azimuthSim = new DCMotorSim(
-		LinearSystemId.createDCMotorSystem(this.azimuthMotorModel, 0.004, DriveConstants.azimuthMotorToCarriageRatio.reductionUnsigned()),
+		LinearSystemId.createDCMotorSystem(this.azimuthMotorModel, 0.0004, DriveConstants.azimuthMotorToCarriageRatio.reductionUnsigned()),
 		this.azimuthMotorModel
 	);
 
