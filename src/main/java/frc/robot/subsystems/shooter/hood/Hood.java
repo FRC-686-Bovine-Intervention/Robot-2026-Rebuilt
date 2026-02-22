@@ -112,7 +112,7 @@ public class Hood extends SubsystemBase {
 		Logger.recordOutput("Shooter/Hood/Angle/Setpoint", this.getSetpointAngleRads(), Radians);
 		Logger.recordOutput("Shooter/Hood/Velocity/Setpoint", this.getSetpointVelocityRadsPerSec(), RadiansPerSecond);
 
-		this.mech.setRads(this.getMeasuredAngleRads());
+		this.mech.setRads(-this.getMeasuredAngleRads());
 
 		if (pidConsts.hasChanged(hashCode())) {
 			this.io.configPID(pidConsts.get());
@@ -129,8 +129,8 @@ public class Hood extends SubsystemBase {
 		this.motorDisconnectedAlert.set(!this.inputs.motorConnected);
 		this.motorDisconnectedGlobalAlert.set(!this.inputs.motorConnected);
 
-		this.notCalibratedAlert.set(!this.calibrated);
-		this.notCalibratedGlobalAlert.set(!this.calibrated);
+		this.notCalibratedAlert.set(!this.isCalibrated());
+		this.notCalibratedGlobalAlert.set(!this.isCalibrated());
 
 		LoggedTracer.logEpoch("CommandScheduler Periodic/Subsystem/Shooter Hood/Periodic");
 		LoggedTracer.logEpoch("CommandScheduler Periodic/Subsystem/Shooter Hood");

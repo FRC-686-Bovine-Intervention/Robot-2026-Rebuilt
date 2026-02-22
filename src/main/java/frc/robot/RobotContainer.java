@@ -5,6 +5,7 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 
@@ -74,7 +75,10 @@ import frc.robot.subsystems.shooter.flywheel.FlywheelConstants;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIOTalonFX;
 import frc.robot.subsystems.shooter.hood.Hood;
+import frc.robot.subsystems.shooter.hood.HoodConstants;
 import frc.robot.subsystems.shooter.hood.HoodIO;
+import frc.robot.subsystems.shooter.hood.HoodIOSim;
+import frc.robot.subsystems.shooter.hood.HoodIOTalonFXS;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.robot.subsystems.vision.object.ObjectVision;
 import frc.util.Perspective;
@@ -125,7 +129,7 @@ public class RobotContainer {
 				this.shooter = new Shooter(
 					new Flywheel(FlywheelConstants.leftFlywheelConfig, new FlywheelIOTalonFX(FlywheelConstants.leftFlywheelConfig)),
 					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIOTalonFX(FlywheelConstants.rightFlywheelConfig)),
-					new Hood(new HoodIO() {}),
+					new Hood(new HoodIOTalonFXS(commonCANdi.candi)),
 					new AimingSystem(
 						new InterpolationShootingCalc(),
 						new InterpolationPassingCalc()
@@ -157,7 +161,7 @@ public class RobotContainer {
 				this.shooter = new Shooter(
 					new Flywheel(FlywheelConstants.leftFlywheelConfig, new FlywheelIO() {}),
 					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIO() {}),
-					new Hood(new HoodIO() {}),
+					new Hood(new HoodIOSim(commonCANdi.candi)),
 					new AimingSystem(
 						new InterpolationShootingCalc(),
 						new InterpolationPassingCalc()
@@ -233,10 +237,10 @@ public class RobotContainer {
 
 		// Register Mechanism3ds
 		Mechanism3d.registerMechs(
-			this.intake.slam.driverMech,
-			this.intake.slam.followerMech,
-			this.intake.slam.couplerMech,
 			this.shooter.hood.mech,
+			this.intake.slam.followerMech,
+			this.intake.slam.driverMech,
+			this.intake.slam.couplerMech,
 			this.climber.hook.mech
 		);
 
@@ -461,5 +465,7 @@ public class RobotContainer {
 				CommandScheduler.getInstance().cancel(aimAtHubCommand);
 			}
 		});
+
+		this.driveController.b().whileTrue(this.shooter.hood.genAngleCommand("babbb", () -> HoodConstants.maxAngle.in(Radians)));
 	}
 }
