@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.Set;
 
 import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
@@ -28,6 +29,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.automations.BumpMitigation;
+import frc.robot.automations.ShootingDriveLock;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.ExtensionSystem;
@@ -321,14 +323,16 @@ public class RobotContainer {
 	}
 
 	private void configureCommands() {
+		Joystick driveJoystick = driveController.leftStick.smoothRadialDeadband(0.05).radialSensitivity(0.5);
 		Joystick.Axis turnAxis = this.driveController.leftTrigger.add(this.driveController.rightTrigger.invert()).smoothDeadband(0.05).sensitivity(0.5);
 		// Setup joystick driving as default command for drivetrain
-		this.drive.translationSubsystem.setDefaultCommand(new Command() {
+		new Trigger(CommandScheduler.getInstance().getActiveButtonLoop(), () -> {
+			return (driveJoystick.x().getAsDouble() * driveJoystick.x().getAsDouble() + driveJoystick.y().getAsDouble() * driveJoystick.y().getAsDouble()) > 0;
+		}).whileTrue(new Command() {
 			{
 				this.setName("Driver Controlled");
 				this.addRequirements(drive.translationSubsystem);
 			}
-			private final Joystick driveJoystick = driveController.leftStick.smoothRadialDeadband(0.05).radialSensitivity(0.5);
 			@Override
 			public void execute() {
 				var joyX = +driveJoystick.y().getAsDouble();
@@ -437,6 +441,7 @@ public class RobotContainer {
 		});
 
 		this.automationsLoop.bind(new BumpMitigation(this.drive));
+		this.automationsLoop.bind(new ShootingDriveLock(this.drive, this.shooter));
 
 		// Setup position reset command
 		// this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(

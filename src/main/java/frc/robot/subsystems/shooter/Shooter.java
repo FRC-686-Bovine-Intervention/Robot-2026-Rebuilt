@@ -14,7 +14,6 @@ public class Shooter {
 	public final Flywheel rightFlywheel;
 	public final Hood hood;
 	public final AimingSystem aimingSystem;
-
 	public Command aimLeftFlywheelAtHub() {
 		return this.leftFlywheel.genSurfaceVeloCommand("Aim at Hub", this.aimingSystem.shootingCalc::getTargetFlywheelSurfaceVeloMPS);
 	}
