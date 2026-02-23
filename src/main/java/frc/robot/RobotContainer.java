@@ -6,15 +6,18 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Seconds;
 
 import java.util.Arrays;
 import java.util.Set;
 
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -28,7 +31,13 @@ import frc.robot.auto.AutoSelector;
 import frc.robot.automations.BumpMitigation;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
+import frc.robot.subsystems.ExtensionSystem;
 import frc.robot.subsystems.climber.Climber;
+import frc.robot.subsystems.climber.hook.Hook;
+import frc.robot.subsystems.climber.hook.HookIO;
+import frc.robot.subsystems.climber.hook.HookIOSim;
+import frc.robot.subsystems.climber.hook.HookIOTalonFX;
+import frc.robot.subsystems.commonDevices.CommonCANdi;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.commands.WheelRadiusCalibration;
@@ -41,20 +50,43 @@ import frc.robot.subsystems.drive.odometry.OdometryTimestampIO;
 import frc.robot.subsystems.drive.odometry.OdometryTimestampIOOdometryThread;
 import frc.robot.subsystems.drive.odometry.OdometryTimestampIOSim;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.rollers.RollersIO;
+import frc.robot.subsystems.intake.rollers.IntakeRollers;
+import frc.robot.subsystems.intake.rollers.IntakeRollersIO;
+import frc.robot.subsystems.intake.rollers.IntakeRollersIOTalonFX;
+import frc.robot.subsystems.intake.slam.IntakeSlam;
+import frc.robot.subsystems.intake.slam.IntakeSlamIO;
+import frc.robot.subsystems.intake.slam.IntakeSlamIOSim;
+import frc.robot.subsystems.intake.slam.IntakeSlamIOTalonFX;
+import frc.robot.subsystems.rollers.RollerSensorsIO;
+import frc.robot.subsystems.rollers.RollerSensorsIOCANdi;
 import frc.robot.subsystems.rollers.Rollers;
+import frc.robot.subsystems.rollers.agitator.Agitator;
+import frc.robot.subsystems.rollers.agitator.AgitatorIO;
+import frc.robot.subsystems.rollers.agitator.AgitatorIOTalonFX;
+import frc.robot.subsystems.rollers.feeder.Feeder;
+import frc.robot.subsystems.rollers.feeder.FeederIO;
+import frc.robot.subsystems.rollers.feeder.FeederIOTalonFX;
 import frc.robot.subsystems.rollers.indexer.Indexer;
 import frc.robot.subsystems.rollers.indexer.IndexerIO;
+import frc.robot.subsystems.rollers.indexer.IndexerIOTalonFX;
 import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.shooter.flywheels.Flywheels;
-import frc.robot.subsystems.shooter.flywheels.FlywheelsIO;
+import frc.robot.subsystems.shooter.aiming.AimingSystem;
+import frc.robot.subsystems.shooter.aiming.passing.InterpolationPassingCalc;
+import frc.robot.subsystems.shooter.aiming.shooting.InterpolationShootingCalc;
+import frc.robot.subsystems.shooter.flywheel.Flywheel;
+import frc.robot.subsystems.shooter.flywheel.FlywheelConstants;
+import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
+import frc.robot.subsystems.shooter.flywheel.FlywheelIOTalonFX;
 import frc.robot.subsystems.shooter.hood.Hood;
 import frc.robot.subsystems.shooter.hood.HoodIO;
+import frc.robot.subsystems.shooter.hood.HoodIOSim;
+import frc.robot.subsystems.shooter.hood.HoodIOTalonFXS;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.robot.subsystems.vision.object.ObjectVision;
 import frc.util.Perspective;
 import frc.util.controllers.Joystick;
 import frc.util.controllers.XboxController;
+import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.robotStructure.Mechanism3d;
 
 public class RobotContainer {
@@ -64,6 +96,7 @@ public class RobotContainer {
 	public final Intake intake;
 	public final Rollers rollers;
 	public final Climber climber;
+	public final ExtensionSystem extensionSystem;
 
 	// Vision
 	public final ApriltagVision apriltagVision;
@@ -87,6 +120,8 @@ public class RobotContainer {
 		// Initialize subsystems with appropriate IO
 		switch (RobotType.getMode()) {
 			case REAL -> {
+				var commonCANdi = new CommonCANdi();
+
 				this.drive = new Drive(
 					new OdometryTimestampIOOdometryThread(),
 					new GyroIOPigeon2(),
@@ -95,20 +130,33 @@ public class RobotContainer {
 						.toArray(ModuleIO[]::new)
 				);
 				this.shooter = new Shooter(
-					new Flywheels(new FlywheelsIO() {}),
-					new Hood(new HoodIO() {})
+					new Flywheel(FlywheelConstants.leftFlywheelConfig, new FlywheelIOTalonFX(FlywheelConstants.leftFlywheelConfig)),
+					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIOTalonFX(FlywheelConstants.rightFlywheelConfig)),
+					new Hood(new HoodIOTalonFXS(commonCANdi)),
+					new AimingSystem(
+						new InterpolationShootingCalc(),
+						new InterpolationPassingCalc()
+					)
 				);
 				this.intake = new Intake(
-					new frc.robot.subsystems.intake.rollers.Rollers(new RollersIO() {})
+					new IntakeRollers(new IntakeRollersIOTalonFX()),
+					new IntakeSlam(new IntakeSlamIOTalonFX())
 				);
 				this.rollers = new Rollers(
-					new Indexer(new IndexerIO() {})
+					new Indexer(new IndexerIOTalonFX()),
+					new Agitator(new AgitatorIOTalonFX()),
+					new Feeder(new FeederIOTalonFX()),
+					new RollerSensorsIOCANdi(commonCANdi)
 				);
 				this.climber = new Climber(
-
+					new Hook(new HookIOTalonFX())
 				);
+
+				commonCANdi.configSend();
 			}
 			case SIM -> {
+				var commonCANdi = new CommonCANdi();
+
 				this.drive = new Drive(
 					new OdometryTimestampIOSim(),
 					new GyroIO() {},
@@ -117,18 +165,29 @@ public class RobotContainer {
 						.toArray(ModuleIO[]::new)
 				);
 				this.shooter = new Shooter(
-					new Flywheels(new FlywheelsIO() {}),
-					new Hood(new HoodIO() {})
+					new Flywheel(FlywheelConstants.leftFlywheelConfig, new FlywheelIO() {}),
+					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIO() {}),
+					new Hood(new HoodIOSim(commonCANdi)),
+					new AimingSystem(
+						new InterpolationShootingCalc(),
+						new InterpolationPassingCalc()
+					)
 				);
 				this.intake = new Intake(
-					new frc.robot.subsystems.intake.rollers.Rollers(new RollersIO() {})
+					new IntakeRollers(new IntakeRollersIO() {}),
+					new IntakeSlam(new IntakeSlamIOSim())
 				);
 				this.rollers = new Rollers(
-					new Indexer(new IndexerIO() {})
+					new Indexer(new IndexerIO() {}),
+					new Agitator(new AgitatorIO() {}),
+					new Feeder(new FeederIO() {}),
+					new RollerSensorsIOCANdi(commonCANdi)
 				);
 				this.climber = new Climber(
-
+					new Hook(new HookIOSim())
 				);
+
+				commonCANdi.configSend();
 			}
 			default -> {
 				this.drive = new Drive(
@@ -140,20 +199,31 @@ public class RobotContainer {
 					new ModuleIO(){}
 				);
 				this.shooter = new Shooter(
-					new Flywheels(new FlywheelsIO() {}),
-					new Hood(new HoodIO() {})
+					new Flywheel(FlywheelConstants.leftFlywheelConfig, new FlywheelIO() {}),
+					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIO() {}),
+					new Hood(new HoodIO() {}),
+					new AimingSystem(
+						new InterpolationShootingCalc(),
+						new InterpolationPassingCalc()
+					)
 				);
 				this.intake = new Intake(
-					new frc.robot.subsystems.intake.rollers.Rollers(new RollersIO() {})
+					new IntakeRollers(new IntakeRollersIO() {}),
+					new IntakeSlam(new IntakeSlamIO() {})
 				);
 				this.rollers = new Rollers(
-					new Indexer(new IndexerIO() {})
+					new Indexer(new IndexerIO() {}),
+					new Agitator(new AgitatorIO() {}),
+					new Feeder(new FeederIO() {}),
+					new RollerSensorsIO() {}
 				);
 				this.climber = new Climber(
-
+					new Hook(new HookIO() {})
 				);
 			}
 		}
+
+		this.extensionSystem = new ExtensionSystem();
 
 		// Initialize vision systems with camera pipelines
 		this.apriltagVision = new ApriltagVision(
@@ -164,13 +234,22 @@ public class RobotContainer {
 		);
 
 		// Setup robot structure
-		// this.drive.structureRoot
-
-		// ;
+		this.drive.structureRoot
+			.addChild(this.intake.slam.driverMech
+				.addChild(this.intake.slam.couplerMech)
+			)
+			.addChild(this.intake.slam.followerMech)
+			.addChild(this.shooter.hood.mech)
+			.addChild(this.climber.hook.mech)
+		;
 
 		// Register Mechanism3ds
 		Mechanism3d.registerMechs(
-
+			this.shooter.hood.mech,
+			this.intake.slam.followerMech,
+			this.intake.slam.driverMech,
+			this.intake.slam.couplerMech,
+			this.climber.hook.mech
 		);
 
 		System.out.println("[Init RobotContainer] Configuring Commands");
@@ -317,6 +396,55 @@ public class RobotContainer {
 		});
 
 		this.automationsLoop.bind(new BumpMitigation(this.drive));
+		final var intakeRollersIdleCommand = this.intake.rollers.idle();
+		final var intakeRollersIntakeCommand = this.intake.rollers.intake();
+		final var intakeStowCommand = this.intake.slam.stow();
+		final var intakeDeployCommand = this.intake.slam.deploy(this.extensionSystem);
+
+		this.intake.rollers.setDefaultCommand(intakeRollersIdleCommand);
+		this.intake.slam.setDefaultCommand(intakeStowCommand);
+
+		final var leftFlywheelIdleCommand = this.shooter.leftFlywheel.idle();
+		final var rightFlywheelIdleCommand = this.shooter.rightFlywheel.idle();
+		final var hoodStowCommand = this.shooter.hood.stow();
+		final var aimAtHubCommand = Commands.parallel(
+			this.shooter.aimingSystem.aimAtHub(
+				RobotState.getInstance()::getEstimatedGlobalPose,
+				this.drive::getFieldMeasuredSpeeds,
+				() -> Translation3d.kZero
+			).repeatedly(),
+			this.shooter.aimLeftFlywheelAtHub(),
+			this.shooter.aimRightFlywheelAtHub(),
+			this.shooter.aimHoodAtHub(),
+			this.shooter.aimDriveAtHub(this.drive.rotationalSubsystem)
+		).withName("Aim at Hub");
+		final var aimToPassCommand = Commands.parallel(
+			this.shooter.aimingSystem.aimToPass(
+				RobotState.getInstance()::getEstimatedGlobalPose,
+				this.drive::getFieldMeasuredSpeeds,
+				() -> Translation3d.kZero
+			).repeatedly(),
+			this.shooter.aimLeftFlywheelToPass(),
+			this.shooter.aimRightFlywheelToPass(),
+			this.shooter.aimHoodToPass(),
+			this.shooter.aimDriveToPass(this.drive.rotationalSubsystem)
+		).withName("Aim to Pass");
+
+		this.shooter.leftFlywheel.setDefaultCommand(leftFlywheelIdleCommand);
+		this.shooter.rightFlywheel.setDefaultCommand(rightFlywheelIdleCommand);
+		this.shooter.hood.setDefaultCommand(hoodStowCommand);
+
+		final var climberStowCommand = this.climber.hook.stow();
+		final var climberDeployCommand = this.climber.hook.deploy();
+		final var climberClimbCommand = this.climber.hook.climb();
+
+		this.climber.hook.setDefaultCommand(climberStowCommand);
+
+		// Auto calibrate hood if not calibrated
+		// new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
+
+		// Auto calibrate hook if not calibrated
+		new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
 
 		// Setup position reset command
 		// this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(
@@ -326,5 +454,42 @@ public class RobotContainer {
 		// 		Rotation2d.kZero
 		// 	)
 		// )));
+
+		/*
+		 * (A)
+		 *  | Press: Deploy intake (if not deployed) and roll in
+		 *  | Double Press: Retract intake
+		 */
+		final var intakeDoublePressThreshold = LoggedTunable.from("Controls/Intake/Double Press Threshold", Seconds::of, 0.25);
+		final var intakeDoublePressTimer = new Timer();
+		CommandScheduler.getInstance().getDefaultButtonLoop().bind(() -> {
+			if (this.driveController.hid.getAButtonPressed()) {
+				CommandScheduler.getInstance().schedule(intakeRollersIntakeCommand);
+				CommandScheduler.getInstance().schedule(intakeDeployCommand);
+			}
+			if (this.driveController.hid.getAButtonReleased()) {
+				CommandScheduler.getInstance().cancel(intakeRollersIntakeCommand);
+				if (intakeDoublePressTimer.isRunning()) {
+					if (!intakeDoublePressTimer.hasElapsed(intakeDoublePressThreshold.get().in(Seconds))) {
+						CommandScheduler.getInstance().schedule(intakeStowCommand);
+					}
+				} else {
+					intakeDoublePressTimer.start();
+				}
+			}
+			if (intakeDoublePressTimer.hasElapsed(intakeDoublePressThreshold.get().in(Seconds))) {
+				intakeDoublePressTimer.stop();
+				intakeDoublePressTimer.reset();
+			}
+		});
+
+		CommandScheduler.getInstance().getDefaultButtonLoop().bind(() -> {
+			if (this.driveController.hid.getRightBumperButtonPressed()) {
+				CommandScheduler.getInstance().schedule(aimAtHubCommand);
+			}
+			if (this.driveController.hid.getRightBumperButtonReleased()) {
+				CommandScheduler.getInstance().cancel(aimAtHubCommand);
+			}
+		});
 	}
 }

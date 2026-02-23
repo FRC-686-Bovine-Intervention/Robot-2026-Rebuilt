@@ -160,8 +160,8 @@ public class Robot extends LoggedRobot {
 			Mechanism3d.logAscopeComponents();
 			LoggedTracer.logEpoch("CommandScheduler Periodic/Mechanism3d LogAscopeComponents");
 
-			//Mechanism3d.logAscopeAxes();
-			LoggedTracer.logEpoch("CommandScheduler Periodic/Mechanism3d LogAscopeAxes");
+			// Mechanism3d.logAscopeAxes();
+			// LoggedTracer.logEpoch("CommandScheduler Periodic/Mechanism3d LogAscopeAxes");
 
 			LoggedTracer.logEpoch("CommandScheduler Periodic/Log Intake Gamepieces");
 
