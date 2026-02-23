@@ -1,4 +1,4 @@
-package frc.robot.subsystems.rollers.indexer;
+package frc.robot.subsystems.rollers.feeder;
 
 import java.util.Optional;
 
@@ -7,14 +7,14 @@ import org.littletonrobotics.junction.AutoLog;
 import frc.util.NeutralMode;
 import frc.util.loggerUtil.inputs.LoggedMotor;
 
-public interface IndexerIO {
+public interface FeederIO {
 	@AutoLog
-	public static class IndexerIOInputs {
+	public static class FeederIOInputs {
 		boolean motorConnected = false;
 		LoggedMotor motor = new LoggedMotor();
 	}
 
-	public default void updateInputs(IndexerIOInputs inputs) {}
+	public default void updateInputs(FeederIOInputs inputs) {}
 
 	public default void setVolts(double volts) {}
 

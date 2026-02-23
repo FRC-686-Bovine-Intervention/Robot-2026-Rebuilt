@@ -7,7 +7,10 @@ import static edu.wpi.first.units.Units.Radians;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import frc.util.flipping.AllianceFlipped;
@@ -26,16 +29,16 @@ public final class FieldConstants {
 	static {
 		AprilTagFieldLayout a = null;
 		try {
-			a = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+			a = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
 		apriltagLayout = a;
 	}
 
-	public static final Distance blueAllianceZoneBoundaryX = Inches.of(158.600000);
+	public static final AllianceFlipped<Distance> allianceZoneBoundaryX = AllianceFlipped.fromBlueXPos(Inches.of(158.600000));
 	private static final Distance allianceTapeWidth = Inches.of(2);
-	public static final AllianceFlipped<Distance> robotStartingLineCenterX = AllianceFlipped.fromBlueXPos(blueAllianceZoneBoundaryX.minus(allianceTapeWidth.div(2.0)));
+	public static final AllianceFlipped<Distance> robotStartingLineCenterX = AllianceFlipped.fromBlueXPos(allianceZoneBoundaryX.getBlue().minus(allianceTapeWidth.div(2.0)));
 	public static final AllianceFlipped<Distance> barrierCenterX = AllianceFlipped.fromBlueXPos(Inches.of(182.100000));
 
 	public static final AllianceFlipped<Translation2d> hubCenter = AllianceFlipped.fromBlue(new Translation2d(
@@ -52,7 +55,7 @@ public final class FieldConstants {
 
 	public static final AllianceFlipped<Distance> outpostCenterY = AllianceFlipped.fromBlueYPos(Inches.of(26.150500));
 
-	public static final AllianceFlipped<VerticalLine> allianceZone = AllianceFlipped.fromBlue(new VerticalLine(blueAllianceZoneBoundaryX.in(Meters), false));
+	public static final AllianceFlipped<VerticalLine> allianceZone = AllianceFlipped.fromBlue(new VerticalLine(allianceZoneBoundaryX.getBlue().in(Meters), false));
 
 	public static final Angle bumpAngle = Degrees.of(15.0);
 	public static final Distance bumpHeight = Inches.of(6.5);
@@ -135,4 +138,21 @@ public final class FieldConstants {
 		)
 	));
 	public static final AllianceFlipped<OrBox> anyTrench = AllianceFlipped.fromFunction((alliance) -> bottomTrench.get(alliance).or(topTrench.get(alliance)));
+
+
+
+
+	public static final AllianceFlipped<Pose2d> hubFrontRobotPose = AllianceFlipped.fromBlue(new Pose2d(
+		new Translation2d(
+			allianceZoneBoundaryX.getBlue().minus(RobotConstants.centerToFrontBumper),
+			hubCenter.getBlue().getMeasureY()
+		),
+		Rotation2d.kZero
+	));
+
+	public static final AllianceFlipped<Translation3d> hubAimPoint = AllianceFlipped.fromBlue(new Translation3d(
+		hubCenter.getBlue().getMeasureX(),
+		hubCenter.getBlue().getMeasureY(),
+		hubHeight
+	));
 }

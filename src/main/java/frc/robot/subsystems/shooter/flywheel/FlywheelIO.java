@@ -24,11 +24,12 @@ public interface FlywheelIO {
 
 	public default void setVolts(double volts) {}
 
-	public default void setVelocityRadsPerSec(double velocityRadsPerSec, double accelerationRadsPerSecSqr, double feedforwardVolts) {}
+	public default void setVelocityRadsPerSec(double velocityRadsPerSec) {}
 
 	public default void stop(Optional<NeutralMode> neutralMode) {}
 
-	public default void configProfile(double maxAcceleration, double maxJerk) {}
+	public default void configProfile(double maxAccelRadsPerSecSec, double maxJerkRadsPerSecSecSec) {}
 	public default void configFF(FFConstants ffConstants) {}
 	public default void configPID(PIDConstants pidConstants) {}
+	public default void configSend() {}
 }

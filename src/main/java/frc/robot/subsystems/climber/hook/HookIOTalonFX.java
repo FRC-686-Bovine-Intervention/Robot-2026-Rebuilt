@@ -1,38 +1,36 @@
-package frc.robot.subsystems.shooter.hood;
+package frc.robot.subsystems.climber.hook;
 
 import java.util.Optional;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.TalonFXSConfiguration;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
-import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
+import com.ctre.phoenix6.controls.DynamicMotionMagicExpoVoltage;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.StaticBrake;
 import com.ctre.phoenix6.controls.VoltageOut;
-import com.ctre.phoenix6.hardware.TalonFXS;
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.ReverseLimitSourceValue;
 import com.ctre.phoenix6.signals.ReverseLimitTypeValue;
-import com.ctre.phoenix6.signals.S1CloseStateValue;
-import com.ctre.phoenix6.signals.S1FloatStateValue;
 
 import edu.wpi.first.math.util.Units;
 import frc.robot.constants.HardwareDevices;
 import frc.robot.constants.RobotConstants;
-import frc.robot.subsystems.commonDevices.CommonCANdi;
 import frc.util.FFConstants;
 import frc.util.NeutralMode;
 import frc.util.PIDConstants;
 import frc.util.loggerUtil.inputs.LoggedEncodedMotor.EncodedMotorStatusSignalCache;
 
-public class HoodIOTalonFXS implements HoodIO {
+public class HookIOTalonFX implements HookIO {
 	// Hardware devices
-	protected final TalonFXS motor = HardwareDevices.hoodMotorID.talonFXS();
+	protected final TalonFX motor = HardwareDevices.climberHookMotorID.talonFX();
 
 	// Device configuration
-	private final TalonFXSConfiguration motorConfig = new TalonFXSConfiguration();
+	private final TalonFXConfiguration motorConfig = new TalonFXConfiguration();
 
 	// Status Signal caches
 	private final EncodedMotorStatusSignalCache motorStatusSignalCache;
@@ -45,42 +43,36 @@ public class HoodIOTalonFXS implements HoodIO {
 	private final BaseStatusSignal[] motorConnectionSignals;
 
 	// Control Requests
+	private final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(true);
+	private final DynamicMotionMagicExpoVoltage unloadedPositionRequest = new DynamicMotionMagicExpoVoltage(0.0, 0.0, 0.0).withEnableFOC(true);
+	private final DynamicMotionMagicExpoVoltage climbingPositionRequest = new DynamicMotionMagicExpoVoltage(0.0, 0.0, 0.0).withEnableFOC(true);
 	private final NeutralOut neutralOutRequest = new NeutralOut();
 	private final CoastOut coastOutRequest = new CoastOut();
 	private final StaticBrake staticBrakeRequest = new StaticBrake();
-	private final VoltageOut voltageRequest = new VoltageOut(0.0).withEnableFOC(true);
-	private final MotionMagicExpoVoltage positionRequest = new MotionMagicExpoVoltage(0.0).withEnableFOC(false);
 
-	public HoodIOTalonFXS(CommonCANdi candi) {
+	public HookIOTalonFX() {
 		this.motorConfig.MotorOutput
-			.withInverted(InvertedValue.Clockwise_Positive)
+			.withInverted(InvertedValue.CounterClockwise_Positive)
 			.withNeutralMode(NeutralModeValue.Brake)
 		;
-		this.motorConfig.ExternalFeedback
-			.withSensorToMechanismRatio(HoodConstants.motorToMechanism.reductionUnsigned())
+		this.motorConfig.Feedback
+			.withSensorToMechanismRatio(HookConstants.motorToMechanism.reductionUnsigned())
 		;
 		this.motorConfig.SoftwareLimitSwitch
 			.withReverseSoftLimitEnable(false)
 			.withForwardSoftLimitEnable(true)
-			.withForwardSoftLimitThreshold(HoodConstants.maxAngle)
+			.withForwardSoftLimitThreshold(HookConstants.spool.distanceToAngle(HookConstants.maxLength))
 		;
 		this.motorConfig.HardwareLimitSwitch
 			.withReverseLimitEnable(true)
-			.withReverseLimitRemoteCANdiS1(candi.candi)
+			.withReverseLimitSource(ReverseLimitSourceValue.LimitSwitchPin)
 			.withReverseLimitType(ReverseLimitTypeValue.NormallyOpen)
 			.withReverseLimitAutosetPositionEnable(true)
-			.withReverseLimitAutosetPositionValue(HoodConstants.limitSwitchAngle)
+			.withReverseLimitAutosetPositionValue(HookConstants.spool.distanceToAngle(HookConstants.limitSwitchLength))
 			.withForwardLimitEnable(false)
 		;
 		this.motorConfig.Slot0
-			.withGravityType(GravityTypeValue.Arm_Cosine)
-		;
-
-		this.motor.getConfigurator().apply(this.motorConfig);
-
-		candi.candiConfig.DigitalInputs
-			.withS1FloatState(S1FloatStateValue.FloatDetect)
-			.withS1CloseState(S1CloseStateValue.CloseWhenLow)
+			.withGravityType(GravityTypeValue.Elevator_Static)
 		;
 
 		this.motorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.motor);
@@ -118,12 +110,10 @@ public class HoodIOTalonFXS implements HoodIO {
 		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency.div(2), this.motorStatusSignalCache.motor().getStatusSignals());
 		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.limitSwitchStatusSignal);
 		this.motor.optimizeBusUtilization();
-
-		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, candi.candi.getS1Closed());
 	}
 
 	@Override
-	public void updateInputs(HoodIOInputs inputs) {
+	public void updateInputs(HookIOInputs inputs) {
 		BaseStatusSignal.refreshAll(this.refreshSignals);
 		inputs.motorConnected = BaseStatusSignal.isAllGood(this.motorConnectionSignals);
 		inputs.motor.updateFrom(this.motorStatusSignalCache);
@@ -141,8 +131,15 @@ public class HoodIOTalonFXS implements HoodIO {
 	}
 
 	@Override
-	public void setPositionRads(double positionRads) {
-		this.motor.setControl(this.positionRequest
+	public void setUnloadedPositionRads(double positionRads) {
+		this.motor.setControl(this.unloadedPositionRequest
+			.withPosition(Units.radiansToRotations(positionRads))
+		);
+	}
+
+	@Override
+	public void setClimbingPositionRads(double positionRads) {
+		this.motor.setControl(this.climbingPositionRequest
 			.withPosition(Units.radiansToRotations(positionRads))
 		);
 	}
@@ -154,11 +151,20 @@ public class HoodIOTalonFXS implements HoodIO {
 	}
 
 	@Override
-	public void configProfile(double kVVoltSecsPerRad, double kAVoltSecsSqrPerRad, double maxVelocityRadsPerSec) {
-		this.motorConfig.MotionMagic
-			.withMotionMagicExpo_kV(Units.rotationsToRadians(kVVoltSecsPerRad))
-			.withMotionMagicExpo_kA(Units.rotationsToRadians(kAVoltSecsSqrPerRad))
-			.withMotionMagicCruiseVelocity(Units.radiansToRotations(maxVelocityRadsPerSec))
+	public void setUnloadedProfile(double kVVoltSecsPerRad, double kAVoltSecsSqrPerRad, double maxVelocityRadsPerSec) {
+		this.unloadedPositionRequest
+			.withKV(Units.rotationsToRadians(kVVoltSecsPerRad))
+			.withKA(Units.rotationsToRadians(kAVoltSecsSqrPerRad))
+			.withVelocity(Units.radiansToRotations(maxVelocityRadsPerSec))
+		;
+	}
+
+	@Override
+	public void setClimbingProfile(double kVVoltSecsPerRad, double kAVoltSecsSqrPerRad, double maxVelocityRadsPerSec) {
+		this.climbingPositionRequest
+			.withKV(Units.rotationsToRadians(kVVoltSecsPerRad))
+			.withKA(Units.rotationsToRadians(kAVoltSecsSqrPerRad))
+			.withVelocity(Units.radiansToRotations(maxVelocityRadsPerSec))
 		;
 	}
 

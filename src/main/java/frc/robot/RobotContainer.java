@@ -13,10 +13,10 @@ import java.util.Set;
 
 import edu.wpi.first.math.geometry.Translation3d;
 import org.littletonrobotics.junction.Logger;
-
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.automations.BumpMitigation;
@@ -33,6 +34,11 @@ import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.ExtensionSystem;
 import frc.robot.subsystems.climber.Climber;
+import frc.robot.subsystems.climber.hook.Hook;
+import frc.robot.subsystems.climber.hook.HookIO;
+import frc.robot.subsystems.climber.hook.HookIOSim;
+import frc.robot.subsystems.climber.hook.HookIOTalonFX;
+import frc.robot.subsystems.commonDevices.CommonCANdi;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.commands.WheelRadiusCalibration;
@@ -52,9 +58,18 @@ import frc.robot.subsystems.intake.slam.IntakeSlam;
 import frc.robot.subsystems.intake.slam.IntakeSlamIO;
 import frc.robot.subsystems.intake.slam.IntakeSlamIOSim;
 import frc.robot.subsystems.intake.slam.IntakeSlamIOTalonFX;
+import frc.robot.subsystems.rollers.RollerSensorsIO;
+import frc.robot.subsystems.rollers.RollerSensorsIOCANdi;
 import frc.robot.subsystems.rollers.Rollers;
+import frc.robot.subsystems.rollers.agitator.Agitator;
+import frc.robot.subsystems.rollers.agitator.AgitatorIO;
+import frc.robot.subsystems.rollers.agitator.AgitatorIOTalonFX;
+import frc.robot.subsystems.rollers.feeder.Feeder;
+import frc.robot.subsystems.rollers.feeder.FeederIO;
+import frc.robot.subsystems.rollers.feeder.FeederIOTalonFX;
 import frc.robot.subsystems.rollers.indexer.Indexer;
 import frc.robot.subsystems.rollers.indexer.IndexerIO;
+import frc.robot.subsystems.rollers.indexer.IndexerIOTalonFX;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.aiming.AimingSystem;
 import frc.robot.subsystems.shooter.aiming.passing.InterpolationPassingCalc;
@@ -65,10 +80,11 @@ import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIOTalonFX;
 import frc.robot.subsystems.shooter.hood.Hood;
 import frc.robot.subsystems.shooter.hood.HoodIO;
+import frc.robot.subsystems.shooter.hood.HoodIOSim;
+import frc.robot.subsystems.shooter.hood.HoodIOTalonFXS;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.robot.subsystems.vision.object.ObjectVision;
 import frc.util.Perspective;
-import frc.util.controllers.Joystick;
 import frc.util.controllers.XboxController;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.robotStructure.Mechanism3d;
@@ -104,6 +120,8 @@ public class RobotContainer {
 		// Initialize subsystems with appropriate IO
 		switch (RobotType.getMode()) {
 			case REAL -> {
+				var commonCANdi = new CommonCANdi();
+
 				this.drive = new Drive(
 					new OdometryTimestampIOOdometryThread(),
 					new GyroIOPigeon2(),
@@ -114,7 +132,7 @@ public class RobotContainer {
 				this.shooter = new Shooter(
 					new Flywheel(FlywheelConstants.leftFlywheelConfig, new FlywheelIOTalonFX(FlywheelConstants.leftFlywheelConfig)),
 					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIOTalonFX(FlywheelConstants.rightFlywheelConfig)),
-					new Hood(new HoodIO() {}),
+					new Hood(new HoodIOTalonFXS(commonCANdi)),
 					new AimingSystem(
 						new InterpolationShootingCalc(),
 						new InterpolationPassingCalc()
@@ -125,13 +143,20 @@ public class RobotContainer {
 					new IntakeSlam(new IntakeSlamIOTalonFX())
 				);
 				this.rollers = new Rollers(
-					new Indexer(new IndexerIO() {})
+					new Indexer(new IndexerIOTalonFX()),
+					new Agitator(new AgitatorIOTalonFX()),
+					new Feeder(new FeederIOTalonFX()),
+					new RollerSensorsIOCANdi(commonCANdi)
 				);
 				this.climber = new Climber(
-
+					new Hook(new HookIOTalonFX())
 				);
+
+				commonCANdi.configSend();
 			}
 			case SIM -> {
+				var commonCANdi = new CommonCANdi();
+
 				this.drive = new Drive(
 					new OdometryTimestampIOSim(),
 					new GyroIO() {},
@@ -142,7 +167,7 @@ public class RobotContainer {
 				this.shooter = new Shooter(
 					new Flywheel(FlywheelConstants.leftFlywheelConfig, new FlywheelIO() {}),
 					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIO() {}),
-					new Hood(new HoodIO() {}),
+					new Hood(new HoodIOSim(commonCANdi)),
 					new AimingSystem(
 						new InterpolationShootingCalc(),
 						new InterpolationPassingCalc()
@@ -153,11 +178,16 @@ public class RobotContainer {
 					new IntakeSlam(new IntakeSlamIOSim())
 				);
 				this.rollers = new Rollers(
-					new Indexer(new IndexerIO() {})
+					new Indexer(new IndexerIO() {}),
+					new Agitator(new AgitatorIO() {}),
+					new Feeder(new FeederIO() {}),
+					new RollerSensorsIOCANdi(commonCANdi)
 				);
 				this.climber = new Climber(
-
+					new Hook(new HookIOSim())
 				);
+
+				commonCANdi.configSend();
 			}
 			default -> {
 				this.drive = new Drive(
@@ -182,10 +212,13 @@ public class RobotContainer {
 					new IntakeSlam(new IntakeSlamIO() {})
 				);
 				this.rollers = new Rollers(
-					new Indexer(new IndexerIO() {})
+					new Indexer(new IndexerIO() {}),
+					new Agitator(new AgitatorIO() {}),
+					new Feeder(new FeederIO() {}),
+					new RollerSensorsIO() {}
 				);
 				this.climber = new Climber(
-
+					new Hook(new HookIO() {})
 				);
 			}
 		}
@@ -207,6 +240,7 @@ public class RobotContainer {
 			)
 			.addChild(this.intake.slam.followerMech)
 			.addChild(this.shooter.hood.mech)
+			.addChild(this.climber.hook.mech)
 		;
 
 		// Register Mechanism3ds
@@ -214,7 +248,8 @@ public class RobotContainer {
 			this.shooter.hood.mech,
 			this.intake.slam.followerMech,
 			this.intake.slam.driverMech,
-			this.intake.slam.couplerMech
+			this.intake.slam.couplerMech,
+			this.climber.hook.mech
 		);
 
 		System.out.println("[Init RobotContainer] Configuring Commands");
@@ -295,18 +330,26 @@ public class RobotContainer {
 	}
 
 	private void configureCommands() {
-		Joystick.Axis turnAxis = this.driveController.leftTrigger.add(this.driveController.rightTrigger.invert()).smoothDeadband(0.05).sensitivity(0.5);
-		// Setup joystick driving as default command for drivetrain
-		this.drive.translationSubsystem.setDefaultCommand(new Command() {
+		// Construct Commands
+		final var translationJoystick = this.driveController.leftStick
+			.smoothRadialDeadband(0.05)
+			.radialSensitivity(0.5)
+		;
+		final var rotateAxis = this.driveController.leftTrigger
+			.add(this.driveController.rightTrigger.invert())
+			.smoothDeadband(0.05)
+			.sensitivity(0.5)
+		;
+		final var driveTranslationCommand = new Command() {
 			{
 				this.setName("Driver Controlled");
 				this.addRequirements(drive.translationSubsystem);
 			}
-			private final Joystick driveJoystick = driveController.leftStick.smoothRadialDeadband(0.05).radialSensitivity(0.5);
+
 			@Override
 			public void execute() {
-				var joyX = +driveJoystick.y().getAsDouble();
-				var joyY = -driveJoystick.x().getAsDouble();
+				var joyX = +translationJoystick.y().getAsDouble();
+				var joyY = -translationJoystick.x().getAsDouble();
 
 				var perspectiveForward = Perspective.getCurrent().getForwardDirection();
 				var fieldX = joyX * perspectiveForward.getCos() - joyY * perspectiveForward.getSin();
@@ -321,95 +364,94 @@ public class RobotContainer {
 
 				drive.translationSubsystem.driveVelocity(driveX, driveY);
 			}
+
 			@Override
 			public void end(boolean interrupted) {
 				drive.translationSubsystem.stop();
 			}
-		});
-		this.drive.rotationalSubsystem.setDefaultCommand(new Command() {
+		};
+		final var driveRotateCommand = new Command() {
 			{
 				this.setName("Drive Controlled");
 				this.addRequirements(drive.rotationalSubsystem);
 			}
+
 			@Override
 			public void execute() {
-				var omega = turnAxis.getAsDouble() * DriveConstants.maxTurnRate.in(RadiansPerSecond);
+				var omega = rotateAxis.getAsDouble() * DriveConstants.maxTurnRate.in(RadiansPerSecond);
 
 				drive.rotationalSubsystem.driveVelocity(omega);
 			}
+
 			@Override
 			public void end(boolean interrupted) {
 				drive.rotationalSubsystem.stop();
 			}
-		});
+		};
 
 		final var intakeRollersIdleCommand = this.intake.rollers.idle();
 		final var intakeRollersIntakeCommand = this.intake.rollers.intake();
-		final var intakeRetractCommand = this.intake.slam.retract();
+		final var intakeStowCommand = this.intake.slam.stow();
 		final var intakeDeployCommand = this.intake.slam.deploy(this.extensionSystem);
-
-		this.intake.rollers.setDefaultCommand(intakeRollersIdleCommand);
-		this.intake.slam.setDefaultCommand(intakeRetractCommand);
 
 		final var leftFlywheelIdleCommand = this.shooter.leftFlywheel.idle();
 		final var rightFlywheelIdleCommand = this.shooter.rightFlywheel.idle();
-		final var hoodIdleCommand = this.shooter.hood.idle();
-		final var aimAtHubCommand = Commands.parallel(
-			this.shooter.aimingSystem.aimAtHub(
-				RobotState.getInstance()::getEstimatedGlobalPose,
-				this.drive::getFieldMeasuredSpeeds,
-				() -> Translation3d.kZero
-			).repeatedly(),
-			this.shooter.aimLeftFlywheelAtHub(),
-			this.shooter.aimRightFlywheelAtHub(),
-			this.shooter.aimHoodAtHub(),
-			this.shooter.aimDriveAtHub(this.drive.rotationalSubsystem)
-		).withName("Aim at Hub");
-		final var aimToPassCommand = Commands.parallel(
-			this.shooter.aimingSystem.aimToPass(
-				RobotState.getInstance()::getEstimatedGlobalPose,
-				this.drive::getFieldMeasuredSpeeds,
-				() -> Translation3d.kZero
-			).repeatedly(),
-			this.shooter.aimLeftFlywheelToPass(),
-			this.shooter.aimRightFlywheelToPass(),
-			this.shooter.aimHoodToPass(),
-			this.shooter.aimDriveToPass(this.drive.rotationalSubsystem)
-		).withName("Aim to Pass");
+		final var hoodStowCommand = this.shooter.hood.stow();
 
+		final var aimAtHubCommand =
+			Commands.parallel(
+				this.shooter.aimingSystem.aimAtHub(
+					RobotState.getInstance()::getEstimatedGlobalPose,
+					this.drive::getFieldMeasuredSpeeds,
+					FieldConstants.hubAimPoint::getOurs
+				).repeatedly(),
+				this.shooter.aimLeftFlywheelAtHub(),
+				this.shooter.aimRightFlywheelAtHub(),
+				this.shooter.aimHoodAtHub(),
+				this.shooter.aimDriveAtHub(this.drive.rotationalSubsystem)
+			)
+			.withName("Aim at Hub")
+		;
+		final var aimToPassCommand =
+			Commands.parallel(
+				this.shooter.aimingSystem.aimToPass(
+					RobotState.getInstance()::getEstimatedGlobalPose,
+					this.drive::getFieldMeasuredSpeeds,
+					() -> Translation3d.kZero
+				).repeatedly(),
+				this.shooter.aimLeftFlywheelToPass(),
+				this.shooter.aimRightFlywheelToPass(),
+				this.shooter.aimHoodToPass(),
+				this.shooter.aimDriveToPass(this.drive.rotationalSubsystem)
+			)
+			.withName("Aim to Pass")
+		;
+
+		final var climberStowCommand = this.climber.hook.stow();
+		final var climberDeployCommand = this.climber.hook.deploy();
+		final var climberClimbCommand = this.climber.hook.climb();
+
+		// Set default commands
 		this.shooter.leftFlywheel.setDefaultCommand(leftFlywheelIdleCommand);
 		this.shooter.rightFlywheel.setDefaultCommand(rightFlywheelIdleCommand);
-		this.shooter.hood.setDefaultCommand(hoodIdleCommand);
+		this.shooter.hood.setDefaultCommand(hoodStowCommand);
+		this.intake.rollers.setDefaultCommand(intakeRollersIdleCommand);
+		this.intake.slam.setDefaultCommand(intakeStowCommand);
+		this.climber.hook.setDefaultCommand(climberStowCommand);
 
-		// Auto calibrate hood if not calibrated
-		// new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
+		// Bind automations
+		this.automationsLoop.bind(new BumpMitigation(this.drive));
+		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
+		new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
 
-		this.automationsLoop.bind(() -> {
-			var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
+		// Bind buttons
+		new Trigger(() -> translationJoystick.magnitude() > 0.0).whileTrue(driveTranslationCommand);
+		new Trigger(() -> Math.abs(rotateAxis.getAsDouble()) > 0.0).whileTrue(driveRotateCommand);
 
-			var flCorner = robotPose.getTranslation().plus(RobotConstants.flBumperCorner.rotateBy(robotPose.getRotation()));
-			var frCorner = robotPose.getTranslation().plus(RobotConstants.frBumperCorner.rotateBy(robotPose.getRotation()));
-			var blCorner = robotPose.getTranslation().plus(RobotConstants.blBumperCorner.rotateBy(robotPose.getRotation()));
-			var brCorner = robotPose.getTranslation().plus(RobotConstants.brBumperCorner.rotateBy(robotPose.getRotation()));
 
-			Logger.recordOutput("CORNER DETECT/alliance zone/FL", FieldConstants.allianceZone.getOurs().withinBounds(flCorner));
-			Logger.recordOutput("CORNER DETECT/alliance zone/FR", FieldConstants.allianceZone.getOurs().withinBounds(frCorner));
-			Logger.recordOutput("CORNER DETECT/alliance zone/BL", FieldConstants.allianceZone.getOurs().withinBounds(blCorner));
-			Logger.recordOutput("CORNER DETECT/alliance zone/BR", FieldConstants.allianceZone.getOurs().withinBounds(brCorner));
-		});
-
-		this.automationsLoop.bind(new BumpMitigation(this.drive, turnAxis));
 		this.automationsLoop.bind(new TrenchMitigation(this.drive, this.intake.slam, this.extensionSystem, this.shooter.hood));
-
 		// Setup position reset command
-		// this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(
-		// 	new Pose2d(
-		// 		14.45,
-		// 		5,
-		// 		Rotation2d.kZero
-		// 	)
-		// )));
-
+		this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(FieldConstants.hubFrontRobotPose.getOurs())));
 		/*
 		 * (A)
 		 *  | Press: Deploy intake (if not deployed) and roll in
@@ -426,7 +468,7 @@ public class RobotContainer {
 				CommandScheduler.getInstance().cancel(intakeRollersIntakeCommand);
 				if (intakeDoublePressTimer.isRunning()) {
 					if (!intakeDoublePressTimer.hasElapsed(intakeDoublePressThreshold.get().in(Seconds))) {
-						CommandScheduler.getInstance().schedule(intakeRetractCommand);
+						CommandScheduler.getInstance().schedule(intakeStowCommand);
 					}
 				} else {
 					intakeDoublePressTimer.start();
@@ -437,6 +479,7 @@ public class RobotContainer {
 				intakeDoublePressTimer.reset();
 			}
 		});
+
 
 		CommandScheduler.getInstance().getDefaultButtonLoop().bind(() -> {
 			if (this.driveController.hid.getRightBumperButtonPressed()) {

@@ -28,7 +28,7 @@ public class Intake {
 
 	public Command retract() {
 		return Commands.parallel(
-			this.slam.retract(),
+			this.slam.stow(),
 			this.rollers.idle()
 		).withName("Retract");
 	}

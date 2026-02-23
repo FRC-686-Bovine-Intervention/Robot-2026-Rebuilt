@@ -3,8 +3,6 @@ package frc.robot.subsystems.shooter.flywheel;
 import java.util.Optional;
 
 import com.ctre.phoenix6.BaseStatusSignal;
-import com.ctre.phoenix6.configs.MotionMagicConfigs;
-import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
@@ -13,7 +11,6 @@ import com.ctre.phoenix6.controls.StaticBrake;
 import com.ctre.phoenix6.controls.StrictFollower;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.util.Units;
@@ -29,6 +26,10 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 	// Hardware devices
 	protected final TalonFX masterMotor;
 	protected final TalonFX slaveMotor;
+
+	// Device configuration
+	private final TalonFXConfiguration masterConfig = new TalonFXConfiguration();
+	private final TalonFXConfiguration slaveConfig = new TalonFXConfiguration();
 
 	// Status Signal caches
 	private final EncodedMotorStatusSignalCache masterMotorStatusSignalCache;
@@ -54,16 +55,21 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 		this.slaveMotor = this.config.slaveMotorID.talonFX();
 
 		// Motor Configuration
-		var motorConfig = new TalonFXConfiguration();
-		motorConfig.MotorOutput
+		this.masterConfig.MotorOutput
 			.withNeutralMode(NeutralModeValue.Coast)
-			.withInverted(InvertedValue.CounterClockwise_Positive)
+			.withInverted(config.masterInvertedValue)
 		;
-		this.masterMotor.getConfigurator().apply(motorConfig);
-		motorConfig.MotorOutput
-			.withInverted(InvertedValue.Clockwise_Positive)
+		this.masterConfig.Feedback
+			.withSensorToMechanismRatio(FlywheelConstants.motorToMechanism.reductionUnsigned())
 		;
-		this.slaveMotor.getConfigurator().apply(motorConfig);
+
+		this.slaveConfig.MotorOutput
+			.withNeutralMode(NeutralModeValue.Coast)
+			.withInverted(config.slaveInvertedValue)
+		;
+		this.slaveConfig.Feedback
+			.withSensorToMechanismRatio(FlywheelConstants.motorToMechanism.reductionUnsigned())
+		;
 
 		// Cache Status Signals
 		this.masterMotorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.masterMotor);
@@ -130,11 +136,9 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 	}
 
 	@Override
-	public void setVelocityRadsPerSec(double velocityRadsPerSec, double accelerationRadsPerSecSqr, double feedforwardVolts) {
+	public void setVelocityRadsPerSec(double velocityRadsPerSec) {
 		this.masterMotor.setControl(this.velocityRequest
 			.withVelocity(Units.radiansToRotations(velocityRadsPerSec))
-			.withAcceleration(Units.radiansToRotations(accelerationRadsPerSecSqr))
-			.withFeedForward(feedforwardVolts)
 		);
 		this.slaveMotor.setControl(this.followerRequest.withLeaderID(this.masterMotor.getDeviceID()));
 	}
@@ -147,29 +151,26 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 	}
 
 	@Override
-	public void configProfile(double maxAccelerationRadsPerSecSec, double maxJerkRadsPerSecSecSec) {
-		var config = new MotionMagicConfigs();
-		this.masterMotor.getConfigurator().refresh(config);
-		config
-			.withMotionMagicAcceleration(Units.radiansToRotations(maxAccelerationRadsPerSecSec))
+	public void configProfile(double maxAccelRadsPerSecSec, double maxJerkRadsPerSecSecSec) {
+		this.masterConfig.MotionMagic
+			.withMotionMagicAcceleration(Units.radiansToRotations(maxAccelRadsPerSecSec))
 			.withMotionMagicJerk(Units.radiansToRotations(maxJerkRadsPerSecSecSec))
 		;
-		this.masterMotor.getConfigurator().apply(config);
 	}
 
 	@Override
 	public void configFF(FFConstants ffConstants) {
-		var config = new Slot0Configs();
-		this.masterMotor.getConfigurator().refresh(config);
-		ffConstants.update(config);
-		this.masterMotor.getConfigurator().apply(config);
+		ffConstants.update(this.masterConfig.Slot0);
 	}
 
 	@Override
 	public void configPID(PIDConstants pidConstants) {
-		var config = new Slot0Configs();
-		this.masterMotor.getConfigurator().refresh(config);
-		pidConstants.update(config);
-		this.masterMotor.getConfigurator().apply(config);
+		pidConstants.update(this.masterConfig.Slot0);
+	}
+
+	@Override
+	public void configSend() {
+		this.masterMotor.getConfigurator().apply(this.masterConfig);
+		this.slaveMotor.getConfigurator().apply(this.slaveConfig);
 	}
 }
