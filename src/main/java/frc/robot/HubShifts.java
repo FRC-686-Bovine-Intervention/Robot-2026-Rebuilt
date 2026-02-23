@@ -166,7 +166,11 @@ public class HubShifts {
 	private static final Optional<Alliance> NONE = Optional.empty();
 
 	public static Optional<Alliance> getAutoWinner() {
-		return switch (DriverStation.getGameSpecificMessage().charAt(0)) {
+		var message = DriverStation.getGameSpecificMessage();
+		if (message.isEmpty()) {
+			return NONE;
+		}
+		return switch (message.charAt(0)) {
 			case 'B' -> BLUE;
 			case 'R' -> RED;
 			default -> NONE;

@@ -16,7 +16,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -25,10 +24,10 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.HubShifts.Shift;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.automations.BumpMitigation;
+import frc.robot.automations.HubShiftNotifications;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.ExtensionSystem;
@@ -108,7 +107,7 @@ public class RobotContainer {
 	public final EventLoop automationsLoop = new EventLoop();
 
 	// Controllers
-	private final XboxController driveController = new XboxController(0);
+	private final XboxController driveController = new XboxController(0, "Drive Controller");
 	@SuppressWarnings("unused")
 	private final CommandJoystick simJoystick = new CommandJoystick(5);
 
@@ -440,6 +439,7 @@ public class RobotContainer {
 
 		// Bind automations
 		this.automationsLoop.bind(new BumpMitigation(this.drive));
+		this.automationsLoop.bind(new HubShiftNotifications(this.driveController));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
 
@@ -485,51 +485,6 @@ public class RobotContainer {
 			}
 			if (this.driveController.hid.getRightBumperButtonReleased()) {
 				CommandScheduler.getInstance().cancel(aimAtHubCommand);
-			}
-		});
-
-		new Trigger(() -> HubShifts.getCurrentShift() != Shift.Auto && HubShifts.getCurrentShift().getSecsLeftInShift() < 3.0).onTrue(new Command() {
-			private Shift initShift;
-
-			@Override
-			public void initialize() {
-				this.initShift = HubShifts.getCurrentShift();
-			}
-
-			@Override
-			public void execute() {
-				var wrappedTime = this.initShift.getSecsSinceShiftStarted() % 1.0;
-				if (initShift.isHubActive().getOurs()) {
-					if (initShift.next().isHubActive().getOurs()) {
-						driveController.setRumble(RumbleType.kLeftRumble, (wrappedTime < 0.3) ? (0.8) : (0.0));
-					} else {
-						if (this.initShift.getSecsLeftInShift() > 0.0) {
-							driveController.setRumble(RumbleType.kRightRumble, (wrappedTime < 0.5) ? (0.8) : (0.0));
-						} else {
-							driveController.setRumble(RumbleType.kLeftRumble, (wrappedTime < 0.3) ? (0.8) : (0.0));
-						}
-					}
-				} else {
-					if (initShift.next().isHubActive().getOurs()) {
-						if (this.initShift.getSecsLeftInShift() > 0.0) {
-							driveController.setRumble(RumbleType.kLeftRumble, (wrappedTime < 0.3) ? (0.8) : (0.0));
-						} else {
-							driveController.setRumble(RumbleType.kRightRumble, (wrappedTime < 0.5) ? (0.8) : (0.0));
-						}
-					} else {
-						driveController.setRumble(RumbleType.kRightRumble, (wrappedTime < 0.5) ? (0.8) : (0.0));
-					}
-				}
-			}
-
-			@Override
-			public void end(boolean interrupted) {
-				driveController.setRumble(RumbleType.kBothRumble, 0.0);
-			}
-
-			@Override
-			public boolean isFinished() {
-				return this.initShift.getSecsLeftInShift() < -1.0;
 			}
 		});
 	}
