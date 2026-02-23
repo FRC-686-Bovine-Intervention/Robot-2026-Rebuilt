@@ -5,7 +5,6 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 
@@ -75,7 +74,6 @@ import frc.robot.subsystems.shooter.flywheel.FlywheelConstants;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIOTalonFX;
 import frc.robot.subsystems.shooter.hood.Hood;
-import frc.robot.subsystems.shooter.hood.HoodConstants;
 import frc.robot.subsystems.shooter.hood.HoodIO;
 import frc.robot.subsystems.shooter.hood.HoodIOSim;
 import frc.robot.subsystems.shooter.hood.HoodIOTalonFXS;
