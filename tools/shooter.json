@@ -1,0 +1,30 @@
+{
+  "shooterHeight": 0.4826,
+
+  "rFly": 0.05,
+  "rRol": 0.025,
+  "rHood": 0.16,
+  "fVelo": 1,
+
+  "maxVFly": 40.0,
+  "minVFly": 0.0,
+  "vFlyMaxTries": 30.0,
+
+  "minAngle": 10.0,
+  "maxAngle": 30.0,
+  "angleRes": 20,
+
+  "minVX": -10.0,
+  "maxVX": 10.0,
+  "vxRes": 20,
+
+  "minX": 2.0,
+  "maxX": 5.0,
+  "xRes": 20,
+
+  "angleDev": 0.5,
+  "vFlyDev": 0.5,
+
+  "robustnessFactor": 1,
+  "heightFactor": 1
+}
