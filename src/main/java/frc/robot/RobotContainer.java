@@ -11,8 +11,6 @@ import static edu.wpi.first.units.Units.Seconds;
 import java.util.Arrays;
 import java.util.Set;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
@@ -29,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.automations.BumpMitigation;
+import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.ExtensionSystem;
 import frc.robot.subsystems.climber.Climber;
@@ -401,7 +400,7 @@ public class RobotContainer {
 				this.shooter.aimingSystem.aimAtHub(
 					RobotState.getInstance()::getEstimatedGlobalPose,
 					this.drive::getFieldMeasuredSpeeds,
-					() -> Translation3d.kZero
+					FieldConstants.hubAimPoint::getOurs
 				).repeatedly(),
 				this.shooter.aimLeftFlywheelAtHub(),
 				this.shooter.aimRightFlywheelAtHub(),
@@ -448,13 +447,7 @@ public class RobotContainer {
 
 
 		// Setup position reset command
-		this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(
-			new Pose2d(
-				14.45,
-				5,
-				Rotation2d.kZero
-			)
-		)));
+		this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(FieldConstants.hubFrontRobotPose.getOurs())));
 		/*
 		 * (A)
 		 *  | Press: Deploy intake (if not deployed) and roll in
