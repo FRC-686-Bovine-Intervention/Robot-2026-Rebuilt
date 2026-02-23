@@ -26,7 +26,7 @@ public final class FieldConstants {
 	static {
 		AprilTagFieldLayout a = null;
 		try {
-			a = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+			a = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
