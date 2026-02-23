@@ -12,7 +12,6 @@ import java.util.Arrays;
 import java.util.Set;
 
 import edu.wpi.first.math.geometry.Translation3d;
-import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
@@ -441,6 +440,7 @@ public class RobotContainer {
 
 		// Bind automations
 		this.automationsLoop.bind(new BumpMitigation(this.drive));
+		this.automationsLoop.bind(new TrenchMitigation(this.drive, this.intake.slam, this.extensionSystem, this.shooter.hood));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
 
@@ -448,8 +448,6 @@ public class RobotContainer {
 		new Trigger(() -> translationJoystick.magnitude() > 0.0).whileTrue(driveTranslationCommand);
 		new Trigger(() -> Math.abs(rotateAxis.getAsDouble()) > 0.0).whileTrue(driveRotateCommand);
 
-
-		this.automationsLoop.bind(new TrenchMitigation(this.drive, this.intake.slam, this.extensionSystem, this.shooter.hood));
 		// Setup position reset command
 		this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(FieldConstants.hubFrontRobotPose.getOurs())));
 		/*
