@@ -16,9 +16,9 @@ public class Indexer extends SubsystemBase {
 	private final IndexerIO io;
 	private final IndexerIOInputsAutoLogged inputs = new IndexerIOInputsAutoLogged();
 
-	private static final LoggedTunable<Voltage> idleVoltage = LoggedTunable.from("Rollers/Indexer/Idle Voltage", Volts::of, 0.0);
-	private static final LoggedTunable<Voltage> indexVoltage = LoggedTunable.from("Rollers/Indexer/Index Voltage", Volts::of, 0.0);
-	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Rollers/Indexer/Eject Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> idleVoltage = LoggedTunable.from("Subsystems/Rollers/Indexer/Commands/Idle/Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> indexVoltage = LoggedTunable.from("Subsystems/Rollers/Indexer/Commands/Index/Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Subsystems/Rollers/Indexer/Commands/Eject/Voltage", Volts::of, 0.0);
 
 	public Indexer(IndexerIO io) {
 		super("Rollers/Indexer");
@@ -40,11 +40,6 @@ public class Indexer extends SubsystemBase {
 			}
 
 			@Override
-			public void initialize() {
-
-			}
-
-			@Override
 			public void execute() {
 				indexer.io.setVolts(voltsSupplier.getAsDouble());
 			}
@@ -59,21 +54,21 @@ public class Indexer extends SubsystemBase {
 	public Command idle() {
 		return this.genVoltageCommand(
 			"Idle",
-			() -> idleVoltage.get().in(Volts)
+			() -> Indexer.idleVoltage.get().in(Volts)
 		);
 	}
 
 	public Command index() {
 		return this.genVoltageCommand(
 			"Index",
-			() -> indexVoltage.get().in(Volts)
+			() -> Indexer.indexVoltage.get().in(Volts)
 		);
 	}
 
 	public Command eject() {
 		return this.genVoltageCommand(
 			"Eject",
-			() -> ejectVoltage.get().in(Volts)
+			() -> Indexer.ejectVoltage.get().in(Volts)
 		);
 	}
 }

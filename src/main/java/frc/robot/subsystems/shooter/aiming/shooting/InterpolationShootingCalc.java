@@ -19,10 +19,10 @@ import frc.util.loggerUtil.tunables.LoggedTunable;
 
 public class InterpolationShootingCalc implements ShootingCalc {
 
-	private static final LoggedTunable<Time> lookaheadTime = LoggedTunable.from("Shooter/Aiming/Lookahead Seconds", Seconds::of, 0.035);
-	private static final LoggedTunable<Distance> azimuthTolerance = LoggedTunable.from("Shooter/Aiming/Tolerance/Azimuth", Centimeters::of, 100);
-	private static final LoggedTunable<Distance> altitudeDegsTolerance = LoggedTunable.from("Shooter/Aiming/Tolerance/Altitude", Centimeters::of, 46);
-	private static final LoggedTunable<Angle> customAzimuthOffset = LoggedTunable.from("Shooter/Aiming/Custom Azimuth Offset", Radians::of, 0.0);
+	private static final LoggedTunable<Time> lookaheadTime = LoggedTunable.from("Subsystems/Shooter/Aiming/Lookahead Seconds", Seconds::of, 0.035);
+	private static final LoggedTunable<Distance> azimuthTolerance = LoggedTunable.from("Subsystems/Shooter/Aiming/Tolerance/Azimuth", Centimeters::of, 100);
+	private static final LoggedTunable<Distance> altitudeDegsTolerance = LoggedTunable.from("Subsystems/Shooter/Aiming/Tolerance/Altitude", Centimeters::of, 46);
+	private static final LoggedTunable<Angle> customAzimuthOffset = LoggedTunable.from("Subsystems/Shooter/Aiming/Custom Azimuth Offset", Radians::of, 0.0);
 
 	private Translation3d aimPoint;
 	// private Pose2d shotPose;
@@ -44,13 +44,13 @@ public class InterpolationShootingCalc implements ShootingCalc {
 
 		this.targetDriveHeadingRads = Math.atan2(predictedToTargetY, predictedToTargetX);
 		this.effectiveDistanceMeters = Math.hypot(predictedToTargetX, predictedToTargetY);
-		Logger.recordOutput("Shooter/Aiming/Effective Distance", this.effectiveDistanceMeters);
+		Logger.recordOutput("Subsystems/Shooter/Aiming/Effective Distance", this.effectiveDistanceMeters);
 
 		this.targetHoodAngleRads = ShooterConstants.hubTargetHoodAngleRads.get(this.effectiveDistanceMeters);
 		this.targetFlywheelVeloMPS = ShooterConstants.hubTargetFlyWheelVeloMPS.get(this.effectiveDistanceMeters);
 
-		Logger.recordOutput("Shooter/Aiming/Aim Point", this.aimPoint);
-		Logger.recordOutput("Shooter/Aiming/Shot Pose", new Pose2d(
+		Logger.recordOutput("Subsystems/Shooter/Aiming/Aim Point", this.aimPoint);
+		Logger.recordOutput("Subsystems/Shooter/Aiming/Shot Pose", new Pose2d(
 			new Translation2d(
 				predictedX,
 				predictedY

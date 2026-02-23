@@ -24,8 +24,8 @@ public interface HookIO {
 
 	public default void setVolts(double volts) {}
 
-	public default void setUnloadedPosition(double positionRads) {}
-	public default void setClimbingPosition(double positionRads) {}
+	public default void setUnloadedPositionRads(double positionRads) {}
+	public default void setClimbingPositionRads(double positionRads) {}
 
 	public default void stop(Optional<NeutralMode> neutralMode) {}
 

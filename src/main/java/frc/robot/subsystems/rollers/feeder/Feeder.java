@@ -16,9 +16,9 @@ public class Feeder extends SubsystemBase {
 	private final FeederIO io;
 	private final FeederIOInputsAutoLogged inputs = new FeederIOInputsAutoLogged();
 
-	private static final LoggedTunable<Voltage> idleVoltage = LoggedTunable.from("Rollers/Feeder/Idle Voltage", Volts::of, 0.0);
-	private static final LoggedTunable<Voltage> feederVoltage = LoggedTunable.from("Rollers/Feeder/Index Voltage", Volts::of, 0.0);
-	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Rollers/Feeder/Eject Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> idleVoltage = LoggedTunable.from("Subsystems/Rollers/Feeder/Commands/Idle/Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> feedVoltage = LoggedTunable.from("Subsystems/Rollers/Feeder/Commands/Feed/Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Subsystems/Rollers/Feeder/Commands/Eject/Voltage", Volts::of, 0.0);
 
 	public Feeder(FeederIO io) {
 		super("Rollers/Feeder");
@@ -40,11 +40,6 @@ public class Feeder extends SubsystemBase {
 			}
 
 			@Override
-			public void initialize() {
-
-			}
-
-			@Override
 			public void execute() {
 				feeder.io.setVolts(voltsSupplier.getAsDouble());
 			}
@@ -59,21 +54,21 @@ public class Feeder extends SubsystemBase {
 	public Command idle() {
 		return this.genVoltageCommand(
 			"Idle",
-			() -> idleVoltage.get().in(Volts)
+			() -> Feeder.idleVoltage.get().in(Volts)
 		);
 	}
 
-	public Command index() {
+	public Command feed() {
 		return this.genVoltageCommand(
 			"Feed",
-			() -> feederVoltage.get().in(Volts)
+			() -> Feeder.feedVoltage.get().in(Volts)
 		);
 	}
 
 	public Command eject() {
 		return this.genVoltageCommand(
 			"Eject",
-			() -> ejectVoltage.get().in(Volts)
+			() -> Feeder.ejectVoltage.get().in(Volts)
 		);
 	}
 }

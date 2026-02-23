@@ -378,15 +378,15 @@ public class RobotContainer {
 
 		final var intakeRollersIdleCommand = this.intake.rollers.idle();
 		final var intakeRollersIntakeCommand = this.intake.rollers.intake();
-		final var intakeRetractCommand = this.intake.slam.retract();
+		final var intakeStowCommand = this.intake.slam.stow();
 		final var intakeDeployCommand = this.intake.slam.deploy(this.extensionSystem);
 
 		this.intake.rollers.setDefaultCommand(intakeRollersIdleCommand);
-		this.intake.slam.setDefaultCommand(intakeRetractCommand);
+		this.intake.slam.setDefaultCommand(intakeStowCommand);
 
 		final var leftFlywheelIdleCommand = this.shooter.leftFlywheel.idle();
 		final var rightFlywheelIdleCommand = this.shooter.rightFlywheel.idle();
-		final var hoodIdleCommand = this.shooter.hood.idle();
+		final var hoodStowCommand = this.shooter.hood.stow();
 		final var aimAtHubCommand = Commands.parallel(
 			this.shooter.aimingSystem.aimAtHub(
 				RobotState.getInstance()::getEstimatedGlobalPose,
@@ -412,13 +412,13 @@ public class RobotContainer {
 
 		this.shooter.leftFlywheel.setDefaultCommand(leftFlywheelIdleCommand);
 		this.shooter.rightFlywheel.setDefaultCommand(rightFlywheelIdleCommand);
-		this.shooter.hood.setDefaultCommand(hoodIdleCommand);
+		this.shooter.hood.setDefaultCommand(hoodStowCommand);
 
-		final var climberRetractCommand = this.climber.hook.retract();
+		final var climberStowCommand = this.climber.hook.stow();
 		final var climberDeployCommand = this.climber.hook.deploy();
 		final var climberClimbCommand = this.climber.hook.climb();
 
-		this.climber.hook.setDefaultCommand(climberRetractCommand);
+		this.climber.hook.setDefaultCommand(climberStowCommand);
 
 		// Auto calibrate hood if not calibrated
 		// new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
@@ -451,7 +451,7 @@ public class RobotContainer {
 				CommandScheduler.getInstance().cancel(intakeRollersIntakeCommand);
 				if (intakeDoublePressTimer.isRunning()) {
 					if (!intakeDoublePressTimer.hasElapsed(intakeDoublePressThreshold.get().in(Seconds))) {
-						CommandScheduler.getInstance().schedule(intakeRetractCommand);
+						CommandScheduler.getInstance().schedule(intakeStowCommand);
 					}
 				} else {
 					intakeDoublePressTimer.start();
@@ -471,7 +471,5 @@ public class RobotContainer {
 				CommandScheduler.getInstance().cancel(aimAtHubCommand);
 			}
 		});
-
-		this.driveController.b().whileTrue(this.shooter.hood.genAngleCommand("babbb", () -> HoodConstants.maxAngle.in(Radians)));
 	}
 }

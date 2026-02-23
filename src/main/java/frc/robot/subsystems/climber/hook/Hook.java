@@ -33,22 +33,26 @@ public class Hook extends SubsystemBase {
 	private final HookIO io;
 	private final HookIOInputsAutoLogged inputs = new HookIOInputsAutoLogged();
 
-	private static final LoggedTunable<Distance> retractLength = LoggedTunable.from("Climber/Hook/Lengths/Retract Length", Inches::of, HookConstants.minLength.in(Inches));
-	private static final LoggedTunable<Distance> deployLength = LoggedTunable.from("Climber/Hook/Lengths/Deploy Length", Inches::of, HookConstants.maxLength.in(Inches));
-	private static final LoggedTunable<Distance> climbLength = LoggedTunable.from("Climber/Hook/Lengths/Climb Length", Inches::of, 8.0);
+	private static final LoggedTunable<Distance> stowLength = LoggedTunable.from("Subsystems/Climber/Hook/Commands/Stow/Target Length", Inches::of, HookConstants.minLength.in(Inches));
+	private static final LoggedTunable<Distance> stowPulldownThreshold = LoggedTunable.from("Subsystems/Climber/Hook/Commands/Stow/Pulldown Threshold", Inches::of, HookConstants.minLength.plus(Inches.of(1.0)).in(Inches));
+	private static final LoggedTunable<Voltage> stowPulldownVoltage = LoggedTunable.from("Subsystems/Climber/Hook/Commands/Stow/Pulldown Voltage", Volts::of, -1.0);
 
-	private static final LoggedTunable<Voltage> calibrationVoltage = LoggedTunable.from("Climber/Hook/Calibration Voltage", Volts::of, -2.0);
+	private static final LoggedTunable<Distance> deployLength = LoggedTunable.from("Subsystems/Climber/Hook/Commands/Deploy/Target Length", Inches::of, HookConstants.maxLength.in(Inches));
 
-	private static final LoggedTunableNumber unloadedProfilekV = LoggedTunable.from("Climber/Hook/Unloaded Profile/kV", 1.0);
-	private static final LoggedTunableNumber unloadedProfilekA = LoggedTunable.from("Climber/Hook/Unloaded Profile/kA", 1.0);
-	private static final LoggedTunable<LinearVelocity> unloadedProfileMaxVel = LoggedTunable.from("Climber/Hook/Unloaded Profile/Max Velocity", InchesPerSecond::of, 0.0);
+	private static final LoggedTunable<Distance> climbLength = LoggedTunable.from("Subsystems/Climber/Hook/Commands/Climb/Target Length", Inches::of, 8.0);
 
-	private static final LoggedTunableNumber climbingProfilekV = LoggedTunable.from("Climber/Hook/Climbing Profile/kV", 1.0);
-	private static final LoggedTunableNumber climbingProfilekA = LoggedTunable.from("Climber/Hook/Climbing Profile/kA", 1.0);
-	private static final LoggedTunable<LinearVelocity> climbingProfileMaxVel = LoggedTunable.from("Climber/Hook/Climbing Profile/Max Velocity", InchesPerSecond::of, 0.0);
+	private static final LoggedTunable<Voltage> calibrationVoltage = LoggedTunable.from("Subsystems/Climber/Hook/Commmands/Calibration/Voltage", Volts::of, -2.0);
+
+	private static final LoggedTunableNumber unloadedProfilekV = LoggedTunable.from("Subsystems/Climber/Hook/Mechanism/Unloaded Profile/kV", 1.0);
+	private static final LoggedTunableNumber unloadedProfilekA = LoggedTunable.from("Subsystems/Climber/Hook/Mechanism/Unloaded Profile/kA", 1.0);
+	private static final LoggedTunable<LinearVelocity> unloadedProfileMaxVel = LoggedTunable.from("Subsystems/Climber/Hook/Mechanism/Unloaded Profile/Max Velocity", InchesPerSecond::of, 0.0);
+
+	private static final LoggedTunableNumber climbingProfilekV = LoggedTunable.from("Subsystems/Climber/Hook/Mechanism/Climbing Profile/kV", 1.0);
+	private static final LoggedTunableNumber climbingProfilekA = LoggedTunable.from("Subsystems/Climber/Hook/Mechanism/Climbing Profile/kA", 1.0);
+	private static final LoggedTunable<LinearVelocity> climbingProfileMaxVel = LoggedTunable.from("Subsystems/Climber/Hook/Mechanism/Climbing Profile/Max Velocity", InchesPerSecond::of, 0.0);
 
 	private static final LoggedTunable<FFConstants> ffConsts = LoggedTunable.from(
-		"Climber/Hook/FF",
+		"Subsystems/Climber/Hook/Mechanism/FF",
 		new FFConstants(
 			0.0,
 			0.0,
@@ -57,7 +61,7 @@ public class Hook extends SubsystemBase {
 		)
 	);
 	private static final LoggedTunable<PIDConstants> pidConsts = LoggedTunable.from(
-		"Climber/Hook/PID",
+		"Subsystems/Climber/Hook/Mechanism/PID",
 		new PIDConstants(
 			1.0,
 			0.0,
@@ -80,10 +84,10 @@ public class Hook extends SubsystemBase {
 
 	public final ElevatorMech mech = new ElevatorMech(HookConstants.hookBase);
 
-	private final Alert notCalibratedAlert = new Alert("Climber/Hook/Alerts", "Not Calibrated", AlertType.kError);
+	private final Alert notCalibratedAlert = new Alert("Subsystems/Climber/Hook/Alerts", "Not Calibrated", AlertType.kError);
 	private final Alert notCalibratedGlobalAlert = new Alert("Climber Hook Not Calibrated!", AlertType.kError);
 
-	private final Alert motorDisconnectedAlert = new Alert("Climber/Hook/Alerts", "Motor Disconnected", AlertType.kError);
+	private final Alert motorDisconnectedAlert = new Alert("Subsystems/Climber/Hook/Alerts", "Motor Disconnected", AlertType.kError);
 	private final Alert motorDisconnectedGlobalAlert = new Alert("Climber Hook Motor Disconnected!", AlertType.kError);
 
 	public Hook(HookIO io) {
@@ -132,7 +136,7 @@ public class Hook extends SubsystemBase {
 		if (this.inputs.limitSwitch) {
 			this.calibrated = true;
 		}
-		Logger.recordOutput("Climber/Hook/Calibrated", this.isCalibrated());
+		Logger.recordOutput("Subsystems/Climber/Hook/Calibrated", this.isCalibrated());
 
 		this.measuredLengthMeters = HookConstants.spool.radiansToMeters(HookConstants.motorToMechanism.applyUnsigned(this.inputs.motor.encoder.getPositionRads()));
 		this.measuredVelocityMetersPerSec = HookConstants.spool.radiansToMeters(HookConstants.motorToMechanism.applyUnsigned(this.inputs.motor.encoder.getVelocityRadsPerSec()));
@@ -140,10 +144,10 @@ public class Hook extends SubsystemBase {
 		this.setpointLengthMeters = HookConstants.spool.radiansToMeters(HookConstants.motorToMechanism.applyUnsigned(this.inputs.motorProfilePositionRads));
 		this.setpointVelocityMetersPerSec = HookConstants.spool.radiansToMeters(HookConstants.motorToMechanism.applyUnsigned(this.inputs.motorProfileVelocityRadsPerSec));
 
-		Logger.recordOutput("Climber/Hook/Length/Measured", this.getMeasuredLengthMeters(), Meters);
-		Logger.recordOutput("Climber/Hook/Velocity/Measured", this.getMeasuredVelocityMetersPerSec(), MetersPerSecond);
-		Logger.recordOutput("Climber/Hook/Length/Setpoint", this.getSetpointLengthMeters(), Meters);
-		Logger.recordOutput("Climber/Hook/Velocity/Setpoint", this.getSetpointVelocityMetersPerSec(), MetersPerSecond);
+		Logger.recordOutput("Subsystems/Climber/Hook/Length/Measured", this.getMeasuredLengthMeters(), Meters);
+		Logger.recordOutput("Subsystems/Climber/Hook/Velocity/Measured", this.getMeasuredVelocityMetersPerSec(), MetersPerSecond);
+		Logger.recordOutput("Subsystems/Climber/Hook/Length/Setpoint", this.getSetpointLengthMeters(), Meters);
+		Logger.recordOutput("Subsystems/Climber/Hook/Velocity/Setpoint", this.getSetpointVelocityMetersPerSec(), MetersPerSecond);
 
 		this.mech.setMeters(this.getMeasuredLengthMeters());
 
@@ -262,6 +266,33 @@ public class Hook extends SubsystemBase {
 		};
 	}
 
+	public Command stow() {
+		final var hook = this;
+		return new Command() {
+			{
+				this.setName("Stow");
+				this.addRequirements(hook);
+			}
+
+			@Override
+			public void execute() {
+				var goalLengthMeters = Hook.stowLength.get().in(Meters);
+				Logger.recordOutput("Subsystems/Climber/Hook/Length/Goal", goalLengthMeters, Meters);
+				if (hook.getMeasuredLengthMeters() <= Hook.stowPulldownThreshold.get().in(Meters)) {
+					hook.io.setVolts(Hook.stowPulldownVoltage.get().in(Volts));
+				} else {
+					var goalAngleRads = HookConstants.motorToMechanism.inverse().applyUnsigned(HookConstants.spool.metersToRadians(goalLengthMeters));
+					hook.io.setUnloadedPositionRads(goalAngleRads);
+				}
+			}
+
+			@Override
+			public void end(boolean interrupted) {
+				hook.io.stop(NeutralMode.DEFAULT);
+			}
+		};
+	}
+
 	private Command genUnloadedCommand(String name, DoubleSupplier lengthMetersSupplier) {
 		final var hook = this;
 		return new Command() {
@@ -274,8 +305,8 @@ public class Hook extends SubsystemBase {
 			public void execute() {
 				var goalLengthMeters = lengthMetersSupplier.getAsDouble();
 				var goalAngleRads = HookConstants.motorToMechanism.inverse().applyUnsigned(HookConstants.spool.metersToRadians(goalLengthMeters));
-				hook.io.setUnloadedPosition(goalAngleRads);
-				Logger.recordOutput("Climber/Hook/Length/Goal", goalLengthMeters, Meters);
+				hook.io.setUnloadedPositionRads(goalAngleRads);
+				Logger.recordOutput("Subsystems/Climber/Hook/Length/Goal", goalLengthMeters, Meters);
 			}
 
 			@Override
@@ -297,8 +328,8 @@ public class Hook extends SubsystemBase {
 			public void execute() {
 				var goalLengthMeters = lengthMetersSupplier.getAsDouble();
 				var goalAngleRads = HookConstants.motorToMechanism.inverse().applyUnsigned(HookConstants.spool.metersToRadians(goalLengthMeters));
-				hook.io.setClimbingPosition(goalAngleRads);
-				Logger.recordOutput("Climber/Hook/Length/Goal", goalLengthMeters, Meters);
+				hook.io.setClimbingPositionRads(goalAngleRads);
+				Logger.recordOutput("Subsystems/Climber/Hook/Length/Goal", goalLengthMeters, Meters);
 			}
 
 			@Override
@@ -308,24 +339,17 @@ public class Hook extends SubsystemBase {
 		};
 	}
 
-	public Command retract() {
-		return this.genUnloadedCommand(
-			"Retract",
-			() -> retractLength.get().in(Meters)
-		);
-	}
-
 	public Command deploy() {
 		return this.genUnloadedCommand(
 			"Deploy",
-			() -> deployLength.get().in(Meters)
+			() -> Hook.deployLength.get().in(Meters)
 		);
 	}
 
 	public Command climb() {
 		return this.genClimbingCommand(
 			"Climb",
-			() -> climbLength.get().in(Meters)
+			() -> Hook.climbLength.get().in(Meters)
 		);
 	}
 }
