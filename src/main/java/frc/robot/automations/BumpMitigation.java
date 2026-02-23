@@ -7,7 +7,6 @@ import static edu.wpi.first.units.Units.Seconds;
 
 import java.util.Arrays;
 
-import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -127,8 +126,6 @@ public class BumpMitigation implements Runnable {
 		//Right
 		//Top
 		//Bottom
-		Logger.recordOutput("DEBUG/Bump Mitigation", fieldSpeeds.vxMetersPerSecond);
-
 		if (fieldSpeeds.vxMetersPerSecond < 0) {
 			box[1] = original[1] + fieldSpeeds.vxMetersPerSecond * BumpMitigation.velocityLookaheadTime.get().in(Seconds);
 		} else if (fieldSpeeds.vxMetersPerSecond > 0) {
