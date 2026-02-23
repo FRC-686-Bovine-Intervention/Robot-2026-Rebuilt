@@ -32,9 +32,9 @@ import frc.util.loggerUtil.tunables.LoggedTunableNumber;
 public class ApriltagVision {
 	private final ApriltagPipeline pipelines[];
 
-	private static final LoggedTunable<Angle> gyroTolerance = LoggedTunable.from("Vision/Apriltags/Filtering/Gyro Tolerance", Degrees::of, 10);
-	private static final LoggedTunableNumber xyStdDevCoef = LoggedTunable.from("Vision/Apriltags/Std Devs/XY Coef", 0.01);
-	private static final LoggedTunableNumber thetaStdDevCoef = LoggedTunable.from("Vision/Apriltags/Std Devs/Theta Coef", Double.POSITIVE_INFINITY);
+	private static final LoggedTunable<Angle> gyroTolerance = LoggedTunable.from("Subsystems/Vision/Apriltags/Filtering/Gyro Tolerance", Degrees::of, 10);
+	private static final LoggedTunableNumber xyStdDevCoef = LoggedTunable.from("Subsystems/Vision/Apriltags/Std Devs/XY Coef", 0.01);
+	private static final LoggedTunableNumber thetaStdDevCoef = LoggedTunable.from("Subsystems/Vision/Apriltags/Std Devs/Theta Coef", Double.POSITIVE_INFINITY);
 
 	public ApriltagVision(ApriltagPipeline... pipelines) {
 		System.out.println("[Init ApriltagVision] Instantiating ApriltagVision");
@@ -48,7 +48,7 @@ public class ApriltagVision {
 
 		for (var pipeline : this.pipelines) {
 			var frames = pipeline.getFrames();
-			var loggingKey = "Vision/Apriltags/Results/" + pipeline.name;
+			var loggingKey = "Subsystems/Vision/Apriltags/Results/" + pipeline.name;
 			var tracingKey = "CommandScheduler Periodic/ApriltagVision/Process Results/" + pipeline.name;
 			var akitPose3d = new Pose3d[0];
 			var akitTargetCorners = new Translation2d[0];
