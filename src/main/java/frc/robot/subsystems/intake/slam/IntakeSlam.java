@@ -33,16 +33,16 @@ public class IntakeSlam extends SubsystemBase {
 	private final IntakeSlamIO io;
 	private final IntakeSlamIOInputsAutoLogged inputs = new IntakeSlamIOInputsAutoLogged();
 
-	private static final LoggedTunable<Angle> retractAngle = LoggedTunable.from("Intake/Slam/Retract/Angle", Degrees::of, IntakeSlamConstants.maxAngle.in(Degrees));
-	private static final LoggedTunable<Angle> deployAngle = LoggedTunable.from("Intake/Slam/Deploy/Angle", Degrees::of, IntakeSlamConstants.minAngle.in(Degrees));
-	private static final LoggedTunable<Angle> deployFlopAngle = LoggedTunable.from("Intake/Slam/Deploy/Flop Angle", Degrees::of, IntakeSlamConstants.maxAngle.minus(Degrees.of(10.0)).in(Degrees));
+	private static final LoggedTunable<Angle> stowAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Stow/Angle", Degrees::of, IntakeSlamConstants.maxAngle.in(Degrees));
+	private static final LoggedTunable<Angle> deployAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Angle", Degrees::of, IntakeSlamConstants.minAngle.in(Degrees));
+	private static final LoggedTunable<Angle> deployFlopAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Flop Angle", Degrees::of, IntakeSlamConstants.maxAngle.minus(Degrees.of(10.0)).in(Degrees));
 
-	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Intake/Slam/Profile/kV", 24.0);
-	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Intake/Slam/Profile/kA", 24.0);
-	private static final LoggedTunable<AngularVelocity> profileMaxVel = LoggedTunable.from("Intake/Slam/Profile/Max Velocity", DegreesPerSecond::of, 0.0);
+	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kV", 24.0);
+	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kA", 24.0);
+	private static final LoggedTunable<AngularVelocity> profileMaxVel = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/Max Velocity", DegreesPerSecond::of, 0.0);
 
 	private static final LoggedTunable<FFConstants> ffConsts = LoggedTunable.from(
-		"Intake/Slam/FF",
+		"Subsystems/Intake/Slam/Mechanism/FF",
 		new FFConstants(
 			0.0,
 			0.0,
@@ -52,7 +52,7 @@ public class IntakeSlam extends SubsystemBase {
 	);
 
 	private static final LoggedTunable<PIDConstants> pidConsts = LoggedTunable.from(
-		"Intake/Slam/PID",
+		"Subsystems/Intake/Slam/Mechanism/PID",
 		new PIDConstants(
 			1.5,
 			0.0,
@@ -60,7 +60,7 @@ public class IntakeSlam extends SubsystemBase {
 		)
 	);
 
-	private final Alert motorDisconnectedAlert = new Alert("Intake/Slam/Alerts", "Motor Disconnected", AlertType.kError);
+	private final Alert motorDisconnectedAlert = new Alert("Subsystems/Intake/Slam/Alerts", "Motor Disconnected", AlertType.kError);
 	private final Alert motorDisconnectedGlobalAlert = new Alert("Intake Slam Motor Disconnected!", AlertType.kError);
 
 	private final FourBarLinkage mechLinkage = new FourBarLinkage(
@@ -135,10 +135,10 @@ public class IntakeSlam extends SubsystemBase {
 		this.setpointAngleRads = IntakeSlamConstants.sensorToMechanism.applyUnsigned(this.inputs.encoder.getPositionRads() + IntakeSlamConstants.encoderZeroOffset.in(Radians));
 		this.setpointVelocityRadsPerSec = IntakeSlamConstants.sensorToMechanism.applyUnsigned(this.inputs.encoder.getVelocityRadsPerSec());
 
-		Logger.recordOutput("Intake/Slam/Angle/Measured", this.getMeasuredAngleRads(), Radians);
-		Logger.recordOutput("Intake/Slam/Velocity/Measured", this.getMeasuredVelocityRadsPerSec(), RadiansPerSecond);
-		Logger.recordOutput("Intake/Slam/Angle/Setpoint", this.getSetpointAngleRads(), Radians);
-		Logger.recordOutput("Intake/Slam/Velocity/Setpoint", this.getSetpointVelocityRadsPerSec(), RadiansPerSecond);
+		Logger.recordOutput("Subsystems/Intake/Slam/Angle/Measured", this.getMeasuredAngleRads(), Radians);
+		Logger.recordOutput("Subsystems/Intake/Slam/Velocity/Measured", this.getMeasuredVelocityRadsPerSec(), RadiansPerSecond);
+		Logger.recordOutput("Subsystems/Intake/Slam/Angle/Setpoint", this.getSetpointAngleRads(), Radians);
+		Logger.recordOutput("Subsystems/Intake/Slam/Velocity/Setpoint", this.getSetpointVelocityRadsPerSec(), RadiansPerSecond);
 
 		this.mechLinkage.setDriverAngleRads(this.getMeasuredAngleRads());
 		this.driverMech.setRads(this.mechLinkage.getHorizonBaseDriverCouplerAngleRads());
@@ -179,7 +179,7 @@ public class IntakeSlam extends SubsystemBase {
 
 	private void setAngleGoalRads(double angleRads) {
 		this.io.setPositionRads(angleRads - IntakeSlamConstants.encoderZeroOffset.in(Radians));
-		Logger.recordOutput("Intake/Slam/Angle/Goal", angleRads - IntakeSlamConstants.encoderZeroOffset.in(Radians));
+		Logger.recordOutput("Subsystems/Intake/Slam/Angle/Goal", angleRads - IntakeSlamConstants.encoderZeroOffset.in(Radians));
 	}
 
 	public Command coast() {
@@ -207,17 +207,17 @@ public class IntakeSlam extends SubsystemBase {
 		};
 	}
 
-	public Command retract() {
+	public Command stow() {
 		final var slam = this;
 		return new Command() {
 			{
-				this.setName("Retract");
+				this.setName("Stow");
 				this.addRequirements(slam);
 			}
 
 			@Override
 			public void execute() {
-				slam.setAngleGoalRads(retractAngle.get().in(Radians));
+				slam.setAngleGoalRads(IntakeSlam.stowAngle.get().in(Radians));
 			}
 
 			@Override
@@ -237,8 +237,8 @@ public class IntakeSlam extends SubsystemBase {
 
 			@Override
 			public void execute() {
-				if (slam.getMeasuredAngleRads() > deployFlopAngle.get().in(Radians)) {
-					slam.setAngleGoalRads(deployAngle.get().in(Radians));
+				if (slam.getMeasuredAngleRads() > IntakeSlam.deployFlopAngle.get().in(Radians)) {
+					slam.setAngleGoalRads(IntakeSlam.deployAngle.get().in(Radians));
 				} else {
 					slam.io.stop(NeutralMode.COAST);
 				}

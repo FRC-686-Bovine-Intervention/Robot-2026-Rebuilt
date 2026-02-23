@@ -30,21 +30,27 @@ public class Flywheel extends SubsystemBase {
 	private final FlywheelIO io;
 	private final FlywheelIOInputsAutoLogged inputs = new FlywheelIOInputsAutoLogged();
 
-	private static final LoggedTunable<LinearVelocity> spinupSurfaceVelo = LoggedTunable.from("Shooter/Flywheels/Spinup Velocity", MetersPerSecond::of, +20.0);
+	private static final LoggedTunable<LinearVelocity> spinupSurfaceVelo = LoggedTunable.from("Subsystems/Shooter/Flywheels/Commands/Spinup/Velocity", MetersPerSecond::of, +20.0);
 
-	private static final LoggedTunable<LinearAcceleration> profileMaxAcceleration = LoggedTunable.from("Shooter/Flywheels/Profile/Max Acceleration", MetersPerSecondPerSecond::of, 0.0);
-	private static final LoggedTunable<Velocity<LinearAccelerationUnit>> profileMaxJerk = LoggedTunable.from("Shooter/Flywheels/Profile/Max Jerk", MetersPerSecondPerSecond.per(Second)::of, 0.0);
-	private static final LoggedTunable<FFConstants> ffGains = LoggedTunable.from("Shooter/Flywheels/FF", new FFConstants(
-		0.0,
-		0.0,
-		0.0,
-		0.0
-	));
-	private static final LoggedTunable<PIDConstants> pidGains = LoggedTunable.from("Shooter/Flywheels/PID", new PIDConstants(
-		0.0,
-		0.0,
-		0.0
-	));
+	private static final LoggedTunable<LinearAcceleration> profileMaxAcceleration = LoggedTunable.from("Subsystems/Shooter/Flywheels/Mechanism/Profile/Max Acceleration", MetersPerSecondPerSecond::of, 0.0);
+	private static final LoggedTunable<Velocity<LinearAccelerationUnit>> profileMaxJerk = LoggedTunable.from("Subsystems/Shooter/Flywheels/Mechanism/Profile/Max Jerk", MetersPerSecondPerSecond.per(Second)::of, 0.0);
+	private static final LoggedTunable<FFConstants> ffGains = LoggedTunable.from(
+		"Subsystems/Shooter/Flywheels/Mechanism/FF",
+		new FFConstants(
+			0.0,
+			0.0,
+			0.0,
+			0.0
+		)
+	);
+	private static final LoggedTunable<PIDConstants> pidGains = LoggedTunable.from(
+		"Subsystems/Shooter/Flywheels/Mechanism/PID",
+		new PIDConstants(
+			0.0,
+			0.0,
+			0.0
+		)
+	);
 
 	@Getter
 	private double measuredSurfaceVeloMPS = 0.0;
@@ -101,9 +107,9 @@ public class Flywheel extends SubsystemBase {
 		this.setpointSurfaceVeloMPS = FlywheelConstants.wheel.radiansToMeters(FlywheelConstants.motorToMechanism.applyUnsigned(this.inputs.motorProfilePositionRads));
 		this.setpointSurfaceAccelMPSS = FlywheelConstants.wheel.radiansToMeters(FlywheelConstants.motorToMechanism.applyUnsigned(this.inputs.motorProfileVelocityRadsPerSec));
 
-		Logger.recordOutput("Shooter/Flywheels/" + this.config.name + "/Surface Velocity/Measured", this.getMeasuredSurfaceVeloMPS(), MetersPerSecond);
-		Logger.recordOutput("Shooter/Flywheels/" + this.config.name + "/Surface Velocity/Setpoint", this.getSetpointSurfaceVeloMPS(), MetersPerSecond);
-		Logger.recordOutput("Shooter/Flywheels/" + this.config.name + "/Surface Acceleration/Setpoint", this.getSetpointSurfaceAccelMPSS(), MetersPerSecondPerSecond);
+		Logger.recordOutput("Subsystems/Shooter/Flywheels/" + this.config.name + "/Surface Velocity/Measured", this.getMeasuredSurfaceVeloMPS(), MetersPerSecond);
+		Logger.recordOutput("Subsystems/Shooter/Flywheels/" + this.config.name + "/Surface Velocity/Setpoint", this.getSetpointSurfaceVeloMPS(), MetersPerSecond);
+		Logger.recordOutput("Subsystems/Shooter/Flywheels/" + this.config.name + "/Surface Acceleration/Setpoint", this.getSetpointSurfaceAccelMPSS(), MetersPerSecondPerSecond);
 
 		var configChanged = false;
 		if (
@@ -169,7 +175,7 @@ public class Flywheel extends SubsystemBase {
 	public Command spinup() {
 		return this.genSurfaceVeloCommand(
 			"Spinup",
-			() -> spinupSurfaceVelo.get().in(MetersPerSecond)
+			() -> Flywheel.spinupSurfaceVelo.get().in(MetersPerSecond)
 		);
 	}
 }

@@ -16,9 +16,9 @@ public class IntakeRollers extends SubsystemBase {
 	private final IntakeRollersIO io;
 	private final IntakeRollersIOInputsAutoLogged inputs = new IntakeRollersIOInputsAutoLogged();
 
-	private static final LoggedTunable<Voltage> idleVoltage = LoggedTunable.from("Intake/Rollers/Idle Voltage", Volts::of, 0.0);
-	private static final LoggedTunable<Voltage> intakeVoltage = LoggedTunable.from("Intake/Rollers/Intake Voltage", Volts::of, 0.0);
-	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Intake/Rollers/Eject Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> idleVoltage = LoggedTunable.from("Subsystems/Intake/Rollers/Commands/Idle/Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> intakeVoltage = LoggedTunable.from("Subsystems/Intake/Rollers/Commands/Intake/Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Subsystems/Intake/Rollers/Commands/Eject/Voltage", Volts::of, 0.0);
 
 	public IntakeRollers(IntakeRollersIO io) {
 		super("Intake/Rollers");
@@ -59,21 +59,21 @@ public class IntakeRollers extends SubsystemBase {
 	public Command idle() {
 		return this.genVoltageCommand(
 			"Idle",
-			() -> idleVoltage.get().in(Volts)
+			() -> IntakeRollers.idleVoltage.get().in(Volts)
 		);
 	}
 
 	public Command intake() {
 		return this.genVoltageCommand(
 			"Intake",
-			() -> intakeVoltage.get().in(Volts)
+			() -> IntakeRollers.intakeVoltage.get().in(Volts)
 		);
 	}
 
 	public Command eject() {
 		return this.genVoltageCommand(
 			"Eject",
-			() -> ejectVoltage.get().in(Volts)
+			() -> IntakeRollers.ejectVoltage.get().in(Volts)
 		);
 	}
 }

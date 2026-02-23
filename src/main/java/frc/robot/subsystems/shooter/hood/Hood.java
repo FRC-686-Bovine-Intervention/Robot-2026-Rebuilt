@@ -34,15 +34,18 @@ public class Hood extends SubsystemBase {
 	private final HoodIO io;
 	private final HoodIOInputsAutoLogged inputs = new HoodIOInputsAutoLogged();
 
-	private static final LoggedTunable<Angle> idleAngle = LoggedTunable.from("Shooter/Hood/Idle Angle", Degrees::of, HoodConstants.minAngle.in(Degrees));
-	private static final LoggedTunable<Voltage> calibrationVoltage = LoggedTunable.from("Shooter/Hood/Calibration Voltage", Volts::of, -2.0);
+	private static final LoggedTunable<Angle> stowAngle = LoggedTunable.from("Subsystems/Shooter/Hood/Commands/Stow/Target Angle", Degrees::of, HoodConstants.minAngle.in(Degrees));
+	private static final LoggedTunable<Angle> stowPulldownThreshold = LoggedTunable.from("Subsystems/Shooter/Hood/Commands/Stow/Pulldown Threshold", Degrees::of, HoodConstants.minAngle.plus(Degrees.of(1.0)).in(Degrees));
+	private static final LoggedTunable<Voltage> stowPulldownVoltage = LoggedTunable.from("Subsystems/Shooter/Hood/Commands/Stow/Pulldown Voltage", Volts::of, -1.0);
 
-	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Shooter/Hood/Profile/kV", 24.0);
-	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Shooter/Hood/Profile/kA", 24.0);
-	private static final LoggedTunable<AngularVelocity> profileMaxVel = LoggedTunable.from("Shooter/Hood/Profile/Max Velocity", DegreesPerSecond::of, 0.0);
+	private static final LoggedTunable<Voltage> calibrationVoltage = LoggedTunable.from("Subsystems/Shooter/Hood/Commands/Calibration/Voltage", Volts::of, -2.0);
+
+	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Shooter/Hood/Mechanism/Profile/kV", 24.0);
+	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Shooter/Hood/Mechanism/Profile/kA", 24.0);
+	private static final LoggedTunable<AngularVelocity> profileMaxVel = LoggedTunable.from("Subsystems/Shooter/Hood/Mechanism/Profile/Max Velocity", DegreesPerSecond::of, 0.0);
 
 	private static final LoggedTunable<FFConstants> ffConsts = LoggedTunable.from(
-		"Shooter/Hood/FF",
+		"Subsystems/Shooter/Hood/Mechanism/FF",
 		new FFConstants(
 			0.0,
 			0.0,
@@ -52,7 +55,7 @@ public class Hood extends SubsystemBase {
 	);
 
 	private static final LoggedTunable<PIDConstants> pidConsts = LoggedTunable.from(
-		"Shooter/Hood/PID",
+		"Subsystems/Shooter/Hood/Mechanism/PID",
 		new PIDConstants(
 			1.5,
 			0.0,
@@ -75,10 +78,10 @@ public class Hood extends SubsystemBase {
 
 	public final ArmMech mech = new ArmMech(HoodConstants.hoodBase);
 
-	private final Alert notCalibratedAlert = new Alert("Shooter/Hood/Alerts", "Not Calibrated", AlertType.kError);
+	private final Alert notCalibratedAlert = new Alert("Subsystems/Shooter/Hood/Alerts", "Not Calibrated", AlertType.kError);
 	private final Alert notCalibratedGlobalAlert = new Alert("Hood Not Calibrated!", AlertType.kError);
 
-	private final Alert motorDisconnectedAlert = new Alert("Shooter/Hood/Alerts", "Motor Disconnected", AlertType.kError);
+	private final Alert motorDisconnectedAlert = new Alert("Subsystems/Shooter/Hood/Alerts", "Motor Disconnected", AlertType.kError);
 	private final Alert motorDisconnectedGlobalAlert = new Alert("Hood Motor Disconnected!", AlertType.kError);
 
 	public Hood(HoodIO io) {
@@ -135,10 +138,10 @@ public class Hood extends SubsystemBase {
 		this.setpointAngleRads = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motorProfilePositionRads);
 		this.setpointVelocityRadsPerSec = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motorProfileVelocityRadsPerSec);
 
-		Logger.recordOutput("Shooter/Hood/Angle/Measured", this.getMeasuredAngleRads(), Radians);
-		Logger.recordOutput("Shooter/Hood/Velocity/Measured", this.getMeasuredVelocityRadsPerSec(), RadiansPerSecond);
-		Logger.recordOutput("Shooter/Hood/Angle/Setpoint", this.getSetpointAngleRads(), Radians);
-		Logger.recordOutput("Shooter/Hood/Velocity/Setpoint", this.getSetpointVelocityRadsPerSec(), RadiansPerSecond);
+		Logger.recordOutput("Subsystems/Shooter/Hood/Angle/Measured", this.getMeasuredAngleRads(), Radians);
+		Logger.recordOutput("Subsystems/Shooter/Hood/Velocity/Measured", this.getMeasuredVelocityRadsPerSec(), RadiansPerSecond);
+		Logger.recordOutput("Subsystems/Shooter/Hood/Angle/Setpoint", this.getSetpointAngleRads(), Radians);
+		Logger.recordOutput("Subsystems/Shooter/Hood/Velocity/Setpoint", this.getSetpointVelocityRadsPerSec(), RadiansPerSecond);
 
 		this.mech.setRads(-this.getMeasuredAngleRads());
 
@@ -177,13 +180,6 @@ public class Hood extends SubsystemBase {
 		LoggedTracer.logEpoch("CommandScheduler Periodic/Subsystem/Shooter Hood");
 	}
 
-	private void setAngleGoalRads(double angleRads) {
-		this.io.setPositionRads(
-			HoodConstants.motorToMechanism.inverse().applyUnsigned(angleRads)
-		);
-		Logger.recordOutput("Shooter/Hood/Angle/Goal", angleRads);
-	}
-
 	public Command coast() {
 		final var hood = this;
 		return new Command() {
@@ -219,7 +215,7 @@ public class Hood extends SubsystemBase {
 
 			@Override
 			public void execute() {
-				hood.io.setVolts(calibrationVoltage.get().in(Volts));
+				hood.io.setVolts(Hood.calibrationVoltage.get().in(Volts));
 			}
 
 			@Override
@@ -234,17 +230,21 @@ public class Hood extends SubsystemBase {
 		};
 	}
 
-	public Command genAngleCommand(String name, DoubleSupplier angleRads) {
+	public Command stow() {
 		final var hood = this;
 		return new Command() {
 			{
-				this.setName(name);
+				this.setName("Stow");
 				this.addRequirements(hood);
 			}
 
 			@Override
 			public void execute() {
-				hood.setAngleGoalRads(angleRads.getAsDouble());
+				if (hood.getMeasuredAngleRads() <= Hood.stowPulldownThreshold.get().in(Radians)) {
+					hood.io.setVolts(Hood.stowPulldownVoltage.get().in(Volts));
+				} else {
+					hood.io.setPositionRads(Hood.stowAngle.get().in(Radians));
+				}
 			}
 
 			@Override
@@ -254,10 +254,25 @@ public class Hood extends SubsystemBase {
 		};
 	}
 
-	public Command idle() {
-		return this.genAngleCommand(
-			"Idle",
-			() -> idleAngle.get().in(Radians)
-		);
+	public Command genAngleCommand(String name, DoubleSupplier goalAngleRadsSupplier) {
+		final var hood = this;
+		return new Command() {
+			{
+				this.setName(name);
+				this.addRequirements(hood);
+			}
+
+			@Override
+			public void execute() {
+				var goalAngleRads = goalAngleRadsSupplier.getAsDouble();
+				hood.io.setPositionRads(goalAngleRads);
+				Logger.recordOutput("Subsystems/Shooter/Hood/Angle/Goal", goalAngleRads, Radians);
+			}
+
+			@Override
+			public void end(boolean interrupted) {
+				hood.io.stop(NeutralMode.DEFAULT);
+			}
+		};
 	}
 }

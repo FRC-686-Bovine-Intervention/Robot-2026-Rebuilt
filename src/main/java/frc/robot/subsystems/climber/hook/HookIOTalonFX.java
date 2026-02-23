@@ -131,14 +131,14 @@ public class HookIOTalonFX implements HookIO {
 	}
 
 	@Override
-	public void setUnloadedPosition(double positionRads) {
+	public void setUnloadedPositionRads(double positionRads) {
 		this.motor.setControl(this.unloadedPositionRequest
 			.withPosition(Units.radiansToRotations(positionRads))
 		);
 	}
 
 	@Override
-	public void setClimbingPosition(double positionRads) {
+	public void setClimbingPositionRads(double positionRads) {
 		this.motor.setControl(this.climbingPositionRequest
 			.withPosition(Units.radiansToRotations(positionRads))
 		);
