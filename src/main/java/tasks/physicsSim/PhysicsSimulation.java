@@ -98,7 +98,11 @@ public class PhysicsSimulation {
 
 	private static void saveShooterConfig(ShooterConfig config) throws JsonIOException, IOException {
 		Gson parser = new Gson();
-		parser.toJson(config, new FileWriter("./tools/shooter.json"));
+		String json = parser.toJson(config);
+		FileWriter writer = new FileWriter("./tools/shooter.json");
+		writer.write(json);
+		writer.flush();
+		writer.close();
 	}
 
 
