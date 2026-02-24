@@ -13,23 +13,23 @@ import frc.util.EdgeDetector;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 
 public class IntakeDeployHysterisis implements Runnable {
-    private final IntakeSlam intakeSlam;
-    private final Command intakeDeployCommand;
+	private final IntakeSlam intakeSlam;
+	private final Command intakeDeployCommand;
 
-    private static final LoggedTunable<Angle> hysterisisThreshold = LoggedTunable.from("Automations/Intake Deploy Hysterisis/Threshold", Degrees::of, IntakeSlamConstants.minAngle.plus(IntakeSlamConstants.maxAngle).div(2.0).in(Degrees));
+	private static final LoggedTunable<Angle> hysterisisThreshold = LoggedTunable.from("Automations/Intake Deploy Hysterisis/Threshold", Degrees::of, IntakeSlamConstants.minAngle.plus(IntakeSlamConstants.maxAngle).div(2.0).in(Degrees));
 
-    private final EdgeDetector teleopEnableEdgeDetector = new EdgeDetector(false);
+	private final EdgeDetector teleopEnableEdgeDetector = new EdgeDetector(false);
 
-    public IntakeDeployHysterisis(IntakeSlam intakeSlam, Command intakeDeployCommand) {
-        this.intakeSlam = intakeSlam;
-        this.intakeDeployCommand = intakeDeployCommand;
-    }
+	public IntakeDeployHysterisis(IntakeSlam intakeSlam, Command intakeDeployCommand) {
+		this.intakeSlam = intakeSlam;
+		this.intakeDeployCommand = intakeDeployCommand;
+	}
 
-    @Override
-    public void run() {
-        this.teleopEnableEdgeDetector.update(DriverStation.isTeleopEnabled());
-        if (this.teleopEnableEdgeDetector.risingEdge() && this.intakeSlam.getMeasuredAngleRads() <= IntakeDeployHysterisis.hysterisisThreshold.get().in(Radians)) {
-            CommandScheduler.getInstance().schedule(this.intakeDeployCommand);
-        }
-    }
+	@Override
+	public void run() {
+		this.teleopEnableEdgeDetector.update(DriverStation.isTeleopEnabled());
+		if (this.teleopEnableEdgeDetector.risingEdge() && this.intakeSlam.getMeasuredAngleRads() <= IntakeDeployHysterisis.hysterisisThreshold.get().in(Radians)) {
+			CommandScheduler.getInstance().schedule(this.intakeDeployCommand);
+		}
+	}
 }
