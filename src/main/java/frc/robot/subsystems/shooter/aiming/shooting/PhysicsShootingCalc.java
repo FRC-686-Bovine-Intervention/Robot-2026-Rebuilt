@@ -24,7 +24,7 @@ public class PhysicsShootingCalc implements ShootingCalc {
 		double radialVelocity = MathExtraUtil.dotProduct(radialUnitVectorCartesian, robotSpeedsArray);
 		double tangentialVelocity = MathExtraUtil.dotProduct(tangentialUnitVectorCartesian, robotSpeedsArray);
 
-		var hoodAngleRads = ShooterConstants.hoodPolynomial.evaluate(radius, radialVelocity);
+		var hoodAngleDegs = ShooterConstants.hoodPolynomial.evaluate(radius, radialVelocity);
 		var flywheelSpeedMPS = ShooterConstants.flywheelPolynomial.evaluate(radius, radialVelocity);
 
 		double angleOffsetRads = Math.atan2(tangentialVelocity, -Math.abs(radialVelocity)); //NEED A DOUBLE-CHECK ON THAT
@@ -32,7 +32,7 @@ public class PhysicsShootingCalc implements ShootingCalc {
 		double robotAngleRads = Math.atan2(robotHubSpaceCartesian.getY(), robotHubSpaceCartesian.getX());
 
 		this.robotRotationRads = angleOffsetRads + robotAngleRads;
-		this.hoodAngleRads = hoodAngleRads;
+		this.hoodAngleRads = Math.toRadians(hoodAngleDegs);
 		this.flywheelSpeedMS = flywheelSpeedMPS;
 		this.aimPoint = aimPoint;
 	}
