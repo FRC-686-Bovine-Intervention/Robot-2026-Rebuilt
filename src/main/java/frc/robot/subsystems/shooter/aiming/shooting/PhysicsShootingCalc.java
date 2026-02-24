@@ -1,5 +1,7 @@
 package frc.robot.subsystems.shooter.aiming.shooting;
 
+import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -24,7 +26,9 @@ public class PhysicsShootingCalc implements ShootingCalc {
 		// double tangentialVelocity = MathExtraUtil.dotProduct(tangentialUnitVectorCartesian, robotSpeedsArray);
 
 		var hoodAngleRads = ShooterConstants.hoodPolynomial.evaluate(radius, 0);
+		Logger.recordOutput("DEBUG/PhysicsShootingCalc/HoodAngleRads", hoodAngleRads);
 		var flywheelSpeedMPS = ShooterConstants.flywheelPolynomial.evaluate(radius, 0);
+		Logger.recordOutput("DEBUG/PhysicsShootingCalc/flywheelSpeedMPS", flywheelSpeedMPS);
 
 		double angleOffsetRads = Math.atan2(0, -Math.abs(0)); //NEED A DOUBLE-CHECK ON THAT
 
