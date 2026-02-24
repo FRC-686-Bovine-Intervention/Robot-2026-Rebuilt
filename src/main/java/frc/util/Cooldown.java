@@ -51,7 +51,7 @@ public class Cooldown {
 		return new DoubleSupplier() {
 			@SuppressWarnings("unchecked")
 			private final LoggedTunable<Measure<U>> stepAmount = LoggedTunable.from(tuningKey + "/Step Amount", (value) -> (Measure<U>) defaultStepAmount.unit().of(value), defaultStepAmount.magnitude());
-			private final LoggedTunable<Time> stepTimeSecs = LoggedTunable.from(tuningKey + "/Step Time", Seconds::of, defaultStepTime.in(Seconds));
+			private final LoggedTunable<Time> stepTime = LoggedTunable.from(tuningKey + "/Step Time", Seconds::of, defaultStepTime.in(Seconds));
 
 			private final Timer timer = new Timer();
 
@@ -61,20 +61,37 @@ public class Cooldown {
 			public double getAsDouble() {
 				var inc = increment.getAsBoolean();
 				var dec = decrement.getAsBoolean();
-				if (inc || dec) {
-					this.timer.start();
-				} else {
-					this.timer.stop();
-					this.timer.reset();
-				}
-				if (this.timer.advanceIfElapsed(this.stepTimeSecs.get().in(Seconds))) {
+
+				var stepTimeSecs = this.stepTime.get().in(Seconds);
+
+				var incAmount = 0;
+				if (!this.timer.isRunning()) {
 					if (inc) {
-						this.inner += this.stepAmount.get().in(outputUnit);
+						incAmount += this.stepAmount.get().in(outputUnit);
 					}
 					if (dec) {
-						this.inner -= this.stepAmount.get().in(outputUnit);
+						incAmount -= this.stepAmount.get().in(outputUnit);
+					}
+				} else if (this.timer.hasElapsed(stepTimeSecs)) {
+					this.timer.stop();
+					if (inc || dec) {
+						this.timer.advanceIfElapsed(stepTimeSecs);
+						if (inc) {
+							incAmount += this.stepAmount.get().in(outputUnit);
+						}
+						if (dec) {
+							incAmount -= this.stepAmount.get().in(outputUnit);
+						}
+					} else {
+						this.timer.reset();
 					}
 				}
+
+				if (incAmount != 0.0) {
+					this.inner += incAmount;
+					this.timer.start();
+				}
+
 				Logger.recordOutput(loggingKey + "/Target", this.inner);
 				return inner;
 			}

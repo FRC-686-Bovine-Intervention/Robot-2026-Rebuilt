@@ -4,9 +4,12 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
+import static edu.wpi.first.units.Units.Volts;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -50,11 +53,9 @@ import frc.robot.subsystems.drive.odometry.OdometryTimestampIOSim;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.rollers.IntakeRollers;
 import frc.robot.subsystems.intake.rollers.IntakeRollersIO;
-import frc.robot.subsystems.intake.rollers.IntakeRollersIOTalonFX;
 import frc.robot.subsystems.intake.slam.IntakeSlam;
 import frc.robot.subsystems.intake.slam.IntakeSlamIO;
 import frc.robot.subsystems.intake.slam.IntakeSlamIOSim;
-import frc.robot.subsystems.intake.slam.IntakeSlamIOTalonFX;
 import frc.robot.subsystems.rollers.RollerSensorsIO;
 import frc.robot.subsystems.rollers.RollerSensorsIOCANdi;
 import frc.robot.subsystems.rollers.Rollers;
@@ -66,7 +67,6 @@ import frc.robot.subsystems.rollers.feeder.FeederIO;
 import frc.robot.subsystems.rollers.feeder.FeederIOTalonFX;
 import frc.robot.subsystems.rollers.indexer.Indexer;
 import frc.robot.subsystems.rollers.indexer.IndexerIO;
-import frc.robot.subsystems.rollers.indexer.IndexerIOTalonFX;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.aiming.AimingSystem;
 import frc.robot.subsystems.shooter.aiming.passing.InterpolationPassingCalc;
@@ -76,11 +76,13 @@ import frc.robot.subsystems.shooter.flywheel.FlywheelConstants;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIOTalonFX;
 import frc.robot.subsystems.shooter.hood.Hood;
+import frc.robot.subsystems.shooter.hood.HoodConstants;
 import frc.robot.subsystems.shooter.hood.HoodIO;
 import frc.robot.subsystems.shooter.hood.HoodIOSim;
 import frc.robot.subsystems.shooter.hood.HoodIOTalonFXS;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.robot.subsystems.vision.object.ObjectVision;
+import frc.util.Cooldown;
 import frc.util.Perspective;
 import frc.util.controllers.XboxController;
 import frc.util.loggerUtil.tunables.LoggedTunable;
@@ -136,14 +138,14 @@ public class RobotContainer {
 					)
 				);
 				this.intake = new Intake(
-					new IntakeRollers(new IntakeRollersIOTalonFX()),
-					new IntakeSlam(new IntakeSlamIOTalonFX())
+					new IntakeRollers(new IntakeRollersIO() {}),
+					new IntakeSlam(new IntakeSlamIO() {})
 				);
 				this.rollers = new Rollers(
-					new Indexer(new IndexerIOTalonFX()),
+					new Indexer(new IndexerIO() {}),
 					new Agitator(new AgitatorIOTalonFX()),
 					new Feeder(new FeederIOTalonFX()),
-					new RollerSensorsIOCANdi(commonCANdi)
+					new RollerSensorsIO() {}
 				);
 				this.climber = new Climber(
 					new Hook(new HookIOTalonFX())
@@ -443,12 +445,15 @@ public class RobotContainer {
 		// Set default commands
 		this.intake.rollers.setDefaultCommand(intakeRollersIdleCommand);
 		this.intake.slam.setDefaultCommand(intakeStowCommand);
+
 		this.rollers.indexer.setDefaultCommand(rollersIndexerIdleCommand);
 		this.rollers.feeder.setDefaultCommand(rollersFeederIdleCommand);
 		this.rollers.agitiator.setDefaultCommand(rollersAgitatorIdleCommand);
-		this.shooter.hood.setDefaultCommand(hoodStowCommand);
+
+		// this.shooter.hood.setDefaultCommand(hoodStowCommand);
 		this.shooter.leftFlywheel.setDefaultCommand(leftFlywheelIdleCommand);
 		this.shooter.rightFlywheel.setDefaultCommand(rightFlywheelIdleCommand);
+
 		this.climber.hook.setDefaultCommand(climberStowCommand);
 
 		// Bind automations
@@ -500,5 +505,51 @@ public class RobotContainer {
 				CommandScheduler.getInstance().cancel(aimAtHubCommand);
 			}
 		});
+
+		final var hoodStepper = Cooldown.incrementingStepper(
+			"Woodbot/Steppers/Hood",
+			"Woodbot/Steppers/Hood",
+			Seconds.of(1.0).div(35.0),
+			Degrees.of(0.0),
+			Degrees.of(1.0),
+			Radians,
+			this.driveController.povUp(),
+			this.driveController.povDown()
+		);
+		final var hoodStepCommand = this.shooter.hood.genAngleCommand(
+			"Step",
+			() -> hoodStepper.getAsDouble() + HoodConstants.minAngle.in(Radians)
+		);
+
+		this.driveController.y().toggleOnTrue(hoodStepCommand);
+
+		final var hoodVoltage = LoggedTunable.from("Woodbot/Hood Voltage", Volts::of, 1.0);
+		this.driveController.povUp().and(() -> !hoodStepCommand.isScheduled()).whileTrue(this.shooter.hood.genVoltageCommand("Volts Up", () -> +hoodVoltage.get().in(Volts)));
+		this.driveController.povDown().and(() -> !hoodStepCommand.isScheduled()).whileTrue(this.shooter.hood.genVoltageCommand("Volts Down", () -> -hoodVoltage.get().in(Volts)));
+		this.driveController.start().and(this.driveController.back()).onTrue(
+			Commands.runOnce(() -> this.shooter.hood.setHardLimit(true))
+			.finallyDo(() -> this.shooter.hood.setHardLimit(false))
+		);
+
+		final var flywheelStepper = Cooldown.incrementingStepper(
+			"Woodbot/Steppers/Flywheel",
+			"Woodbot/Steppers/Flywheel",
+			Seconds.of(0.0625),
+			MetersPerSecond.of(1.0),
+			MetersPerSecond.of(0.1),
+			MetersPerSecond,
+			this.driveController.povRight(),
+			this.driveController.povLeft()
+		);
+
+		this.driveController.b().toggleOnTrue(
+			Commands.parallel(
+				this.shooter.leftFlywheel.genSurfaceVeloCommand("", () -> flywheelStepper.getAsDouble()),
+				this.shooter.rightFlywheel.genSurfaceVeloCommand("", () -> flywheelStepper.getAsDouble())
+			)
+			.withName("Step")
+		);
+
+		this.driveController.x().whileTrue(this.rollers.feeder.feed());
 	}
 }

@@ -176,4 +176,11 @@ public class HoodIOTalonFXS implements HoodIO {
 	public void configSend() {
 		this.motor.getConfigurator().apply(this.motorConfig);
 	}
+
+
+	@Override
+	public void setHardLimit(boolean enable) {
+		this.voltageRequest.withLimitReverseMotion(enable);
+		this.positionRequest.withLimitReverseMotion(enable);
+	}
 }
