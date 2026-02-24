@@ -7,6 +7,8 @@ import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.util.NeutralMode;
@@ -20,6 +22,9 @@ public class Indexer extends SubsystemBase {
 	private static final LoggedTunable<Voltage> indexVoltage = LoggedTunable.from("Subsystems/Rollers/Indexer/Commands/Index/Voltage", Volts::of, 0.0);
 	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Subsystems/Rollers/Indexer/Commands/Eject/Voltage", Volts::of, 0.0);
 
+	private final Alert motorDisconnectedAlert = new Alert("Subsystems/Rollers/Indexer/Alerts", "Motor Disconnected", AlertType.kError);
+	private final Alert motorDisconnectedGlobalAlert = new Alert("Indexer Motor Disconnected!", AlertType.kError);
+
 	public Indexer(IndexerIO io) {
 		super("Rollers/Indexer");
 		this.io = io;
@@ -29,6 +34,9 @@ public class Indexer extends SubsystemBase {
 	public void periodic() {
 		this.io.updateInputs(this.inputs);
 		Logger.processInputs("Inputs/Rollers/Indexer", this.inputs);
+
+		this.motorDisconnectedAlert.set(!this.inputs.motorConnected);
+		this.motorDisconnectedGlobalAlert.set(!this.inputs.motorConnected);
 	}
 
 	private Command genVoltageCommand(String name, DoubleSupplier voltsSupplier) {

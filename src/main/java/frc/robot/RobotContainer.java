@@ -391,6 +391,18 @@ public class RobotContainer {
 		final var intakeStowCommand = this.intake.slam.stow();
 		final var intakeDeployCommand = this.intake.slam.deploy(this.extensionSystem);
 
+		final var rollersIndexerIdleCommand = this.rollers.indexer.idle();
+		final var rollersFeederIdleCommand = this.rollers.feeder.idle();
+		final var rollersAgitatorIdleCommand = this.rollers.agitiator.idle();
+		final var rollersFeedCommand =
+			Commands.parallel(
+				this.rollers.indexer.index(),
+				this.rollers.feeder.feed(),
+				this.rollers.agitiator.index()
+			)
+			.withName("Feed")
+		;
+
 		final var leftFlywheelIdleCommand = this.shooter.leftFlywheel.idle();
 		final var rightFlywheelIdleCommand = this.shooter.rightFlywheel.idle();
 		final var hoodStowCommand = this.shooter.hood.stow();
@@ -429,11 +441,14 @@ public class RobotContainer {
 		final var climberClimbCommand = this.climber.hook.climb();
 
 		// Set default commands
-		this.shooter.leftFlywheel.setDefaultCommand(leftFlywheelIdleCommand);
-		this.shooter.rightFlywheel.setDefaultCommand(rightFlywheelIdleCommand);
-		this.shooter.hood.setDefaultCommand(hoodStowCommand);
 		this.intake.rollers.setDefaultCommand(intakeRollersIdleCommand);
 		this.intake.slam.setDefaultCommand(intakeStowCommand);
+		this.rollers.indexer.setDefaultCommand(rollersIndexerIdleCommand);
+		this.rollers.feeder.setDefaultCommand(rollersFeederIdleCommand);
+		this.rollers.agitiator.setDefaultCommand(rollersAgitatorIdleCommand);
+		this.shooter.hood.setDefaultCommand(hoodStowCommand);
+		this.shooter.leftFlywheel.setDefaultCommand(leftFlywheelIdleCommand);
+		this.shooter.rightFlywheel.setDefaultCommand(rightFlywheelIdleCommand);
 		this.climber.hook.setDefaultCommand(climberStowCommand);
 
 		// Bind automations

@@ -18,14 +18,14 @@ import frc.util.NeutralMode;
 import frc.util.loggerUtil.inputs.LoggedMotor.MotorStatusSignalCache;
 
 public class FeederIOTalonFX implements FeederIO {
-	private final TalonFX motor = HardwareDevices.indexerMotorID.talonFX();
+	private final TalonFX motor = HardwareDevices.feederMotorID.talonFX();
 
 	private final MotorStatusSignalCache motorStatusSignalCache;
 
 	private final BaseStatusSignal[] refreshSignals;
 	private final BaseStatusSignal[] motorConnectedSignals;
 
-	private final VoltageOut voltageRequest = new VoltageOut(0);
+	private final VoltageOut voltageRequest = new VoltageOut(0.0);
 	private final NeutralOut neutralOutRequest = new NeutralOut();
 	private final CoastOut coastOutRequest = new CoastOut();
 	private final StaticBrake staticBrakeRequest = new StaticBrake();
@@ -33,7 +33,7 @@ public class FeederIOTalonFX implements FeederIO {
 	public FeederIOTalonFX(){
 		var motorConfig = new TalonFXConfiguration();
 		motorConfig.MotorOutput
-			.withInverted(InvertedValue.Clockwise_Positive)
+			.withInverted(InvertedValue.CounterClockwise_Positive)
 			.withNeutralMode(NeutralModeValue.Brake)
 		;
 		this.motor.getConfigurator().apply(motorConfig);
@@ -45,14 +45,14 @@ public class FeederIOTalonFX implements FeederIO {
 			this.motorStatusSignalCache.statorCurrent(),
 			this.motorStatusSignalCache.supplyCurrent(),
 			this.motorStatusSignalCache.torqueCurrent(),
-			this.motorStatusSignalCache.deviceTemperature()
+			this.motorStatusSignalCache.deviceTemperature(),
 		};
 		this.motorConnectedSignals = new BaseStatusSignal[] {
 			this.motorStatusSignalCache.appliedVoltage(),
 			this.motorStatusSignalCache.statorCurrent(),
 			this.motorStatusSignalCache.supplyCurrent(),
 			this.motorStatusSignalCache.torqueCurrent(),
-			this.motorStatusSignalCache.deviceTemperature()
+			this.motorStatusSignalCache.deviceTemperature(),
 		};
 
 		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.motorStatusSignalCache.getStatusSignals());
