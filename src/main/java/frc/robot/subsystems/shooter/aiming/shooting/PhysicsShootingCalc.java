@@ -17,6 +17,7 @@ public class PhysicsShootingCalc implements ShootingCalc {
 	public void calculate(Translation2d robotPose, ChassisSpeeds fieldSpeeds, Translation3d aimPoint) {
 		var robotHubSpaceCartesian = robotPose.minus(aimPoint.toTranslation2d());
 		double radius = Math.sqrt(Math.pow(robotHubSpaceCartesian.getX(), 2) + Math.pow(robotHubSpaceCartesian.getY(), 2));
+		Logger.recordOutput("DEBUG/PhysicsShootingCalc/RadiusMeters", radius);
 
 		// var radialUnitVectorCartesian = new double[] {-robotHubSpaceCartesian.getX() / radius, -robotHubSpaceCartesian.getY() / radius};
 		// var tangentialUnitVectorCartesian = new double[] {-radialUnitVectorCartesian[1], radialUnitVectorCartesian[0]};
