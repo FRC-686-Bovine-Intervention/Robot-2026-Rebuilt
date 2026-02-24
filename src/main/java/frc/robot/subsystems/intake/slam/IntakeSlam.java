@@ -66,6 +66,10 @@ public class IntakeSlam extends SubsystemBase {
 		this.io.configPID(pidConsts.get());
 	}
 
+	public boolean isDeployed() {
+		return this.getAngleRads() < deployFlopAngle.get().in(Radians);
+	}
+
 	@Override
 	public void periodic() {
 		LoggedTracer.logEpoch("CommandScheduler Periodic/Subsystem/Intake Slam/Before");
