@@ -21,7 +21,7 @@ import frc.robot.subsystems.shooter.flywheel.FlywheelConstants;
 import frc.robot.subsystems.shooter.hood.HoodConstants;
 
 public class PhysicsSimulation {
-	private static final boolean SHOULD_SIM_DURING_BUILD = true;
+	private static final boolean SHOULD_SIM_DURING_BUILD = false;
 	public static void main(String[] args) throws InterruptedException, IOException {
 		boolean isWindows = System.getProperty("os.name").toLowerCase().contains("win");
 

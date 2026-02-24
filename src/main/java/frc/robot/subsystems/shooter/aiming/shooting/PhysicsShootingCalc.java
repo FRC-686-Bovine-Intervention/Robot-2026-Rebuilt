@@ -4,7 +4,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.subsystems.shooter.ShooterConstants;
-import frc.util.math.MathExtraUtil;
 
 public class PhysicsShootingCalc implements ShootingCalc {
 	private double hoodAngleRads;
@@ -17,22 +16,22 @@ public class PhysicsShootingCalc implements ShootingCalc {
 		var robotHubSpaceCartesian = robotPose.minus(aimPoint.toTranslation2d());
 		double radius = Math.sqrt(Math.pow(robotHubSpaceCartesian.getX(), 2) + Math.pow(robotHubSpaceCartesian.getY(), 2));
 
-		var radialUnitVectorCartesian = new double[] {-robotHubSpaceCartesian.getX() / radius, -robotHubSpaceCartesian.getY() / radius};
-		var tangentialUnitVectorCartesian = new double[] {-radialUnitVectorCartesian[1], radialUnitVectorCartesian[0]};
-		var robotSpeedsArray = new double[] { fieldSpeeds.vxMetersPerSecond, fieldSpeeds.vyMetersPerSecond };
+		// var radialUnitVectorCartesian = new double[] {-robotHubSpaceCartesian.getX() / radius, -robotHubSpaceCartesian.getY() / radius};
+		// var tangentialUnitVectorCartesian = new double[] {-radialUnitVectorCartesian[1], radialUnitVectorCartesian[0]};
+		// var robotSpeedsArray = new double[] { fieldSpeeds.vxMetersPerSecond, fieldSpeeds.vyMetersPerSecond };
 
-		double radialVelocity = MathExtraUtil.dotProduct(radialUnitVectorCartesian, robotSpeedsArray);
-		double tangentialVelocity = MathExtraUtil.dotProduct(tangentialUnitVectorCartesian, robotSpeedsArray);
+		// double radialVelocity = MathExtraUtil.dotProduct(radialUnitVectorCartesian, robotSpeedsArray);
+		// double tangentialVelocity = MathExtraUtil.dotProduct(tangentialUnitVectorCartesian, robotSpeedsArray);
 
-		var hoodAngleDegs = ShooterConstants.hoodPolynomial.evaluate(radius, radialVelocity);
-		var flywheelSpeedMPS = ShooterConstants.flywheelPolynomial.evaluate(radius, radialVelocity);
+		var hoodAngleRads = ShooterConstants.hoodPolynomial.evaluate(radius, 0);
+		var flywheelSpeedMPS = ShooterConstants.flywheelPolynomial.evaluate(radius, 0);
 
-		double angleOffsetRads = Math.atan2(tangentialVelocity, -Math.abs(radialVelocity)); //NEED A DOUBLE-CHECK ON THAT
+		double angleOffsetRads = Math.atan2(0, -Math.abs(0)); //NEED A DOUBLE-CHECK ON THAT
 
 		double robotAngleRads = Math.atan2(robotHubSpaceCartesian.getY(), robotHubSpaceCartesian.getX());
 
 		this.robotRotationRads = angleOffsetRads + robotAngleRads;
-		this.hoodAngleRads = Math.toRadians(hoodAngleDegs);
+		this.hoodAngleRads = hoodAngleRads;
 		this.flywheelSpeedMS = flywheelSpeedMPS;
 		this.aimPoint = aimPoint;
 	}
