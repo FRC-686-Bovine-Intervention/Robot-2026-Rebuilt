@@ -2,13 +2,14 @@ package frc.robot.automations.shootingIntakeSlammer;
 
 import static edu.wpi.first.units.Units.Seconds;
 
+import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.ExtensionSystem;
 import frc.robot.subsystems.intake.slam.IntakeSlam;
-import frc.robot.subsystems.intake.slam.IntakeSlamConstants;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.util.EdgeDetector;
 import frc.util.loggerUtil.tunables.LoggedTunable;
@@ -45,8 +46,10 @@ public class ShootingIntakeSlammer implements Runnable {
 		}
 		this.io.updateInputs(this.inputs);
 
+		Logger.recordOutput("DEBUG/ShootingIntakeSlammer", inputs.ballCount);
+
 		this.edgeDetector.update(
-			this.inputs.ballCount >= slamBallThreshold.getAsDouble()
+			this.inputs.ballCount <= slamBallThreshold.getAsDouble()
 			&& this.shooter.aimingSystem.getCurrentCommand() != null
 		);
 
