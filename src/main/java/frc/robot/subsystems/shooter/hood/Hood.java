@@ -40,8 +40,8 @@ public class Hood extends SubsystemBase {
 
 	private static final LoggedTunable<Voltage> calibrationVoltage = LoggedTunable.from("Subsystems/Shooter/Hood/Commands/Calibration/Voltage", Volts::of, -2.0);
 
-	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Shooter/Hood/Mechanism/Profile/kV", 24.0);
-	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Shooter/Hood/Mechanism/Profile/kA", 24.0);
+	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Shooter/Hood/Mechanism/Profile/kV", 10.0);
+	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Shooter/Hood/Mechanism/Profile/kA", 1.0);
 	private static final LoggedTunable<AngularVelocity> profileMaxVel = LoggedTunable.from("Subsystems/Shooter/Hood/Mechanism/Profile/Max Velocity", DegreesPerSecond::of, 0.0);
 
 	private static final LoggedTunable<FFConstants> ffConsts = LoggedTunable.from(
@@ -49,7 +49,7 @@ public class Hood extends SubsystemBase {
 		new FFConstants(
 			0.0,
 			0.0,
-			2.4,
+			10.0,
 			0.0
 		)
 	);
@@ -57,7 +57,7 @@ public class Hood extends SubsystemBase {
 	private static final LoggedTunable<PIDConstants> pidConsts = LoggedTunable.from(
 		"Subsystems/Shooter/Hood/Mechanism/PID",
 		new PIDConstants(
-			1.5,
+			500.0,
 			0.0,
 			0.0
 		)
@@ -135,8 +135,10 @@ public class Hood extends SubsystemBase {
 		this.measuredAngleRads = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motor.encoder.getPositionRads());
 		this.measuredVelocityRadsPerSec = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motor.encoder.getVelocityRadsPerSec());
 
-		this.setpointAngleRads = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motorProfilePositionRads);
-		this.setpointVelocityRadsPerSec = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motorProfileVelocityRadsPerSec);
+		// this.setpointAngleRads = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motorProfilePositionRads);
+		// this.setpointVelocityRadsPerSec = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motorProfileVelocityRadsPerSec);
+		this.setpointAngleRads = this.inputs.motorProfilePositionRads;
+		this.setpointVelocityRadsPerSec = this.inputs.motorProfileVelocityRadsPerSec;
 
 		Logger.recordOutput("Subsystems/Shooter/Hood/Angle/Measured", this.getMeasuredAngleRads(), Radians);
 		Logger.recordOutput("Subsystems/Shooter/Hood/Velocity/Measured", this.getMeasuredVelocityRadsPerSec(), RadiansPerSecond);

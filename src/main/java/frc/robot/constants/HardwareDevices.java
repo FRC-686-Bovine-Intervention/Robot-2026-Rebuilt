@@ -43,8 +43,8 @@ public class HardwareDevices {
 	public static final CANDevice intakeSlamMotorID = canivore.id(5);
 	public static final CANDevice intakeSlamEncoderID = canivore.id(5);
 	// | Rollers
-	public static final CANDevice intakeLeftRollerMotorID = canivore.id(6);
-	public static final CANDevice intakeRightRollerMotorID = canivore.id(7);
+	public static final CANDevice intakeLeftRollerMotorID = rio.id(6);
+	public static final CANDevice intakeRightRollerMotorID = rio.id(7);
 
 	// Rollers
 	// | Indexer

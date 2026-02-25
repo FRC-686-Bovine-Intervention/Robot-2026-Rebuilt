@@ -13,8 +13,8 @@ import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFXS;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.MotorArrangementValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.signals.ReverseLimitTypeValue;
 import com.ctre.phoenix6.signals.S1CloseStateValue;
 import com.ctre.phoenix6.signals.S1FloatStateValue;
 
@@ -53,8 +53,11 @@ public class HoodIOTalonFXS implements HoodIO {
 
 	public HoodIOTalonFXS(CommonCANdi candi) {
 		this.motorConfig.MotorOutput
-			.withInverted(InvertedValue.Clockwise_Positive)
+			.withInverted(InvertedValue.CounterClockwise_Positive)
 			.withNeutralMode(NeutralModeValue.Brake)
+		;
+		this.motorConfig.Commutation
+			.withMotorArrangement(MotorArrangementValue.NEO550_JST)
 		;
 		this.motorConfig.ExternalFeedback
 			.withSensorToMechanismRatio(HoodConstants.motorToMechanism.reductionUnsigned())
@@ -66,8 +69,8 @@ public class HoodIOTalonFXS implements HoodIO {
 		;
 		this.motorConfig.HardwareLimitSwitch
 			.withReverseLimitEnable(true)
-			.withReverseLimitRemoteCANdiS1(candi.candi)
-			.withReverseLimitType(ReverseLimitTypeValue.NormallyOpen)
+			// .withReverseLimitRemoteCANdiS1(candi.candi)
+			// .withReverseLimitType(ReverseLimitTypeValue.NormallyOpen)
 			.withReverseLimitAutosetPositionEnable(true)
 			.withReverseLimitAutosetPositionValue(HoodConstants.limitSwitchAngle)
 			.withForwardLimitEnable(false)

@@ -37,7 +37,6 @@ import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.climber.hook.Hook;
 import frc.robot.subsystems.climber.hook.HookIO;
 import frc.robot.subsystems.climber.hook.HookIOSim;
-import frc.robot.subsystems.climber.hook.HookIOTalonFX;
 import frc.robot.subsystems.commonDevices.CommonCANdi;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -53,6 +52,7 @@ import frc.robot.subsystems.drive.odometry.OdometryTimestampIOSim;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.rollers.IntakeRollers;
 import frc.robot.subsystems.intake.rollers.IntakeRollersIO;
+import frc.robot.subsystems.intake.rollers.IntakeRollersIOSparkMax;
 import frc.robot.subsystems.intake.slam.IntakeSlam;
 import frc.robot.subsystems.intake.slam.IntakeSlamIO;
 import frc.robot.subsystems.intake.slam.IntakeSlamIOSim;
@@ -138,7 +138,7 @@ public class RobotContainer {
 					)
 				);
 				this.intake = new Intake(
-					new IntakeRollers(new IntakeRollersIO() {}),
+					new IntakeRollers(new IntakeRollersIOSparkMax()),
 					new IntakeSlam(new IntakeSlamIO() {})
 				);
 				this.rollers = new Rollers(
@@ -148,7 +148,7 @@ public class RobotContainer {
 					new RollerSensorsIO() {}
 				);
 				this.climber = new Climber(
-					new Hook(new HookIOTalonFX())
+					new Hook(new HookIO() {})
 				);
 
 				commonCANdi.configSend();
@@ -458,7 +458,7 @@ public class RobotContainer {
 
 		// Bind automations
 		this.automationsLoop.bind(new BumpMitigation(this.drive));
-		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
+		// new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
 
 		// Bind buttons
@@ -526,9 +526,11 @@ public class RobotContainer {
 		final var hoodVoltage = LoggedTunable.from("Woodbot/Hood Voltage", Volts::of, 1.0);
 		this.driveController.povUp().and(() -> !hoodStepCommand.isScheduled()).whileTrue(this.shooter.hood.genVoltageCommand("Volts Up", () -> +hoodVoltage.get().in(Volts)));
 		this.driveController.povDown().and(() -> !hoodStepCommand.isScheduled()).whileTrue(this.shooter.hood.genVoltageCommand("Volts Down", () -> -hoodVoltage.get().in(Volts)));
-		this.driveController.start().and(this.driveController.back()).onTrue(
-			Commands.runOnce(() -> this.shooter.hood.setHardLimit(true))
-			.finallyDo(() -> this.shooter.hood.setHardLimit(false))
+		this.driveController.start().and(this.driveController.back()).whileTrue(
+			Commands.startEnd(
+				() -> this.shooter.hood.setHardLimit(true),
+				() -> this.shooter.hood.setHardLimit(false)
+			)
 		);
 
 		final var flywheelStepper = Cooldown.incrementingStepper(
