@@ -81,4 +81,8 @@ public class InterpolationShootingCalc implements ShootingCalc {
 		return this.aimPoint;
 	}
 
+	@Override
+	public double getTOFSeconds() {
+		return 0.0; //Must be handled by the caller
+	}
 }

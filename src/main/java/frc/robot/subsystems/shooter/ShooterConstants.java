@@ -12,6 +12,8 @@ import frc.util.math.polynomial.TwoVariablePolynomial3rdDegree;
 public class ShooterConstants {
 	public static final TwoVariablePolynomial3rdDegree hoodPolynomial = TwoVariablePolynomial3rdDegree.from(Filesystem.getDeployDirectory().getPath() + "/hoodPolynomial.json");
 	public static final TwoVariablePolynomial3rdDegree flywheelPolynomial = TwoVariablePolynomial3rdDegree.from(Filesystem.getDeployDirectory().getPath() + "/flywheelPolynomial.json");
+	public static final TwoVariablePolynomial3rdDegree tofPolynomial = TwoVariablePolynomial3rdDegree.from(Filesystem.getDeployDirectory().getPath() + "/tofPolynomial.json");
+
 	public static final InterpolatingDoubleTreeMap hubTargetFlyWheelVeloMPS = new InterpolatingDoubleTreeMap();
 	static {
 		hubTargetFlyWheelVeloMPS.put(Meters.of(1.1717).in(Meters), MetersPerSecond.of(20.0).in(MetersPerSecond));

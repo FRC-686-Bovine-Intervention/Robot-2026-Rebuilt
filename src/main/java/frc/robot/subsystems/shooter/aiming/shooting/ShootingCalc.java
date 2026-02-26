@@ -12,4 +12,6 @@ public interface ShootingCalc {
 	public double getTargetAzimuthHeadingRads();
 
 	public Translation3d getAimPoint();
+
+	public double getTOFSeconds();
 }
