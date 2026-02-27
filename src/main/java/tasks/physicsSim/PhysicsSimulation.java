@@ -21,7 +21,7 @@ import frc.robot.subsystems.shooter.flywheel.FlywheelConstants;
 import frc.robot.subsystems.shooter.hood.HoodConstants;
 
 public class PhysicsSimulation {
-	private static final boolean SHOULD_SIM_DURING_BUILD = false;
+	private static final boolean SHOULD_SIM_DURING_BUILD = true;
 	public static void main(String[] args) throws InterruptedException, IOException {
 		boolean isWindows = System.getProperty("os.name").toLowerCase().contains("win");
 
@@ -34,7 +34,7 @@ public class PhysicsSimulation {
 				FlywheelConstants.wheel.effectiveRadius().in(Meters),
 				FlywheelConstants.hoodRoller.effectiveRadius().in(Meters),
 				HoodConstants.hoodRadius.in(Meters),
-				FlywheelConstants.flywheelToHood.reductionUnsigned(),
+				(FlywheelConstants.flywheelToHood.reductionUnsigned() / FlywheelConstants.wheel.effectiveRadius().in(Meters)) * FlywheelConstants.hoodRoller.effectiveRadius().in(Meters),
 				FlywheelConstants.wheel.rotationsToMeters(FlywheelConstants.motorToMechanism.reductionSigned() * 6000) / 60,
 				oldConfig.minVFly,
 				oldConfig.vFlyMaxTries,

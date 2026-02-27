@@ -19,12 +19,7 @@ public class FlywheelConstants {
 	.axle()
 	;
 
-	public static final GearRatio flywheelToHood = new GearRatio()
-	.sprocket(38)
-	.axle()
-	.sprocket(16)
-	.axle()
-	;
+	public static final GearRatio flywheelToHood = new GearRatio(38/16);
 	// Flywheel wheel
 	public static final LinearRelation wheel = LinearRelation.wheelDiameter(Inches.of(3.0));
 	public static final LinearRelation hoodRoller = LinearRelation.wheelDiameter(Inches.of(1.0));

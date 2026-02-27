@@ -21,4 +21,29 @@ public class MathExtraUtil {
 		}
 		return output;
 	}
+
+	public static double[] addVectors(double[] a, double[] b) {
+		double[] longestVec;
+		double[] shortestVec;
+		if (a.length < b.length) {
+			longestVec = b;
+			shortestVec = a;
+		} else {
+			longestVec = a;
+			shortestVec = b;
+		}
+		double[] output = longestVec.clone();
+		for (int i = 0; i < shortestVec.length; i++) {
+			output[i] += shortestVec[i];
+		}
+		return output;
+	}
+
+	public static double[] scalarMultiply(double[] a, double scalar) {
+		double[] output = new double[a.length];
+		for (int i = 0; i < a.length; i++) {
+			output[i] = a[i] * scalar;
+		}
+		return output;
+	}
 }
