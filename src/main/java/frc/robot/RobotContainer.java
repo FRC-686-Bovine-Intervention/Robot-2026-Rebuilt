@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
+import frc.robot.automations.AutomaticScoring;
 import frc.robot.automations.BumpMitigation;
 import frc.robot.automations.HubShiftNotifications;
 import frc.robot.constants.FieldConstants;
@@ -394,12 +395,12 @@ public class RobotContainer {
 
 		final var rollersIndexerIdleCommand = this.rollers.indexer.idle();
 		final var rollersFeederIdleCommand = this.rollers.feeder.idle();
-		final var rollersAgitatorIdleCommand = this.rollers.agitiator.idle();
+		final var rollersAgitatorIdleCommand = this.rollers.agitator.idle();
 		final var rollersFeedCommand =
 			Commands.parallel(
 				this.rollers.indexer.index(),
 				this.rollers.feeder.feed(),
-				this.rollers.agitiator.index()
+				this.rollers.agitator.index()
 			)
 			.withName("Feed")
 		;
@@ -446,7 +447,7 @@ public class RobotContainer {
 		this.intake.slam.setDefaultCommand(intakeStowCommand);
 		this.rollers.indexer.setDefaultCommand(rollersIndexerIdleCommand);
 		this.rollers.feeder.setDefaultCommand(rollersFeederIdleCommand);
-		this.rollers.agitiator.setDefaultCommand(rollersAgitatorIdleCommand);
+		this.rollers.agitator.setDefaultCommand(rollersAgitatorIdleCommand);
 		this.shooter.hood.setDefaultCommand(hoodStowCommand);
 		this.shooter.leftFlywheel.setDefaultCommand(leftFlywheelIdleCommand);
 		this.shooter.rightFlywheel.setDefaultCommand(rightFlywheelIdleCommand);
@@ -454,6 +455,7 @@ public class RobotContainer {
 
 		// Bind automations
 		this.automationsLoop.bind(new BumpMitigation(this.drive));
+		this.automationsLoop.bind(new AutomaticScoring(this.drive, this.shooter, this.rollers));
 		this.automationsLoop.bind(new HubShiftNotifications(this.driveController));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
