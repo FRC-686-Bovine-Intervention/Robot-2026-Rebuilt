@@ -221,3 +221,13 @@ spotless {
 		endWithNewline()
 	}
 }
+
+tasks.register('PhysicsSim', JavaExec) {
+	dependsOn classes
+	mainClass.set("tasks.physicsSim.PhysicsSimulation")
+	classpath = sourceSets.main.runtimeClasspath
+}
+
+tasks.named("jar") {
+	dependsOn("PhysicsSim")
+}
