@@ -137,6 +137,9 @@ public class Robot extends LoggedRobot {
 			Perspective.periodic();
 			LoggedTracer.logEpoch("CommandScheduler Periodic/Perspective Periodic");
 
+			HubShifts.periodic();
+			LoggedTracer.logEpoch("CommandScheduler Periodic/HubShifts Periodic");
+
 			VirtualSubsystem.periodicAll();
 			LoggedTracer.logEpoch("CommandScheduler Periodic/VirtualSubsystem Periodic");
 
