@@ -2,6 +2,7 @@ package frc.robot.auto;
 
 import static edu.wpi.first.units.Units.Seconds;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -88,13 +89,31 @@ public class AutoManager extends VirtualSubsystem {
 				}
 
 				Leds.getInstance().autonomousDelayingAnimation.setFlag(!this.autoCommandRunning && !this.autoCommandFinished);
-				Leds.getInstance().autonomousDelayingAnimation.setPos(this.autoTimer.get() / initialDelaySeconds);
+				Leds.getInstance().autonomousDelayingAnimation.setPos(
+					MathUtil.inverseInterpolate(
+						0.0,
+						initialDelaySeconds,
+						this.autoTimer.get()
+					)
+				);
 				Leds.getInstance().autonomousRunningAnimation.setFlag(this.autoCommandRunning);
 				if (this.autoCommandFinished) {
 					if (this.autoTimer.get() <= AutoConstants.allottedAutoTime.in(Seconds)) {
-						Leds.getInstance().autonomousFinishedAnimation.setPos(1.0 - ((this.autoTimer.get() - this.autoFinishTime) / (AutoConstants.allottedAutoTime.in(Seconds) - this.autoFinishTime)));
+						Leds.getInstance().autonomousFinishedAnimation.setPos(
+							1.0 - MathUtil.inverseInterpolate(
+								this.autoFinishTime,
+								AutoConstants.allottedAutoTime.in(Seconds),
+								this.autoTimer.get()
+							)
+						);
 					} else {
-						Leds.getInstance().autonomousFinishedAnimation.setPos((this.autoTimer.get() - AutoConstants.allottedAutoTime.in(Seconds)) / AutoConstants.disabledTime.in(Seconds));
+						Leds.getInstance().autonomousFinishedAnimation.setPos(
+							MathUtil.inverseInterpolate(
+								AutoConstants.allottedAutoTime.in(Seconds),
+								AutoConstants.allottedAutoTime.in(Seconds) + AutoConstants.disabledTime.in(Seconds),
+								this.autoTimer.get()
+							)
+						);
 					}
 				}
 			}
