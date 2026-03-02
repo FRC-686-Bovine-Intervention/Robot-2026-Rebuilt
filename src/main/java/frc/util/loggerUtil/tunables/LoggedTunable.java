@@ -1,6 +1,7 @@
 package frc.util.loggerUtil.tunables;
 
 import java.util.function.DoubleFunction;
+import java.util.function.Function;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -448,6 +449,29 @@ public interface LoggedTunable<T> {
 			public Pose2d get() {
 				if (this.hasChanged(this.hashCode())) {
 					this.cache = new Pose2d(this.translation.get(), this.rotation.get());
+				}
+				return this.cache;
+			}
+		};
+	}
+
+	public default <U> LoggedTunable<U> map(Function<T, U> mappingFunction) {
+		final var self = this;
+		return new LoggedTunable<>() {
+			private final LoggedTunable<T> parent = self;
+			private final Function<T, U> func = mappingFunction;
+
+			private U cache = this.func.apply(this.parent.get());
+
+			@Override
+			public boolean hasChanged(int id) {
+				return this.parent.hasChanged(id);
+			}
+
+			@Override
+			public U get() {
+				if (this.hasChanged(this.hashCode())) {
+					this.cache = this.func.apply(this.parent.get());
 				}
 				return this.cache;
 			}

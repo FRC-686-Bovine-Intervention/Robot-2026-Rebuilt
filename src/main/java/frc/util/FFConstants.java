@@ -1,5 +1,7 @@
 package frc.util;
 
+import java.util.function.DoubleUnaryOperator;
+
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.Slot1Configs;
 import com.ctre.phoenix6.configs.Slot2Configs;
@@ -94,5 +96,23 @@ public record FFConstants(double kS, double kG, double kV, double kA) implements
 			.withKV(this.kV())
 			.withKA(this.kA())
 		;
+	}
+
+	public FFConstants mul(double mul) {
+		return new FFConstants(
+			this.kS() * mul,
+			this.kG() * mul,
+			this.kV() * mul,
+			this.kA() * mul
+		);
+	}
+
+	public FFConstants map(DoubleUnaryOperator mappingFunction) {
+		return new FFConstants(
+			mappingFunction.applyAsDouble(this.kS()),
+			mappingFunction.applyAsDouble(this.kG()),
+			mappingFunction.applyAsDouble(this.kV()),
+			mappingFunction.applyAsDouble(this.kA())
+		);
 	}
 }
