@@ -101,7 +101,9 @@ public class Cluster {
 	 */
 	public Translation2d[] getLineOfBestFit() {
 		if (memberCount < 2) {
-			throw new IllegalArgumentException("Need at least 2 points");
+			return new Translation2d[] {center, center};
+		} else if (memberCount == 2) {
+			return new Translation2d[] {members.get(0), members.get(1)};
 		}
 
 		double meanX = weightedCenter.getX();
@@ -240,7 +242,7 @@ public class Cluster {
 
 	private static double computeDensity(List<Translation2d> points) {
 		if (points.size() < 3) {
-			return Double.POSITIVE_INFINITY;
+			return 1.0;
 		}
 
 		List<Translation2d> hull = convexHull(points);
@@ -254,6 +256,10 @@ public class Cluster {
 	}
 
 	private static double computeDensity(List<Translation2d> hull, int count) {
+		if (count < 3) {
+			return 1.0;
+		}
+
 		double area = polygonArea(hull);
 
 		if (area <= 1e-6) {
