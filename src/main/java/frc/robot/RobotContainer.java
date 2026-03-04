@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
@@ -17,6 +18,8 @@ import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -41,39 +44,30 @@ import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.climber.hook.Hook;
 import frc.robot.subsystems.climber.hook.HookIO;
 import frc.robot.subsystems.climber.hook.HookIOSim;
-import frc.robot.subsystems.climber.hook.HookIOTalonFX;
 import frc.robot.subsystems.commonDevices.CommonCANdi;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.commands.WheelRadiusCalibration;
 import frc.robot.subsystems.drive.gyro.GyroIO;
-import frc.robot.subsystems.drive.gyro.GyroIOPigeon2;
 import frc.robot.subsystems.drive.modules.ModuleIO;
-import frc.robot.subsystems.drive.modules.ModuleIOFalcon550;
 import frc.robot.subsystems.drive.modules.ModuleIOSim;
 import frc.robot.subsystems.drive.odometry.OdometryTimestampIO;
-import frc.robot.subsystems.drive.odometry.OdometryTimestampIOOdometryThread;
 import frc.robot.subsystems.drive.odometry.OdometryTimestampIOSim;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.rollers.IntakeRollers;
 import frc.robot.subsystems.intake.rollers.IntakeRollersIO;
-import frc.robot.subsystems.intake.rollers.IntakeRollersIOTalonFX;
 import frc.robot.subsystems.intake.slam.IntakeSlam;
 import frc.robot.subsystems.intake.slam.IntakeSlamIO;
 import frc.robot.subsystems.intake.slam.IntakeSlamIOSim;
-import frc.robot.subsystems.intake.slam.IntakeSlamIOTalonFX;
 import frc.robot.subsystems.rollers.RollerSensorsIO;
 import frc.robot.subsystems.rollers.RollerSensorsIOCANdi;
 import frc.robot.subsystems.rollers.Rollers;
 import frc.robot.subsystems.rollers.agitator.Agitator;
 import frc.robot.subsystems.rollers.agitator.AgitatorIO;
-import frc.robot.subsystems.rollers.agitator.AgitatorIOTalonFX;
 import frc.robot.subsystems.rollers.feeder.Feeder;
 import frc.robot.subsystems.rollers.feeder.FeederIO;
-import frc.robot.subsystems.rollers.feeder.FeederIOTalonFX;
 import frc.robot.subsystems.rollers.indexer.Indexer;
 import frc.robot.subsystems.rollers.indexer.IndexerIO;
-import frc.robot.subsystems.rollers.indexer.IndexerIOTalonFX;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.aiming.AimingSystem;
 import frc.robot.subsystems.shooter.aiming.passing.InterpolationPassingCalc;
@@ -81,12 +75,13 @@ import frc.robot.subsystems.shooter.aiming.shooting.InterpolationShootingCalc;
 import frc.robot.subsystems.shooter.flywheel.Flywheel;
 import frc.robot.subsystems.shooter.flywheel.FlywheelConstants;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
-import frc.robot.subsystems.shooter.flywheel.FlywheelIOTalonFX;
 import frc.robot.subsystems.shooter.hood.Hood;
 import frc.robot.subsystems.shooter.hood.HoodIO;
 import frc.robot.subsystems.shooter.hood.HoodIOSim;
-import frc.robot.subsystems.shooter.hood.HoodIOTalonFXS;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
+import frc.robot.subsystems.vision.cameras.Camera;
+import frc.robot.subsystems.vision.cameras.CameraIOPhoton;
+import frc.robot.subsystems.vision.object.ObjectPipeline;
 import frc.robot.subsystems.vision.object.ObjectVision;
 import frc.util.Perspective;
 import frc.util.controllers.XboxController;
@@ -125,39 +120,36 @@ public class RobotContainer {
 		// Initialize subsystems with appropriate IO
 		switch (RobotType.getMode()) {
 			case REAL -> {
-				var commonCANdi = new CommonCANdi();
-
 				this.drive = new Drive(
-					new OdometryTimestampIOOdometryThread(),
-					new GyroIOPigeon2(),
-					Arrays.stream(DriveConstants.moduleConstants)
-						.map(ModuleIOFalcon550::new)
-						.toArray(ModuleIO[]::new)
+					new OdometryTimestampIO() {},
+					new GyroIO() {},
+					new ModuleIO(){},
+					new ModuleIO(){},
+					new ModuleIO(){},
+					new ModuleIO(){}
 				);
 				this.shooter = new Shooter(
-					new Flywheel(FlywheelConstants.leftFlywheelConfig, new FlywheelIOTalonFX(FlywheelConstants.leftFlywheelConfig)),
-					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIOTalonFX(FlywheelConstants.rightFlywheelConfig)),
-					new Hood(new HoodIOTalonFXS(commonCANdi)),
+					new Flywheel(FlywheelConstants.leftFlywheelConfig, new FlywheelIO() {}),
+					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIO() {}),
+					new Hood(new HoodIO() {}),
 					new AimingSystem(
 						new InterpolationShootingCalc(),
 						new InterpolationPassingCalc()
 					)
 				);
 				this.intake = new Intake(
-					new IntakeRollers(new IntakeRollersIOTalonFX()),
-					new IntakeSlam(new IntakeSlamIOTalonFX())
+					new IntakeRollers(new IntakeRollersIO() {}),
+					new IntakeSlam(new IntakeSlamIO() {})
 				);
 				this.rollers = new Rollers(
-					new Indexer(new IndexerIOTalonFX()),
-					new Agitator(new AgitatorIOTalonFX()),
-					new Feeder(new FeederIOTalonFX()),
-					new RollerSensorsIOCANdi(commonCANdi)
+					new Indexer(new IndexerIO() {}),
+					new Agitator(new AgitatorIO() {}),
+					new Feeder(new FeederIO() {}),
+					new RollerSensorsIO() {}
 				);
 				this.climber = new Climber(
-					new Hook(new HookIOTalonFX())
+					new Hook(new HookIO() {})
 				);
-
-				commonCANdi.configSend();
 			}
 			case SIM -> {
 				var commonCANdi = new CommonCANdi();
@@ -235,7 +227,12 @@ public class RobotContainer {
 
 		);
 		this.objectVision = new ObjectVision(
-
+			new ObjectPipeline(new Camera(new CameraIOPhoton("Intake"), "Intake", new Transform3d(
+				Inches.of(0),
+				Inches.of(0),
+				Inches.of(7.5),
+				Rotation3d.kZero
+			), null), 0)
 		);
 
 		// Setup robot structure
