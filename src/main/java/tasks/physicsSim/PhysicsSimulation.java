@@ -24,10 +24,10 @@ public class PhysicsSimulation {
 	private static final boolean SHOULD_SIM_DURING_BUILD = true;
 	public static void main(String[] args) throws InterruptedException, IOException {
 		boolean isWindows = System.getProperty("os.name").toLowerCase().contains("win");
+		boolean isLinux = System.getProperty("os.name").toLowerCase().contains("lin");
 
-
-		if (isWindows && SHOULD_SIM_DURING_BUILD) {
-			ShooterConfig oldConfig = fromFile("./tools/shooter.json");
+		if (SHOULD_SIM_DURING_BUILD) {
+			ShooterConfig oldConfig = fromFile("./tools/physicsSim/shooter.json");
 
 			ShooterConfig config = new ShooterConfig(
 				HoodConstants.hoodBase.getZ(),
@@ -54,16 +54,42 @@ public class PhysicsSimulation {
 			);
 
 			saveShooterConfig(config);
-
-			Path exePath = Paths.get("./tools/Headless.exe").toAbsolutePath();
+		}
+		if (isWindows && SHOULD_SIM_DURING_BUILD) {
+			Path exePath = Paths.get("./tools/physicsSim/windows/Headless.exe").toAbsolutePath();
 
 			ProcessBuilder pb = new ProcessBuilder(
 				exePath.toString(),
+				"--inputpath",
+				"../shooter.json",
 				"--outputdir",
-				"../src/main/deploy/"
+				"../../../src/main/deploy/"
 			);
 
-			pb.directory(new File("tools"));
+			pb.directory(new File("tools/physicsSim/windows"));
+			pb.inheritIO();
+
+			Process process = pb.start();
+			int exitCode = process.waitFor();
+
+			if (exitCode != 0) {
+				throw new RuntimeException("Physics tool failed with exit code " + exitCode);
+			}
+
+			System.out.println("Physics tool completed successfully.");
+		}
+		if (isLinux && SHOULD_SIM_DURING_BUILD) {
+			Path exePath = Paths.get("./tools/physicsSim/linux/Headless").toAbsolutePath();
+
+			ProcessBuilder pb = new ProcessBuilder(
+				exePath.toString(),
+				"--inputpath",
+				"../shooter.json",
+				"--outputdir",
+				"../../../src/main/deploy/"
+			);
+
+			pb.directory(new File("tools/physicsSim/linux"));
 			pb.inheritIO();
 
 			Process process = pb.start();
