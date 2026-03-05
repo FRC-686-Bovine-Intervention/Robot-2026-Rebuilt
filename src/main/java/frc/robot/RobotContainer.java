@@ -8,16 +8,10 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
-import org.littletonrobotics.junction.Logger;
-
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
@@ -33,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
+import frc.robot.automations.AutoIntake;
 import frc.robot.automations.BumpMitigation;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
@@ -92,7 +87,6 @@ import frc.util.Perspective;
 import frc.util.controllers.XboxController;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.robotStructure.Mechanism3d;
-import frc.util.misc.Cluster;
 
 public class RobotContainer {
 	// Subsystems
@@ -117,6 +111,8 @@ public class RobotContainer {
 	private final XboxController driveController = new XboxController(0);
 	@SuppressWarnings("unused")
 	private final CommandJoystick simJoystick = new CommandJoystick(5);
+
+	private Supplier<ChassisSpeeds> desiredSpeedsSupplier = () -> new ChassisSpeeds(0,0,0);
 
 	@SuppressWarnings("resource")
 	public RobotContainer() {
@@ -367,6 +363,7 @@ public class RobotContainer {
 				var driveX = robotX * DriveConstants.maxDriveSpeed.in(MetersPerSecond);
 				var driveY = robotY * DriveConstants.maxDriveSpeed.in(MetersPerSecond);
 
+				desiredSpeedsSupplier = () -> new ChassisSpeeds(driveX, driveY, desiredSpeedsSupplier.get().omegaRadiansPerSecond);
 				drive.translationSubsystem.driveVelocity(driveX, driveY);
 			}
 
@@ -385,6 +382,7 @@ public class RobotContainer {
 			public void execute() {
 				var omega = rotateAxis.getAsDouble() * DriveConstants.maxTurnRate.in(RadiansPerSecond);
 
+				desiredSpeedsSupplier = () -> new ChassisSpeeds(desiredSpeedsSupplier.get().vxMetersPerSecond, desiredSpeedsSupplier.get().vyMetersPerSecond, omega);
 				drive.rotationalSubsystem.driveVelocity(omega);
 			}
 
@@ -461,6 +459,7 @@ public class RobotContainer {
 
 		// Bind automations
 		this.automationsLoop.bind(new BumpMitigation(this.drive));
+		this.automationsLoop.bind(new AutoIntake(this.drive, this.intake, this.objectVision, this.driveController.rightBumper(), desiredSpeedsSupplier));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
 
@@ -508,107 +507,107 @@ public class RobotContainer {
 		// 	)
 		// )));
 
-		this.driveController.rightBumper().onTrue(new Command() {
-			{
-				setName("Auto Intake");
-				addRequirements(drive.translationSubsystem, drive.rotationalSubsystem);
-			}
+		// this.driveController.rightBumper().onTrue(new Command() {
+		// 	{
+		// 		setName("Auto Intake");
+		// 		addRequirements(drive.translationSubsystem, drive.rotationalSubsystem);
+		// 	}
 
-			Cluster chosenCluster;
-			Translation2d start;
-			boolean hasReachedStart = false;
+		// 	Cluster chosenCluster;
+		// 	Translation2d start;
+		// 	boolean hasReachedStart = false;
 
-			@Override
-			public void initialize() {
-				var fuel = objectVision.getTrackedObjectsOfType(0);
-				List<Translation2d> fuelPoints = new ArrayList<>();
-				// for (var ball : fuel) {
-				// 	fuelPoints.add(ball.fieldPos);
-				// }
-				fuelPoints = List.of(
-					new Translation2d(1.0, 1.0),
-					new Translation2d(1.1, 1.1),
-					new Translation2d(1.0,1.2),
-					new Translation2d(2.0, 2.0),
-					new Translation2d(2.5, 2.5),
-					new Translation2d(3.0, 3.0)
-				);
+		// 	@Override
+		// 	public void initialize() {
+		// 		var fuel = objectVision.getTrackedObjectsOfType(0);
+		// 		List<Translation2d> fuelPoints = new ArrayList<>();
+		// 		// for (var ball : fuel) {
+		// 		// 	fuelPoints.add(ball.fieldPos);
+		// 		// }
+		// 		fuelPoints = List.of(
+		// 			new Translation2d(1.0, 1.0),
+		// 			new Translation2d(1.1, 1.1),
+		// 			new Translation2d(1.0,1.2),
+		// 			new Translation2d(2.0, 2.0),
+		// 			new Translation2d(2.5, 2.5),
+		// 			new Translation2d(3.0, 3.0)
+		// 		);
 
-				Logger.recordOutput("DEBUG/AutoIntake/FuelPoints", fuelPoints.stream().map((point) -> new Pose2d(point, Rotation2d.kZero)).toArray(Pose2d[]::new));
+		// 		Logger.recordOutput("DEBUG/AutoIntake/FuelPoints", fuelPoints.stream().map((point) -> new Pose2d(point, Rotation2d.kZero)).toArray(Pose2d[]::new));
 
-				var clusters = Cluster.formClusters(fuelPoints, 0.3);
-				Logger.recordOutput("DEBUG/AutoIntake/Clusters", clusters.stream().map((cluster) -> new Pose2d(cluster.getWeightedCenter(), Rotation2d.kZero)).toArray(Pose2d[]::new));
-				// Logger.recordOutput("DEBUG/AutoIntake/ClusterSizes", clusters.stream().map((c) -> c.getMemberCount()).toArray(int[]::new));
+		// 		var clusters = Cluster.formClusters(fuelPoints, 0.3);
+		// 		Logger.recordOutput("DEBUG/AutoIntake/Clusters", clusters.stream().map((cluster) -> new Pose2d(cluster.getWeightedCenter(), Rotation2d.kZero)).toArray(Pose2d[]::new));
+		// 		// Logger.recordOutput("DEBUG/AutoIntake/ClusterSizes", clusters.stream().map((c) -> c.getMemberCount()).toArray(int[]::new));
 
-				var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
-				double chosenClusterScore = 0;
-				for (var cluster : clusters) {
-					var center = cluster.getWeightedCenter();
-					double dist = robotPose.getTranslation().getDistance(center);
-					double density = cluster.getDensity();
-					Logger.recordOutput("DEBUG/AutoIntake/Density/" + clusters.indexOf(cluster), density);
-					double count = cluster.getMemberCount();
-					Logger.recordOutput("DEBUG/AutoIntake/ClusterCount/" + clusters.indexOf(cluster), count);
-					ChassisSpeeds robotRelative = drive.getRobotMeasuredSpeeds();
+		// 		var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
+		// 		double chosenClusterScore = 0;
+		// 		for (var cluster : clusters) {
+		// 			var center = cluster.getWeightedCenter();
+		// 			double dist = robotPose.getTranslation().getDistance(center);
+		// 			double density = cluster.getDensity();
+		// 			Logger.recordOutput("DEBUG/AutoIntake/Density/" + clusters.indexOf(cluster), density);
+		// 			double count = cluster.getMemberCount();
+		// 			Logger.recordOutput("DEBUG/AutoIntake/ClusterCount/" + clusters.indexOf(cluster), count);
+		// 			ChassisSpeeds robotRelative = drive.getRobotMeasuredSpeeds();
 
-					Translation2d clusterToRobot = new Pose2d(center, Rotation2d.kZero).relativeTo(robotPose).getTranslation();
-					clusterToRobot = clusterToRobot.getNorm() != 0 ? clusterToRobot.div(clusterToRobot.getNorm()) : Translation2d.kZero;
+		// 			Translation2d clusterToRobot = new Pose2d(center, Rotation2d.kZero).relativeTo(robotPose).getTranslation();
+		// 			clusterToRobot = clusterToRobot.getNorm() != 0 ? clusterToRobot.div(clusterToRobot.getNorm()) : Translation2d.kZero;
 
-					Translation2d robotVelocity = new Translation2d(robotRelative.vxMetersPerSecond, robotRelative.vyMetersPerSecond);
-					robotVelocity = robotVelocity.getNorm() != 0 ? robotVelocity.div(robotVelocity.getNorm()) : Translation2d.kZero;
+		// 			Translation2d robotVelocity = new Translation2d(robotRelative.vxMetersPerSecond, robotRelative.vyMetersPerSecond);
+		// 			robotVelocity = robotVelocity.getNorm() != 0 ? robotVelocity.div(robotVelocity.getNorm()) : Translation2d.kZero;
 
-					double angleScore = Math.acos(clusterToRobot.dot(robotVelocity));
-					Logger.recordOutput("DEBUG/AutoIntake/AngleScore/" + clusters.indexOf(cluster), angleScore);
+		// 			double angleScore = Math.acos(clusterToRobot.dot(robotVelocity));
+		// 			Logger.recordOutput("DEBUG/AutoIntake/AngleScore/" + clusters.indexOf(cluster), angleScore);
 
-					double score = (density * count)/(dist * angleScore); 	//Will end up changing
-					Logger.recordOutput("DEBUG/AutoIntake/ClusterScore/" + clusters.indexOf(cluster), score);
+		// 			double score = (density * count)/(dist * angleScore); 	//Will end up changing
+		// 			Logger.recordOutput("DEBUG/AutoIntake/ClusterScore/" + clusters.indexOf(cluster), score);
 
-					if (score > chosenClusterScore) {
-						Logger.recordOutput("DEBUG/AutoIntake/ChosenClusterChanged", true);
-						chosenCluster = cluster;
-						chosenClusterScore = score;
-					}
-				}
+		// 			if (score > chosenClusterScore) {
+		// 				Logger.recordOutput("DEBUG/AutoIntake/ChosenClusterChanged", true);
+		// 				chosenCluster = cluster;
+		// 				chosenClusterScore = score;
+		// 			}
+		// 		}
 
-				Logger.recordOutput("DEBUG/AutoIntake/ChosenClusterIndex", clusters.indexOf(chosenCluster));
-				Logger.recordOutput("DEBUG/AutoIntake/ChosenClusterClosest", chosenCluster == null ? null : chosenCluster.getClosest(robotPose.getTranslation()));
-				Logger.recordOutput("DEBUG/AutoIntake/LineOfBestFit", chosenCluster == null ? null : Arrays.stream(chosenCluster.getLineOfBestFit()).map((point) -> new Pose2d(point, Rotation2d.kZero)).toArray(Pose2d[]::new));
-				start = chosenCluster == null ? null : chosenCluster.getClosest(robotPose.getTranslation());
-			}
+		// 		Logger.recordOutput("DEBUG/AutoIntake/ChosenClusterIndex", clusters.indexOf(chosenCluster));
+		// 		Logger.recordOutput("DEBUG/AutoIntake/ChosenClusterClosest", chosenCluster == null ? null : chosenCluster.getClosest(robotPose.getTranslation()));
+		// 		Logger.recordOutput("DEBUG/AutoIntake/LineOfBestFit", chosenCluster == null ? null : Arrays.stream(chosenCluster.getLineOfBestFit()).map((point) -> new Pose2d(point, Rotation2d.kZero)).toArray(Pose2d[]::new));
+		// 		start = chosenCluster == null ? null : chosenCluster.getClosest(robotPose.getTranslation());
+		// 	}
 
-			@Override
-			public void execute() {
-				if (start != null) {
-					var pose = RobotState.getInstance().getEstimatedGlobalPose();
-				if (!hasReachedStart) {
-					var startRobotRelative = new Pose2d(start, Rotation2d.kZero).relativeTo(pose).getTranslation();
-					var angle = new Rotation2d(Math.atan2(startRobotRelative.getY(), startRobotRelative.getX()));
-					drive.translationSubsystem.simplePIDTo(() -> startRobotRelative);
-					drive.rotationalSubsystem.pidControlledHeading(() -> angle);
-				} else {
-					chosenCluster.resetReduction();
-					chosenCluster.reduceToAllAheadOf(pose);
-					Translation2d[] line = chosenCluster.getLineOfBestFit();
-					Translation2d closestLinePoint;
-					Translation2d farthestLinePoint;
-					if (line[0].getDistance(pose.getTranslation()) < line[1].getDistance(pose.getTranslation())) {
-						closestLinePoint = line[0];
-						farthestLinePoint = line[1];
-					} else {
-						closestLinePoint = line[1];
-						farthestLinePoint = line[0];
-					}
-					closestLinePoint = new Pose2d(closestLinePoint, Rotation2d.kZero).relativeTo(pose).getTranslation();
-					farthestLinePoint = new Pose2d(farthestLinePoint, Rotation2d.kZero).relativeTo(pose).getTranslation();
-					var velocity = farthestLinePoint.minus(closestLinePoint);
-					velocity = velocity.div(velocity.getNorm()).times(3);
-					var angle = new Rotation2d(Math.atan2(velocity.getY(), velocity.getX()));
-					drive.translationSubsystem.driveVelocity(velocity.getX(), velocity.getY());
-					drive.rotationalSubsystem.pidControlledHeading(() -> angle);
-				}
-				}
-			}
-		});
+		// 	@Override
+		// 	public void execute() {
+		// 		if (start != null) {
+		// 			var pose = RobotState.getInstance().getEstimatedGlobalPose();
+		// 		if (!hasReachedStart) {
+		// 			var startRobotRelative = new Pose2d(start, Rotation2d.kZero).relativeTo(pose).getTranslation();
+		// 			var angle = new Rotation2d(Math.atan2(startRobotRelative.getY(), startRobotRelative.getX()));
+		// 			drive.translationSubsystem.simplePIDTo(() -> startRobotRelative);
+		// 			drive.rotationalSubsystem.pidControlledHeading(() -> angle);
+		// 		} else {
+		// 			chosenCluster.resetReduction();
+		// 			chosenCluster.reduceToAllAheadOf(pose);
+		// 			Translation2d[] line = chosenCluster.getLineOfBestFit();
+		// 			Translation2d closestLinePoint;
+		// 			Translation2d farthestLinePoint;
+		// 			if (line[0].getDistance(pose.getTranslation()) < line[1].getDistance(pose.getTranslation())) {
+		// 				closestLinePoint = line[0];
+		// 				farthestLinePoint = line[1];
+		// 			} else {
+		// 				closestLinePoint = line[1];
+		// 				farthestLinePoint = line[0];
+		// 			}
+		// 			closestLinePoint = new Pose2d(closestLinePoint, Rotation2d.kZero).relativeTo(pose).getTranslation();
+		// 			farthestLinePoint = new Pose2d(farthestLinePoint, Rotation2d.kZero).relativeTo(pose).getTranslation();
+		// 			var velocity = farthestLinePoint.minus(closestLinePoint);
+		// 			velocity = velocity.div(velocity.getNorm()).times(3);
+		// 			var angle = new Rotation2d(Math.atan2(velocity.getY(), velocity.getX()));
+		// 			drive.translationSubsystem.driveVelocity(velocity.getX(), velocity.getY());
+		// 			drive.rotationalSubsystem.pidControlledHeading(() -> angle);
+		// 		}
+		// 		}
+		// 	}
+		// });
 
 		// CommandScheduler.getInstance().getDefaultButtonLoop().bind(() -> {
 		// 	if (this.driveController.hid.getRightBumperButtonPressed()) {

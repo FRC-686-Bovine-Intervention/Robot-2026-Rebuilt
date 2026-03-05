@@ -3,6 +3,7 @@ package frc.robot.automations;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -12,6 +13,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.RobotState;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.intake.Intake;
@@ -23,6 +25,8 @@ public class AutoIntake implements Runnable{
 	private final Drive drive;
 	private final Intake intake;
 	private final ObjectVision objectVision;
+	private final Trigger trigger;
+	private final Supplier<ChassisSpeeds> desiredSpeedsSupplier;
 	private final Command command;
 
 	private Cluster chosenCluster;
@@ -31,10 +35,12 @@ public class AutoIntake implements Runnable{
 
 	private final EdgeDetector edgeDetector = new EdgeDetector(false);
 
-	public AutoIntake(Drive drive, Intake intake, ObjectVision objectVision) {
+	public AutoIntake(Drive drive, Intake intake, ObjectVision objectVision, Trigger trigger, Supplier<ChassisSpeeds> desiredSpeedsSupplier) {
 		this.drive = drive;
 		this.intake = intake;
 		this.objectVision = objectVision;
+		this.trigger = trigger;
+		this.desiredSpeedsSupplier = desiredSpeedsSupplier;
 		this.command = new Command() {
 			{
 				this.addRequirements(drive.translationSubsystem);
@@ -58,14 +64,15 @@ public class AutoIntake implements Runnable{
 				start = null;
 				chosenCluster = null;
 			}
-		}.alongWith(drive.rotationalSubsystem.pidControlledHeading(() -> new Rotation2d(getDriveSpeeds()[2])));
+		}.alongWith(drive.rotationalSubsystem.pidControlledHeading(() -> new Rotation2d(getDriveSpeeds()[2]))).repeatedly();
 	}
 	@Override
 	public void run() {
 		edgeDetector.update(
-			this.intake.rollers.getCurrentCommand().getName() != "Idle"
-			&& this.drive.translationSubsystem.getCurrentCommand() == null
-			&& this.drive.rotationalSubsystem.getCurrentCommand() == null
+			// this.intake.rollers.getCurrentCommand().getName() != "Idle"
+			// && this.drive.translationSubsystem.getCurrentCommand() == null
+			// && this.drive.rotationalSubsystem.getCurrentCommand() == null
+			trigger.getAsBoolean()
 		);
 
 		if (this.edgeDetector.risingEdge() && !this.command.isScheduled()) {
@@ -131,29 +138,22 @@ public class AutoIntake implements Runnable{
 		if (start != null) {
 			var pose = RobotState.getInstance().getEstimatedGlobalPose();
 			if (!hasReachedStart) {
-				var startRobotRelative = new Pose2d(start, Rotation2d.kZero).relativeTo(pose).getTranslation();
-				var angle = new Rotation2d(Math.atan2(startRobotRelative.getY(), startRobotRelative.getX()));
-				var velocity = startRobotRelative.div(startRobotRelative.getNorm()).times(3);
-				return new double[] {velocity.getX(), velocity.getY(), angle.getRadians()};
+				var startPos = start.minus(pose.getTranslation());
+				var angle = Math.atan2(startPos.getY(), startPos.getX());
+				var startRobotRelative = new Pose2d(startPos, Rotation2d.kZero).relativeTo(pose);
+				var velocity = desiredSpeedsSupplier.get();
+				var vx = velocity.vxMetersPerSecond;
+				var lambda = startRobotRelative.getY()/startRobotRelative.getX();
+				Logger.recordOutput("DEBUG/AutoIntake/DesiredSpeeds", new Translation2d(vx, vx * lambda));
+				return new double[] {vx, vx * lambda, angle};
 			} else {
-				chosenCluster.resetReduction();
-				chosenCluster.reduceToAllAheadOf(pose);
-				Translation2d[] line = chosenCluster.getLineOfBestFit();
-				Translation2d closestLinePoint;
-				Translation2d farthestLinePoint;
-				if (line[0].getDistance(pose.getTranslation()) < line[1].getDistance(pose.getTranslation())) {
-					closestLinePoint = line[0];
-					farthestLinePoint = line[1];
-				} else {
-					closestLinePoint = line[1];
-					farthestLinePoint = line[0];
-				}
-				closestLinePoint = new Pose2d(closestLinePoint, Rotation2d.kZero).relativeTo(pose).getTranslation();
-				farthestLinePoint = new Pose2d(farthestLinePoint, Rotation2d.kZero).relativeTo(pose).getTranslation();
-				var velocity = farthestLinePoint.minus(closestLinePoint);
-				velocity = velocity.div(velocity.getNorm()).times(3);
-				var angle = new Rotation2d(Math.atan2(velocity.getY(), velocity.getX()));
-				return new double[] {velocity.getX(), velocity.getY(), angle.getRadians()};
+				var startPos = start.minus(pose.getTranslation());
+				var angle = Math.atan2(startPos.getY(), startPos.getX());
+				var startRobotRelative = new Pose2d(startPos, Rotation2d.kZero).relativeTo(pose);
+				var velocity = desiredSpeedsSupplier.get();
+				var vx = velocity.vxMetersPerSecond;
+				var lambda = startRobotRelative.getY()/startRobotRelative.getX();
+				return new double[] {vx, vx * lambda, angle};
 			}
 		}
 		return new double[] {0, 0, 0};
