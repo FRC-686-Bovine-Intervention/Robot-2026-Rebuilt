@@ -36,6 +36,8 @@ public final class FieldConstants {
 		apriltagLayout = a;
 	}
 
+	public static final Distance fuelHeight = Inches.of(5.91);
+
 	public static final AllianceFlipped<Distance> allianceZoneBoundaryX = AllianceFlipped.fromBlueXPos(Inches.of(158.600000));
 	private static final Distance allianceTapeWidth = Inches.of(2);
 	public static final AllianceFlipped<Distance> robotStartingLineCenterX = AllianceFlipped.fromBlueXPos(allianceZoneBoundaryX.getBlue().minus(allianceTapeWidth.div(2.0)));
