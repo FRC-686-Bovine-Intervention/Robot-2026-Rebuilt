@@ -15,10 +15,10 @@ public class EdgeDetector {
 	public void update(boolean value) {
 		risingEdge = false;
 		fallingEdge = false;
-		if(value && !prevVal) {
+		if (value && !prevVal) {
 			risingEdge = true;
 		}
-		if(!value && prevVal) {
+		if (!value && prevVal) {
 			fallingEdge = true;
 		}
 		prevVal = value;

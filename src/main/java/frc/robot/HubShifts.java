@@ -1,14 +1,27 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Seconds;
+
 import java.util.Optional;
 
+import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
+import frc.util.EdgeDetector;
 import frc.util.flipping.AllianceFlipped;
+import frc.util.loggerUtil.tunables.LoggedTunable;
 import lombok.Getter;
 
 public class HubShifts {
+	private static final Optional<Alliance> BLUE = Optional.of(Alliance.Blue);
+	private static final Optional<Alliance> RED = Optional.of(Alliance.Red);
+	private static final Optional<Alliance> NONE = Optional.empty();
+
+	private static final AllianceFlipped<Boolean> BOTH_ACTIVE = new AllianceFlipped<>(true, true);
+	private static final AllianceFlipped<Boolean> BLUE_ACTIVE = new AllianceFlipped<>(true, false);
+	private static final AllianceFlipped<Boolean> RED_ACTIVE = new AllianceFlipped<>(false, true);
+	private static final AllianceFlipped<Boolean> NONE_ACTIVE = new AllianceFlipped<>(false, false);
 
 	public static enum Shift {
 		Auto,
@@ -114,6 +127,7 @@ public class HubShifts {
 			};
 			return (Timer.getTimestamp() - teleopEnableTime) - shiftStartSecs;
 		}
+
 		public double getSecsLeftInShift() {
 			var shiftEndSecs = switch (this) {
 				case Auto -> 0.0;
@@ -133,17 +147,22 @@ public class HubShifts {
 	private static Shift currentShift = Shift.Disabled;
 
 	private static double teleopEnableTime;
-	private static boolean prevTeleopEnable = false;
+	private static final EdgeDetector teleopEnableEdgeDetector = new EdgeDetector(false);
+
+	private static final LoggedTunable<Time> matchTimeErrorSyncThreshold = LoggedTunable.from("Hub Shifts/Match Time Sync Threshold", Seconds::of, 2.0);
+	private static int prevMatchTime = 0;
 
 	public static void periodic() {
-		var teleopEnable = DriverStation.isTeleopEnabled();
-		if (teleopEnable && !prevTeleopEnable) {
+		teleopEnableEdgeDetector.update(DriverStation.isTeleopEnabled());
+
+		if (teleopEnableEdgeDetector.risingEdge()) {
 			teleopEnableTime = Timer.getTimestamp();
 		}
-		prevTeleopEnable = teleopEnable;
+
 		if (DriverStation.isAutonomousEnabled()) {
 			currentShift = Shift.Auto;
-		} else if (teleopEnable) {
+		} else if (teleopEnableEdgeDetector.getValue()) {
+			DriverStation.getMatchTime();
 			var timeSinceTeleEnable = Timer.getTimestamp() - teleopEnableTime;
 			if (timeSinceTeleEnable < 10.0) {
 				currentShift = Shift.Transition;
@@ -158,12 +177,10 @@ public class HubShifts {
 			} else {
 				currentShift = Shift.Endgame;
 			}
+		} else {
+			currentShift = Shift.Disabled;
 		}
 	}
-
-	private static final Optional<Alliance> BLUE = Optional.of(Alliance.Blue);
-	private static final Optional<Alliance> RED = Optional.of(Alliance.Red);
-	private static final Optional<Alliance> NONE = Optional.empty();
 
 	public static Optional<Alliance> getAutoWinner() {
 		var message = DriverStation.getGameSpecificMessage();
@@ -176,9 +193,4 @@ public class HubShifts {
 			default -> NONE;
 		};
 	}
-
-	private static final AllianceFlipped<Boolean> BOTH_ACTIVE = new AllianceFlipped<>(true, true);
-	private static final AllianceFlipped<Boolean> BLUE_ACTIVE = new AllianceFlipped<>(true, false);
-	private static final AllianceFlipped<Boolean> RED_ACTIVE = new AllianceFlipped<>(false, true);
-	private static final AllianceFlipped<Boolean> NONE_ACTIVE = new AllianceFlipped<>(false, false);
 }
