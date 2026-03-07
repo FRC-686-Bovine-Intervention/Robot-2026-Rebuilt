@@ -81,6 +81,7 @@ import frc.robot.subsystems.shooter.hood.HoodConstants;
 import frc.robot.subsystems.shooter.hood.HoodIO;
 import frc.robot.subsystems.shooter.hood.HoodIOSim;
 import frc.robot.subsystems.shooter.hood.HoodIOTalonFXS;
+import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.apriltag.ApriltagPipeline;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.robot.subsystems.vision.cameras.Camera;
@@ -163,26 +164,26 @@ public class RobotContainer {
 
 				this.hubZoomCamera = new Camera(
 					new CameraIOPhoton("Left Top"),
-					"Top Left",
-					Transform3d.kZero,
+					"Hub Zoom",
+					VisionConstants.topLeftMount,
 					(connected) -> {}
 				);
 				this.leftBroadCamera = new Camera(
 					new CameraIOPhoton("Left Bottom"),
-					"Bottom Left",
-					Transform3d.kZero,
+					"Left Broad",
+					VisionConstants.bottomLeftMount,
 					(connected) -> {}
 				);
 				this.rightBroadCamera = new Camera(
 					new CameraIOPhoton("Right Top"),
-					"Top Right",
-					Transform3d.kZero,
+					"Right Broad",
+					VisionConstants.topRightMount,
 					(connected) -> {}
 				);
 				this.backBroadCamera = new Camera(
 					new CameraIOPhoton("Right Bottom"),
-					"Bottom Right",
-					Transform3d.kZero,
+					"Back Broad",
+					VisionConstants.bottomRightMount,
 					(connected) -> {}
 				);
 
