@@ -13,7 +13,8 @@ import lombok.RequiredArgsConstructor;
 public class FlywheelConstants {
 	// Gear Ratios
 	public static final GearRatio motorToMechanism = new GearRatio()
-
+		.sprocket(20)
+		.sprocket(24)
 	;
 	// Flywheel wheel
 	public static final LinearRelation wheel = LinearRelation.wheelDiameter(Inches.of(3.0));

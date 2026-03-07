@@ -258,6 +258,8 @@ public class Drive extends VirtualSubsystem {
 		// } else
 		if (this.translationSubsystem.needsPostProcessing || this.rotationalSubsystem.needsPostProcessing) {
 			this.runRobotSpeeds(this.desiredRobotSpeeds);
+		} else if (this.translationSubsystem.getCurrentCommand() == null && this.rotationalSubsystem.getCurrentCommand() == null) {
+			this.stop();
 		}
 		LoggedTracer.logEpoch("VirtualSubsystem PostCommandPeriodic/Drive/Periodic");
 		LoggedTracer.logEpoch("VirtualSubsystem PostCommandPeriodic/Drive");
@@ -469,6 +471,10 @@ public class Drive extends VirtualSubsystem {
 		public void stop() {
 			this.needsPostProcessing = false;
 			this.driveVelocity(0.0, 0.0);
+			if (!this.drive.rotationalSubsystem.needsPostProcessing) {
+				this.drive.stop();
+				System.out.println("STOPPING DRIVE FROM TRANSLATIONAL");
+			}
 		}
 
 		public Command fieldRelative(Supplier<ChassisSpeeds> speeds) {
@@ -554,7 +560,11 @@ public class Drive extends VirtualSubsystem {
 		}
 		public void stop() {
 			this.needsPostProcessing = false;
-			this.driveVelocity(0);
+			this.driveVelocity(0.0);
+			if (!this.drive.translationSubsystem.needsPostProcessing) {
+				this.drive.stop();
+				System.out.println("STOPPING DRIVE FROM ROTATIONAL");
+			}
 		}
 
 		public Command spin(DoubleSupplier omega) {

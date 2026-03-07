@@ -14,6 +14,7 @@ import static edu.wpi.first.units.Units.Volts;
 import java.util.Arrays;
 import java.util.Set;
 
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
@@ -52,7 +53,6 @@ import frc.robot.subsystems.drive.odometry.OdometryTimestampIOSim;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.rollers.IntakeRollers;
 import frc.robot.subsystems.intake.rollers.IntakeRollersIO;
-import frc.robot.subsystems.intake.rollers.IntakeRollersIOSparkMax;
 import frc.robot.subsystems.intake.slam.IntakeSlam;
 import frc.robot.subsystems.intake.slam.IntakeSlamIO;
 import frc.robot.subsystems.intake.slam.IntakeSlamIOSim;
@@ -67,6 +67,7 @@ import frc.robot.subsystems.rollers.feeder.FeederIO;
 import frc.robot.subsystems.rollers.feeder.FeederIOTalonFX;
 import frc.robot.subsystems.rollers.indexer.Indexer;
 import frc.robot.subsystems.rollers.indexer.IndexerIO;
+import frc.robot.subsystems.rollers.indexer.IndexerIOTalonFX;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.aiming.AimingSystem;
 import frc.robot.subsystems.shooter.aiming.passing.InterpolationPassingCalc;
@@ -80,7 +81,11 @@ import frc.robot.subsystems.shooter.hood.HoodConstants;
 import frc.robot.subsystems.shooter.hood.HoodIO;
 import frc.robot.subsystems.shooter.hood.HoodIOSim;
 import frc.robot.subsystems.shooter.hood.HoodIOTalonFXS;
+import frc.robot.subsystems.vision.apriltag.ApriltagPipeline;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
+import frc.robot.subsystems.vision.cameras.Camera;
+import frc.robot.subsystems.vision.cameras.CameraIO;
+import frc.robot.subsystems.vision.cameras.CameraIOPhoton;
 import frc.robot.subsystems.vision.object.ObjectVision;
 import frc.util.Cooldown;
 import frc.util.Perspective;
@@ -100,6 +105,11 @@ public class RobotContainer {
 	// Vision
 	public final ApriltagVision apriltagVision;
 	public final ObjectVision objectVision;
+
+	public final Camera hubZoomCamera;
+	public final Camera leftBroadCamera;
+	public final Camera rightBroadCamera;
+	public final Camera backBroadCamera;
 
 	// Auto
 	public final AutoManager autoManager;
@@ -138,17 +148,42 @@ public class RobotContainer {
 					)
 				);
 				this.intake = new Intake(
-					new IntakeRollers(new IntakeRollersIOSparkMax()),
+					new IntakeRollers(new IntakeRollersIO() {}),
 					new IntakeSlam(new IntakeSlamIO() {})
 				);
 				this.rollers = new Rollers(
-					new Indexer(new IndexerIO() {}),
+					new Indexer(new IndexerIOTalonFX()),
 					new Agitator(new AgitatorIOTalonFX()),
 					new Feeder(new FeederIOTalonFX()),
 					new RollerSensorsIO() {}
 				);
 				this.climber = new Climber(
 					new Hook(new HookIO() {})
+				);
+
+				this.hubZoomCamera = new Camera(
+					new CameraIOPhoton("Left Top"),
+					"Top Left",
+					Transform3d.kZero,
+					(connected) -> {}
+				);
+				this.leftBroadCamera = new Camera(
+					new CameraIOPhoton("Left Bottom"),
+					"Bottom Left",
+					Transform3d.kZero,
+					(connected) -> {}
+				);
+				this.rightBroadCamera = new Camera(
+					new CameraIOPhoton("Right Top"),
+					"Top Right",
+					Transform3d.kZero,
+					(connected) -> {}
+				);
+				this.backBroadCamera = new Camera(
+					new CameraIOPhoton("Right Bottom"),
+					"Bottom Right",
+					Transform3d.kZero,
+					(connected) -> {}
 				);
 
 				commonCANdi.configSend();
@@ -186,6 +221,31 @@ public class RobotContainer {
 					new Hook(new HookIOSim())
 				);
 
+				this.hubZoomCamera = new Camera(
+					new CameraIO() {},
+					"Top Left",
+					Transform3d.kZero,
+					(connected) -> {}
+				);
+				this.leftBroadCamera = new Camera(
+					new CameraIO() {},
+					"Bottom Left",
+					Transform3d.kZero,
+					(connected) -> {}
+				);
+				this.rightBroadCamera = new Camera(
+					new CameraIO() {},
+					"Top Right",
+					Transform3d.kZero,
+					(connected) -> {}
+				);
+				this.backBroadCamera = new Camera(
+					new CameraIO() {},
+					"Bottom Right",
+					Transform3d.kZero,
+					(connected) -> {}
+				);
+
 				commonCANdi.configSend();
 			}
 			default -> {
@@ -219,6 +279,31 @@ public class RobotContainer {
 				this.climber = new Climber(
 					new Hook(new HookIO() {})
 				);
+
+				this.hubZoomCamera = new Camera(
+					new CameraIO() {},
+					"Top Left",
+					Transform3d.kZero,
+					(connected) -> {}
+				);
+				this.leftBroadCamera = new Camera(
+					new CameraIO() {},
+					"Bottom Left",
+					Transform3d.kZero,
+					(connected) -> {}
+				);
+				this.rightBroadCamera = new Camera(
+					new CameraIO() {},
+					"Top Right",
+					Transform3d.kZero,
+					(connected) -> {}
+				);
+				this.backBroadCamera = new Camera(
+					new CameraIO() {},
+					"Bottom Right",
+					Transform3d.kZero,
+					(connected) -> {}
+				);
 			}
 		}
 
@@ -226,7 +311,7 @@ public class RobotContainer {
 
 		// Initialize vision systems with camera pipelines
 		this.apriltagVision = new ApriltagVision(
-
+			new ApriltagPipeline(this.hubZoomCamera, 0, 1.0)
 		);
 		this.objectVision = new ObjectVision(
 
@@ -240,6 +325,10 @@ public class RobotContainer {
 			.addChild(this.intake.slam.followerMech)
 			.addChild(this.shooter.hood.mech)
 			.addChild(this.climber.hook.mech)
+			.addChild(this.hubZoomCamera.mount)
+			.addChild(this.leftBroadCamera.mount)
+			.addChild(this.rightBroadCamera.mount)
+			.addChild(this.backBroadCamera.mount)
 		;
 
 		// Register Mechanism3ds
@@ -450,7 +539,7 @@ public class RobotContainer {
 		this.rollers.feeder.setDefaultCommand(rollersFeederIdleCommand);
 		this.rollers.agitiator.setDefaultCommand(rollersAgitatorIdleCommand);
 
-		// this.shooter.hood.setDefaultCommand(hoodStowCommand);
+		this.shooter.hood.setDefaultCommand(hoodStowCommand);
 		this.shooter.leftFlywheel.setDefaultCommand(leftFlywheelIdleCommand);
 		this.shooter.rightFlywheel.setDefaultCommand(rightFlywheelIdleCommand);
 
@@ -458,7 +547,7 @@ public class RobotContainer {
 
 		// Bind automations
 		this.automationsLoop.bind(new BumpMitigation(this.drive));
-		// new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
+		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
 
 		// Bind buttons
@@ -467,7 +556,7 @@ public class RobotContainer {
 
 
 		// Setup position reset command
-		this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(FieldConstants.hubFrontRobotPose.getOurs())));
+		this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(FieldConstants.hubFrontRobotPose.getOurs())).ignoringDisable(true));
 		/*
 		 * (A)
 		 *  | Press: Deploy intake (if not deployed) and roll in
@@ -526,12 +615,6 @@ public class RobotContainer {
 		final var hoodVoltage = LoggedTunable.from("Woodbot/Hood Voltage", Volts::of, 1.0);
 		this.driveController.povUp().and(() -> !hoodStepCommand.isScheduled()).whileTrue(this.shooter.hood.genVoltageCommand("Volts Up", () -> +hoodVoltage.get().in(Volts)));
 		this.driveController.povDown().and(() -> !hoodStepCommand.isScheduled()).whileTrue(this.shooter.hood.genVoltageCommand("Volts Down", () -> -hoodVoltage.get().in(Volts)));
-		this.driveController.start().and(this.driveController.back()).whileTrue(
-			Commands.startEnd(
-				() -> this.shooter.hood.setHardLimit(true),
-				() -> this.shooter.hood.setHardLimit(false)
-			)
-		);
 
 		final var flywheelStepper = Cooldown.incrementingStepper(
 			"Woodbot/Steppers/Flywheel",
@@ -552,6 +635,8 @@ public class RobotContainer {
 			.withName("Step")
 		);
 
-		this.driveController.x().whileTrue(this.rollers.feeder.feed());
+		this.driveController.x().whileTrue(rollersFeedCommand);
+
+		this.driveController.start().onTrue(Commands.runOnce(() -> this.drive.stop()));
 	}
 }

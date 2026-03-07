@@ -48,7 +48,7 @@ public class HardwareDevices {
 
 	// Rollers
 	// | Indexer
-	public static final CANDevice indexerMotorID = canivore.id(8);
+	public static final CANDevice indexerMotorID = rio.id(8);
 	// | Agitator
 	public static final CANDevice agitatorMotorID = canivore.id(9);
 	// | Feeder

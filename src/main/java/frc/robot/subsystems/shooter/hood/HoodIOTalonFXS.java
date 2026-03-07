@@ -1,5 +1,7 @@
 package frc.robot.subsystems.shooter.hood;
 
+import static edu.wpi.first.units.Units.Amps;
+
 import java.util.Optional;
 
 import com.ctre.phoenix6.BaseStatusSignal;
@@ -15,6 +17,7 @@ import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorArrangementValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.ReverseLimitTypeValue;
 import com.ctre.phoenix6.signals.S1CloseStateValue;
 import com.ctre.phoenix6.signals.S1FloatStateValue;
 
@@ -62,6 +65,10 @@ public class HoodIOTalonFXS implements HoodIO {
 		this.motorConfig.ExternalFeedback
 			.withSensorToMechanismRatio(HoodConstants.motorToMechanism.reductionUnsigned())
 		;
+		this.motorConfig.CurrentLimits
+			.withStatorCurrentLimitEnable(true)
+			.withStatorCurrentLimit(Amps.of(40.0))
+		;
 		this.motorConfig.SoftwareLimitSwitch
 			.withReverseSoftLimitEnable(false)
 			.withForwardSoftLimitEnable(true)
@@ -69,8 +76,8 @@ public class HoodIOTalonFXS implements HoodIO {
 		;
 		this.motorConfig.HardwareLimitSwitch
 			.withReverseLimitEnable(true)
-			// .withReverseLimitRemoteCANdiS1(candi.candi)
-			// .withReverseLimitType(ReverseLimitTypeValue.NormallyOpen)
+			.withReverseLimitRemoteCANdiS1(candi.candi)
+			.withReverseLimitType(ReverseLimitTypeValue.NormallyOpen)
 			.withReverseLimitAutosetPositionEnable(true)
 			.withReverseLimitAutosetPositionValue(HoodConstants.limitSwitchAngle)
 			.withForwardLimitEnable(false)
@@ -159,8 +166,10 @@ public class HoodIOTalonFXS implements HoodIO {
 	@Override
 	public void configProfile(double kVVoltSecsPerRad, double kAVoltSecsSqrPerRad, double maxVelocityRadsPerSec) {
 		this.motorConfig.MotionMagic
-			.withMotionMagicExpo_kV(Units.rotationsToRadians(kVVoltSecsPerRad))
-			.withMotionMagicExpo_kA(Units.rotationsToRadians(kAVoltSecsSqrPerRad))
+			// .withMotionMagicExpo_kV(Units.rotationsToRadians(kVVoltSecsPerRad))
+			// .withMotionMagicExpo_kA(Units.rotationsToRadians(kAVoltSecsSqrPerRad))
+			.withMotionMagicExpo_kV(kVVoltSecsPerRad)
+			.withMotionMagicExpo_kA(kAVoltSecsSqrPerRad)
 			.withMotionMagicCruiseVelocity(Units.radiansToRotations(maxVelocityRadsPerSec))
 		;
 	}
@@ -178,12 +187,5 @@ public class HoodIOTalonFXS implements HoodIO {
 	@Override
 	public void configSend() {
 		this.motor.getConfigurator().apply(this.motorConfig);
-	}
-
-
-	@Override
-	public void setHardLimit(boolean enable) {
-		this.voltageRequest.withLimitReverseMotion(enable);
-		this.positionRequest.withLimitReverseMotion(enable);
 	}
 }

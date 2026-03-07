@@ -38,18 +38,18 @@ public class Hood extends SubsystemBase {
 	private static final LoggedTunable<Angle> stowPulldownThreshold = LoggedTunable.from("Subsystems/Shooter/Hood/Commands/Stow/Pulldown Threshold", Degrees::of, HoodConstants.minAngle.plus(Degrees.of(1.0)).in(Degrees));
 	private static final LoggedTunable<Voltage> stowPulldownVoltage = LoggedTunable.from("Subsystems/Shooter/Hood/Commands/Stow/Pulldown Voltage", Volts::of, -1.0);
 
-	private static final LoggedTunable<Voltage> calibrationVoltage = LoggedTunable.from("Subsystems/Shooter/Hood/Commands/Calibration/Voltage", Volts::of, -2.0);
+	private static final LoggedTunable<Voltage> calibrationVoltage = LoggedTunable.from("Subsystems/Shooter/Hood/Commands/Calibration/Voltage", Volts::of, -0.5);
 
-	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Shooter/Hood/Mechanism/Profile/kV", 10.0);
+	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Shooter/Hood/Mechanism/Profile/kV", 7.0);
 	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Shooter/Hood/Mechanism/Profile/kA", 1.0);
 	private static final LoggedTunable<AngularVelocity> profileMaxVel = LoggedTunable.from("Subsystems/Shooter/Hood/Mechanism/Profile/Max Velocity", DegreesPerSecond::of, 0.0);
 
 	private static final LoggedTunable<FFConstants> ffConsts = LoggedTunable.from(
 		"Subsystems/Shooter/Hood/Mechanism/FF",
 		new FFConstants(
+			0.4,
 			0.0,
-			0.0,
-			10.0,
+			1.0,
 			0.0
 		)
 	);
@@ -92,8 +92,8 @@ public class Hood extends SubsystemBase {
 
 		final var sysidRoutine = new SysIdRoutine(
 			new SysIdRoutine.Config(
-				Volts.of(1.0).per(Second),
-				Volts.of(7.0),
+				Volts.of(0.125).per(Second),
+				Volts.of(1.0),
 				Seconds.of(10.0),
 				(state) -> {
 					Logger.recordOutput("SysID/Shooter-Hood/State", state.toString());

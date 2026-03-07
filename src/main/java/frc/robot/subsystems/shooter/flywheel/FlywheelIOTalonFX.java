@@ -3,6 +3,7 @@ package frc.robot.subsystems.shooter.flywheel;
 import java.util.Optional;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
@@ -34,6 +35,8 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 	// Status Signal caches
 	private final EncodedMotorStatusSignalCache masterMotorStatusSignalCache;
 	private final EncodedMotorStatusSignalCache slaveMotorStatusSignalCache;
+	private final StatusSignal<Double> motorProfilePositionStatusSignal;
+	private final StatusSignal<Double> motorProfileVelocityStatusSignal;
 
 	// Quick reference arrays
 	private final BaseStatusSignal[] refreshSignals;
@@ -74,6 +77,8 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 		// Cache Status Signals
 		this.masterMotorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.masterMotor);
 		this.slaveMotorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.slaveMotor);
+		this.motorProfilePositionStatusSignal = this.masterMotor.getClosedLoopReference();
+		this.motorProfileVelocityStatusSignal = this.masterMotor.getClosedLoopReferenceSlope();
 
 		// Make quick reference arrays
 		this.refreshSignals = new BaseStatusSignal[] {
@@ -91,6 +96,8 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 			this.slaveMotorStatusSignalCache.motor().supplyCurrent(),
 			this.slaveMotorStatusSignalCache.motor().torqueCurrent(),
 			this.slaveMotorStatusSignalCache.motor().deviceTemperature(),
+			this.motorProfilePositionStatusSignal,
+			this.motorProfileVelocityStatusSignal,
 		};
 		this.masterMotorConnectedSignals = new BaseStatusSignal[] {
 			this.masterMotorStatusSignalCache.encoder().position(),
@@ -100,6 +107,8 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 			this.masterMotorStatusSignalCache.motor().supplyCurrent(),
 			this.masterMotorStatusSignalCache.motor().torqueCurrent(),
 			this.masterMotorStatusSignalCache.motor().deviceTemperature(),
+			this.motorProfilePositionStatusSignal,
+			this.motorProfileVelocityStatusSignal,
 		};
 		this.slaveMotorConnectedSignals = new BaseStatusSignal[] {
 			this.slaveMotorStatusSignalCache.encoder().position(),
@@ -113,6 +122,9 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
 		// Set Status Signal update frequency
 		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.masterMotorStatusSignalCache.encoder().getStatusSignals());
+		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.masterMotorStatusSignalCache.motor().getStatusSignals());
+		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.motorProfilePositionStatusSignal, this.motorProfileVelocityStatusSignal);
+		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency.div(10.0), this.slaveMotorStatusSignalCache.encoder().getStatusSignals());
 		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency.div(10.0), this.slaveMotorStatusSignalCache.motor().getStatusSignals());
 		this.masterMotor.optimizeBusUtilization();
 		this.slaveMotor.optimizeBusUtilization();
@@ -125,6 +137,8 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 		inputs.slaveMotorConnected = BaseStatusSignal.isAllGood(this.slaveMotorConnectedSignals);
 		inputs.masterMotor.updateFrom(this.masterMotorStatusSignalCache);
 		inputs.slaveMotor.updateFrom(this.slaveMotorStatusSignalCache);
+		inputs.motorProfilePositionRads = Units.rotationsToRadians(this.motorProfilePositionStatusSignal.getValueAsDouble());
+		inputs.motorProfileVelocityRadsPerSec = Units.rotationsToRadians(this.motorProfileVelocityStatusSignal.getValueAsDouble());
 	}
 
 	@Override
