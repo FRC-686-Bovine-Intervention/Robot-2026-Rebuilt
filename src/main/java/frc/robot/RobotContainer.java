@@ -73,7 +73,7 @@ import frc.robot.subsystems.rollers.indexer.IndexerIOTalonFX;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.aiming.AimingSystem;
 import frc.robot.subsystems.shooter.aiming.passing.InterpolationPassingCalc;
-import frc.robot.subsystems.shooter.aiming.shooting.InterpolationShootingCalc;
+import frc.robot.subsystems.shooter.aiming.shooting.PhysicsShootingCalc;
 import frc.robot.subsystems.shooter.flywheel.Flywheel;
 import frc.robot.subsystems.shooter.flywheel.FlywheelConstants;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
@@ -146,7 +146,7 @@ public class RobotContainer {
 					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIOTalonFX(FlywheelConstants.rightFlywheelConfig)),
 					new Hood(new HoodIOTalonFXS(commonCANdi)),
 					new AimingSystem(
-						new InterpolationShootingCalc(),
+						new PhysicsShootingCalc(),
 						new InterpolationPassingCalc()
 					)
 				);
@@ -206,7 +206,7 @@ public class RobotContainer {
 					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIO() {}),
 					new Hood(new HoodIOSim(commonCANdi)),
 					new AimingSystem(
-						new InterpolationShootingCalc(),
+						new PhysicsShootingCalc(),
 						new InterpolationPassingCalc()
 					)
 				);
@@ -265,7 +265,7 @@ public class RobotContainer {
 					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIO() {}),
 					new Hood(new HoodIO() {}),
 					new AimingSystem(
-						new InterpolationShootingCalc(),
+						new PhysicsShootingCalc(),
 						new InterpolationPassingCalc()
 					)
 				);

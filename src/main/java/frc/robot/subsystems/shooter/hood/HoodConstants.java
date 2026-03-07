@@ -8,6 +8,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Distance;
 import frc.util.geometry.GeomUtil;
 import frc.util.mechanismUtil.GearRatio;
 
@@ -41,4 +42,6 @@ public class HoodConstants {
 
 		.build()
 	);
+
+	public static final Distance hoodRadius = Inches.of(6.655512);
 }

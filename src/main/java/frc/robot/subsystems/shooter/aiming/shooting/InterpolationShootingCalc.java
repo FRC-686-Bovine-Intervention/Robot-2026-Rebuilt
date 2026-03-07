@@ -33,7 +33,8 @@ public class InterpolationShootingCalc implements ShootingCalc {
 	private double targetDriveHeadingRads;
 
 	@Override
-	public void calculate(Translation2d robotPos, ChassisSpeeds fieldSpeeds, Translation3d aimPoint) {
+	public void calculate(Pose2d robotPose, ChassisSpeeds fieldSpeeds, Translation3d aimPoint) {
+		var robotPos = robotPose.getTranslation();
 		this.aimPoint = aimPoint;
 
 		var predictedX = robotPos.getX() + fieldSpeeds.vxMetersPerSecond * lookaheadTime.get().in(Seconds);
@@ -81,4 +82,8 @@ public class InterpolationShootingCalc implements ShootingCalc {
 		return this.aimPoint;
 	}
 
+	@Override
+	public double getTOFSeconds() {
+		return 0.0; //Must be handled by the caller
+	}
 }

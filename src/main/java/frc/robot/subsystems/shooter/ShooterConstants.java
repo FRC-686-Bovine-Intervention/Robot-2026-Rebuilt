@@ -7,9 +7,18 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Seconds;
 
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import edu.wpi.first.wpilibj.Filesystem;
+import frc.util.geometry.GeomUtil;
+import frc.util.math.polynomial.TwoVariablePolynomial3rdDegree;
 
 public class ShooterConstants {
+	public static final TwoVariablePolynomial3rdDegree hoodPolynomial = TwoVariablePolynomial3rdDegree.from(Filesystem.getDeployDirectory().getPath() + "/hoodPolynomial.json");
+	public static final TwoVariablePolynomial3rdDegree flywheelPolynomial = TwoVariablePolynomial3rdDegree.from(Filesystem.getDeployDirectory().getPath() + "/flywheelPolynomial.json");
+	public static final TwoVariablePolynomial3rdDegree tofPolynomial = TwoVariablePolynomial3rdDegree.from(Filesystem.getDeployDirectory().getPath() + "/tofPolynomial.json");
+
 	public static final InterpolatingDoubleTreeMap hubTargetFlyWheelVeloMPS = new InterpolatingDoubleTreeMap();
 	static {
 		hubTargetFlyWheelVeloMPS.put(Inches.of(40.125).in(Meters),         MetersPerSecond.of(7.3).in(MetersPerSecond)); // Hub Shot
@@ -40,4 +49,16 @@ public class ShooterConstants {
 		hubTargetTimeOfFlightSecs.put(Inches.of(127.640764646).in(Meters), Seconds.of(0.0).in(Seconds)); // Trench Shot
 		hubTargetTimeOfFlightSecs.put(Inches.of(183.623178366).in(Meters), Seconds.of(1.26).in(Seconds)); // Outpost Shot
 	}
+
+	// Physics Shooting Calc
+	public static final Transform3d flywheelBase = new Transform3d(
+		new Translation3d(
+			Meters.of(-0.103427),
+			Meters.of(0),
+			Meters.of(0.492469)
+		),
+		GeomUtil.rotation3dBuilder()
+
+		.build()
+	);
 }
