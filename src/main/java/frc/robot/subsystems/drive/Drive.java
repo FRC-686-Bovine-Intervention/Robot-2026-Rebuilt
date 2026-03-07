@@ -571,6 +571,39 @@ public class Drive extends VirtualSubsystem {
 			return Commands.runEnd(() -> driveVelocity(omega.getAsDouble()), this::stop, this);
 		}
 
+		public Command genHeadingPIDCommand(String name, LoggedTunable<PIDConstants> pidGains, DoubleSupplier measuredHeadingRadsSupplier, DoubleSupplier targetHeadingRadsSupplier) {
+			final var rotational = this;
+			return new Command() {
+				private final PIDController pid = new PIDController(pidGains.get().kP(), pidGains.get().kI(), pidGains.get().kD());
+
+				{
+					this.setName(name);
+					this.addRequirements(rotational);
+
+					this.pid.enableContinuousInput(-Math.PI, Math.PI);
+				}
+
+				@Override
+				public void initialize() {
+					if (pidGains.hasChanged(this.hashCode())) {
+						pidGains.get().update(this.pid);
+					}
+				}
+
+				@Override
+				public void execute() {
+					var measuredHeadingRads = measuredHeadingRadsSupplier.getAsDouble();
+					var targetHeadingRads = targetHeadingRadsSupplier.getAsDouble();
+					rotational.driveVelocity(this.pid.calculate(measuredHeadingRads, targetHeadingRads));
+				}
+
+				@Override
+				public void end(boolean interrupted) {
+					rotational.stop();
+				}
+			};
+		}
+
 		// public Command defenseSpin(Joystick joystick) {
 		//     var subsystem = this;
 		//     return new Command() {

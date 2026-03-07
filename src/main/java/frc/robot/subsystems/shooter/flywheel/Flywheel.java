@@ -39,14 +39,14 @@ public class Flywheel extends SubsystemBase {
 		new FFConstants(
 			0.0,
 			0.0,
-			5.15,
+			3.22,
 			0.0
 		)
 	);
 	private static final LoggedTunable<PIDConstants> pidGains = LoggedTunable.from(
 		"Subsystems/Shooter/Flywheels/Mechanism/PID",
 		new PIDConstants(
-			5.0,
+			0.0,
 			0.0,
 			0.0
 		)

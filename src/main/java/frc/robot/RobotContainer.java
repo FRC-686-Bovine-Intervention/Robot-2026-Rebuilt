@@ -14,6 +14,8 @@ import static edu.wpi.first.units.Units.Volts;
 import java.util.Arrays;
 import java.util.Set;
 
+import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -548,6 +550,10 @@ public class RobotContainer {
 
 		// Bind automations
 		this.automationsLoop.bind(new BumpMitigation(this.drive));
+		this.automationsLoop.bind(() -> {
+			Logger.recordOutput("DEBUG/Distance to hub", RobotState.getInstance().getEstimatedGlobalPose().getTranslation().getDistance(FieldConstants.hubCenter.getOurs()));
+			Logger.recordOutput("DEBUG/camera pose", this.hubZoomCamera.mount.getFieldRelative());
+		});
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
 

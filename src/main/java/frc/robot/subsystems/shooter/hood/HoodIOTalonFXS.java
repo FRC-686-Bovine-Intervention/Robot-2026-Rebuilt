@@ -96,7 +96,7 @@ public class HoodIOTalonFXS implements HoodIO {
 		this.motorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.motor);
 		this.motorProfilePositionStatusSignal = this.motor.getClosedLoopReference();
 		this.motorProfileVelocityStatusSignal = this.motor.getClosedLoopReferenceSlope();
-		this.limitSwitchStatusSignal = this.motor.getFault_ReverseHardLimit();
+		this.limitSwitchStatusSignal = candi.candi.getS1Closed();
 
 		this.refreshSignals = new BaseStatusSignal[] {
 			this.motorStatusSignalCache.encoder().position(),
@@ -128,8 +128,6 @@ public class HoodIOTalonFXS implements HoodIO {
 		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency.div(2), this.motorStatusSignalCache.motor().getStatusSignals());
 		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.limitSwitchStatusSignal);
 		this.motor.optimizeBusUtilization();
-
-		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, candi.candi.getS1Closed());
 	}
 
 	@Override
