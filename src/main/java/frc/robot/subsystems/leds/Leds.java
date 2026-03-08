@@ -57,6 +57,9 @@ public class Leds extends VirtualSubsystem {
 		this.backBroadCamConnection = new StatusLightAnimation(sideStrips.substrip(5, 6), Color.kOrange, Color.kGreen);
 		this.intakeCamConnection = new StatusLightAnimation(sideStrips.substrip(6, 7), Color.kOrange, Color.kGreen);
 
+		this.hoodNotCalibratedAnimation = new FlashingAnimation(sideStrips.substrip(17, 20), WaveFunction.Sawtooth.frequency(2.0), InterpolationFunction.step.gradient(Color.kBlack, Color.kRed));
+		this.hoodCalibratedAnimation = new FillAnimation(sideStrips.substrip(17, 20), Color.kGreen);
+
 		this.loadingNotifier = new Notifier(() -> {
 			synchronized(this) {
 				this.bootingAnimation.apply();
@@ -83,6 +86,9 @@ public class Leds extends VirtualSubsystem {
 	public final FlashingAnimation autonomousOverrunAnimation;
 	public final FlashingAnimation tipped;
 	public final AllianceColorAnimation allianceColorAnimation;
+
+	public final FlashingAnimation hoodNotCalibratedAnimation;
+	public final FillAnimation hoodCalibratedAnimation;
 
 	private int skippedFrames = 0;
 	private static final int frameSkipAmount = 15;
@@ -116,6 +122,8 @@ public class Leds extends VirtualSubsystem {
 			this.rightBroadCamConnection.apply();
 			this.backBroadCamConnection.apply();
 			this.intakeCamConnection.apply();
+
+			this.hoodCalibratedAnimation.applyIfFlagged();
 		} else {
 
 		}
@@ -125,6 +133,8 @@ public class Leds extends VirtualSubsystem {
 		this.autonomousRunningAnimation.applyIfFlagged();
 		this.autonomousFinishedAnimation.applyIfFlagged();
 		this.autonomousOverrunAnimation.applyIfFlagged();
+
+		this.hoodNotCalibratedAnimation.applyIfFlagged();
 
 		this.tipped.applyIfFlagged();
 		this.estopped.applyIfFlagged();

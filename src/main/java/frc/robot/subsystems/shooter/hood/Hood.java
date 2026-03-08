@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.subsystems.leds.Leds;
 import frc.util.FFConstants;
 import frc.util.LoggedTracer;
 import frc.util.NeutralMode;
@@ -131,6 +132,9 @@ public class Hood extends SubsystemBase {
 		if (this.inputs.limitSwitch) {
 			this.calibrated = true;
 		}
+
+		Leds.getInstance().hoodNotCalibratedAnimation.setFlag(!this.isCalibrated());
+		Leds.getInstance().hoodCalibratedAnimation.setFlag(this.isCalibrated());
 
 		this.measuredAngleRads = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motor.encoder.getPositionRads());
 		this.measuredVelocityRadsPerSec = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motor.encoder.getVelocityRadsPerSec());
