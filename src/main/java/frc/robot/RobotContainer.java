@@ -11,9 +11,12 @@ import static edu.wpi.first.units.Units.Seconds;
 import java.util.Arrays;
 import java.util.Set;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -86,6 +89,7 @@ import frc.robot.subsystems.vision.cameras.Camera;
 import frc.robot.subsystems.vision.cameras.CameraIO;
 import frc.robot.subsystems.vision.cameras.CameraIOPhoton;
 import frc.robot.subsystems.vision.object.ObjectVision;
+import frc.util.PIDConstants;
 import frc.util.Perspective;
 import frc.util.controllers.XboxController;
 import frc.util.loggerUtil.tunables.LoggedTunable;
@@ -474,6 +478,56 @@ public class RobotContainer {
 				drive.rotationalSubsystem.stop();
 			}
 		};
+		final var driveRotateToIntakeDirCommand = new Command() {
+			private static final LoggedTunable<PIDConstants> pidGains = LoggedTunable.from(
+				"Controls/Drive Intake Dir/PID",
+				new PIDConstants(
+					5.0,
+					0.0,
+					0.0
+				)
+			);
+			private final PIDController pid = new PIDController(pidGains.get().kP(), pidGains.get().kI(), pidGains.get().kD());
+
+			private static final LoggedTunable<LinearVelocity> velocityThreshold = LoggedTunable.from("Controls/Drive Intake Dir/Linear Velocity Threshold", MetersPerSecond::of, 0.25);
+
+			{
+				this.setName("Intake Direction");
+				this.addRequirements(drive.rotationalSubsystem);
+
+				pid.enableContinuousInput(-Math.PI, Math.PI);
+			}
+
+			private double targetHeadingRads;
+
+			@Override
+			public void execute() {
+				var joyX = +translationJoystick.y().getAsDouble();
+				var joyY = -translationJoystick.x().getAsDouble();
+
+				var joyVX = joyX * DriveConstants.maxDriveSpeed.in(MetersPerSecond);
+				var joyVY = joyY * DriveConstants.maxDriveSpeed.in(MetersPerSecond);
+
+				if (Math.hypot(joyVX, joyVY) >= velocityThreshold.get().in(MetersPerSecond)) {
+					var perspectiveForward = Perspective.getCurrent().getForwardDirection();
+					var fieldX = joyX * perspectiveForward.getCos() - joyY * perspectiveForward.getSin();
+					var fieldY = joyX * perspectiveForward.getSin() + joyY * perspectiveForward.getCos();
+
+					this.targetHeadingRads = Math.atan2(fieldY, fieldX);
+				} else {
+					this.targetHeadingRads = RobotState.getInstance().getEstimatedGlobalPose().getRotation().getRadians();
+				}
+
+				var pidOut = this.pid.calculate(RobotState.getInstance().getEstimatedGlobalPose().getRotation().getRadians(), this.targetHeadingRads);
+				pidOut = MathUtil.clamp(pidOut, -DriveConstants.maxTurnRate.in(RadiansPerSecond), +DriveConstants.maxTurnRate.in(RadiansPerSecond));
+				drive.rotationalSubsystem.driveVelocity(pidOut);
+			}
+
+			@Override
+			public void end(boolean interrupted) {
+				drive.rotationalSubsystem.stop();
+			}
+		};
 
 		final var intakeRollersIdleCommand = this.intake.rollers.idle();
 		final var intakeRollersIntakeCommand = this.intake.rollers.intake();
@@ -585,6 +639,7 @@ public class RobotContainer {
 			}
 		});
 
+		this.driveController.leftBumper().whileTrue(driveRotateToIntakeDirCommand);
 
 		CommandScheduler.getInstance().getDefaultButtonLoop().bind(() -> {
 			if (this.driveController.hid.getRightBumperButtonPressed()) {
