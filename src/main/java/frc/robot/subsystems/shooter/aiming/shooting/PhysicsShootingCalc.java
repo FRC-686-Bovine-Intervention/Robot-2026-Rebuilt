@@ -41,13 +41,12 @@ public class PhysicsShootingCalc implements ShootingCalc {
 		double robotAngleRads = Math.atan2(hubRobotSpaceCartesian.getY(), hubRobotSpaceCartesian.getX());
 
 		var staticAimVector = getLaunchVector(flywheelSpeedMPS, hoodAngleRads, robotAngleRads);
-		var radialVector = MathExtraUtil.scalarMultiply(radialUnitVectorCartesian, radialVelocity);
-		var radialVeloAimVector = MathExtraUtil.addVectors(staticAimVector, radialVector);
-		var offsetVector = MathExtraUtil.scalarMultiply(tangentialUnitVectorCartesian, -tangentialVelocity);
-		var newVector = MathExtraUtil.addVectors(radialVeloAimVector, offsetVector);
+		double elevationAngle = Math.PI / 2.0 - hoodAngleRads;
+		double horizontalScale = Math.cos(elevationAngle);
+		var offsetVector = MathExtraUtil.scalarMultiply(tangentialUnitVectorCartesian, -tangentialVelocity * horizontalScale);
+		var newVector = MathExtraUtil.addVectors(staticAimVector, offsetVector);
 		Logger.recordOutput("DEBUG/PhysicsShooting/NewVector", new Translation3d(newVector[0], newVector[1], newVector[2]));
 		Logger.recordOutput("DEBUG/PhysicsShooting/staticVector", new Translation3d(staticAimVector[0], staticAimVector[1], staticAimVector[2]));
-		Logger.recordOutput("DEBUG/PhysicsShooting/radialVector", new Translation2d(radialVector[0], radialVector[1]));
 		Logger.recordOutput("DEBUG/PhysicsShooting/offsetVector", new Translation2d(offsetVector[0], offsetVector[1]));
 		Logger.recordOutput("DEBUG/PhysicsShooting/tangentialVeloUnitVec", new Translation2d(tangentialUnitVectorCartesian[0], tangentialUnitVectorCartesian[1]));
 		var launchValues = getLaunchValues(newVector);
