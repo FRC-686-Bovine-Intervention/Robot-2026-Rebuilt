@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Meters;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,10 +16,6 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.net.WebServer;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.event.EventLoop;
@@ -29,13 +23,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
-import frc.robot.constants.FieldConstants;
 import frc.robot.subsystems.leds.Leds;
 import frc.util.Environment;
 import frc.util.LoggedTracer;
 import frc.util.Perspective;
 import frc.util.VirtualSubsystem;
-import frc.util.flipping.AllianceFlipped;
 import frc.util.robotStructure.Mechanism3d;
 
 public class Robot extends LoggedRobot {
@@ -150,6 +142,9 @@ public class Robot extends LoggedRobot {
 
 			this.robotContainer.apriltagVision.periodic();
 
+			this.robotContainer.drive.calculateFieldVelocity();
+			LoggedTracer.logEpoch("CommandScheduler Periodic/Calculate Field Velocity");
+
 			this.robotContainer.drive.structureRoot.setPose(RobotState.getInstance().getEstimatedGlobalPose());
 			RobotState.getInstance().log();
 			LoggedTracer.logEpoch("CommandScheduler Periodic/RobotState Log");
@@ -172,26 +167,6 @@ public class Robot extends LoggedRobot {
 			LoggedTracer.logEpoch("CommandScheduler Periodic/Triggers");
 		});
 		CommandScheduler.getInstance().setActiveButtonLoop(activeButtonLoop);
-
-		var hubCenter = AllianceFlipped.fromBlue(new Pose3d(new Translation3d(FieldConstants.hubCenter.getBlue().getX(), FieldConstants.hubCenter.getBlue().getY(), FieldConstants.hubHeight.in(Meters)), Rotation3d.kZero));
-		var outpostCenter = AllianceFlipped.fromBlue(new Pose3d(new Translation3d(0.0, FieldConstants.outpostCenterY.getBlue().in(Meters), 0.0), Rotation3d.kZero));
-		var towerRungsCenter = AllianceFlipped.fromBlue(new Pose3d(new Translation3d(FieldConstants.towerRungsCenter.getBlue().getX(), FieldConstants.towerRungsCenter.getBlue().getY(), 0.0), Rotation3d.kZero));
-		var bottomUpright = new Pose3d(new Translation3d(FieldConstants.towerRungsCenter.getBlue().getX(), FieldConstants.towerRungsCenter.getBlue().getY() - FieldConstants.towerInnerUprightDistance.div(2).in(Meters), 0.01), new Rotation3d(Rotation2d.kCCW_90deg));
-		var topUpright = new Pose3d(new Translation3d(FieldConstants.towerRungsCenter.getBlue().getX(), FieldConstants.towerRungsCenter.getBlue().getY() + FieldConstants.towerInnerUprightDistance.div(2).in(Meters), 0.01), new Rotation3d(Rotation2d.k180deg));
-		var backBottomUpright = new Pose3d(new Translation3d(FieldConstants.towerRungsCenter.getBlue().getX() - Inches.of(27.639411).in(Meters), FieldConstants.towerRungsCenter.getBlue().getY() - FieldConstants.towerInnerUprightDistance.div(2).in(Meters), 0.01), new Rotation3d(Rotation2d.kZero));
-		var backTopUpright = new Pose3d(new Translation3d(FieldConstants.towerRungsCenter.getBlue().getX() - Inches.of(27.639411).in(Meters), FieldConstants.towerRungsCenter.getBlue().getY() + FieldConstants.towerInnerUprightDistance.div(2).in(Meters), 0.01), new Rotation3d(Rotation2d.kCW_90deg));
-
-		Logger.recordOutput("DEBUG/hubCenter/blue", hubCenter.getBlue());
-		Logger.recordOutput("DEBUG/hubCenter/red", hubCenter.getRed());
-		Logger.recordOutput("DEBUG/outpostCenter/blue", outpostCenter.getBlue());
-		Logger.recordOutput("DEBUG/outpostCenter/red", outpostCenter.getRed());
-		Logger.recordOutput("DEBUG/towerRungsCenter/blue", towerRungsCenter.getBlue());
-		Logger.recordOutput("DEBUG/towerRungsCenter/red", towerRungsCenter.getRed());
-		Logger.recordOutput("DEBUG/bottomUpright", bottomUpright);
-		Logger.recordOutput("DEBUG/topUpright", topUpright);
-		Logger.recordOutput("DEBUG/backBottomUpright", backBottomUpright);
-		Logger.recordOutput("DEBUG/backTopUpright", backTopUpright);
-		Logger.recordOutput("DEBUG/alliancezone", new Pose3d(new Translation3d(FieldConstants.blueAllianceZoneBoundaryX.in(Meters),0.0,0.0), Rotation3d.kZero));
 	}
 
 	@Override

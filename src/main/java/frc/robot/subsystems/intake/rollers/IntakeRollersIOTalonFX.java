@@ -17,7 +17,7 @@ import frc.util.NeutralMode;
 import frc.util.loggerUtil.inputs.LoggedMotor.MotorStatusSignalCache;
 
 public class IntakeRollersIOTalonFX implements IntakeRollersIO {
-	private final TalonFX motor = HardwareDevices.intakeRollerMotorID.talonFX();
+	private final TalonFX motor = HardwareDevices.intakeLeftRollerMotorID.talonFX();
 	private final MotorStatusSignalCache motorStatusSignalCache;
 
 	private final BaseStatusSignal[] refreshSignals;

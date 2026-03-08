@@ -38,18 +38,18 @@ public class Hood extends SubsystemBase {
 	private static final LoggedTunable<Angle> stowPulldownThreshold = LoggedTunable.from("Subsystems/Shooter/Hood/Commands/Stow/Pulldown Threshold", Degrees::of, HoodConstants.minAngle.plus(Degrees.of(1.0)).in(Degrees));
 	private static final LoggedTunable<Voltage> stowPulldownVoltage = LoggedTunable.from("Subsystems/Shooter/Hood/Commands/Stow/Pulldown Voltage", Volts::of, -1.0);
 
-	private static final LoggedTunable<Voltage> calibrationVoltage = LoggedTunable.from("Subsystems/Shooter/Hood/Commands/Calibration/Voltage", Volts::of, -2.0);
+	private static final LoggedTunable<Voltage> calibrationVoltage = LoggedTunable.from("Subsystems/Shooter/Hood/Commands/Calibration/Voltage", Volts::of, -0.5);
 
-	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Shooter/Hood/Mechanism/Profile/kV", 24.0);
-	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Shooter/Hood/Mechanism/Profile/kA", 24.0);
+	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Shooter/Hood/Mechanism/Profile/kV", 7.0);
+	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Shooter/Hood/Mechanism/Profile/kA", 1.0);
 	private static final LoggedTunable<AngularVelocity> profileMaxVel = LoggedTunable.from("Subsystems/Shooter/Hood/Mechanism/Profile/Max Velocity", DegreesPerSecond::of, 0.0);
 
 	private static final LoggedTunable<FFConstants> ffConsts = LoggedTunable.from(
 		"Subsystems/Shooter/Hood/Mechanism/FF",
 		new FFConstants(
+			0.4,
 			0.0,
-			0.0,
-			2.4,
+			1.0,
 			0.0
 		)
 	);
@@ -57,7 +57,7 @@ public class Hood extends SubsystemBase {
 	private static final LoggedTunable<PIDConstants> pidConsts = LoggedTunable.from(
 		"Subsystems/Shooter/Hood/Mechanism/PID",
 		new PIDConstants(
-			1.5,
+			500.0,
 			0.0,
 			0.0
 		)
@@ -92,8 +92,8 @@ public class Hood extends SubsystemBase {
 
 		final var sysidRoutine = new SysIdRoutine(
 			new SysIdRoutine.Config(
-				Volts.of(1.0).per(Second),
-				Volts.of(7.0),
+				Volts.of(0.125).per(Second),
+				Volts.of(1.0),
 				Seconds.of(10.0),
 				(state) -> {
 					Logger.recordOutput("SysID/Shooter-Hood/State", state.toString());
@@ -135,8 +135,10 @@ public class Hood extends SubsystemBase {
 		this.measuredAngleRads = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motor.encoder.getPositionRads());
 		this.measuredVelocityRadsPerSec = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motor.encoder.getVelocityRadsPerSec());
 
-		this.setpointAngleRads = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motorProfilePositionRads);
-		this.setpointVelocityRadsPerSec = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motorProfileVelocityRadsPerSec);
+		// this.setpointAngleRads = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motorProfilePositionRads);
+		// this.setpointVelocityRadsPerSec = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motorProfileVelocityRadsPerSec);
+		this.setpointAngleRads = this.inputs.motorProfilePositionRads;
+		this.setpointVelocityRadsPerSec = this.inputs.motorProfileVelocityRadsPerSec;
 
 		Logger.recordOutput("Subsystems/Shooter/Hood/Angle/Measured", this.getMeasuredAngleRads(), Radians);
 		Logger.recordOutput("Subsystems/Shooter/Hood/Velocity/Measured", this.getMeasuredVelocityRadsPerSec(), RadiansPerSecond);
@@ -274,5 +276,29 @@ public class Hood extends SubsystemBase {
 				hood.io.stop(NeutralMode.DEFAULT);
 			}
 		};
+	}
+
+	public Command genVoltageCommand(String name, DoubleSupplier voltageSupplier) {
+		final var hood = this;
+		return new Command() {
+			{
+				this.setName(name);
+				this.addRequirements(hood);
+			}
+
+			@Override
+			public void execute() {
+				hood.io.setVolts(voltageSupplier.getAsDouble());
+			}
+
+			@Override
+			public void end(boolean interrupted) {
+				hood.io.stop(NeutralMode.DEFAULT);
+			}
+		};
+	}
+
+	public void setHardLimit(boolean enable) {
+		this.io.setHardLimit(enable);
 	}
 }
