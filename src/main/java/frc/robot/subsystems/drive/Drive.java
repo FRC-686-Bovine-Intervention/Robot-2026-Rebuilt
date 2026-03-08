@@ -210,9 +210,6 @@ public class Drive extends VirtualSubsystem {
 		}
 
 		Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Measured", this.robotMeasuredSpeeds);
-		// RobotState.getInstance().addDriveMeasurement(this.gyroAngle, this.getModulePositions());
-
-		this.fieldMeasuredSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(this.robotMeasuredSpeeds, RobotState.getInstance().getEstimatedGlobalPose().getRotation());
 
 		// Skid Detection
 		// SwerveModuleState[] rotationalStates = new SwerveModuleState[DriveConstants.modules.length];
@@ -265,21 +262,35 @@ public class Drive extends VirtualSubsystem {
 		LoggedTracer.logEpoch("VirtualSubsystem PostCommandPeriodic/Drive");
 	}
 
+	public void calculateFieldVelocity() {
+		this.fieldMeasuredSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(this.robotMeasuredSpeeds, RobotState.getInstance().getEstimatedGlobalPose().getRotation());
+	}
+
 	public void runSetpoints(SwerveModuleState... states) {
 		this.translationSubsystem.needsPostProcessing = false;
 		this.rotationalSubsystem.needsPostProcessing = false;
 		this.setpointStates = states;
 		Logger.recordOutput("Subsystems/Drive/Swerve States/Setpoints", this.setpointStates);
-		IntStream.range(0, this.modules.length).forEach((i) -> this.modules[i].runSetpoint(this.setpointStates[i]));
+		for (int i = 0; i < this.modules.length; i++) {
+			this.modules[i].runSetpoint(this.setpointStates[i]);
+		}
 		Logger.recordOutput("Subsystems/Drive/Swerve States/Setpoints Optimized", this.setpointStates);
 	}
 
 	private static final LoggedTunable<LinearAcceleration> forwardAccelLimitTunable = LoggedTunable.from("Subsystems/Drive/Accel Limits/Forward Accel Limit", MetersPerSecondPerSecond::of, 5000);
 	private static final LoggedTunable<LinearAcceleration> skidAccelLimitTunable = LoggedTunable.from("Subsystems/Drive/Accel Limits/Skid Accel Limit", MetersPerSecondPerSecond::of, 60);
 
-	public static final LoggedTunable<TiltAccelerationLimits> normalTiltLimitTunable = LoggedTunable.from("Subsystems/Drive/Accel Limits/Tilt Limits/Normal", new TiltAccelerationLimits(500, 500, 500, 500));
-	public static final LoggedTunable<TiltAccelerationLimits> extendedTiltLimitTunable = LoggedTunable.from("Subsystems/Drive/Accel Limits/Tilt Limits/Extended", new TiltAccelerationLimits(10, 12, 20, 20));
+	public static final LoggedTunable<TiltAccelerationLimits> normalTiltLimitTunable = LoggedTunable.from(
+		"Subsystems/Drive/Accel Limits/Tilt Limits/Normal",
+		new TiltAccelerationLimits(
+			500.0,
+			500.0,
+			500.0,
+			500.0
+		)
+	);
 	private TiltAccelerationLimits tiltLimits = normalTiltLimitTunable.get();
+
 	public void setTiltLimits(TiltAccelerationLimits tiltLimits) {
 		this.tiltLimits = tiltLimits;
 	}

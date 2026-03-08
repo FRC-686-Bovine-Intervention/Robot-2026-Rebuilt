@@ -4,17 +4,12 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
-import static edu.wpi.first.units.Units.Volts;
 
 import java.util.Arrays;
 import java.util.Set;
-
-import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -34,6 +29,8 @@ import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.automations.BumpMitigation;
 import frc.robot.automations.TrenchMitigation;
+import frc.robot.automations.HookAutoDeployHysteresis;
+import frc.robot.automations.IntakeDeployHysteresis;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
@@ -81,7 +78,6 @@ import frc.robot.subsystems.shooter.flywheel.FlywheelConstants;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIOTalonFX;
 import frc.robot.subsystems.shooter.hood.Hood;
-import frc.robot.subsystems.shooter.hood.HoodConstants;
 import frc.robot.subsystems.shooter.hood.HoodIO;
 import frc.robot.subsystems.shooter.hood.HoodIOSim;
 import frc.robot.subsystems.shooter.hood.HoodIOTalonFXS;
@@ -92,7 +88,6 @@ import frc.robot.subsystems.vision.cameras.Camera;
 import frc.robot.subsystems.vision.cameras.CameraIO;
 import frc.robot.subsystems.vision.cameras.CameraIOPhoton;
 import frc.robot.subsystems.vision.object.ObjectVision;
-import frc.util.Cooldown;
 import frc.util.Perspective;
 import frc.util.controllers.XboxController;
 import frc.util.loggerUtil.tunables.LoggedTunable;
@@ -160,7 +155,7 @@ public class RobotContainer {
 					new Indexer(new IndexerIOTalonFX()),
 					new Agitator(new AgitatorIOTalonFX()),
 					new Feeder(new FeederIOTalonFX()),
-					new RollerSensorsIO() {}
+					new RollerSensorsIOCANdi(commonCANdi)
 				);
 				this.climber = new Climber(
 					new Hook(new HookIO() {})
@@ -532,9 +527,10 @@ public class RobotContainer {
 			.withName("Aim to Pass")
 		;
 
-		final var climberStowCommand = this.climber.hook.stow();
-		final var climberDeployCommand = this.climber.hook.deploy();
-		final var climberClimbCommand = this.climber.hook.climb();
+		final var climberHookStowCommand = this.climber.hook.stow();
+		final var climberHookDeployCommand = this.climber.hook.deploy();
+		final var climberHookAutoDeployCommand = this.climber.hook.deploy().withName("Auto Deploy");
+		final var climberHookClimbCommand = this.climber.hook.climb();
 
 		// Set default commands
 		this.intake.rollers.setDefaultCommand(intakeRollersIdleCommand);
@@ -547,16 +543,13 @@ public class RobotContainer {
 		this.shooter.hood.setDefaultCommand(hoodStowCommand);
 		this.shooter.leftFlywheel.setDefaultCommand(leftFlywheelIdleCommand);
 		this.shooter.rightFlywheel.setDefaultCommand(rightFlywheelIdleCommand);
-
-		this.climber.hook.setDefaultCommand(climberStowCommand);
+		this.climber.hook.setDefaultCommand(climberHookStowCommand);
 
 		// Bind automations
 		this.automationsLoop.bind(new BumpMitigation(this.drive));
 		this.automationsLoop.bind(new TrenchMitigation(this.drive, this.intake.slam, this.extensionSystem, this.shooter.hood));
-		this.automationsLoop.bind(() -> {
-			Logger.recordOutput("DEBUG/Distance to hub", RobotState.getInstance().getEstimatedGlobalPose().getTranslation().getDistance(FieldConstants.hubCenter.getOurs()));
-			Logger.recordOutput("DEBUG/camera pose", this.hubZoomCamera.mount.getFieldRelative());
-		});
+		this.automationsLoop.bind(new IntakeDeployHysteresis(this.intake.slam, intakeDeployCommand));
+		this.automationsLoop.bind(new HookAutoDeployHysteresis(this.climber.hook, climberHookAutoDeployCommand));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
 
@@ -604,48 +597,6 @@ public class RobotContainer {
 			}
 		});
 
-		final var hoodStepper = Cooldown.incrementingStepper(
-			"Woodbot/Steppers/Hood",
-			"Woodbot/Steppers/Hood",
-			Seconds.of(1.0).div(35.0),
-			Degrees.of(0.0),
-			Degrees.of(1.0),
-			Radians,
-			this.driveController.povUp(),
-			this.driveController.povDown()
-		);
-		final var hoodStepCommand = this.shooter.hood.genAngleCommand(
-			"Step",
-			() -> hoodStepper.getAsDouble() + HoodConstants.minAngle.in(Radians)
-		);
-
-		this.driveController.y().toggleOnTrue(hoodStepCommand);
-
-		final var hoodVoltage = LoggedTunable.from("Woodbot/Hood Voltage", Volts::of, 1.0);
-		this.driveController.povUp().and(() -> !hoodStepCommand.isScheduled()).whileTrue(this.shooter.hood.genVoltageCommand("Volts Up", () -> +hoodVoltage.get().in(Volts)));
-		this.driveController.povDown().and(() -> !hoodStepCommand.isScheduled()).whileTrue(this.shooter.hood.genVoltageCommand("Volts Down", () -> -hoodVoltage.get().in(Volts)));
-
-		final var flywheelStepper = Cooldown.incrementingStepper(
-			"Woodbot/Steppers/Flywheel",
-			"Woodbot/Steppers/Flywheel",
-			Seconds.of(0.0625),
-			MetersPerSecond.of(1.0),
-			MetersPerSecond.of(0.1),
-			MetersPerSecond,
-			this.driveController.povRight(),
-			this.driveController.povLeft()
-		);
-
-		this.driveController.b().toggleOnTrue(
-			Commands.parallel(
-				this.shooter.leftFlywheel.genSurfaceVeloCommand("", () -> flywheelStepper.getAsDouble()),
-				this.shooter.rightFlywheel.genSurfaceVeloCommand("", () -> flywheelStepper.getAsDouble())
-			)
-			.withName("Step")
-		);
-
 		this.driveController.x().whileTrue(rollersFeedCommand);
-
-		this.driveController.start().onTrue(Commands.runOnce(() -> this.drive.stop()));
 	}
 }

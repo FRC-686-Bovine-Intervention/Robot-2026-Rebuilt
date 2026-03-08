@@ -14,9 +14,9 @@ public class HardwareDevices {
 	 * 16: Radio              7: Rio
 	 * 17: Radio              6: Climber
 	 * 18: Indexer            5: Hood
-	 * 19: LS Flywheel        4: RS Flywheel
-	 * 20: LM Flywheel        3: RM Flywheel
-	 * 21: Agitator           2: Feeder
+	 * 19: Agitator           4: Feeder
+	 * 20: LS Flywheel        3: RS Flywheel
+	 * 21: LM Flywheel        2: RM Flywheel
 	 * 22: BL Azimuth         1: BR Azimuth
 	 * 23: BL Drive           0: BR Drive
 	 */
@@ -40,8 +40,8 @@ public class HardwareDevices {
 
 	// Intake
 	// | Slam
-	public static final CANDevice intakeSlamMotorID = canivore.id(5);
-	public static final CANDevice intakeSlamEncoderID = canivore.id(5);
+	public static final CANDevice intakeSlamMotorID = rio.id(5);
+	public static final CANDevice intakeSlamEncoderID = rio.id(5);
 	// | Rollers
 	public static final CANDevice intakeLeftRollerMotorID = rio.id(6);
 	public static final CANDevice intakeRightRollerMotorID = rio.id(7);

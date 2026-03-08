@@ -1,7 +1,5 @@
 package frc.robot.subsystems.shooter.aiming.shooting;
 
-import static edu.wpi.first.units.Units.Centimeters;
-import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Seconds;
 
 import org.littletonrobotics.junction.Logger;
@@ -11,8 +9,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Time;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.util.loggerUtil.tunables.LoggedTunable;
@@ -20,9 +16,9 @@ import frc.util.loggerUtil.tunables.LoggedTunable;
 public class InterpolationShootingCalc implements ShootingCalc {
 
 	private static final LoggedTunable<Time> lookaheadTime = LoggedTunable.from("Subsystems/Shooter/Aiming/Lookahead Seconds", Seconds::of, 1.0);
-	private static final LoggedTunable<Distance> azimuthTolerance = LoggedTunable.from("Subsystems/Shooter/Aiming/Tolerance/Azimuth", Centimeters::of, 100);
-	private static final LoggedTunable<Distance> altitudeDegsTolerance = LoggedTunable.from("Subsystems/Shooter/Aiming/Tolerance/Altitude", Centimeters::of, 46);
-	private static final LoggedTunable<Angle> customAzimuthOffset = LoggedTunable.from("Subsystems/Shooter/Aiming/Custom Azimuth Offset", Radians::of, 0.0);
+	// private static final LoggedTunable<Distance> azimuthTolerance = LoggedTunable.from("Subsystems/Shooter/Aiming/Tolerance/Azimuth", Centimeters::of, 100);
+	// private static final LoggedTunable<Distance> altitudeDegsTolerance = LoggedTunable.from("Subsystems/Shooter/Aiming/Tolerance/Altitude", Centimeters::of, 46);
+	// private static final LoggedTunable<Angle> customAzimuthOffset = LoggedTunable.from("Subsystems/Shooter/Aiming/Custom Azimuth Offset", Radians::of, 0.0);
 
 	private Translation3d aimPoint;
 	// private Pose2d shotPose;
@@ -31,6 +27,7 @@ public class InterpolationShootingCalc implements ShootingCalc {
 	private double targetHoodAngleRads;
 	private double targetFlywheelVeloMPS;
 	private double targetDriveHeadingRads;
+	private double tofSecs;
 
 	@Override
 	public void calculate(Pose2d robotPose, ChassisSpeeds fieldSpeeds, Translation3d aimPoint) {
@@ -49,6 +46,7 @@ public class InterpolationShootingCalc implements ShootingCalc {
 
 		this.targetHoodAngleRads = ShooterConstants.hubTargetHoodAngleRads.get(this.effectiveDistanceMeters);
 		this.targetFlywheelVeloMPS = ShooterConstants.hubTargetFlyWheelVeloMPS.get(this.effectiveDistanceMeters);
+		this.tofSecs = ShooterConstants.hubTargetTimeOfFlightSecs.get(this.effectiveDistanceMeters);
 
 		Logger.recordOutput("Subsystems/Shooter/Aiming/Aim Point", this.aimPoint);
 		Logger.recordOutput("Subsystems/Shooter/Aiming/Shot Pose", new Pose2d(
@@ -84,6 +82,6 @@ public class InterpolationShootingCalc implements ShootingCalc {
 
 	@Override
 	public double getTOFSeconds() {
-		return 0.0; //Must be handled by the caller
+		return this.tofSecs;
 	}
 }
