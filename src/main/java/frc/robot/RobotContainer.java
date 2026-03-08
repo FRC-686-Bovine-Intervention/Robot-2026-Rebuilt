@@ -30,6 +30,7 @@ import frc.robot.auto.AutoSelector;
 import frc.robot.automations.BumpMitigation;
 import frc.robot.automations.HookAutoDeployHysteresis;
 import frc.robot.automations.IntakeDeployHysteresis;
+import frc.robot.automations.PassiveRollerPreStage;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.ExtensionSystem;
@@ -483,11 +484,19 @@ public class RobotContainer {
 		final var rollersIndexerIdleCommand = this.rollers.indexer.idle();
 		final var rollersFeederIdleCommand = this.rollers.feeder.idle();
 		final var rollersAgitatorIdleCommand = this.rollers.agitiator.idle();
+		final var rollersPassivePrestageCommand =
+			Commands.parallel(
+				this.rollers.indexer.passivePrestage(),
+				this.rollers.feeder.passivePrestage(),
+				this.rollers.agitiator.passivePrestage()
+			)
+			.withName("Passive Prestage")
+		;
 		final var rollersFeedCommand =
 			Commands.parallel(
 				this.rollers.indexer.index(),
 				this.rollers.feeder.feed(),
-				this.rollers.agitiator.index()
+				this.rollers.agitiator.agitate()
 			)
 			.withName("Feed")
 		;
@@ -547,6 +556,7 @@ public class RobotContainer {
 		this.automationsLoop.bind(new BumpMitigation(this.drive));
 		this.automationsLoop.bind(new IntakeDeployHysteresis(this.intake.slam, intakeDeployCommand));
 		this.automationsLoop.bind(new HookAutoDeployHysteresis(this.climber.hook, climberHookAutoDeployCommand));
+		this.automationsLoop.bind(new PassiveRollerPreStage(this.rollers, rollersPassivePrestageCommand));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
 

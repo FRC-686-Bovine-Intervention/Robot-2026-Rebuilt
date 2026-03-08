@@ -19,6 +19,7 @@ public class Agitator extends SubsystemBase {
 	private final AgitatorIOInputsAutoLogged inputs = new AgitatorIOInputsAutoLogged();
 
 	private static final LoggedTunable<Voltage> idleVoltage = LoggedTunable.from("Subsystems/Rollers/Agitiator/Commands/Idle/Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> passivePrestageVoltage = LoggedTunable.from("Subsystems/Rollers/Agitiator/Commands/Passive Prestage/Voltage", Volts::of, 1.0);
 	private static final LoggedTunable<Voltage> agitateVoltage = LoggedTunable.from("Subsystems/Rollers/Agitiator/Commands/Agitate/Voltage", Volts::of, 6.0);
 	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Subsystems/Rollers/Agitiator/Commands/Eject/Voltage", Volts::of, 0.0);
 
@@ -66,9 +67,16 @@ public class Agitator extends SubsystemBase {
 		);
 	}
 
-	public Command index() {
+	public Command passivePrestage() {
 		return this.genVoltageCommand(
-			"Index",
+			"Passive Prestage",
+			() -> Agitator.passivePrestageVoltage.get().in(Volts)
+		);
+	}
+
+	public Command agitate() {
+		return this.genVoltageCommand(
+			"Agitate",
 			() -> Agitator.agitateVoltage.get().in(Volts)
 		);
 	}
