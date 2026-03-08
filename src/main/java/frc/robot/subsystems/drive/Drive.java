@@ -258,6 +258,8 @@ public class Drive extends VirtualSubsystem {
 		// } else
 		if (this.translationSubsystem.needsPostProcessing || this.rotationalSubsystem.needsPostProcessing) {
 			this.runRobotSpeeds(this.desiredRobotSpeeds);
+		} else if (this.translationSubsystem.getCurrentCommand() == null && this.rotationalSubsystem.getCurrentCommand() == null) {
+			this.stop();
 		}
 		LoggedTracer.logEpoch("VirtualSubsystem PostCommandPeriodic/Drive/Periodic");
 		LoggedTracer.logEpoch("VirtualSubsystem PostCommandPeriodic/Drive");
@@ -469,6 +471,10 @@ public class Drive extends VirtualSubsystem {
 		public void stop() {
 			this.needsPostProcessing = false;
 			this.driveVelocity(0.0, 0.0);
+			if (!this.drive.rotationalSubsystem.needsPostProcessing) {
+				this.drive.stop();
+				System.out.println("STOPPING DRIVE FROM TRANSLATIONAL");
+			}
 		}
 
 		public Command fieldRelative(Supplier<ChassisSpeeds> speeds) {
@@ -554,11 +560,48 @@ public class Drive extends VirtualSubsystem {
 		}
 		public void stop() {
 			this.needsPostProcessing = false;
-			this.driveVelocity(0);
+			this.driveVelocity(0.0);
+			if (!this.drive.translationSubsystem.needsPostProcessing) {
+				this.drive.stop();
+				System.out.println("STOPPING DRIVE FROM ROTATIONAL");
+			}
 		}
 
 		public Command spin(DoubleSupplier omega) {
 			return Commands.runEnd(() -> driveVelocity(omega.getAsDouble()), this::stop, this);
+		}
+
+		public Command genHeadingPIDCommand(String name, LoggedTunable<PIDConstants> pidGains, DoubleSupplier measuredHeadingRadsSupplier, DoubleSupplier targetHeadingRadsSupplier) {
+			final var rotational = this;
+			return new Command() {
+				private final PIDController pid = new PIDController(pidGains.get().kP(), pidGains.get().kI(), pidGains.get().kD());
+
+				{
+					this.setName(name);
+					this.addRequirements(rotational);
+
+					this.pid.enableContinuousInput(-Math.PI, Math.PI);
+				}
+
+				@Override
+				public void initialize() {
+					if (pidGains.hasChanged(this.hashCode())) {
+						pidGains.get().update(this.pid);
+					}
+				}
+
+				@Override
+				public void execute() {
+					var measuredHeadingRads = measuredHeadingRadsSupplier.getAsDouble();
+					var targetHeadingRads = targetHeadingRadsSupplier.getAsDouble();
+					rotational.driveVelocity(this.pid.calculate(measuredHeadingRads, targetHeadingRads));
+				}
+
+				@Override
+				public void end(boolean interrupted) {
+					rotational.stop();
+				}
+			};
 		}
 
 		// public Command defenseSpin(Joystick joystick) {

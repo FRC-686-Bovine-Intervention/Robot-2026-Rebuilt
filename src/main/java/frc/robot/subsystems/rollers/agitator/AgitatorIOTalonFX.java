@@ -25,7 +25,7 @@ public class AgitatorIOTalonFX implements AgitatorIO {
 	private final BaseStatusSignal[] refreshSignals;
 	private final BaseStatusSignal[] motorConnectedSignals;
 
-	private final VoltageOut voltageRequest = new VoltageOut(0);
+	private final VoltageOut voltageRequest = new VoltageOut(0.0);
 	private final NeutralOut neutralOutRequest = new NeutralOut();
 	private final CoastOut coastOutRequest = new CoastOut();
 	private final StaticBrake staticBrakeRequest = new StaticBrake();
@@ -33,8 +33,8 @@ public class AgitatorIOTalonFX implements AgitatorIO {
 	public AgitatorIOTalonFX(){
 		var motorConfig = new TalonFXConfiguration();
 		motorConfig.MotorOutput
-			.withInverted(InvertedValue.Clockwise_Positive)
-			.withNeutralMode(NeutralModeValue.Brake)
+			.withInverted(InvertedValue.CounterClockwise_Positive)
+			.withNeutralMode(NeutralModeValue.Coast)
 		;
 		this.motor.getConfigurator().apply(motorConfig);
 
@@ -45,14 +45,14 @@ public class AgitatorIOTalonFX implements AgitatorIO {
 			this.motorStatusSignalCache.statorCurrent(),
 			this.motorStatusSignalCache.supplyCurrent(),
 			this.motorStatusSignalCache.torqueCurrent(),
-			this.motorStatusSignalCache.deviceTemperature()
+			this.motorStatusSignalCache.deviceTemperature(),
 		};
 		this.motorConnectedSignals = new BaseStatusSignal[] {
 			this.motorStatusSignalCache.appliedVoltage(),
 			this.motorStatusSignalCache.statorCurrent(),
 			this.motorStatusSignalCache.supplyCurrent(),
 			this.motorStatusSignalCache.torqueCurrent(),
-			this.motorStatusSignalCache.deviceTemperature()
+			this.motorStatusSignalCache.deviceTemperature(),
 		};
 
 		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.motorStatusSignalCache.getStatusSignals());

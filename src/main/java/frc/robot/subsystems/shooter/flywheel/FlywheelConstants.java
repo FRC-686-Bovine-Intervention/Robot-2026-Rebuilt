@@ -13,10 +13,8 @@ import lombok.RequiredArgsConstructor;
 public class FlywheelConstants {
 	// Gear Ratios
 	public static final GearRatio motorToMechanism = new GearRatio()
-	.sprocket(24)
-	.axle()
-	.sprocket(16)
-	.axle()
+		.sprocket(20)
+		.sprocket(24)
 	;
 
 	public static final GearRatio flywheelToHood = new GearRatio(38/16);
