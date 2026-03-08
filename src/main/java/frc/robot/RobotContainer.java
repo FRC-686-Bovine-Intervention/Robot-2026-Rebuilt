@@ -11,6 +11,7 @@ import static edu.wpi.first.units.Units.Seconds;
 import java.util.Arrays;
 import java.util.Set;
 
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
@@ -28,6 +29,8 @@ import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.automations.AutomaticScoring;
 import frc.robot.automations.BumpMitigation;
+import frc.robot.automations.HookAutoDeployHysteresis;
+import frc.robot.automations.IntakeDeployHysteresis;
 import frc.robot.automations.HubShiftNotifications;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
@@ -36,7 +39,6 @@ import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.climber.hook.Hook;
 import frc.robot.subsystems.climber.hook.HookIO;
 import frc.robot.subsystems.climber.hook.HookIOSim;
-import frc.robot.subsystems.climber.hook.HookIOTalonFX;
 import frc.robot.subsystems.commonDevices.CommonCANdi;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -52,11 +54,9 @@ import frc.robot.subsystems.drive.odometry.OdometryTimestampIOSim;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.rollers.IntakeRollers;
 import frc.robot.subsystems.intake.rollers.IntakeRollersIO;
-import frc.robot.subsystems.intake.rollers.IntakeRollersIOTalonFX;
 import frc.robot.subsystems.intake.slam.IntakeSlam;
 import frc.robot.subsystems.intake.slam.IntakeSlamIO;
 import frc.robot.subsystems.intake.slam.IntakeSlamIOSim;
-import frc.robot.subsystems.intake.slam.IntakeSlamIOTalonFX;
 import frc.robot.subsystems.rollers.RollerSensorsIO;
 import frc.robot.subsystems.rollers.RollerSensorsIOCANdi;
 import frc.robot.subsystems.rollers.Rollers;
@@ -81,7 +81,12 @@ import frc.robot.subsystems.shooter.hood.Hood;
 import frc.robot.subsystems.shooter.hood.HoodIO;
 import frc.robot.subsystems.shooter.hood.HoodIOSim;
 import frc.robot.subsystems.shooter.hood.HoodIOTalonFXS;
+import frc.robot.subsystems.vision.VisionConstants;
+import frc.robot.subsystems.vision.apriltag.ApriltagPipeline;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
+import frc.robot.subsystems.vision.cameras.Camera;
+import frc.robot.subsystems.vision.cameras.CameraIO;
+import frc.robot.subsystems.vision.cameras.CameraIOPhoton;
 import frc.robot.subsystems.vision.object.ObjectVision;
 import frc.util.Perspective;
 import frc.util.controllers.XboxController;
@@ -100,6 +105,11 @@ public class RobotContainer {
 	// Vision
 	public final ApriltagVision apriltagVision;
 	public final ObjectVision objectVision;
+
+	public final Camera hubZoomCamera;
+	public final Camera leftBroadCamera;
+	public final Camera rightBroadCamera;
+	public final Camera backBroadCamera;
 
 	// Auto
 	public final AutoManager autoManager;
@@ -138,8 +148,8 @@ public class RobotContainer {
 					)
 				);
 				this.intake = new Intake(
-					new IntakeRollers(new IntakeRollersIOTalonFX()),
-					new IntakeSlam(new IntakeSlamIOTalonFX())
+					new IntakeRollers(new IntakeRollersIO() {}),
+					new IntakeSlam(new IntakeSlamIO() {})
 				);
 				this.rollers = new Rollers(
 					new Indexer(new IndexerIOTalonFX()),
@@ -148,7 +158,32 @@ public class RobotContainer {
 					new RollerSensorsIOCANdi(commonCANdi)
 				);
 				this.climber = new Climber(
-					new Hook(new HookIOTalonFX())
+					new Hook(new HookIO() {})
+				);
+
+				this.hubZoomCamera = new Camera(
+					new CameraIOPhoton("Left Top"),
+					"Hub Zoom",
+					VisionConstants.topLeftMount,
+					(connected) -> {}
+				);
+				this.leftBroadCamera = new Camera(
+					new CameraIOPhoton("Left Bottom"),
+					"Left Broad",
+					VisionConstants.bottomLeftMount,
+					(connected) -> {}
+				);
+				this.rightBroadCamera = new Camera(
+					new CameraIOPhoton("Right Top"),
+					"Right Broad",
+					VisionConstants.topRightMount,
+					(connected) -> {}
+				);
+				this.backBroadCamera = new Camera(
+					new CameraIOPhoton("Right Bottom"),
+					"Back Broad",
+					VisionConstants.bottomRightMount,
+					(connected) -> {}
 				);
 
 				commonCANdi.configSend();
@@ -186,6 +221,31 @@ public class RobotContainer {
 					new Hook(new HookIOSim())
 				);
 
+				this.hubZoomCamera = new Camera(
+					new CameraIO() {},
+					"Top Left",
+					Transform3d.kZero,
+					(connected) -> {}
+				);
+				this.leftBroadCamera = new Camera(
+					new CameraIO() {},
+					"Bottom Left",
+					Transform3d.kZero,
+					(connected) -> {}
+				);
+				this.rightBroadCamera = new Camera(
+					new CameraIO() {},
+					"Top Right",
+					Transform3d.kZero,
+					(connected) -> {}
+				);
+				this.backBroadCamera = new Camera(
+					new CameraIO() {},
+					"Bottom Right",
+					Transform3d.kZero,
+					(connected) -> {}
+				);
+
 				commonCANdi.configSend();
 			}
 			default -> {
@@ -219,6 +279,31 @@ public class RobotContainer {
 				this.climber = new Climber(
 					new Hook(new HookIO() {})
 				);
+
+				this.hubZoomCamera = new Camera(
+					new CameraIO() {},
+					"Top Left",
+					Transform3d.kZero,
+					(connected) -> {}
+				);
+				this.leftBroadCamera = new Camera(
+					new CameraIO() {},
+					"Bottom Left",
+					Transform3d.kZero,
+					(connected) -> {}
+				);
+				this.rightBroadCamera = new Camera(
+					new CameraIO() {},
+					"Top Right",
+					Transform3d.kZero,
+					(connected) -> {}
+				);
+				this.backBroadCamera = new Camera(
+					new CameraIO() {},
+					"Bottom Right",
+					Transform3d.kZero,
+					(connected) -> {}
+				);
 			}
 		}
 
@@ -226,7 +311,7 @@ public class RobotContainer {
 
 		// Initialize vision systems with camera pipelines
 		this.apriltagVision = new ApriltagVision(
-
+			new ApriltagPipeline(this.hubZoomCamera, 0, 1.0)
 		);
 		this.objectVision = new ObjectVision(
 
@@ -240,6 +325,10 @@ public class RobotContainer {
 			.addChild(this.intake.slam.followerMech)
 			.addChild(this.shooter.hood.mech)
 			.addChild(this.climber.hook.mech)
+			.addChild(this.hubZoomCamera.mount)
+			.addChild(this.leftBroadCamera.mount)
+			.addChild(this.rightBroadCamera.mount)
+			.addChild(this.backBroadCamera.mount)
 		;
 
 		// Register Mechanism3ds
@@ -438,23 +527,28 @@ public class RobotContainer {
 			.withName("Aim to Pass")
 		;
 
-		final var climberStowCommand = this.climber.hook.stow();
-		final var climberDeployCommand = this.climber.hook.deploy();
-		final var climberClimbCommand = this.climber.hook.climb();
+		final var climberHookStowCommand = this.climber.hook.stow();
+		final var climberHookDeployCommand = this.climber.hook.deploy();
+		final var climberHookAutoDeployCommand = this.climber.hook.deploy().withName("Auto Deploy");
+		final var climberHookClimbCommand = this.climber.hook.climb();
 
 		// Set default commands
 		this.intake.rollers.setDefaultCommand(intakeRollersIdleCommand);
 		this.intake.slam.setDefaultCommand(intakeStowCommand);
+
 		this.rollers.indexer.setDefaultCommand(rollersIndexerIdleCommand);
 		this.rollers.feeder.setDefaultCommand(rollersFeederIdleCommand);
 		this.rollers.agitator.setDefaultCommand(rollersAgitatorIdleCommand);
+
 		this.shooter.hood.setDefaultCommand(hoodStowCommand);
 		this.shooter.leftFlywheel.setDefaultCommand(leftFlywheelIdleCommand);
 		this.shooter.rightFlywheel.setDefaultCommand(rightFlywheelIdleCommand);
-		this.climber.hook.setDefaultCommand(climberStowCommand);
+		this.climber.hook.setDefaultCommand(climberHookStowCommand);
 
 		// Bind automations
 		this.automationsLoop.bind(new BumpMitigation(this.drive));
+		this.automationsLoop.bind(new IntakeDeployHysteresis(this.intake.slam, intakeDeployCommand));
+		this.automationsLoop.bind(new HookAutoDeployHysteresis(this.climber.hook, climberHookAutoDeployCommand));
 		this.automationsLoop.bind(new AutomaticScoring(this.drive, this.shooter, this.rollers));
 		this.automationsLoop.bind(new HubShiftNotifications(this.driveController));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
@@ -466,7 +560,7 @@ public class RobotContainer {
 
 
 		// Setup position reset command
-		this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(FieldConstants.hubFrontRobotPose.getOurs())));
+		this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(FieldConstants.hubFrontRobotPose.getOurs())).ignoringDisable(true));
 		/*
 		 * (A)
 		 *  | Press: Deploy intake (if not deployed) and roll in
@@ -504,5 +598,7 @@ public class RobotContainer {
 				CommandScheduler.getInstance().cancel(aimAtHubCommand);
 			}
 		});
+
+		this.driveController.x().whileTrue(rollersFeedCommand);
 	}
 }

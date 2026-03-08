@@ -56,12 +56,12 @@ public class AutomaticScoring implements Runnable {
 	public void run() {
 		var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
 		var currentHubShift = HubShifts.getCurrentShift();
-		this.shooter.aimingSystem.shootingCalc.calculate(robotPose.getTranslation(), this.drive.getFieldMeasuredSpeeds(), FieldConstants.hubAimPoint.getOurs());
+		this.shooter.aimingSystem.shootingCalc.calculate(robotPose, this.drive.getFieldMeasuredSpeeds(), FieldConstants.hubAimPoint.getOurs());
 		boolean willBeHubShift = (currentHubShift.next().isHubActive().getOurs() && currentHubShift.next().getSecsSinceShiftStarted() >= -spinUpSeconds.get().in(Seconds) - this.shooter.aimingSystem.shootingCalc.getTOFSeconds());
 		boolean isHubShift = (currentHubShift.isHubActive().getOurs() && currentHubShift.getSecsLeftInShift() > this.shooter.aimingSystem.shootingCalc.getTOFSeconds()) || (currentHubShift.next().isHubActive().getOurs() && currentHubShift.next().getSecsSinceShiftStarted() >= -this.shooter.aimingSystem.shootingCalc.getTOFSeconds());
 
 		this.spinUpEdgeDetector.update(
-			FieldConstants.allianceZone.getOurs().withinBounds(robotPose.getTranslation())	
+			FieldConstants.allianceZone.getOurs().withinBounds(robotPose.getTranslation())
 			&& this.drive.rotationalSubsystem.getCurrentCommand() == null
 			&& willBeHubShift
 		);
