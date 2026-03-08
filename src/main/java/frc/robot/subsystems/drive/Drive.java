@@ -210,9 +210,6 @@ public class Drive extends VirtualSubsystem {
 		}
 
 		Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Measured", this.robotMeasuredSpeeds);
-		// RobotState.getInstance().addDriveMeasurement(this.gyroAngle, this.getModulePositions());
-
-		this.fieldMeasuredSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(this.robotMeasuredSpeeds, RobotState.getInstance().getEstimatedGlobalPose().getRotation());
 
 		// Skid Detection
 		// SwerveModuleState[] rotationalStates = new SwerveModuleState[DriveConstants.modules.length];
@@ -258,9 +255,15 @@ public class Drive extends VirtualSubsystem {
 		// } else
 		if (this.translationSubsystem.needsPostProcessing || this.rotationalSubsystem.needsPostProcessing) {
 			this.runRobotSpeeds(this.desiredRobotSpeeds);
+		} else if (this.translationSubsystem.getCurrentCommand() == null && this.rotationalSubsystem.getCurrentCommand() == null) {
+			this.stop();
 		}
 		LoggedTracer.logEpoch("VirtualSubsystem PostCommandPeriodic/Drive/Periodic");
 		LoggedTracer.logEpoch("VirtualSubsystem PostCommandPeriodic/Drive");
+	}
+
+	public void calculateFieldVelocity() {
+		this.fieldMeasuredSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(this.robotMeasuredSpeeds, RobotState.getInstance().getEstimatedGlobalPose().getRotation());
 	}
 
 	public void runSetpoints(SwerveModuleState... states) {
@@ -268,16 +271,26 @@ public class Drive extends VirtualSubsystem {
 		this.rotationalSubsystem.needsPostProcessing = false;
 		this.setpointStates = states;
 		Logger.recordOutput("Subsystems/Drive/Swerve States/Setpoints", this.setpointStates);
-		IntStream.range(0, this.modules.length).forEach((i) -> this.modules[i].runSetpoint(this.setpointStates[i]));
+		for (int i = 0; i < this.modules.length; i++) {
+			this.modules[i].runSetpoint(this.setpointStates[i]);
+		}
 		Logger.recordOutput("Subsystems/Drive/Swerve States/Setpoints Optimized", this.setpointStates);
 	}
 
 	private static final LoggedTunable<LinearAcceleration> forwardAccelLimitTunable = LoggedTunable.from("Subsystems/Drive/Accel Limits/Forward Accel Limit", MetersPerSecondPerSecond::of, 5000);
 	private static final LoggedTunable<LinearAcceleration> skidAccelLimitTunable = LoggedTunable.from("Subsystems/Drive/Accel Limits/Skid Accel Limit", MetersPerSecondPerSecond::of, 60);
 
-	public static final LoggedTunable<TiltAccelerationLimits> normalTiltLimitTunable = LoggedTunable.from("Subsystems/Drive/Accel Limits/Tilt Limits/Normal", new TiltAccelerationLimits(500, 500, 500, 500));
-	public static final LoggedTunable<TiltAccelerationLimits> extendedTiltLimitTunable = LoggedTunable.from("Subsystems/Drive/Accel Limits/Tilt Limits/Extended", new TiltAccelerationLimits(10, 12, 20, 20));
+	public static final LoggedTunable<TiltAccelerationLimits> normalTiltLimitTunable = LoggedTunable.from(
+		"Subsystems/Drive/Accel Limits/Tilt Limits/Normal",
+		new TiltAccelerationLimits(
+			500.0,
+			500.0,
+			500.0,
+			500.0
+		)
+	);
 	private TiltAccelerationLimits tiltLimits = normalTiltLimitTunable.get();
+
 	public void setTiltLimits(TiltAccelerationLimits tiltLimits) {
 		this.tiltLimits = tiltLimits;
 	}
@@ -469,6 +482,10 @@ public class Drive extends VirtualSubsystem {
 		public void stop() {
 			this.needsPostProcessing = false;
 			this.driveVelocity(0.0, 0.0);
+			if (!this.drive.rotationalSubsystem.needsPostProcessing) {
+				this.drive.stop();
+				System.out.println("STOPPING DRIVE FROM TRANSLATIONAL");
+			}
 		}
 
 		public Command fieldRelative(Supplier<ChassisSpeeds> speeds) {
@@ -554,11 +571,48 @@ public class Drive extends VirtualSubsystem {
 		}
 		public void stop() {
 			this.needsPostProcessing = false;
-			this.driveVelocity(0);
+			this.driveVelocity(0.0);
+			if (!this.drive.translationSubsystem.needsPostProcessing) {
+				this.drive.stop();
+				System.out.println("STOPPING DRIVE FROM ROTATIONAL");
+			}
 		}
 
 		public Command spin(DoubleSupplier omega) {
 			return Commands.runEnd(() -> driveVelocity(omega.getAsDouble()), this::stop, this);
+		}
+
+		public Command genHeadingPIDCommand(String name, LoggedTunable<PIDConstants> pidGains, DoubleSupplier measuredHeadingRadsSupplier, DoubleSupplier targetHeadingRadsSupplier) {
+			final var rotational = this;
+			return new Command() {
+				private final PIDController pid = new PIDController(pidGains.get().kP(), pidGains.get().kI(), pidGains.get().kD());
+
+				{
+					this.setName(name);
+					this.addRequirements(rotational);
+
+					this.pid.enableContinuousInput(-Math.PI, Math.PI);
+				}
+
+				@Override
+				public void initialize() {
+					if (pidGains.hasChanged(this.hashCode())) {
+						pidGains.get().update(this.pid);
+					}
+				}
+
+				@Override
+				public void execute() {
+					var measuredHeadingRads = measuredHeadingRadsSupplier.getAsDouble();
+					var targetHeadingRads = targetHeadingRadsSupplier.getAsDouble();
+					rotational.driveVelocity(this.pid.calculate(measuredHeadingRads, targetHeadingRads));
+				}
+
+				@Override
+				public void end(boolean interrupted) {
+					rotational.stop();
+				}
+			};
 		}
 
 		// public Command defenseSpin(Joystick joystick) {
