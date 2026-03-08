@@ -1,0 +1,22 @@
+package frc.robot.subsystems.rollers.feeder;
+
+import java.util.Optional;
+
+import org.littletonrobotics.junction.AutoLog;
+
+import frc.util.NeutralMode;
+import frc.util.loggerUtil.inputs.LoggedMotor;
+
+public interface FeederIO {
+	@AutoLog
+	public static class FeederIOInputs {
+		boolean motorConnected = false;
+		LoggedMotor motor = new LoggedMotor();
+	}
+
+	public default void updateInputs(FeederIOInputs inputs) {}
+
+	public default void setVolts(double volts) {}
+
+	public default void stop(Optional<NeutralMode> neutralMode) {}
+}

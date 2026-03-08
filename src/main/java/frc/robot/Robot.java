@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -141,6 +142,9 @@ public class Robot extends LoggedRobot {
 
 			this.robotContainer.apriltagVision.periodic();
 
+			this.robotContainer.drive.calculateFieldVelocity();
+			LoggedTracer.logEpoch("CommandScheduler Periodic/Calculate Field Velocity");
+
 			this.robotContainer.drive.structureRoot.setPose(RobotState.getInstance().getEstimatedGlobalPose());
 			RobotState.getInstance().log();
 			LoggedTracer.logEpoch("CommandScheduler Periodic/RobotState Log");
@@ -151,8 +155,8 @@ public class Robot extends LoggedRobot {
 			Mechanism3d.logAscopeComponents();
 			LoggedTracer.logEpoch("CommandScheduler Periodic/Mechanism3d LogAscopeComponents");
 
-			//Mechanism3d.logAscopeAxes();
-			LoggedTracer.logEpoch("CommandScheduler Periodic/Mechanism3d LogAscopeAxes");
+			// Mechanism3d.logAscopeAxes();
+			// LoggedTracer.logEpoch("CommandScheduler Periodic/Mechanism3d LogAscopeAxes");
 
 			LoggedTracer.logEpoch("CommandScheduler Periodic/Log Intake Gamepieces");
 

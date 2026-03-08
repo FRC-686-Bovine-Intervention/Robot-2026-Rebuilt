@@ -65,7 +65,7 @@ public class Drive extends VirtualSubsystem {
 
 	public final Module[] modules = new Module[DriveConstants.moduleConstants.length];
 
-	private static final LoggedTunableNumber rotationCorrection = LoggedTunable.from("Drive/Rotation Correction", 0.125);
+	private static final LoggedTunableNumber rotationCorrection = LoggedTunable.from("Subsystems/Drive/Rotation Correction", 0.125);
 	public static final Supplier<DoubleSupplier> maxDriveSpeedEnvCoef = Environment.switchVar(
 		() -> 1.0,
 		new LoggedNetworkNumber("Demo Constraints/Max Translational Percentage", 0.25)::get
@@ -202,17 +202,14 @@ public class Drive extends VirtualSubsystem {
 		for (int i = 0; i < this.modules.length; i++) {
 			this.measuredStates[i] = this.modules[i].getModuleState();
 		}
-		Logger.recordOutput("Drive/Swerve States/Measured", this.measuredStates);
+		Logger.recordOutput("Subsystems/Drive/Swerve States/Measured", this.measuredStates);
 
 		this.robotMeasuredSpeeds = DriveConstants.kinematics.toChassisSpeeds(this.measuredStates);
 		if (this.gyroInputs.connected) {
 			this.robotMeasuredSpeeds.omegaRadiansPerSecond = this.gyroInputs.yawVelocityRadsPerSec;
 		}
 
-		Logger.recordOutput("Drive/Chassis Speeds/Measured", this.robotMeasuredSpeeds);
-		// RobotState.getInstance().addDriveMeasurement(this.gyroAngle, this.getModulePositions());
-
-		// this.fieldMeasuredSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(this.robotMeasuredSpeeds, this.gyroAngle);
+		Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Measured", this.robotMeasuredSpeeds);
 
 		// Skid Detection
 		// SwerveModuleState[] rotationalStates = new SwerveModuleState[DriveConstants.modules.length];
@@ -227,22 +224,22 @@ public class Drive extends VirtualSubsystem {
 		//     translationalStates[i] = new SwerveModuleState(translational.getNorm(), translational.getAngle());
 		// }
 
-		// Logger.recordOutput("Drive/SwerveStates/Rotational States", rotationalStates);
-		// Logger.recordOutput("Drive/SwerveStates/Translational States", translationalStates);
+		// Logger.recordOutput("Subsystems/Drive/SwerveStates/Rotational States", rotationalStates);
+		// Logger.recordOutput("Subsystems/Drive/SwerveStates/Translational States", translationalStates);
 
 		// var minTranslational = Arrays.stream(translationalStates).mapToDouble((state) -> state.speedMetersPerSecond).map(Math::abs).min().orElse(0);
 		// var maxTranslational = Arrays.stream(translationalStates).mapToDouble((state) -> state.speedMetersPerSecond).map(Math::abs).max().orElse(0);
 		// var averageTranslational = Arrays.stream(translationalStates).mapToDouble((state) -> state.speedMetersPerSecond).map(Math::abs).average().orElse(0);
 		// var maxDistanceFromAverage = Arrays.stream(translationalStates).mapToDouble((state) -> state.speedMetersPerSecond).map(Math::abs).map((a) -> averageTranslational - a).map(Math::abs).average().orElse(0);
-		// Logger.recordOutput("Drive/Skid Detection/Min Translational Speed", minTranslational);
-		// Logger.recordOutput("Drive/Skid Detection/Max Translational Speed", maxTranslational);
-		// Logger.recordOutput("Drive/Skid Detection/MaxMin Ratio", maxTranslational / minTranslational);
-		// Logger.recordOutput("Drive/Skid Detection/Largest From Average", maxDistanceFromAverage);
+		// Logger.recordOutput("Subsystems/Drive/Skid Detection/Min Translational Speed", minTranslational);
+		// Logger.recordOutput("Subsystems/Drive/Skid Detection/Max Translational Speed", maxTranslational);
+		// Logger.recordOutput("Subsystems/Drive/Skid Detection/MaxMin Ratio", maxTranslational / minTranslational);
+		// Logger.recordOutput("Subsystems/Drive/Skid Detection/Largest From Average", maxDistanceFromAverage);
 
 		// Clearing log fields
-		Logger.recordOutput("Drive/Chassis Speeds/Setpoint", emptySpeeds);
-		Logger.recordOutput("Drive/Swerve States/Setpoints", emptyStates);
-		Logger.recordOutput("Drive/Swerve States/Setpoints Optimized", emptyStates);
+		Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Setpoint", emptySpeeds);
+		Logger.recordOutput("Subsystems/Drive/Swerve States/Setpoints", emptyStates);
+		Logger.recordOutput("Subsystems/Drive/Swerve States/Setpoints Optimized", emptyStates);
 
 		LoggedTracer.logEpoch("CommandScheduler Periodic/VirtualSubsystem Periodic/Drive/Clear Log Fields");
 		LoggedTracer.logEpoch("CommandScheduler Periodic/VirtualSubsystem Periodic/Drive");
@@ -258,26 +255,42 @@ public class Drive extends VirtualSubsystem {
 		// } else
 		if (this.translationSubsystem.needsPostProcessing || this.rotationalSubsystem.needsPostProcessing) {
 			this.runRobotSpeeds(this.desiredRobotSpeeds);
+		} else if (this.translationSubsystem.getCurrentCommand() == null && this.rotationalSubsystem.getCurrentCommand() == null) {
+			this.stop();
 		}
 		LoggedTracer.logEpoch("VirtualSubsystem PostCommandPeriodic/Drive/Periodic");
 		LoggedTracer.logEpoch("VirtualSubsystem PostCommandPeriodic/Drive");
+	}
+
+	public void calculateFieldVelocity() {
+		this.fieldMeasuredSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(this.robotMeasuredSpeeds, RobotState.getInstance().getEstimatedGlobalPose().getRotation());
 	}
 
 	public void runSetpoints(SwerveModuleState... states) {
 		this.translationSubsystem.needsPostProcessing = false;
 		this.rotationalSubsystem.needsPostProcessing = false;
 		this.setpointStates = states;
-		Logger.recordOutput("Drive/Swerve States/Setpoints", this.setpointStates);
-		IntStream.range(0, this.modules.length).forEach((i) -> this.modules[i].runSetpoint(this.setpointStates[i]));
-		Logger.recordOutput("Drive/Swerve States/Setpoints Optimized", this.setpointStates);
+		Logger.recordOutput("Subsystems/Drive/Swerve States/Setpoints", this.setpointStates);
+		for (int i = 0; i < this.modules.length; i++) {
+			this.modules[i].runSetpoint(this.setpointStates[i]);
+		}
+		Logger.recordOutput("Subsystems/Drive/Swerve States/Setpoints Optimized", this.setpointStates);
 	}
 
-	private static final LoggedTunable<LinearAcceleration> forwardAccelLimitTunable = LoggedTunable.from("Drive/Accel Limits/Forward Accel Limit", MetersPerSecondPerSecond::of, 5000);
-	private static final LoggedTunable<LinearAcceleration> skidAccelLimitTunable = LoggedTunable.from("Drive/Accel Limits/Skid Accel Limit", MetersPerSecondPerSecond::of, 60);
+	private static final LoggedTunable<LinearAcceleration> forwardAccelLimitTunable = LoggedTunable.from("Subsystems/Drive/Accel Limits/Forward Accel Limit", MetersPerSecondPerSecond::of, 5000);
+	private static final LoggedTunable<LinearAcceleration> skidAccelLimitTunable = LoggedTunable.from("Subsystems/Drive/Accel Limits/Skid Accel Limit", MetersPerSecondPerSecond::of, 60);
 
-	public static final LoggedTunable<TiltAccelerationLimits> normalTiltLimitTunable = LoggedTunable.from("Drive/Accel Limits/Tilt Limits/Normal", new TiltAccelerationLimits(500, 500, 500, 500));
-	public static final LoggedTunable<TiltAccelerationLimits> extendedTiltLimitTunable = LoggedTunable.from("Drive/Accel Limits/Tilt Limits/Extended", new TiltAccelerationLimits(10, 12, 20, 20));
+	public static final LoggedTunable<TiltAccelerationLimits> normalTiltLimitTunable = LoggedTunable.from(
+		"Subsystems/Drive/Accel Limits/Tilt Limits/Normal",
+		new TiltAccelerationLimits(
+			500.0,
+			500.0,
+			500.0,
+			500.0
+		)
+	);
 	private TiltAccelerationLimits tiltLimits = normalTiltLimitTunable.get();
+
 	public void setTiltLimits(TiltAccelerationLimits tiltLimits) {
 		this.tiltLimits = tiltLimits;
 	}
@@ -288,12 +301,12 @@ public class Drive extends VirtualSubsystem {
 		this.desiredRobotSpeeds.vxMetersPerSecond = vxMetersPerSecond;
 		this.desiredRobotSpeeds.vyMetersPerSecond = vyMetersPerSecond;
 		this.desiredRobotSpeeds.omegaRadiansPerSecond = omegaRadsPerSecond;
-		Logger.recordOutput("Drive/Chassis Speeds/Desired Speed", this.desiredRobotSpeeds);
+		Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Desired Speed", this.desiredRobotSpeeds);
 
 		var desiredDelta = this.desiredRobotSpeeds.minus(this.robotMeasuredSpeeds);
 		var desiredAccel = desiredDelta.div(RobotConstants.rioUpdatePeriodSecs);
-		Logger.recordOutput("Drive/Chassis Speeds/Desired Delta", desiredDelta);
-		Logger.recordOutput("Drive/Chassis Speeds/Desired Accel", desiredAccel);
+		Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Desired Delta", desiredDelta);
+		Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Desired Accel", desiredAccel);
 
 		var limitedAccel = desiredAccel;
 
@@ -302,10 +315,10 @@ public class Drive extends VirtualSubsystem {
 		var maxDesiredModuleAccel = Math.hypot(limitedAccel.vxMetersPerSecond, limitedAccel.vyMetersPerSecond) + Math.abs(limitedAccel.omegaRadiansPerSecond * DriveConstants.driveBaseRadius.in(Meters));
 		var forwardAccelLimit = /* (1 - (maxMeasuredModuleSpeed / DriveConstants.maxModuleSpeed.in(MetersPerSecond))) *  */forwardAccelLimitTunable.get().in(MetersPerSecondPerSecond);
 		var forwardAccelLimitingFactor = forwardAccelLimit / Math.max(maxDesiredModuleAccel, forwardAccelLimit);
-		Logger.recordOutput("Drive/Chassis Speeds/Forward Limit/Max Measured Module Speed", maxMeasuredModuleSpeed);
-		Logger.recordOutput("Drive/Chassis Speeds/Forward Limit/Max Desired Module Accel", maxDesiredModuleAccel);
-		Logger.recordOutput("Drive/Chassis Speeds/Forward Limit/Forward Accel Limit", forwardAccelLimit);
-		Logger.recordOutput("Drive/Chassis Speeds/Forward Limit/Limiting Factor", forwardAccelLimitingFactor);
+		Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Forward Limit/Max Measured Module Speed", maxMeasuredModuleSpeed);
+		Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Forward Limit/Max Desired Module Accel", maxDesiredModuleAccel);
+		Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Forward Limit/Forward Accel Limit", forwardAccelLimit);
+		Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Forward Limit/Limiting Factor", forwardAccelLimitingFactor);
 		limitedAccel = limitedAccel.times(forwardAccelLimitingFactor);
 
 		// Tilt Accel Limit
@@ -313,10 +326,10 @@ public class Drive extends VirtualSubsystem {
 		var desiredTiltAccelHeading = Math.atan2(limitedAccel.vyMetersPerSecond, limitedAccel.vxMetersPerSecond);
 		var tiltAccelLimit = this.tiltLimits.getMaxTiltAccelerationMPSS(desiredTiltAccelHeading);
 		var tiltAccelLimitingFactor = tiltAccelLimit / Math.max(desiredTiltAccel, tiltAccelLimit);
-		Logger.recordOutput("Drive/Chassis Speeds/Tilt Limit/Desired Tilt Accel", desiredTiltAccel);
-		Logger.recordOutput("Drive/Chassis Speeds/Tilt Limit/Desired Tilt Accel Heading", desiredTiltAccelHeading);
-		Logger.recordOutput("Drive/Chassis Speeds/Tilt Limit/Tilt Accel Limit", tiltAccelLimit);
-		Logger.recordOutput("Drive/Chassis Speeds/Tilt Limit/Limiting Factor", tiltAccelLimitingFactor);
+		Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Tilt Limit/Desired Tilt Accel", desiredTiltAccel);
+		Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Tilt Limit/Desired Tilt Accel Heading", desiredTiltAccelHeading);
+		Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Tilt Limit/Tilt Accel Limit", tiltAccelLimit);
+		Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Tilt Limit/Limiting Factor", tiltAccelLimitingFactor);
 		limitedAccel = new ChassisSpeeds(
 			limitedAccel.vxMetersPerSecond * tiltAccelLimitingFactor,
 			limitedAccel.vyMetersPerSecond * tiltAccelLimitingFactor,
@@ -327,9 +340,9 @@ public class Drive extends VirtualSubsystem {
 		var desiredSkidAccel = Math.hypot(limitedAccel.vxMetersPerSecond, limitedAccel.vyMetersPerSecond);
 		var skidAccelLimit = skidAccelLimitTunable.get().in(MetersPerSecondPerSecond);
 		var skidAccelLimitingFactor = skidAccelLimit / Math.max(desiredSkidAccel, skidAccelLimit);
-		Logger.recordOutput("Drive/Chassis Speeds/Skid Limit/Desired Skid Accel", desiredSkidAccel);
-		Logger.recordOutput("Drive/Chassis Speeds/Skid Limit/Skid Accel Limit", skidAccelLimit);
-		Logger.recordOutput("Drive/Chassis Speeds/Skid Limit/Limiting Factor", skidAccelLimitingFactor);
+		Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Skid Limit/Desired Skid Accel", desiredSkidAccel);
+		Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Skid Limit/Skid Accel Limit", skidAccelLimit);
+		Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Skid Limit/Limiting Factor", skidAccelLimitingFactor);
 		limitedAccel = new ChassisSpeeds(
 			limitedAccel.vxMetersPerSecond * skidAccelLimitingFactor,
 			limitedAccel.vyMetersPerSecond * skidAccelLimitingFactor,
@@ -339,10 +352,10 @@ public class Drive extends VirtualSubsystem {
 
 		var limitedDelta = limitedAccel.times(RobotConstants.rioUpdatePeriodSecs);
 		var limitedSpeeds = this.robotMeasuredSpeeds.plus(limitedDelta);
-		// Logger.recordOutput("Drive/Chassis Speeds/Limiting Factor", limitingFactor);
-		Logger.recordOutput("Drive/Chassis Speeds/Limited Accel", limitedAccel);
-		Logger.recordOutput("Drive/Chassis Speeds/Limited Delta", limitedDelta);
-		Logger.recordOutput("Drive/Chassis Speeds/Limited Speed", limitedSpeeds);
+		// Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Limiting Factor", limitingFactor);
+		Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Limited Accel", limitedAccel);
+		Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Limited Delta", limitedDelta);
+		Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Limited Speed", limitedSpeeds);
 
 		ChassisSpeeds correctedSpeeds = ChassisSpeeds.discretize(limitedSpeeds, rotationCorrection.get());
 		this.setpointStates = DriveConstants.kinematics.toSwerveModuleStates(correctedSpeeds, this.centerOfRotation);
@@ -389,7 +402,7 @@ public class Drive extends VirtualSubsystem {
 
 	public void setCenterOfRotation(Translation2d cor) {
 		this.centerOfRotation = cor;
-		Logger.recordOutput("Drive/Center of Rotation", RobotState.getInstance().getEstimatedGlobalPose().transformBy(new Transform2d(this.centerOfRotation, Rotation2d.kZero)));
+		Logger.recordOutput("Subsystems/Drive/Center of Rotation", RobotState.getInstance().getEstimatedGlobalPose().transformBy(new Transform2d(this.centerOfRotation, Rotation2d.kZero)));
 	}
 
 	/** Stops the drive. */
@@ -469,6 +482,10 @@ public class Drive extends VirtualSubsystem {
 		public void stop() {
 			this.needsPostProcessing = false;
 			this.driveVelocity(0.0, 0.0);
+			if (!this.drive.rotationalSubsystem.needsPostProcessing) {
+				this.drive.stop();
+				System.out.println("STOPPING DRIVE FROM TRANSLATIONAL");
+			}
 		}
 
 		public Command fieldRelative(Supplier<ChassisSpeeds> speeds) {
@@ -493,7 +510,7 @@ public class Drive extends VirtualSubsystem {
 			final var translational = this;
 			return new Command() {
 				private static final LoggedTunable<PIDConstants> pidConsts = LoggedTunable.from(
-					"Drive/Translational/Simple PID",
+					"Subsystems/Drive/Translational/Simple PID",
 					new PIDConstants(
 						3.0,
 						0.0,
@@ -554,11 +571,48 @@ public class Drive extends VirtualSubsystem {
 		}
 		public void stop() {
 			this.needsPostProcessing = false;
-			this.driveVelocity(0);
+			this.driveVelocity(0.0);
+			if (!this.drive.translationSubsystem.needsPostProcessing) {
+				this.drive.stop();
+				System.out.println("STOPPING DRIVE FROM ROTATIONAL");
+			}
 		}
 
 		public Command spin(DoubleSupplier omega) {
 			return Commands.runEnd(() -> driveVelocity(omega.getAsDouble()), this::stop, this);
+		}
+
+		public Command genHeadingPIDCommand(String name, LoggedTunable<PIDConstants> pidGains, DoubleSupplier measuredHeadingRadsSupplier, DoubleSupplier targetHeadingRadsSupplier) {
+			final var rotational = this;
+			return new Command() {
+				private final PIDController pid = new PIDController(pidGains.get().kP(), pidGains.get().kI(), pidGains.get().kD());
+
+				{
+					this.setName(name);
+					this.addRequirements(rotational);
+
+					this.pid.enableContinuousInput(-Math.PI, Math.PI);
+				}
+
+				@Override
+				public void initialize() {
+					if (pidGains.hasChanged(this.hashCode())) {
+						pidGains.get().update(this.pid);
+					}
+				}
+
+				@Override
+				public void execute() {
+					var measuredHeadingRads = measuredHeadingRadsSupplier.getAsDouble();
+					var targetHeadingRads = targetHeadingRadsSupplier.getAsDouble();
+					rotational.driveVelocity(this.pid.calculate(measuredHeadingRads, targetHeadingRads));
+				}
+
+				@Override
+				public void end(boolean interrupted) {
+					rotational.stop();
+				}
+			};
 		}
 
 		// public Command defenseSpin(Joystick joystick) {
@@ -568,7 +622,7 @@ public class Drive extends VirtualSubsystem {
 		//             this.addRequirements(subsystem);
 		//             this.setName("Defense Spin");
 		//         }
-		//         private static final LoggedTunableNumber defenseSpinLinearThreshold = LoggedTunable.from("Drive/Defense Spin Linear Threshold", 0.125);
+		//         private static final LoggedTunableNumber defenseSpinLinearThreshold = LoggedTunable.from("Subsystems/Drive/Defense Spin Linear Threshold", 0.125);
 		//         private static final Matrix<N2, N2> perpendicularMatrix =
 		//             MatBuilder.fill(
 		//                 Nat.N2(), Nat.N2(),
@@ -624,15 +678,15 @@ public class Drive extends VirtualSubsystem {
 		// }
 
 		private static final LoggedTunable<PIDConstants> pidConsts = LoggedTunable.from(
-			"Drive/Rotational/PID",
+			"Subsystems/Drive/Rotational/PID",
 			new PIDConstants(
 				0.2,
 				0.0,
 				0.0
 			)
 		);
-		private static final LoggedTunable<Angle> headingTolerance = LoggedTunable.from("Drive/Rotational/Heading Tolerance", Degrees::of, 1.0);
-		private static final LoggedTunable<AngularVelocity> omegaTolerance = LoggedTunable.from("Drive/Rotational/Heading Tolerance", DegreesPerSecond::of, 1.0);
+		private static final LoggedTunable<Angle> headingTolerance = LoggedTunable.from("Subsystems/Drive/Rotational/Heading Tolerance", Degrees::of, 1.0);
+		private static final LoggedTunable<AngularVelocity> omegaTolerance = LoggedTunable.from("Subsystems/Drive/Rotational/Heading Tolerance", DegreesPerSecond::of, 1.0);
 
 		public Command pidControlledOptionalHeading(Supplier<Optional<Rotation2d>> headingSupplier) {
 			var subsystem = this;
