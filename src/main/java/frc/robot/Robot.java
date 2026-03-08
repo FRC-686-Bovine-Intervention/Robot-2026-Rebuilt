@@ -142,6 +142,9 @@ public class Robot extends LoggedRobot {
 
 			this.robotContainer.apriltagVision.periodic();
 
+			this.robotContainer.drive.calculateFieldVelocity();
+			LoggedTracer.logEpoch("CommandScheduler Periodic/Calculate Field Velocity");
+
 			this.robotContainer.drive.structureRoot.setPose(RobotState.getInstance().getEstimatedGlobalPose());
 			RobotState.getInstance().log();
 			LoggedTracer.logEpoch("CommandScheduler Periodic/RobotState Log");

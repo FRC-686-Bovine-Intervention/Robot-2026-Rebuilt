@@ -19,7 +19,7 @@ public class Agitator extends SubsystemBase {
 	private final AgitatorIOInputsAutoLogged inputs = new AgitatorIOInputsAutoLogged();
 
 	private static final LoggedTunable<Voltage> idleVoltage = LoggedTunable.from("Subsystems/Rollers/Agitiator/Commands/Idle/Voltage", Volts::of, 0.0);
-	private static final LoggedTunable<Voltage> agitateVoltage = LoggedTunable.from("Subsystems/Rollers/Agitiator/Commands/Agitate/Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> agitateVoltage = LoggedTunable.from("Subsystems/Rollers/Agitiator/Commands/Agitate/Voltage", Volts::of, 6.0);
 	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Subsystems/Rollers/Agitiator/Commands/Eject/Voltage", Volts::of, 0.0);
 
 	private final Alert motorDisconnectedAlert = new Alert("Subsystems/Rollers/Agitator/Alerts", "Motor Disconnected", AlertType.kError);

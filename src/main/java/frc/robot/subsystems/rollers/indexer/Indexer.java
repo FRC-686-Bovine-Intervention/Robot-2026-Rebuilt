@@ -19,7 +19,7 @@ public class Indexer extends SubsystemBase {
 	private final IndexerIOInputsAutoLogged inputs = new IndexerIOInputsAutoLogged();
 
 	private static final LoggedTunable<Voltage> idleVoltage = LoggedTunable.from("Subsystems/Rollers/Indexer/Commands/Idle/Voltage", Volts::of, 0.0);
-	private static final LoggedTunable<Voltage> indexVoltage = LoggedTunable.from("Subsystems/Rollers/Indexer/Commands/Index/Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> indexVoltage = LoggedTunable.from("Subsystems/Rollers/Indexer/Commands/Index/Voltage", Volts::of, 4.5);
 	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Subsystems/Rollers/Indexer/Commands/Eject/Voltage", Volts::of, 0.0);
 
 	private final Alert motorDisconnectedAlert = new Alert("Subsystems/Rollers/Indexer/Alerts", "Motor Disconnected", AlertType.kError);
