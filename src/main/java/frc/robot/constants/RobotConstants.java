@@ -16,7 +16,7 @@ import edu.wpi.first.units.measure.Time;
 import frc.robot.Robot;
 
 public final class RobotConstants {
-	public static final boolean tuningMode = false;
+	public static final boolean tuningMode = true;
 
 	public static final Mass robotWeight = Pounds.of(125);
 	public static final MomentOfInertia robotMOI = KilogramSquareMeters.of(6);
@@ -27,7 +27,7 @@ public final class RobotConstants {
 	public static final Distance centerToFrontFrame = frameLength.div(2);
 	public static final Distance centerToSideFrame = frameWidth.div(2);
 
-	public static final Distance bumperThickness = Inches.of(4);
+	public static final Distance bumperThickness = Inches.of(3.625);
 
 	public static final Distance centerToFrontBumper = centerToFrontFrame.plus(bumperThickness);
 	public static final Distance centerToSideBumper = centerToSideFrame.plus(bumperThickness);

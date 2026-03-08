@@ -62,7 +62,7 @@ public final class DriveConstants {
 			HardwareDevices.frontLeftDriveMotorID, HardwareDevices.frontLeftTurnMotorID,
 			InvertedValue.CounterClockwise_Positive,
 			Rotation2d.kCCW_90deg,
-			Rotations.of(0.7326064),
+			Rotations.of(0.3238442),
 			new Translation2d(
 				trackWidthX.div(+2),
 				trackWidthY.div(+2)
@@ -73,7 +73,7 @@ public final class DriveConstants {
 			HardwareDevices.frontRightDriveMotorID, HardwareDevices.frontRightTurnMotorID,
 			InvertedValue.CounterClockwise_Positive,
 			Rotation2d.kZero,
-			Rotations.of(0.7325602),
+			Rotations.of(0.8459126),
 			new Translation2d(
 				trackWidthX.div(+2),
 				trackWidthY.div(-2)
@@ -84,7 +84,7 @@ public final class DriveConstants {
 			HardwareDevices.backLeftDriveMotorID, HardwareDevices.backLeftTurnMotorID,
 			InvertedValue.CounterClockwise_Positive,
 			Rotation2d.k180deg,
-			Rotations.of(0.6867877),
+			Rotations.of(0.000863050503),
 			new Translation2d(
 				trackWidthX.div(-2),
 				trackWidthY.div(+2)
@@ -95,7 +95,7 @@ public final class DriveConstants {
 			HardwareDevices.backRightDriveMotorID, HardwareDevices.backRightTurnMotorID,
 			InvertedValue.CounterClockwise_Positive,
 			Rotation2d.kCW_90deg,
-			Rotations.of(0.8682748),
+			Rotations.of(0.5872595),
 			new Translation2d(
 				trackWidthX.div(-2),
 				trackWidthY.div(-2)

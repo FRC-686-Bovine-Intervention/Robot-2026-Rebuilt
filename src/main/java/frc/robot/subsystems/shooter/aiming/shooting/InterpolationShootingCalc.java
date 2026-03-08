@@ -19,7 +19,7 @@ import frc.util.loggerUtil.tunables.LoggedTunable;
 
 public class InterpolationShootingCalc implements ShootingCalc {
 
-	private static final LoggedTunable<Time> lookaheadTime = LoggedTunable.from("Subsystems/Shooter/Aiming/Lookahead Seconds", Seconds::of, 0.035);
+	private static final LoggedTunable<Time> lookaheadTime = LoggedTunable.from("Subsystems/Shooter/Aiming/Lookahead Seconds", Seconds::of, 1.0);
 	private static final LoggedTunable<Distance> azimuthTolerance = LoggedTunable.from("Subsystems/Shooter/Aiming/Tolerance/Azimuth", Centimeters::of, 100);
 	private static final LoggedTunable<Distance> altitudeDegsTolerance = LoggedTunable.from("Subsystems/Shooter/Aiming/Tolerance/Altitude", Centimeters::of, 46);
 	private static final LoggedTunable<Angle> customAzimuthOffset = LoggedTunable.from("Subsystems/Shooter/Aiming/Custom Azimuth Offset", Radians::of, 0.0);
@@ -33,7 +33,8 @@ public class InterpolationShootingCalc implements ShootingCalc {
 	private double targetDriveHeadingRads;
 
 	@Override
-	public void calculate(Translation2d robotPos, ChassisSpeeds fieldSpeeds, Translation3d aimPoint) {
+	public void calculate(Pose2d robotPose, ChassisSpeeds fieldSpeeds, Translation3d aimPoint) {
+		var robotPos = robotPose.getTranslation();
 		this.aimPoint = aimPoint;
 
 		var predictedX = robotPos.getX() + fieldSpeeds.vxMetersPerSecond * lookaheadTime.get().in(Seconds);
@@ -81,4 +82,8 @@ public class InterpolationShootingCalc implements ShootingCalc {
 		return this.aimPoint;
 	}
 
+	@Override
+	public double getTOFSeconds() {
+		return 0.0; //Must be handled by the caller
+	}
 }

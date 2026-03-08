@@ -79,6 +79,8 @@ dependencies {
 
 	implementation "gov.nist.math:jama:1.0.3"
 
+	implementation "com.google.code.gson:gson:2.10.1"
+
 	def akitJson = new groovy.json.JsonSlurper().parseText(new File(projectDir.getAbsolutePath() + "/vendordeps/AdvantageKit.json").text)
 	annotationProcessor "org.littletonrobotics.akit:akit-autolog:$akitJson.version"
 }
@@ -218,4 +220,14 @@ spotless {
 		indentWithSpaces(2)
 		endWithNewline()
 	}
+}
+
+tasks.register('PhysicsSim', JavaExec) {
+	dependsOn classes
+	mainClass.set("tasks.physicsSim.PhysicsSimulation")
+	classpath = sourceSets.main.runtimeClasspath
+}
+
+tasks.named("jar") {
+	dependsOn("PhysicsSim")
 }
