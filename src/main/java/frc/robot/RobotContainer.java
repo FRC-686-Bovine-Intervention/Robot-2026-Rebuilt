@@ -55,6 +55,7 @@ import frc.robot.subsystems.intake.rollers.IntakeRollersIO;
 import frc.robot.subsystems.intake.slam.IntakeSlam;
 import frc.robot.subsystems.intake.slam.IntakeSlamIO;
 import frc.robot.subsystems.intake.slam.IntakeSlamIOSim;
+import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.rollers.RollerSensorsIO;
 import frc.robot.subsystems.rollers.RollerSensorsIOCANdi;
 import frc.robot.subsystems.rollers.Rollers;
@@ -163,25 +164,25 @@ public class RobotContainer {
 					new CameraIOPhoton("Left Top"),
 					"Hub Zoom",
 					VisionConstants.topLeftMount,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().hubZoomCamConnection.setFlag(connected);}
 				);
 				this.leftBroadCamera = new Camera(
 					new CameraIOPhoton("Left Bottom"),
 					"Left Broad",
 					VisionConstants.bottomLeftMount,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().leftBroadCamConnection.setFlag(connected);}
 				);
 				this.rightBroadCamera = new Camera(
 					new CameraIOPhoton("Right Top"),
 					"Right Broad",
 					VisionConstants.topRightMount,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().rightBroadCamConnection.setFlag(connected);}
 				);
 				this.backBroadCamera = new Camera(
 					new CameraIOPhoton("Right Bottom"),
 					"Back Broad",
 					VisionConstants.bottomRightMount,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().backBroadCamConnection.setFlag(connected);}
 				);
 
 				commonCANdi.configSend();
@@ -223,25 +224,25 @@ public class RobotContainer {
 					new CameraIO() {},
 					"Top Left",
 					Transform3d.kZero,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().hubZoomCamConnection.setFlag(connected);}
 				);
 				this.leftBroadCamera = new Camera(
 					new CameraIO() {},
 					"Bottom Left",
 					Transform3d.kZero,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().leftBroadCamConnection.setFlag(connected);}
 				);
 				this.rightBroadCamera = new Camera(
 					new CameraIO() {},
 					"Top Right",
 					Transform3d.kZero,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().rightBroadCamConnection.setFlag(connected);}
 				);
 				this.backBroadCamera = new Camera(
 					new CameraIO() {},
 					"Bottom Right",
 					Transform3d.kZero,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().backBroadCamConnection.setFlag(connected);}
 				);
 
 				commonCANdi.configSend();
@@ -282,25 +283,25 @@ public class RobotContainer {
 					new CameraIO() {},
 					"Top Left",
 					Transform3d.kZero,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().hubZoomCamConnection.setFlag(connected);}
 				);
 				this.leftBroadCamera = new Camera(
 					new CameraIO() {},
 					"Bottom Left",
 					Transform3d.kZero,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().leftBroadCamConnection.setFlag(connected);}
 				);
 				this.rightBroadCamera = new Camera(
 					new CameraIO() {},
 					"Top Right",
 					Transform3d.kZero,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().rightBroadCamConnection.setFlag(connected);}
 				);
 				this.backBroadCamera = new Camera(
 					new CameraIO() {},
 					"Bottom Right",
 					Transform3d.kZero,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().backBroadCamConnection.setFlag(connected);}
 				);
 			}
 		}

@@ -30,10 +30,15 @@ public class Leds extends VirtualSubsystem {
 		System.out.println("[Init Leds] Instantiating Leds");
 		this.hardwareStrip = new AddressableStrip(HardwareDevices.ledPort, 80);
 
-		var leftStrip = this.hardwareStrip.substrip(0, 40);
-		var rightStrip = this.hardwareStrip.substrip(40, 80).reverse();
+		final var rightHopperStrip = this.hardwareStrip.substrip(0, 20).reverse();
+		final var rightTowerStrip = this.hardwareStrip.substrip(20, 40);
+		final var leftTowerStrip = this.hardwareStrip.substrip(40, 60).reverse();
+		final var leftHopperStrip = this.hardwareStrip.substrip(60, 80);
 
-		var sideStrips = leftStrip.parallel(rightStrip);
+		final var leftStrip = leftTowerStrip.concat(leftHopperStrip);
+		final var rightStrip = rightTowerStrip.concat(rightHopperStrip);
+
+		final var sideStrips = leftStrip.parallel(rightStrip);
 
 		this.bootingAnimation = new FlashingAnimation(this.hardwareStrip, (t) -> WaveFunction.Sinusoidal.applyAsDouble(System.currentTimeMillis() / 1000.0), InterpolationFunction.linear.gradient(Color.kBlack, Color.kDimGray));
 		this.autonomousBackgroundAnimation = new FillAnimation(sideStrips, Color.kBlack);
@@ -46,9 +51,11 @@ public class Leds extends VirtualSubsystem {
 		this.allianceColorAnimation = new AllianceColorAnimation(sideStrips, Color.kFirstBlue, Color.kRed);
 		this.driverStationConnection = new StatusLightAnimation(sideStrips.substrip(0, 2), Color.kOrange, Color.kGreen);
 		this.fmsConnection = new FillAnimation(sideStrips.substrip(0, 2), Color.kBlue);
-		this.flCamConnection = new StatusLightAnimation(sideStrips.substrip(2, 3), Color.kOrange, Color.kGreen);
-		this.frCamConnection = new StatusLightAnimation(sideStrips.substrip(3, 4), Color.kOrange, Color.kGreen);
-		this.intakeCamConnection = new StatusLightAnimation(sideStrips.substrip(4, 5), Color.kOrange, Color.kGreen);
+		this.hubZoomCamConnection = new StatusLightAnimation(sideStrips.substrip(2, 3), Color.kOrange, Color.kGreen);
+		this.leftBroadCamConnection = new StatusLightAnimation(sideStrips.substrip(3, 4), Color.kOrange, Color.kGreen);
+		this.rightBroadCamConnection = new StatusLightAnimation(sideStrips.substrip(4, 5), Color.kOrange, Color.kGreen);
+		this.backBroadCamConnection = new StatusLightAnimation(sideStrips.substrip(5, 6), Color.kOrange, Color.kGreen);
+		this.intakeCamConnection = new StatusLightAnimation(sideStrips.substrip(6, 7), Color.kOrange, Color.kGreen);
 
 		this.loadingNotifier = new Notifier(() -> {
 			synchronized(this) {
@@ -63,8 +70,10 @@ public class Leds extends VirtualSubsystem {
 	public final FlashingAnimation bootingAnimation;
 	public final StatusLightAnimation driverStationConnection;
 	public final FillAnimation fmsConnection;
-	public final StatusLightAnimation flCamConnection;
-	public final StatusLightAnimation frCamConnection;
+	public final StatusLightAnimation hubZoomCamConnection;
+	public final StatusLightAnimation leftBroadCamConnection;
+	public final StatusLightAnimation rightBroadCamConnection;
+	public final StatusLightAnimation backBroadCamConnection;
 	public final StatusLightAnimation intakeCamConnection;
 	public final FillAnimation estopped;
 	public final FillAnimation autonomousBackgroundAnimation;
@@ -102,8 +111,10 @@ public class Leds extends VirtualSubsystem {
 		if (DriverStation.isDisabled()) {
 			this.driverStationConnection.apply();
 			this.fmsConnection.applyIfFlagged();
-			this.flCamConnection.apply();
-			this.frCamConnection.apply();
+			this.hubZoomCamConnection.apply();
+			this.leftBroadCamConnection.apply();
+			this.rightBroadCamConnection.apply();
+			this.backBroadCamConnection.apply();
 			this.intakeCamConnection.apply();
 		} else {
 
