@@ -127,7 +127,7 @@ public class BumpMitigation implements Runnable {
 		//Top
 		//Bottom
 		if (fieldSpeeds.vxMetersPerSecond < 0) {
-			box[1] = original[1] + fieldSpeeds.vxMetersPerSecond * BumpMitigation.velocityLookaheadTime.get().in(Seconds);
+			box[1] = original[1] - fieldSpeeds.vxMetersPerSecond * BumpMitigation.velocityLookaheadTime.get().in(Seconds);
 		} else if (fieldSpeeds.vxMetersPerSecond > 0) {
 			box[0] = original[0] - fieldSpeeds.vxMetersPerSecond * BumpMitigation.velocityLookaheadTime.get().in(Seconds);
 		} else {
