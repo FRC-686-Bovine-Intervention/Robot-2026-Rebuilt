@@ -4,7 +4,6 @@ import java.util.Optional;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.DynamicMotionMagicExpoVoltage;
@@ -30,6 +29,9 @@ public class HookIOTalonFX implements HookIO {
 	// Hardware devices
 	protected final TalonFX motor = HardwareDevices.climberHookMotorID.talonFX();
 
+	// Device configuration
+	private final TalonFXConfiguration motorConfig = new TalonFXConfiguration();
+
 	// Status Signal caches
 	private final EncodedMotorStatusSignalCache motorStatusSignalCache;
 	private final StatusSignal<Double> motorProfilePositionStatusSignal;
@@ -49,30 +51,29 @@ public class HookIOTalonFX implements HookIO {
 	private final StaticBrake staticBrakeRequest = new StaticBrake();
 
 	public HookIOTalonFX() {
-		var motorConfig = new TalonFXConfiguration();
-
-		motorConfig.MotorOutput
+		this.motorConfig.MotorOutput
 			.withInverted(InvertedValue.CounterClockwise_Positive)
 			.withNeutralMode(NeutralModeValue.Brake)
 		;
-		motorConfig.SoftwareLimitSwitch
+		this.motorConfig.Feedback
+			.withSensorToMechanismRatio(HookConstants.motorToMechanism.reductionUnsigned())
+		;
+		this.motorConfig.SoftwareLimitSwitch
 			.withReverseSoftLimitEnable(false)
 			.withForwardSoftLimitEnable(true)
-			.withForwardSoftLimitThreshold(HookConstants.motorToMechanism.inverse().applyUnsigned(HookConstants.spool.distanceToAngle(HookConstants.maxLength)))
+			.withForwardSoftLimitThreshold(HookConstants.spool.distanceToAngle(HookConstants.maxLength))
 		;
-		motorConfig.HardwareLimitSwitch
+		this.motorConfig.HardwareLimitSwitch
 			.withReverseLimitEnable(true)
 			.withReverseLimitSource(ReverseLimitSourceValue.LimitSwitchPin)
 			.withReverseLimitType(ReverseLimitTypeValue.NormallyOpen)
 			.withReverseLimitAutosetPositionEnable(true)
-			.withReverseLimitAutosetPositionValue(HookConstants.motorToMechanism.inverse().applyUnsigned(HookConstants.spool.distanceToAngle(HookConstants.minLength)))
+			.withReverseLimitAutosetPositionValue(HookConstants.spool.distanceToAngle(HookConstants.limitSwitchLength))
 			.withForwardLimitEnable(false)
 		;
-		motorConfig.Slot0
+		this.motorConfig.Slot0
 			.withGravityType(GravityTypeValue.Elevator_Static)
 		;
-
-		this.motor.getConfigurator().apply(motorConfig);
 
 		this.motorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.motor);
 		this.motorProfilePositionStatusSignal = this.motor.getClosedLoopReference();
@@ -130,14 +131,14 @@ public class HookIOTalonFX implements HookIO {
 	}
 
 	@Override
-	public void setUnloadedPosition(double positionRads) {
+	public void setUnloadedPositionRads(double positionRads) {
 		this.motor.setControl(this.unloadedPositionRequest
 			.withPosition(Units.radiansToRotations(positionRads))
 		);
 	}
 
 	@Override
-	public void setClimbingPosition(double positionRads) {
+	public void setClimbingPositionRads(double positionRads) {
 		this.motor.setControl(this.climbingPositionRequest
 			.withPosition(Units.radiansToRotations(positionRads))
 		);
@@ -150,36 +151,35 @@ public class HookIOTalonFX implements HookIO {
 	}
 
 	@Override
-	public void configUnloadedProfile(double kV, double kA, double maxVelocityRadsPerSec) {
+	public void setUnloadedProfile(double kVVoltSecsPerRad, double kAVoltSecsSqrPerRad, double maxVelocityRadsPerSec) {
 		this.unloadedPositionRequest
-			.withKV(kV)
-			.withKA(kA)
+			.withKV(Units.rotationsToRadians(kVVoltSecsPerRad))
+			.withKA(Units.rotationsToRadians(kAVoltSecsSqrPerRad))
 			.withVelocity(Units.radiansToRotations(maxVelocityRadsPerSec))
 		;
 	}
 
 	@Override
-	public void configClimbingProfile(double kV, double kA, double maxVelocityRadsPerSec) {
+	public void setClimbingProfile(double kVVoltSecsPerRad, double kAVoltSecsSqrPerRad, double maxVelocityRadsPerSec) {
 		this.climbingPositionRequest
-			.withKV(kV)
-			.withKA(kA)
+			.withKV(Units.rotationsToRadians(kVVoltSecsPerRad))
+			.withKA(Units.rotationsToRadians(kAVoltSecsSqrPerRad))
 			.withVelocity(Units.radiansToRotations(maxVelocityRadsPerSec))
 		;
 	}
 
 	@Override
 	public void configFF(FFConstants ffConstants) {
-		var config = new Slot0Configs();
-		this.motor.getConfigurator().refresh(config);
-		ffConstants.update(config);
-		this.motor.getConfigurator().apply(config);
+		ffConstants.update(this.motorConfig.Slot0);
 	}
 
 	@Override
 	public void configPID(PIDConstants pidConstants) {
-		var config = new Slot0Configs();
-		this.motor.getConfigurator().refresh(config);
-		pidConstants.update(config);
-		this.motor.getConfigurator().apply(config);
+		pidConstants.update(this.motorConfig.Slot0);
+	}
+
+	@Override
+	public void configSend() {
+		this.motor.getConfigurator().apply(this.motorConfig);
 	}
 }

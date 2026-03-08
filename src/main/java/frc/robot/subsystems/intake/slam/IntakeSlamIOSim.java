@@ -29,10 +29,10 @@ public class IntakeSlamIOSim extends IntakeSlamIOTalonFX {
 		this.slamSim.setInputVoltage(-motorSimState.getMotorVoltage());
 		this.slamSim.update(RobotConstants.rioUpdatePeriodSecs);
 
-		var mechAngle = Radians.of(this.slamSim.getAngleRads()).unaryMinus();
-		var mechVelo = RadiansPerSecond.of(this.slamSim.getVelocityRadPerSec()).unaryMinus();
+		var mechAngle = Radians.of(this.slamSim.getAngleRads());
+		var mechVelo = RadiansPerSecond.of(this.slamSim.getVelocityRadPerSec());
 
-		encoderSimState.setRawPosition(IntakeSlamConstants.sensorToMechanism.inverse().applyUnsigned(mechAngle));
+		encoderSimState.setRawPosition(IntakeSlamConstants.sensorToMechanism.inverse().applyUnsigned(mechAngle.minus(IntakeSlamConstants.encoderZeroOffset)));
 		encoderSimState.setVelocity(IntakeSlamConstants.sensorToMechanism.inverse().applyUnsigned(mechVelo));
 
 		motorSimState.setRawRotorPosition(IntakeSlamConstants.motorToMechanism.inverse().applyUnsigned(mechAngle));

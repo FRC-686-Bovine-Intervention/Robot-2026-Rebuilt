@@ -36,10 +36,10 @@ public class Module {
 	private final SwerveModulePosition[] modulePositionSampleBuffer = new SwerveModulePosition[OdometryThread.MAX_BUFFER_SIZE];
 	private SwerveModulePosition[] modulePositionSamples = new SwerveModulePosition[0];
 
-	private static final LoggedTunable<LinearVelocity> brakeModeThreshold = LoggedTunable.from("Drive/Brake Mode Threshold", InchesPerSecond::of, 1);
+	private static final LoggedTunable<LinearVelocity> brakeModeThreshold = LoggedTunable.from("Subsystems/Drive/Brake Mode Threshold", InchesPerSecond::of, 1);
 
 	private static final LoggedTunable<PIDConstants> drivePIDConsts = LoggedTunable.from(
-		"Drive/Module/Drive/PID",
+		"Subsystems/Drive/Module/Drive/PID",
 		new PIDConstants(
 			0.1,
 			0,
@@ -47,7 +47,7 @@ public class Module {
 		)
 	);
 	private static final LoggedTunable<FFConstants> driveFFConsts = LoggedTunable.from(
-		"Drive/Module/Drive/FF",
+		"Subsystems/Drive/Module/Drive/FF",
 		new FFConstants(
 			0,
 			0,
@@ -56,7 +56,7 @@ public class Module {
 		)
 	);
 	private static final LoggedTunable<PIDConstants> azimuthPIDConsts = LoggedTunable.from(
-		"Drive/Module/Azimuth/PID",
+		"Subsystems/Drive/Module/Azimuth/PID",
 		new PIDConstants(
 			5*2*Math.PI,
 			0*2*Math.PI,
@@ -92,7 +92,7 @@ public class Module {
 			this.modulePositionSampleBuffer[i] = new SwerveModulePosition();
 		}
 
-		final var alertGroup = "Drive/Module " + this.config.name + "/Alerts";
+		final var alertGroup = "Subsystems/Drive/Module " + this.config.name + "/Alerts";
 
 		// this.driveMotorActiveFaultsAlert = new DeviceFaultAlerts(new Alert(alertGroup, "Drive Motor has active faults: ", AlertType.kError));
 		// this.driveMotorStickyFaultsAlert = new DeviceFaultAlerts(new Alert(alertGroup, "Drive Motor has sticky faults: ", AlertType.kWarning), FaultType.StatorCurrentLimit, FaultType.SupplyCurrentLimit);
