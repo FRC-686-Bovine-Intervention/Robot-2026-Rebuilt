@@ -36,7 +36,7 @@ public class ShootingIntakeSlammer implements Runnable {
 		this.extensionSystem = extensionSystem;
 		this.shooter = shooter;
 
-		this.command = this.slam.deploy(extensionSystem).withDeadline(Commands.waitTime(slamPeriod.get())).andThen(this.slam.retract().withDeadline(Commands.waitTime(slamPeriod.get()))).repeatedly();
+		this.command = this.slam.deploy(extensionSystem).withDeadline(Commands.waitTime(slamPeriod.get())).andThen(this.slam.stow().withDeadline(Commands.waitTime(slamPeriod.get()))).repeatedly();
 	}
 
 	@Override

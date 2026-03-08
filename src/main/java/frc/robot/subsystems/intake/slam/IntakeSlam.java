@@ -125,6 +125,10 @@ public class IntakeSlam extends SubsystemBase {
 		return this.getAngleRads() < deployFlopAngle.get().in(Radians);
 	}
 
+	public double getAngleRads() {
+		return this.measuredAngleRads;
+	}
+
 	@Override
 	public void periodic() {
 		LoggedTracer.logEpoch("CommandScheduler Periodic/Subsystem/Intake Slam/Before");
