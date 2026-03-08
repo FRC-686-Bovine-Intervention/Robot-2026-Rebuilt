@@ -28,8 +28,8 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.automations.BumpMitigation;
-import frc.robot.automations.HookAutoDeployHysterisis;
-import frc.robot.automations.IntakeDeployHysterisis;
+import frc.robot.automations.HookAutoDeployHysteresis;
+import frc.robot.automations.IntakeDeployHysteresis;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.ExtensionSystem;
@@ -545,8 +545,8 @@ public class RobotContainer {
 
 		// Bind automations
 		this.automationsLoop.bind(new BumpMitigation(this.drive));
-		this.automationsLoop.bind(new IntakeDeployHysterisis(this.intake.slam, intakeDeployCommand));
-		this.automationsLoop.bind(new HookAutoDeployHysterisis(this.climber.hook, climberHookAutoDeployCommand));
+		this.automationsLoop.bind(new IntakeDeployHysteresis(this.intake.slam, intakeDeployCommand));
+		this.automationsLoop.bind(new HookAutoDeployHysteresis(this.climber.hook, climberHookAutoDeployCommand));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
 

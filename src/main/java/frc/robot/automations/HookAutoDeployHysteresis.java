@@ -11,15 +11,15 @@ import frc.robot.subsystems.climber.hook.Hook;
 import frc.util.EdgeDetector;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 
-public class HookAutoDeployHysterisis implements Runnable {
+public class HookAutoDeployHysteresis implements Runnable {
 	private final Hook hook;
 	private final Command hookAutoDeployCommand;
 
-	private static final LoggedTunable<Distance> hysterisisThreshold = LoggedTunable.from("Automations/Climber Hook Auto Deploy Hysterisis/Threshold", Inches::of, 4.0);
+	private static final LoggedTunable<Distance> hysteresisThreshold = LoggedTunable.from("Automations/Climber Hook Auto Deploy Hysterisis/Threshold", Inches::of, 4.0);
 
 	private final EdgeDetector teleopEnableEdgeDetector = new EdgeDetector(false);
 
-	public HookAutoDeployHysterisis(Hook hook, Command hookAutoDeployCommand) {
+	public HookAutoDeployHysteresis(Hook hook, Command hookAutoDeployCommand) {
 		this.hook = hook;
 		this.hookAutoDeployCommand = hookAutoDeployCommand;
 	}
@@ -27,7 +27,7 @@ public class HookAutoDeployHysterisis implements Runnable {
 	@Override
 	public void run() {
 		this.teleopEnableEdgeDetector.update(DriverStation.isTeleopEnabled());
-		if (this.teleopEnableEdgeDetector.risingEdge() && this.hook.getMeasuredLengthMeters() <= HookAutoDeployHysterisis.hysterisisThreshold.get().in(Meters)) {
+		if (this.teleopEnableEdgeDetector.risingEdge() && this.hook.getMeasuredLengthMeters() <= HookAutoDeployHysteresis.hysteresisThreshold.get().in(Meters)) {
 			CommandScheduler.getInstance().schedule(this.hookAutoDeployCommand);
 		}
 	}

@@ -12,7 +12,7 @@ import frc.robot.subsystems.intake.slam.IntakeSlamConstants;
 import frc.util.EdgeDetector;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 
-public class IntakeDeployHysterisis implements Runnable {
+public class IntakeDeployHysteresis implements Runnable {
 	private final IntakeSlam intakeSlam;
 	private final Command intakeDeployCommand;
 
@@ -20,7 +20,7 @@ public class IntakeDeployHysterisis implements Runnable {
 
 	private final EdgeDetector teleopEnableEdgeDetector = new EdgeDetector(false);
 
-	public IntakeDeployHysterisis(IntakeSlam intakeSlam, Command intakeDeployCommand) {
+	public IntakeDeployHysteresis(IntakeSlam intakeSlam, Command intakeDeployCommand) {
 		this.intakeSlam = intakeSlam;
 		this.intakeDeployCommand = intakeDeployCommand;
 	}
@@ -28,7 +28,7 @@ public class IntakeDeployHysterisis implements Runnable {
 	@Override
 	public void run() {
 		this.teleopEnableEdgeDetector.update(DriverStation.isTeleopEnabled());
-		if (this.teleopEnableEdgeDetector.risingEdge() && this.intakeSlam.getMeasuredAngleRads() <= IntakeDeployHysterisis.hysterisisThreshold.get().in(Radians)) {
+		if (this.teleopEnableEdgeDetector.risingEdge() && this.intakeSlam.getMeasuredAngleRads() <= IntakeDeployHysteresis.hysterisisThreshold.get().in(Radians)) {
 			CommandScheduler.getInstance().schedule(this.intakeDeployCommand);
 		}
 	}
