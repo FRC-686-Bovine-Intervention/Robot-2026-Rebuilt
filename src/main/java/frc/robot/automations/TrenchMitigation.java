@@ -6,6 +6,7 @@ import static edu.wpi.first.units.Units.Seconds;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -21,9 +22,8 @@ import frc.util.loggerUtil.tunables.LoggedTunable;
 
 public class TrenchMitigation implements Runnable {
 	private final Drive drive;
-	private final IntakeSlam slam;
-	private final Command command;
-	private Command previousIntakeCommand;
+	private final Command intakeDeployCommand;
+	private final Command safetyCommand;
 
 	private final double[] staticBoxTopBlue = new double[] {
 		FieldConstants.trenchInnerX.getBlue().in(Meters),
@@ -62,17 +62,17 @@ public class TrenchMitigation implements Runnable {
 
 	private final EdgeDetector edgeDetector = new EdgeDetector(false);
 
-	public TrenchMitigation(Drive drive, IntakeSlam slam, ExtensionSystem extensionSystem, Hood hood) {
+	public TrenchMitigation(Drive drive, IntakeSlam slam, ExtensionSystem extensionSystem, Hood hood, Command intakeDeployCommand) {
 		this.drive = drive;
-		this.slam = slam;
-		this.command =
+		this.safetyCommand =
 			Commands.parallel(
-				this.slam.deploy(extensionSystem),
+				slam.deploy(extensionSystem),
 				hood.stow()
 			)
 			.withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
 			.withName("Trench Mitigation")
 		;
+		this.intakeDeployCommand = intakeDeployCommand;
 	}
 
 	@Override
@@ -86,19 +86,20 @@ public class TrenchMitigation implements Runnable {
 		this.updateBoundingBox(this.dynamicBoxBottomRed,  this.staticBoxBottomRed,  fieldSpeeds);
 
 		this.edgeDetector.update(
-			(this.withinBounds(this.dynamicBoxTopBlue,       robotPose.getTranslation())
-			|| this.withinBounds(this.dynamicBoxBottomBlue, robotPose.getTranslation())
-			|| this.withinBounds(this.dynamicBoxTopRed,     robotPose.getTranslation())
-			|| this.withinBounds(this.dynamicBoxBottomRed,  robotPose.getTranslation()))
-			&& edu.wpi.first.wpilibj.RobotState.isTeleop()
+			(
+				this.withinBounds(this.dynamicBoxTopBlue,       robotPose.getTranslation())
+				|| this.withinBounds(this.dynamicBoxBottomBlue, robotPose.getTranslation())
+				|| this.withinBounds(this.dynamicBoxTopRed,     robotPose.getTranslation())
+				|| this.withinBounds(this.dynamicBoxBottomRed,  robotPose.getTranslation())
+			)
+			&& DriverStation.isTeleopEnabled()
 		);
 
-		if (this.edgeDetector.risingEdge() && !this.command.isScheduled()) {
-			this.previousIntakeCommand = this.slam.getCurrentCommand();
-			CommandScheduler.getInstance().schedule(this.command);
-		} else if (this.edgeDetector.fallingEdge() && this.command.isScheduled()) {
-			CommandScheduler.getInstance().cancel(this.command);
-			CommandScheduler.getInstance().schedule(previousIntakeCommand);
+		if (this.edgeDetector.risingEdge() && !this.safetyCommand.isScheduled()) {
+			CommandScheduler.getInstance().schedule(this.safetyCommand);
+		} else if (this.edgeDetector.fallingEdge() && this.safetyCommand.isScheduled()) {
+			CommandScheduler.getInstance().cancel(this.safetyCommand);
+			CommandScheduler.getInstance().schedule(this.intakeDeployCommand);
 		}
 	}
 
