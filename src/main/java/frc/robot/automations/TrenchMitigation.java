@@ -21,7 +21,9 @@ import frc.util.loggerUtil.tunables.LoggedTunable;
 
 public class TrenchMitigation implements Runnable {
 	private final Drive drive;
+	private final IntakeSlam slam;
 	private final Command command;
+	private Command previousIntakeCommand;
 
 	private final double[] staticBoxTopBlue = new double[] {
 		FieldConstants.trenchInnerX.getBlue().in(Meters),
@@ -62,9 +64,10 @@ public class TrenchMitigation implements Runnable {
 
 	public TrenchMitigation(Drive drive, IntakeSlam slam, ExtensionSystem extensionSystem, Hood hood) {
 		this.drive = drive;
+		this.slam = slam;
 		this.command =
 			Commands.parallel(
-				slam.deploy(extensionSystem),
+				this.slam.deploy(extensionSystem),
 				hood.stow()
 			)
 			.withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
@@ -83,16 +86,19 @@ public class TrenchMitigation implements Runnable {
 		this.updateBoundingBox(this.dynamicBoxBottomRed,  this.staticBoxBottomRed,  fieldSpeeds);
 
 		this.edgeDetector.update(
-			this.withinBounds(this.dynamicBoxTopBlue,       robotPose.getTranslation())
+			(this.withinBounds(this.dynamicBoxTopBlue,       robotPose.getTranslation())
 			|| this.withinBounds(this.dynamicBoxBottomBlue, robotPose.getTranslation())
 			|| this.withinBounds(this.dynamicBoxTopRed,     robotPose.getTranslation())
-			|| this.withinBounds(this.dynamicBoxBottomRed,  robotPose.getTranslation())
+			|| this.withinBounds(this.dynamicBoxBottomRed,  robotPose.getTranslation()))
+			&& edu.wpi.first.wpilibj.RobotState.isTeleop()
 		);
 
 		if (this.edgeDetector.risingEdge() && !this.command.isScheduled()) {
+			this.previousIntakeCommand = this.slam.getCurrentCommand();
 			CommandScheduler.getInstance().schedule(this.command);
 		} else if (this.edgeDetector.fallingEdge() && this.command.isScheduled()) {
 			CommandScheduler.getInstance().cancel(this.command);
+			CommandScheduler.getInstance().schedule(previousIntakeCommand);
 		}
 	}
 
