@@ -53,7 +53,9 @@ public class PhysicsShootingCalc implements ShootingCalc {
 
 		this.robotRotationRads = launchValues[2];
 		this.hoodAngleRads = launchValues[1];
+		Logger.recordOutput("DEBUG/PhysicsShooting/HoodAngle", this.hoodAngleRads);
 		this.flywheelSpeedMS = launchValues[0];
+		Logger.recordOutput("DEBUG/PhysicsShooting/FlywheelSpeed", this.flywheelSpeedMS);
 		this.aimPoint = aimPoint;
 		this.tofSeconds = tofSeconds;
 	}
