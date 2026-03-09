@@ -76,12 +76,12 @@ public class TrenchMitigation implements Runnable {
 	public void run() {
 		var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
 		var fieldSpeeds = this.drive.getFieldMeasuredSpeeds();
-		
+
 		this.updateBoundingBox(this.dynamicBoxTopBlue,    this.staticBoxTopBlue,    fieldSpeeds);
 		this.updateBoundingBox(this.dynamicBoxBottomBlue, this.staticBoxBottomBlue, fieldSpeeds);
 		this.updateBoundingBox(this.dynamicBoxTopRed,     this.staticBoxTopRed,     fieldSpeeds);
 		this.updateBoundingBox(this.dynamicBoxBottomRed,  this.staticBoxBottomRed,  fieldSpeeds);
-		
+
 		this.edgeDetector.update(
 			this.withinBounds(this.dynamicBoxTopBlue,       robotPose.getTranslation())
 			|| this.withinBounds(this.dynamicBoxBottomBlue, robotPose.getTranslation())
