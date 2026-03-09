@@ -30,6 +30,8 @@ import frc.robot.auto.AutoSelector;
 import frc.robot.automations.BumpMitigation;
 import frc.robot.automations.HookAutoDeployHysteresis;
 import frc.robot.automations.IntakeDeployHysteresis;
+import frc.robot.automations.shootingIntakeSlammer.HopperTrackerIOServer;
+import frc.robot.automations.shootingIntakeSlammer.ShootingIntakeSlammer;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.ExtensionSystem;
@@ -554,6 +556,8 @@ public class RobotContainer {
 		new Trigger(() -> translationJoystick.magnitude() > 0.0).whileTrue(driveTranslationCommand);
 		new Trigger(() -> Math.abs(rotateAxis.getAsDouble()) > 0.0).whileTrue(driveRotateCommand);
 
+		this.automationsLoop.bind(new BumpMitigation(this.drive));
+		this.automationsLoop.bind(new ShootingIntakeSlammer(new HopperTrackerIOServer(), this.intake.slam, this.extensionSystem, this.shooter));
 
 		// Setup position reset command
 		this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(FieldConstants.hubFrontRobotPose.getOurs())).ignoringDisable(true));
