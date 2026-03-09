@@ -27,7 +27,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
-import frc.robot.automations.AutomaticScoring;
+import frc.robot.automations.AutoScore;
 import frc.robot.automations.BumpMitigation;
 import frc.robot.automations.HookAutoDeployHysteresis;
 import frc.robot.automations.IntakeDeployHysteresis;
@@ -549,7 +549,7 @@ public class RobotContainer {
 		this.automationsLoop.bind(new BumpMitigation(this.drive));
 		this.automationsLoop.bind(new IntakeDeployHysteresis(this.intake.slam, intakeDeployCommand));
 		this.automationsLoop.bind(new HookAutoDeployHysteresis(this.climber.hook, climberHookAutoDeployCommand));
-		this.automationsLoop.bind(new AutomaticScoring(this.drive, this.shooter, this.rollers));
+		this.automationsLoop.bind(new AutoScore(this.drive, this.shooter, this.rollers));
 		this.automationsLoop.bind(new HubShiftNotifications(this.driveController));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
