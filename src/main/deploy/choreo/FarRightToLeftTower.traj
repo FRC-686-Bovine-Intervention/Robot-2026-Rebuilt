@@ -17,7 +17,7 @@
  },
  "params":{
   "waypoints":[
-    {"x":{"exp":"FarRight.x", "val":3.558422803878784}, "y":{"exp":"FarRight.y", "val":0.6738224029541016}, "heading":{"exp":"FarRight.heading", "val":0.0}, "intervals":27, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":{"exp":"FarRight.x", "val":3.5734100341796875}, "y":{"exp":"FarRight.y", "val":0.6738224029541016}, "heading":{"exp":"FarRight.heading", "val":0.0}, "intervals":27, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"LeftTowerMoveIn.x", "val":2.394882917404175}, "y":{"exp":"LeftTowerMoveIn.y", "val":4.5836052894592285}, "heading":{"exp":"LeftTowerMoveIn.heading", "val":0.015743012649996016}, "intervals":16, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"LeftTower.x", "val":1.0822818279266355}, "y":{"exp":"LeftTower.y", "val":4.613605499267578}, "heading":{"exp":"LeftTower.heading", "val":0.0}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
   "constraints":[

@@ -17,7 +17,7 @@
  },
  "params":{
   "waypoints":[
-    {"x":{"exp":"IncomingNeutralR.x", "val":6.638332843780518}, "y":{"exp":"IncomingNeutralR.y", "val":1.1584683656692505}, "heading":{"exp":"IncomingNeutralR.heading", "val":0.9314104805132608}, "intervals":20, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":{"exp":"IncomingNeutralR.x", "val":6.52476167678833}, "y":{"exp":"IncomingNeutralR.y", "val":1.1531788110733032}, "heading":{"exp":"IncomingNeutralR.heading", "val":0.97}, "intervals":20, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"FirstPoseInNeutralScatter.x", "val":7.512775897979736}, "y":{"exp":"FirstPoseInNeutralScatter.y", "val":1.850924372673035}, "heading":{"exp":"FirstPoseInNeutralScatter.heading", "val":0.0}, "intervals":22, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
     {"x":{"exp":"QuarterScatterR.x", "val":8.342095375061035}, "y":{"exp":"QuarterScatterR.y", "val":2.9427621364593506}, "heading":{"exp":"QuarterScatterR.heading", "val":2.214297613191292}, "intervals":13, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"MiddleScatter.x", "val":8.425623893737793}, "y":{"exp":"MiddleScatter.y", "val":4.052498817443848}, "heading":{"exp":"MiddleScatter.heading", "val":2.214297613191292}, "intervals":22, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},

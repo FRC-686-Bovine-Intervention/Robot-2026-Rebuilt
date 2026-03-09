@@ -1,5 +1,5 @@
 {
- "name":"OutpostToCenter",
+ "name":"OutpostToCenterShooter",
  "version":3,
  "snapshot":{
   "waypoints":[
@@ -15,7 +15,7 @@
  },
  "params":{
   "waypoints":[
-    {"x":{"exp":"outpost.x", "val":0.5560399889945984}, "y":{"exp":"outpost.y", "val":0.633793830871582}, "heading":{"exp":"outpost.heading", "val":0.0}, "intervals":26, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":{"exp":"Outpost.x", "val":0.5560399889945984}, "y":{"exp":"Outpost.y", "val":0.633793830871582}, "heading":{"exp":"Outpost.heading", "val":0.0}, "intervals":26, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"2.166947841644287 m", "val":2.166947841644287}, "y":{"exp":"2.5489847660064697 m", "val":2.5489847660064697}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":23, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
     {"x":{"exp":"CenterShooter.x", "val":2.979863405227661}, "y":{"exp":"CenterShooter.y", "val":4.041109085083008}, "heading":{"exp":"CenterShooter.heading", "val":0.0}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false}],
   "constraints":[

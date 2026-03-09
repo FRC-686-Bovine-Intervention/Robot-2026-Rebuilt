@@ -1,5 +1,5 @@
 {
- "name":"LeftToDepotToCenterPointingAtHub",
+ "name":"LeftToDepotToCenterShooterPointingAtHub",
  "version":3,
  "snapshot":{
   "waypoints":[
@@ -23,10 +23,10 @@
  },
  "params":{
   "waypoints":[
-    {"x":{"exp":"LeftStart.x", "val":3.5360476970672607}, "y":{"exp":"LeftStart.y", "val":5.887160301208496}, "heading":{"exp":"LeftStart.heading", "val":0.0}, "intervals":17, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":{"exp":"LeftStart.x", "val":3.5734100341796875}, "y":{"exp":"LeftStart.y", "val":5.887160301208496}, "heading":{"exp":"LeftStart.heading", "val":0.0}, "intervals":17, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"3.061896800994873 m", "val":3.061896800994873}, "y":{"exp":"6.039285182952881 m", "val":6.039285182952881}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":20, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
     {"x":{"exp":"1.6299784183502197 m", "val":1.6299784183502195}, "y":{"exp":"6.075083255767822 m", "val":6.075083255767822}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":22, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
-    {"x":{"exp":"depo.x", "val":1.1825040578842163}, "y":{"exp":"depo.y", "val":5.967689514160156}, "heading":{"exp":"depo.heading", "val":3.141592653589793}, "intervals":36, "split":true, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":{"exp":"Depo.x", "val":1.1825040578842163}, "y":{"exp":"Depo.y", "val":5.967689514160156}, "heading":{"exp":"Depo.heading", "val":3.141592653589793}, "intervals":36, "split":true, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"1.7164349555969238 m", "val":1.7164349555969238}, "y":{"exp":"4.952371597290039 m", "val":4.952371597290039}, "heading":{"exp":"-0.28805572876314944 rad", "val":-0.28805572876314944}, "intervals":20, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"CenterShooter.x", "val":2.979863405227661}, "y":{"exp":"CenterShooter.y", "val":4.041109085083008}, "heading":{"exp":"CenterShooter.heading", "val":0.0}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
   "constraints":[
