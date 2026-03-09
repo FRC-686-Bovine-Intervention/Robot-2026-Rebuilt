@@ -43,16 +43,16 @@ public class FollowTrajectoryCommand extends Command {
 	@Override
 	public void initialize() {
 		this.trajectoryTimer.reset();
+		if (TRANS_PID_CONSTS.hasChanged(this.hashCode())) {
+			TRANS_PID_CONSTS.get().update(this.translationalPID);
+		}
+		if (ROT_PID_CONSTS.hasChanged(this.hashCode())) {
+			ROT_PID_CONSTS.get().update(this.rotationalPID);
+		}
 	}
 
 	@Override
 	public void execute() {
-		if (LoggedTunable.hasChanged(this.hashCode(), TRANS_PID_CONSTS)) {
-			TRANS_PID_CONSTS.get().update(this.translationalPID);
-		}
-		if (LoggedTunable.hasChanged(this.hashCode(), ROT_PID_CONSTS)) {
-			ROT_PID_CONSTS.get().update(this.rotationalPID);
-		}
 		var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
 		var sample = this.trajectory.sampleAt(this.trajectoryTimer.get(), false).get();
 		var errX = sample.x - robotPose.getX();
