@@ -32,7 +32,4 @@ public interface HoodIO {
 	public default void configFF(FFConstants ffConstants) {}
 	public default void configPID(PIDConstants pidConstants) {}
 	public default void configSend() {}
-
-
-	public default void setHardLimit(boolean enable) {}
 }

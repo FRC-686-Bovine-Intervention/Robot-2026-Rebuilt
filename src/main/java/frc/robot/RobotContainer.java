@@ -28,6 +28,10 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.automations.BumpMitigation;
+import frc.robot.automations.TrenchMitigation;
+import frc.robot.automations.HookAutoDeployHysteresis;
+import frc.robot.automations.IntakeDeployHysteresis;
+import frc.robot.constants.FieldConstants;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.ExtensionSystem;
@@ -523,9 +527,10 @@ public class RobotContainer {
 			.withName("Aim to Pass")
 		;
 
-		final var climberStowCommand = this.climber.hook.stow();
-		final var climberDeployCommand = this.climber.hook.deploy();
-		final var climberClimbCommand = this.climber.hook.climb();
+		final var climberHookStowCommand = this.climber.hook.stow();
+		final var climberHookDeployCommand = this.climber.hook.deploy();
+		final var climberHookAutoDeployCommand = this.climber.hook.deploy().withName("Auto Deploy");
+		final var climberHookClimbCommand = this.climber.hook.climb();
 
 		// Set default commands
 		this.intake.rollers.setDefaultCommand(intakeRollersIdleCommand);
@@ -538,18 +543,19 @@ public class RobotContainer {
 		this.shooter.hood.setDefaultCommand(hoodStowCommand);
 		this.shooter.leftFlywheel.setDefaultCommand(leftFlywheelIdleCommand);
 		this.shooter.rightFlywheel.setDefaultCommand(rightFlywheelIdleCommand);
-
-		this.climber.hook.setDefaultCommand(climberStowCommand);
+		this.climber.hook.setDefaultCommand(climberHookStowCommand);
 
 		// Bind automations
 		this.automationsLoop.bind(new BumpMitigation(this.drive));
+		this.automationsLoop.bind(new TrenchMitigation(this.drive, this.intake.slam, this.extensionSystem, this.shooter.hood, intakeDeployCommand));
+		this.automationsLoop.bind(new IntakeDeployHysteresis(this.intake.slam, intakeDeployCommand));
+		this.automationsLoop.bind(new HookAutoDeployHysteresis(this.climber.hook, climberHookAutoDeployCommand));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
 
 		// Bind buttons
 		new Trigger(() -> translationJoystick.magnitude() > 0.0).whileTrue(driveTranslationCommand);
 		new Trigger(() -> Math.abs(rotateAxis.getAsDouble()) > 0.0).whileTrue(driveRotateCommand);
-
 
 		// Setup position reset command
 		this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(FieldConstants.hubFrontRobotPose.getOurs())).ignoringDisable(true));

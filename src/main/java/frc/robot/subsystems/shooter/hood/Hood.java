@@ -277,28 +277,4 @@ public class Hood extends SubsystemBase {
 			}
 		};
 	}
-
-	public Command genVoltageCommand(String name, DoubleSupplier voltageSupplier) {
-		final var hood = this;
-		return new Command() {
-			{
-				this.setName(name);
-				this.addRequirements(hood);
-			}
-
-			@Override
-			public void execute() {
-				hood.io.setVolts(voltageSupplier.getAsDouble());
-			}
-
-			@Override
-			public void end(boolean interrupted) {
-				hood.io.stop(NeutralMode.DEFAULT);
-			}
-		};
-	}
-
-	public void setHardLimit(boolean enable) {
-		this.io.setHardLimit(enable);
-	}
 }

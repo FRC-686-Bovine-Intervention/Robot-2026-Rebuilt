@@ -104,8 +104,8 @@ public class Flywheel extends SubsystemBase {
 
 		this.measuredSurfaceVeloMPS = FlywheelConstants.wheel.radiansToMeters(FlywheelConstants.motorToMechanism.applyUnsigned(this.inputs.masterMotor.encoder.getVelocityRadsPerSec()));
 
-		this.setpointSurfaceVeloMPS = FlywheelConstants.wheel.radiansToMeters(FlywheelConstants.motorToMechanism.applyUnsigned(this.inputs.motorProfilePositionRads));
-		this.setpointSurfaceAccelMPSS = FlywheelConstants.wheel.radiansToMeters(FlywheelConstants.motorToMechanism.applyUnsigned(this.inputs.motorProfileVelocityRadsPerSec));
+		this.setpointSurfaceVeloMPS = FlywheelConstants.wheel.radiansToMeters(this.inputs.motorProfilePositionRads);
+		this.setpointSurfaceAccelMPSS = FlywheelConstants.wheel.radiansToMeters(this.inputs.motorProfileVelocityRadsPerSec);
 
 		Logger.recordOutput("Subsystems/Shooter/Flywheels/" + this.config.name + "/Surface Velocity/Measured", this.getMeasuredSurfaceVeloMPS(), MetersPerSecond);
 		Logger.recordOutput("Subsystems/Shooter/Flywheels/" + this.config.name + "/Surface Velocity/Setpoint", this.getSetpointSurfaceVeloMPS(), MetersPerSecond);
