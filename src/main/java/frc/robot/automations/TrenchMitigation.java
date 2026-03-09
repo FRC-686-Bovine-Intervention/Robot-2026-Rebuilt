@@ -3,14 +3,13 @@ package frc.robot.automations;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Seconds;
 
-
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotState;
 import frc.robot.constants.FieldConstants;
 import frc.robot.subsystems.ExtensionSystem;
@@ -22,11 +21,7 @@ import frc.util.loggerUtil.tunables.LoggedTunable;
 
 public class TrenchMitigation implements Runnable {
 	private final Drive drive;
-	private final IntakeSlam slam;
-	private final ExtensionSystem extensionSystem;
-	private final Hood hood;
 	private final Command command;
-	private double lockedInHeading = 0;
 
 	private final double[] staticBoxTopBlue = new double[] {
 		FieldConstants.trenchInnerX.getBlue().in(Meters),
@@ -56,10 +51,10 @@ public class TrenchMitigation implements Runnable {
 		FieldConstants.bottomTrenchBottomY.in(Meters)
 	};
 
-	private double[] dynamicBoxTopBlue = java.util.Arrays.copyOf(staticBoxTopBlue, staticBoxTopBlue.length);
-	private double[] dynamicBoxBottomBlue = java.util.Arrays.copyOf(staticBoxBottomBlue, staticBoxBottomBlue.length);
-	private double[] dynamicBoxTopRed = java.util.Arrays.copyOf(staticBoxTopRed, staticBoxTopRed.length);
-	private double[] dynamicBoxBottomRed = java.util.Arrays.copyOf(staticBoxBottomRed, staticBoxBottomRed.length);
+	private double[] dynamicBoxTopBlue = java.util.Arrays.copyOf(this.staticBoxTopBlue, this.staticBoxTopBlue.length);
+	private double[] dynamicBoxBottomBlue = java.util.Arrays.copyOf(this.staticBoxBottomBlue, this.staticBoxBottomBlue.length);
+	private double[] dynamicBoxTopRed = java.util.Arrays.copyOf(this.staticBoxTopRed, this.staticBoxTopRed.length);
+	private double[] dynamicBoxBottomRed = java.util.Arrays.copyOf(this.staticBoxBottomRed, this.staticBoxBottomRed.length);
 
 	private static final LoggedTunable<Time> velocityLookaheadTime = LoggedTunable.from("Automations/Trench Mitigation/Box Scaling Factor", Seconds::of, 0.5);
 
@@ -67,33 +62,34 @@ public class TrenchMitigation implements Runnable {
 
 	public TrenchMitigation(Drive drive, IntakeSlam slam, ExtensionSystem extensionSystem, Hood hood) {
 		this.drive = drive;
-		this.slam = slam;
-		this.extensionSystem = extensionSystem;
-		this.hood = hood;
-		this.command = this.drive.rotationalSubsystem.pidControlledHeading(() -> {
-			return new Rotation2d(lockedInHeading);
-		}).alongWith(this.slam.deploy(extensionSystem).withInterruptBehavior(InterruptionBehavior.kCancelIncoming))
-		.alongWith(this.hood.stow()).withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
-		.withName("Trench Mitigation");
+		this.command =
+			Commands.parallel(
+				slam.deploy(extensionSystem),
+				hood.stow()
+			)
+			.withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
+			.withName("Trench Mitigation")
+		;
 	}
 
 	@Override
 	public void run() {
 		var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
-		var fieldSpeeds = drive.getFieldMeasuredSpeeds();
-		updateBoundingBox(dynamicBoxTopBlue, staticBoxTopBlue, fieldSpeeds);
-		updateBoundingBox(dynamicBoxBottomBlue, staticBoxBottomBlue, fieldSpeeds);
-		updateBoundingBox(dynamicBoxTopRed, staticBoxTopRed, fieldSpeeds);
-		updateBoundingBox(dynamicBoxBottomRed, staticBoxBottomRed, fieldSpeeds);
+		var fieldSpeeds = this.drive.getFieldMeasuredSpeeds();
+		
+		this.updateBoundingBox(this.dynamicBoxTopBlue,    this.staticBoxTopBlue,    fieldSpeeds);
+		this.updateBoundingBox(this.dynamicBoxBottomBlue, this.staticBoxBottomBlue, fieldSpeeds);
+		this.updateBoundingBox(this.dynamicBoxTopRed,     this.staticBoxTopRed,     fieldSpeeds);
+		this.updateBoundingBox(this.dynamicBoxBottomRed,  this.staticBoxBottomRed,  fieldSpeeds);
+		
 		this.edgeDetector.update(
-			(((withinBounds(dynamicBoxTopBlue, robotPose.getTranslation()) || withinBounds(dynamicBoxBottomBlue, robotPose.getTranslation())))
-			||
-			((withinBounds(dynamicBoxTopRed, robotPose.getTranslation()) || withinBounds(dynamicBoxBottomRed, robotPose.getTranslation())))
-			// && this.drive.getFieldMeasuredSpeeds().vxMetersPerSecond * (AllianceFlipUtil.getAlliance() == Alliance.Blue ? 1 : -1) < 0
-		));
+			this.withinBounds(this.dynamicBoxTopBlue,       robotPose.getTranslation())
+			|| this.withinBounds(this.dynamicBoxBottomBlue, robotPose.getTranslation())
+			|| this.withinBounds(this.dynamicBoxTopRed,     robotPose.getTranslation())
+			|| this.withinBounds(this.dynamicBoxBottomRed,  robotPose.getTranslation())
+		);
 
 		if (this.edgeDetector.risingEdge() && !this.command.isScheduled()) {
-			lockedInHeading = this.drive.getFieldMeasuredSpeeds().vxMetersPerSecond < 0 ? 0 : Math.PI;
 			CommandScheduler.getInstance().schedule(this.command);
 		} else if (this.edgeDetector.fallingEdge() && this.command.isScheduled()) {
 			CommandScheduler.getInstance().cancel(this.command);
