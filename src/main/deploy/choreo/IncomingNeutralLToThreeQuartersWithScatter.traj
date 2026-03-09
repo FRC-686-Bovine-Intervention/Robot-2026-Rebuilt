@@ -17,10 +17,10 @@
  },
  "params":{
   "waypoints":[
-    {"x":{"exp":"IncomingNeutralL.x", "val":6.623793125152588}, "y":{"exp":"IncomingNeutralL.y", "val":6.952133655548096}, "heading":{"exp":"IncomingNeutralL.heading", "val":-0.9699409903360444}, "intervals":29, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
-    {"x":{"exp":"QuarterScatterL.x", "val":8.455531120300293}, "y":{"exp":"QuarterScatterL.y", "val":5.307754993438721}, "heading":{"exp":"QuarterScatterL.heading", "val":-2.278227764112338}, "intervals":14, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
-    {"x":{"exp":"HalfScatterL.x", "val":8.455531120300293}, "y":{"exp":"HalfScatterL.y", "val":4.049190998077393}, "heading":{"exp":"HalfScatterL.heading", "val":-2.278227764112338}, "intervals":21, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
-    {"x":{"exp":"ThreeQuartersL.x", "val":7.805125713348389}, "y":{"exp":"ThreeQuartersL.y", "val":2.923752546310425}, "heading":{"exp":"ThreeQuartersL.heading", "val":-1.5707963267948966}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
+    {"x":{"exp":"IncomingNeutralL.x", "val":6.697170971899999}, "y":{"exp":"IncomingNeutralL.y", "val":7.436485}, "heading":{"exp":"IncomingNeutralL.heading", "val":-0.7853981633974483}, "intervals":29, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":{"exp":"QuarterScatterL.x", "val":8.27024}, "y":{"exp":"QuarterScatterL.y", "val":5.160645000000001}, "heading":{"exp":"QuarterScatterL.heading", "val":-2.356194490192345}, "intervals":14, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":{"exp":"HalfScatterL.x", "val":8.27024}, "y":{"exp":"HalfScatterL.y", "val":4.03479}, "heading":{"exp":"HalfScatterL.heading", "val":-2.356194490192345}, "intervals":21, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
+    {"x":{"exp":"ThreeQuartersL.x", "val":7.825740000000001}, "y":{"exp":"ThreeQuartersL.y", "val":2.908935}, "heading":{"exp":"ThreeQuartersL.heading", "val":-1.5707963267948966}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
   "constraints":[
     {"from":"first", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
     {"from":"last", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
