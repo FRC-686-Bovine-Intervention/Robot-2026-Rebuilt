@@ -1,127 +1,86 @@
-import { NT4_Client } from "../lib/NT4.js";
-
-const toRobotPrefix = "/DriverDashboard/ToRobot/";
-const toDashboardPrefix = "/DriverDashboard/FromRobot/";
-
-const hopperHeightName = "HopperHeight";
-const intakeDeployedName = "IntakeDeployed";
-
-let intakeDeployed = true;
-
-const ntClient = new NT4_Client(
-  window.location.hostname,
-  "DriverDashboard",
-  (topic) => {},
-  (topic) => {},
-  (topic, timestamp, value) => {
-    if (topic === toDashboardPrefix + intakeDeployedName) {
-      intakeDeployed = value;
-      updateUI();
-    }
-  },
-  () => {},
-  () => {}
-);
-
-window.addEventListener("load", () => {
-  ntClient.subscribe([
-    toDashboardPrefix + intakeDeployedName
-  ]);
-
-  ntClient.publishTopic(toRobotPrefix + hopperHeightName, "double");
-
-  ntClient.connect();
-  updateUI();
-});
-
-const fieldDOM = document.getElementById("field");
-const hopperBoxDOM = document.getElementById("hopper");
-
-let startX, startY, startW, startH, startL, startT;
-let mode = null;
-
-hopperBoxDOM.addEventListener("mousedown", e => {
-  e.preventDefault();
-
-  const handleClasses = ["n"];
-  const handleClicked = handleClasses.find(c => e.target.classList.contains(c));
-  mode = handleClicked;
-
-  startX = e.clientX;
-  startY = e.clientY;
-  startW = hopperBoxDOM.offsetWidth;
-  startH = hopperBoxDOM.offsetHeight;
-  startL = hopperBoxDOM.offsetLeft;
-  startT = hopperBoxDOM.offsetTop;
-
-  document.addEventListener("mousemove", onMove);
-  document.addEventListener("mouseup", stopDrag);
-});
-
-function onMove(e) {
-  if (mode !== "n") return;
-
-  const dy = e.clientY - startY;
-
-  let newH = startH - dy;
-  let newT = startT + dy;
-
-  const minSize = 20;
-
-  if (newH < minSize) {
-    newH = minSize;
-    newT = startT + (startH - minSize);
+const rightPanel   = document.getElementById('rightPanel');
+const imageFrame   = document.getElementById('imageFrame');
+const measureBox   = document.getElementById('measureBox');
+const measureLabel = document.getElementById('measureLabel');
+const yReadout     = document.getElementById('yReadout');
+const ratioReadout = document.getElementById('ratioReadout');
+const holdBtn      = document.getElementById('holdBtn');
+const btnState     = document.getElementById('btnState');
+const dragHandle   = document.getElementById('dragHandle');
+const ASPECT = 4 / 3;
+function resizeFrame() {
+  const pw = rightPanel.clientWidth;
+  const ph = rightPanel.clientHeight;
+  let fw, fh;
+  if (pw / ph > ASPECT) {
+    fh = ph * 0.88;
+    fw = fh * ASPECT;
+  } else {
+    fw = pw * 0.88;
+    fh = fw / ASPECT;
   }
-
-  hopperBoxDOM.style.top = newT + "px";
-  hopperBoxDOM.style.height = newH + "px";
-
-  const corners = getBoxRelativePositions();
-
-  ntClient.addSample(
-    toRobotPrefix + hopperHeightName,
-    corners.topLeft.y-corners.bottomRight.y
-  );
+  imageFrame.style.width  = fw + 'px';
+  imageFrame.style.height = fh + 'px';
 }
-
-function stopDrag() {
-  document.removeEventListener("mousemove", onMove);
-  document.removeEventListener("mouseup", stopDrag);
+resizeFrame();
+window.addEventListener('resize', resizeFrame);
+function applyRatio(ratio) {
+  ratio = Math.min(1, Math.max(0, ratio));
+  const frameH = imageFrame.getBoundingClientRect().height;
+  const pct = (ratio * 100).toFixed(1);
+  measureBox.style.height = (ratio * 100) + '%';
+  measureLabel.textContent = pct + '%';
+  yReadout.textContent = Math.round((1 - ratio) * frameH) + 'px';
+  ratioReadout.textContent = ratio.toFixed(3);
 }
-
-function getBoxRelativePositions() {
-  const bounds = document.getElementById("hopperbounds");
-  const box = document.getElementById("hopper");
-
-  const boundsRect = bounds.getBoundingClientRect();
-  const boxRect = box.getBoundingClientRect();
-
-  const boundsWidthPx = boundsRect.width;
-  const boundsHeightPx = boundsRect.height;
-
-  const HOPPER_WIDTH_IN = 24.75;
-  const pixelsPerIn = boundsWidthPx / HOPPER_WIDTH_IN;
-
-  const topLeftX_m =
-    (boxRect.left - boundsRect.left) / pixelsPerIn;
-  const topLeftY_m =
-    (boundsHeightPx - (boxRect.top - boundsRect.top)) / pixelsPerIn;
-
-  const bottomRightX_m =
-    (boxRect.right - boundsRect.left) / pixelsPerIn;
-  const bottomRightY_m =
-    (boundsHeightPx - (boxRect.bottom - boundsRect.top)) / pixelsPerIn;
-
-  return {
-    topLeft: { x: topLeftX_m, y: topLeftY_m },
-    bottomRight: { x: bottomRightX_m, y: bottomRightY_m }
-  };
+let isDragging = false;
+rightPanel.addEventListener('click', (e) => {
+  if (isDragging) return;
+  const frameRect = imageFrame.getBoundingClientRect();
+  const relY = e.clientY - frameRect.top;
+  const ratio = 1 - (relY / frameRect.height);
+  applyRatio(ratio);
+});
+function onDragStart(e) {
+  e.preventDefault();
+  isDragging = true;
+  measureBox.classList.add('dragging');
+  dragHandle.classList.add('active');
+  rightPanel.classList.add('dragging');
+  const moveEvent = e.type === 'touchstart' ? 'touchmove' : 'mousemove';
+  const endEvent  = e.type === 'touchstart' ? 'touchend'  : 'mouseup';
+  function onMove(ev) {
+    const clientY = ev.touches ? ev.touches[0].clientY : ev.clientY;
+    const frameRect = imageFrame.getBoundingClientRect();
+    const relY = clientY - frameRect.top;
+    const ratio = 1 - (relY / frameRect.height);
+    applyRatio(ratio);
+  }
+  function onEnd() {
+    setTimeout(() => { isDragging = false; }, 10);
+    measureBox.classList.remove('dragging');
+    dragHandle.classList.remove('active');
+    rightPanel.classList.remove('dragging');
+    document.removeEventListener(moveEvent, onMove);
+    document.removeEventListener(endEvent, onEnd);
+  }
+  document.addEventListener(moveEvent, onMove);
+  document.addEventListener(endEvent, onEnd);
 }
-
-function updateUI() {
-  hopperBoxDOM.style.width = intakeDeployed ? "69vh" : "37.5vh";
-
-  fieldDOM.style.backgroundImage = intakeDeployed
-    ? 'url("./media/deployed.png")'
-    : 'url("./media/retracted.png")';
+dragHandle.addEventListener('mousedown', onDragStart);
+dragHandle.addEventListener('touchstart', onDragStart, { passive: false });
+// Hold button
+let held = false;
+function setHeld(val) {
+  held = val;
+  holdBtn.classList.toggle('held', val);
+  btnState.textContent = val ? 'Paused' : 'Active';
+  btnState.classList.toggle('active', val);
 }
+holdBtn.addEventListener('mousedown', () => setHeld(true));
+document.addEventListener('mouseup', () => { if (held) setHeld(false); });
+holdBtn.addEventListener('mouseleave', (e) => {
+  if (!(e.buttons & 1)) setHeld(false);
+});
+holdBtn.addEventListener('touchstart', (e) => { e.preventDefault(); setHeld(true); });
+holdBtn.addEventListener('touchend', () => setHeld(false));

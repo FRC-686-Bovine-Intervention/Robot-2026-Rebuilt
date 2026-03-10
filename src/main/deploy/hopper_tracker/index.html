@@ -1,30 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Second Driver Dashboard</title>
-    <link rel="icon" href="./media/favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="./styles/main.css" />
-    <link rel="stylesheet" href="./styles/field.css" />
-    <link rel="stylesheet" href="./styles/slider.css" />
-    <link rel="stylesheet" href="./styles/controls.css" />
-  </head>
-  <body>
-    <div id="field">
-        <div id="hopper">
-            <div class="handle n"></div>
-        </div>
-        <div id="hopperbounds">
-            
-        </div>
-		<div id = "intakeUp">
-			
-		</div>
-		<div id = "intakeDown">
-			
-		</div>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Operator Dashboard</title>
+<link href="./styles/main.css" rel="stylesheet">
+<link href="./media/favicon.ico" rel="icon" type="image/x-icon">
+</head>
+<body>
+
+<div class="layout">
+  <div class="left-panel">
+    <div class="panel-label">Bovine Intervention<br/>Operator Dashboard</div>
+
+    <button class="hold-btn" id="holdBtn">
+      <div class="ring"></div>
+      <div class="btn-icon"></div>
+      <div class="btn-text">Hold</div>
+    </button>
+
+    <div class="status-readout">
+      Shooting State<br>
+      <span id="btnState">Active</span>
     </div>
-    <script src="./scripts/index.js" type="module" defer></script>
-  </body>
+  </div>
+
+  <div class="right-panel" id="rightPanel">
+
+    <div class="image-frame" id="imageFrame">
+      <div class="bg-art"></div>
+
+      <div class="measure-box" id="measureBox" style="height:50%;">
+        <span class="measure-label" id="measureLabel">50%</span>
+        <div class="tick tl"></div>
+        <div class="tick tr"></div>
+        <div class="tick bl"></div>
+        <div class="tick br"></div>
+        <div class="crosshair">
+          <div class="crosshair-v"></div>
+          <div class="crosshair-h"></div>
+        </div>
+        <div class="drag-handle" id="dragHandle">
+          <div class="drag-handle-pip"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="readout-overlay">
+      Y-POSITION<br><span class="val" id="yReadout">—</span>
+      <br><br>
+      RATIO<br><span class="val" id="ratioReadout">0.500</span>
+    </div>
+
+    <div class="corner-label">Hopper Height Estimation</div>
+
+    <div class="vignette"></div>
+    <div class="scanlines"></div>
+  </div>
+
+</div>
+
+<script src="./scripts/index.js" defer></script>
+</body>
 </html>
