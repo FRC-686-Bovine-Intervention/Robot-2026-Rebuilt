@@ -2,11 +2,7 @@ package frc.robot.subsystems.shooter.aiming.shooting;
 
 import static edu.wpi.first.units.Units.Meters;
 
-import org.littletonrobotics.junction.Logger;
-
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.subsystems.shooter.ShooterConstants;
@@ -21,14 +17,29 @@ public class PhysicsShootingCalc implements ShootingCalc {
 	private Translation3d aimPoint;
 	private double tofSeconds;
 
+	private double[] radialUnitVectorCartesian = new double[] {0.0, 0.0};
+	private double[] tangentialUnitVectorCartesian = new double[] {0.0, 0.0};
+	private double[] robotSpeedsArray = new double[] {0.0, 0.0};
+
+	private double[] shooterFieldSpaceCartesian = new double[] {0.0, 0.0, 0.0};
+	private double[] shooterHubSpaceCartesian = new double[] {0.0, 0.0};
+	private double[] hubRobotSpaceCartesian = new double[] {0.0, 0.0};
+
+	private double[] staticAimVector = new double[] {0.0, 0.0, 0.0};
+	private double[] radialVector = new double[] {0.0, 0.0};
+	private double[] offsetVector = new double[] {0.0, 0.0};
+	private double[] newLaunchVector = new double[] {0.0, 0.0, 0.0};
+	private double[] launchValues = new double[] {0.0, 0.0, 0.0};
+
 	@Override
 	public void calculate(Pose2d robotPose, ChassisSpeeds fieldSpeeds, Translation3d aimPoint) {
-		var shooterHubSpaceCartesian = new Pose3d(robotPose).transformBy(HoodConstants.hoodBase).getTranslation().toTranslation2d().minus(aimPoint.toTranslation2d());
-		double radius = shooterHubSpaceCartesian.getNorm();
+		MathExtraUtil.transformBy(shooterFieldSpaceCartesian, robotPose, HoodConstants.hoodBase);
+		MathExtraUtil.putVector(shooterHubSpaceCartesian, shooterFieldSpaceCartesian[0] - aimPoint.getX(), shooterFieldSpaceCartesian[1] - aimPoint.getY());
+		double radius = MathExtraUtil.norm(shooterHubSpaceCartesian);
 
-		var radialUnitVectorCartesian = new double[] {-shooterHubSpaceCartesian.getX() / radius, -shooterHubSpaceCartesian.getY() / radius};
-		var tangentialUnitVectorCartesian = new double[] {-radialUnitVectorCartesian[1], radialUnitVectorCartesian[0]};
-		var robotSpeedsArray = new double[] { fieldSpeeds.vxMetersPerSecond, fieldSpeeds.vyMetersPerSecond };
+		MathExtraUtil.putVector(radialUnitVectorCartesian, -shooterHubSpaceCartesian[0] / radius, -shooterHubSpaceCartesian[1] / radius);
+		MathExtraUtil.putVector(tangentialUnitVectorCartesian, -radialUnitVectorCartesian[1], radialUnitVectorCartesian[0]);
+		MathExtraUtil.putVector(robotSpeedsArray, fieldSpeeds.vxMetersPerSecond, fieldSpeeds.vyMetersPerSecond);
 
 		double radialVelocity = MathExtraUtil.dotProduct(radialUnitVectorCartesian, robotSpeedsArray);
 		double tangentialVelocity = MathExtraUtil.dotProduct(tangentialUnitVectorCartesian, robotSpeedsArray);
@@ -37,25 +48,18 @@ public class PhysicsShootingCalc implements ShootingCalc {
 		var flywheelSpeedMPS = ShooterConstants.flywheelPolynomial.evaluate(radius, radialVelocity);
 		var tofSeconds = ShooterConstants.tofPolynomial.evaluate(radius, radialVelocity);
 
-		var hubRobotSpaceCartesian = aimPoint.toTranslation2d().minus(robotPose.getTranslation());
-		double robotAngleRads = Math.atan2(hubRobotSpaceCartesian.getY(), hubRobotSpaceCartesian.getX());
+		MathExtraUtil.putVector(hubRobotSpaceCartesian, aimPoint.getX() - robotPose.getX(), aimPoint.getY() - robotPose.getY());
+		double robotAngleRads = Math.atan2(hubRobotSpaceCartesian[1], hubRobotSpaceCartesian[0]);
 
-		var staticAimVector = getLaunchVector(flywheelSpeedMPS, hoodAngleRads, robotAngleRads);
-		var radialVector = MathExtraUtil.scalarMultiply(radialUnitVectorCartesian, radialVelocity);
-		var offsetVector = MathExtraUtil.scalarMultiply(tangentialUnitVectorCartesian, -tangentialVelocity);
-		var newVector = MathExtraUtil.addVectors(staticAimVector, offsetVector);
-		Logger.recordOutput("DEBUG/PhysicsShooting/NewVector", new Translation3d(newVector[0], newVector[1], newVector[2]));
-		Logger.recordOutput("DEBUG/PhysicsShooting/staticVector", new Translation3d(staticAimVector[0], staticAimVector[1], staticAimVector[2]));
-		Logger.recordOutput("DEBUG/PhysicsShooting/radialVector", new Translation2d(radialVector[0], radialVector[1]));
-		Logger.recordOutput("DEBUG/PhysicsShooting/offsetVector", new Translation2d(offsetVector[0], offsetVector[1]));
-		Logger.recordOutput("DEBUG/PhysicsShooting/tangentialVeloUnitVec", new Translation2d(tangentialUnitVectorCartesian[0], tangentialUnitVectorCartesian[1]));
-		var launchValues = getLaunchValues(newVector, radialVector);
+		getLaunchVector(staticAimVector, flywheelSpeedMPS, hoodAngleRads, robotAngleRads);
+		MathExtraUtil.scalarMultiply(radialVector, radialUnitVectorCartesian, radialVelocity);
+		MathExtraUtil.scalarMultiply(offsetVector, tangentialUnitVectorCartesian, -tangentialVelocity);
+		MathExtraUtil.addVectors(newLaunchVector, staticAimVector, offsetVector);
+		getLaunchValues(launchValues, newLaunchVector, radialVector);
 
 		this.robotRotationRads = launchValues[2];
 		this.hoodAngleRads = launchValues[1];
-		Logger.recordOutput("DEBUG/PhysicsShooting/HoodAngle", this.hoodAngleRads);
 		this.flywheelSpeedMS = launchValues[0];
-		Logger.recordOutput("DEBUG/PhysicsShooting/FlywheelSpeed", this.flywheelSpeedMS);
 		this.aimPoint = aimPoint;
 		this.tofSeconds = tofSeconds;
 	}
@@ -85,22 +89,24 @@ public class PhysicsShootingCalc implements ShootingCalc {
 		return this.tofSeconds;
 	}
 
-	private static double[] getLaunchVector(double flywheelSpeedMPS, double hoodAngleRads, double robotAngleRads) {
+	private static void getLaunchVector(double[] out, double flywheelSpeedMPS, double hoodAngleRads, double robotAngleRads) {
 		double exitVelo = getExitVelo(flywheelSpeedMPS, getFVelo());
-		// double exitVelo = flywheelSpeedMPS;
 		double x = exitVelo * Math.cos(Math.PI / 2.0 - hoodAngleRads) * Math.cos(robotAngleRads);
 		double y = exitVelo * Math.cos(Math.PI / 2.0 - hoodAngleRads) * Math.sin(robotAngleRads);
 		double z = exitVelo * Math.sin(Math.PI / 2.0 - hoodAngleRads);
-		return new double[] {x, y, z};
+		out[0] = x;
+		out[1] = y;
+		out[2] = z;
 	}
 
-	private static double[] getLaunchValues(double[] launchVector, double[] radialVelo) {
+	private static void getLaunchValues(double[] out, double[] launchVector, double[] radialVelo) {
 		double exitVelo = Math.sqrt(Math.pow(launchVector[0], 2) + Math.pow(launchVector[1], 2) + Math.pow(launchVector[2], 2));
 		var robotAngleVector = MathExtraUtil.addVectors(launchVector, radialVelo);
 		double robotAngleRads = Math.atan2(robotAngleVector[1], robotAngleVector[0]);
 		double hoodAngleRads = Math.PI / 2.0 - Math.atan2(launchVector[2], Math.sqrt(Math.pow(launchVector[0], 2) + Math.pow(launchVector[1], 2)));
-		return new double[] {getFlywheelSpeedMPS(exitVelo), hoodAngleRads, robotAngleRads};
-		// return new double[] {exitVelo, hoodAngleRads, robotAngleRads};
+		out[0] = getFlywheelSpeedMPS(exitVelo);
+		out[1] = hoodAngleRads;
+		out[2] = robotAngleRads;
 	}
 
 	private static double getExitVelo(double flywheelSpeedMPS, double fVelo) {
@@ -112,7 +118,6 @@ public class PhysicsShootingCalc implements ShootingCalc {
 	}
 
 	private static double getFVelo() {
-		Logger.recordOutput("DEBUG/PhysicsShooting/FVelo",  (FlywheelConstants.flywheelToHood.reductionUnsigned() / FlywheelConstants.wheel.effectiveRadius().in(Meters)) * FlywheelConstants.hoodRoller.effectiveRadius().in(Meters));
 		return (FlywheelConstants.flywheelToHood.reductionUnsigned() / FlywheelConstants.wheel.effectiveRadius().in(Meters)) * FlywheelConstants.hoodRoller.effectiveRadius().in(Meters);
 	}
 }
