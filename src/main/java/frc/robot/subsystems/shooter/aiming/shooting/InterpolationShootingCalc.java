@@ -1,7 +1,5 @@
 package frc.robot.subsystems.shooter.aiming.shooting;
 
-import static edu.wpi.first.units.Units.Centimeters;
-import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Seconds;
 
 import org.littletonrobotics.junction.Logger;
@@ -11,18 +9,16 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Time;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 
 public class InterpolationShootingCalc implements ShootingCalc {
 
-	private static final LoggedTunable<Time> lookaheadTime = LoggedTunable.from("Shooter/Aiming/Lookahead Seconds", Seconds::of, 0.035);
-	private static final LoggedTunable<Distance> azimuthTolerance = LoggedTunable.from("Shooter/Aiming/Tolerance/Azimuth", Centimeters::of, 100);
-	private static final LoggedTunable<Distance> altitudeDegsTolerance = LoggedTunable.from("Shooter/Aiming/Tolerance/Altitude", Centimeters::of, 46);
-	private static final LoggedTunable<Angle> customAzimuthOffset = LoggedTunable.from("Shooter/Aiming/Custom Azimuth Offset", Radians::of, 0.0);
+	private static final LoggedTunable<Time> lookaheadTime = LoggedTunable.from("Subsystems/Shooter/Aiming/Lookahead Seconds", Seconds::of, 1.0);
+	// private static final LoggedTunable<Distance> azimuthTolerance = LoggedTunable.from("Subsystems/Shooter/Aiming/Tolerance/Azimuth", Centimeters::of, 100);
+	// private static final LoggedTunable<Distance> altitudeDegsTolerance = LoggedTunable.from("Subsystems/Shooter/Aiming/Tolerance/Altitude", Centimeters::of, 46);
+	// private static final LoggedTunable<Angle> customAzimuthOffset = LoggedTunable.from("Subsystems/Shooter/Aiming/Custom Azimuth Offset", Radians::of, 0.0);
 
 	private Translation3d aimPoint;
 	// private Pose2d shotPose;
@@ -31,9 +27,11 @@ public class InterpolationShootingCalc implements ShootingCalc {
 	private double targetHoodAngleRads;
 	private double targetFlywheelVeloMPS;
 	private double targetDriveHeadingRads;
+	private double tofSecs;
 
 	@Override
-	public void calculate(Translation2d robotPos, ChassisSpeeds fieldSpeeds, Translation3d aimPoint) {
+	public void calculate(Pose2d robotPose, ChassisSpeeds fieldSpeeds, Translation3d aimPoint) {
+		var robotPos = robotPose.getTranslation();
 		this.aimPoint = aimPoint;
 
 		var predictedX = robotPos.getX() + fieldSpeeds.vxMetersPerSecond * lookaheadTime.get().in(Seconds);
@@ -44,13 +42,14 @@ public class InterpolationShootingCalc implements ShootingCalc {
 
 		this.targetDriveHeadingRads = Math.atan2(predictedToTargetY, predictedToTargetX);
 		this.effectiveDistanceMeters = Math.hypot(predictedToTargetX, predictedToTargetY);
-		Logger.recordOutput("Shooter/Aiming/Effective Distance", this.effectiveDistanceMeters);
+		Logger.recordOutput("Subsystems/Shooter/Aiming/Effective Distance", this.effectiveDistanceMeters);
 
 		this.targetHoodAngleRads = ShooterConstants.hubTargetHoodAngleRads.get(this.effectiveDistanceMeters);
 		this.targetFlywheelVeloMPS = ShooterConstants.hubTargetFlyWheelVeloMPS.get(this.effectiveDistanceMeters);
+		this.tofSecs = ShooterConstants.hubTargetTimeOfFlightSecs.get(this.effectiveDistanceMeters);
 
-		Logger.recordOutput("Shooter/Aiming/Aim Point", this.aimPoint);
-		Logger.recordOutput("Shooter/Aiming/Shot Pose", new Pose2d(
+		Logger.recordOutput("Subsystems/Shooter/Aiming/Aim Point", this.aimPoint);
+		Logger.recordOutput("Subsystems/Shooter/Aiming/Shot Pose", new Pose2d(
 			new Translation2d(
 				predictedX,
 				predictedY
@@ -81,4 +80,8 @@ public class InterpolationShootingCalc implements ShootingCalc {
 		return this.aimPoint;
 	}
 
+	@Override
+	public double getTOFSeconds() {
+		return this.tofSecs;
+	}
 }

@@ -7,6 +7,8 @@ import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.util.NeutralMode;
@@ -16,9 +18,12 @@ public class Indexer extends SubsystemBase {
 	private final IndexerIO io;
 	private final IndexerIOInputsAutoLogged inputs = new IndexerIOInputsAutoLogged();
 
-	private static final LoggedTunable<Voltage> idleVoltage = LoggedTunable.from("Rollers/Indexer/Idle Voltage", Volts::of, 0.0);
-	private static final LoggedTunable<Voltage> indexVoltage = LoggedTunable.from("Rollers/Indexer/Index Voltage", Volts::of, 0.0);
-	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Rollers/Indexer/Eject Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> idleVoltage = LoggedTunable.from("Subsystems/Rollers/Indexer/Commands/Idle/Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> indexVoltage = LoggedTunable.from("Subsystems/Rollers/Indexer/Commands/Index/Voltage", Volts::of, 4.5);
+	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Subsystems/Rollers/Indexer/Commands/Eject/Voltage", Volts::of, 0.0);
+
+	private final Alert motorDisconnectedAlert = new Alert("Subsystems/Rollers/Indexer/Alerts", "Motor Disconnected", AlertType.kError);
+	private final Alert motorDisconnectedGlobalAlert = new Alert("Indexer Motor Disconnected!", AlertType.kError);
 
 	public Indexer(IndexerIO io) {
 		super("Rollers/Indexer");
@@ -29,6 +34,9 @@ public class Indexer extends SubsystemBase {
 	public void periodic() {
 		this.io.updateInputs(this.inputs);
 		Logger.processInputs("Inputs/Rollers/Indexer", this.inputs);
+
+		this.motorDisconnectedAlert.set(!this.inputs.motorConnected);
+		this.motorDisconnectedGlobalAlert.set(!this.inputs.motorConnected);
 	}
 
 	private Command genVoltageCommand(String name, DoubleSupplier voltsSupplier) {
@@ -37,11 +45,6 @@ public class Indexer extends SubsystemBase {
 			{
 				this.setName(name);
 				this.addRequirements(indexer);
-			}
-
-			@Override
-			public void initialize() {
-
 			}
 
 			@Override
@@ -59,21 +62,21 @@ public class Indexer extends SubsystemBase {
 	public Command idle() {
 		return this.genVoltageCommand(
 			"Idle",
-			() -> idleVoltage.get().in(Volts)
+			() -> Indexer.idleVoltage.get().in(Volts)
 		);
 	}
 
 	public Command index() {
 		return this.genVoltageCommand(
 			"Index",
-			() -> indexVoltage.get().in(Volts)
+			() -> Indexer.indexVoltage.get().in(Volts)
 		);
 	}
 
 	public Command eject() {
 		return this.genVoltageCommand(
 			"Eject",
-			() -> ejectVoltage.get().in(Volts)
+			() -> Indexer.ejectVoltage.get().in(Volts)
 		);
 	}
 }

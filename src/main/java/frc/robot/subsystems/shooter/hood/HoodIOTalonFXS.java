@@ -1,24 +1,22 @@
 package frc.robot.subsystems.shooter.hood;
 
+import static edu.wpi.first.units.Units.Amps;
+
 import java.util.Optional;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.DigitalInputsConfigs;
-import com.ctre.phoenix6.configs.MotionMagicConfigs;
-import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXSConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.StaticBrake;
 import com.ctre.phoenix6.controls.VoltageOut;
-import com.ctre.phoenix6.hardware.CANdi;
 import com.ctre.phoenix6.hardware.TalonFXS;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.MotorArrangementValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.signals.ReverseLimitSourceValue;
 import com.ctre.phoenix6.signals.ReverseLimitTypeValue;
 import com.ctre.phoenix6.signals.S1CloseStateValue;
 import com.ctre.phoenix6.signals.S1FloatStateValue;
@@ -26,6 +24,7 @@ import com.ctre.phoenix6.signals.S1FloatStateValue;
 import edu.wpi.first.math.util.Units;
 import frc.robot.constants.HardwareDevices;
 import frc.robot.constants.RobotConstants;
+import frc.robot.subsystems.commonDevices.CommonCANdi;
 import frc.util.FFConstants;
 import frc.util.NeutralMode;
 import frc.util.PIDConstants;
@@ -34,6 +33,9 @@ import frc.util.loggerUtil.inputs.LoggedEncodedMotor.EncodedMotorStatusSignalCac
 public class HoodIOTalonFXS implements HoodIO {
 	// Hardware devices
 	protected final TalonFXS motor = HardwareDevices.hoodMotorID.talonFXS();
+
+	// Device configuration
+	private final TalonFXSConfiguration motorConfig = new TalonFXSConfiguration();
 
 	// Status Signal caches
 	private final EncodedMotorStatusSignalCache motorStatusSignalCache;
@@ -52,45 +54,49 @@ public class HoodIOTalonFXS implements HoodIO {
 	private final VoltageOut voltageRequest = new VoltageOut(0.0).withEnableFOC(true);
 	private final MotionMagicExpoVoltage positionRequest = new MotionMagicExpoVoltage(0.0).withEnableFOC(false);
 
-	public HoodIOTalonFXS(CANdi candi) {
-		var motorConfig = new TalonFXSConfiguration();
-
-		motorConfig.MotorOutput
-			.withInverted(InvertedValue.Clockwise_Positive)
+	public HoodIOTalonFXS(CommonCANdi candi) {
+		this.motorConfig.MotorOutput
+			.withInverted(InvertedValue.CounterClockwise_Positive)
 			.withNeutralMode(NeutralModeValue.Brake)
 		;
-		motorConfig.SoftwareLimitSwitch
+		this.motorConfig.Commutation
+			.withMotorArrangement(MotorArrangementValue.NEO550_JST)
+		;
+		this.motorConfig.ExternalFeedback
+			.withSensorToMechanismRatio(HoodConstants.motorToMechanism.reductionUnsigned())
+		;
+		this.motorConfig.CurrentLimits
+			.withStatorCurrentLimitEnable(true)
+			.withStatorCurrentLimit(Amps.of(40.0))
+		;
+		this.motorConfig.SoftwareLimitSwitch
 			.withReverseSoftLimitEnable(false)
 			.withForwardSoftLimitEnable(true)
-			.withForwardSoftLimitThreshold(HoodConstants.motorToMechanism.inverse().applyUnsigned(HoodConstants.maxAngle))
+			.withForwardSoftLimitThreshold(HoodConstants.maxAngle)
 		;
-		motorConfig.HardwareLimitSwitch
+		this.motorConfig.HardwareLimitSwitch
 			.withReverseLimitEnable(true)
-			.withReverseLimitSource(ReverseLimitSourceValue.RemoteCANdiS1)
-			.withReverseLimitRemoteSensorID(candi.getDeviceID())
+			.withReverseLimitRemoteCANdiS1(candi.candi)
 			.withReverseLimitType(ReverseLimitTypeValue.NormallyOpen)
+			.withReverseLimitAutosetPositionEnable(true)
+			.withReverseLimitAutosetPositionValue(HoodConstants.limitSwitchAngle)
 			.withForwardLimitEnable(false)
 		;
-		motorConfig.Slot0
+		this.motorConfig.Slot0
 			.withGravityType(GravityTypeValue.Arm_Cosine)
 		;
 
-		this.motor.getConfigurator().apply(motorConfig);
+		this.motor.getConfigurator().apply(this.motorConfig);
 
-		var candiConfig = new DigitalInputsConfigs();
-		candi.getConfigurator().refresh(candiConfig);
-
-		candiConfig
+		candi.candiConfig.DigitalInputs
 			.withS1FloatState(S1FloatStateValue.FloatDetect)
 			.withS1CloseState(S1CloseStateValue.CloseWhenLow)
 		;
 
-		candi.getConfigurator().apply(candiConfig);
-
 		this.motorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.motor);
 		this.motorProfilePositionStatusSignal = this.motor.getClosedLoopReference();
 		this.motorProfileVelocityStatusSignal = this.motor.getClosedLoopReferenceSlope();
-		this.limitSwitchStatusSignal = this.motor.getFault_ReverseHardLimit();
+		this.limitSwitchStatusSignal = candi.candi.getS1Closed();
 
 		this.refreshSignals = new BaseStatusSignal[] {
 			this.motorStatusSignalCache.encoder().position(),
@@ -156,35 +162,28 @@ public class HoodIOTalonFXS implements HoodIO {
 	}
 
 	@Override
-	public void configPID(PIDConstants pidConstants) {
-		var config = new Slot0Configs();
-		this.motor.getConfigurator().refresh(config);
-		pidConstants.update(config);
-		this.motor.getConfigurator().apply(config);
+	public void configProfile(double kVVoltSecsPerRad, double kAVoltSecsSqrPerRad, double maxVelocityRadsPerSec) {
+		this.motorConfig.MotionMagic
+			// .withMotionMagicExpo_kV(Units.rotationsToRadians(kVVoltSecsPerRad))
+			// .withMotionMagicExpo_kA(Units.rotationsToRadians(kAVoltSecsSqrPerRad))
+			.withMotionMagicExpo_kV(kVVoltSecsPerRad)
+			.withMotionMagicExpo_kA(kAVoltSecsSqrPerRad)
+			.withMotionMagicCruiseVelocity(Units.radiansToRotations(maxVelocityRadsPerSec))
+		;
 	}
 
 	@Override
 	public void configFF(FFConstants ffConstants) {
-		var config = new Slot0Configs();
-		this.motor.getConfigurator().refresh(config);
-		ffConstants.update(config);
-		this.motor.getConfigurator().apply(config);
+		ffConstants.update(this.motorConfig.Slot0);
 	}
 
 	@Override
-	public void configProfile(double kV, double kA, double maxVelocity) {
-		var config = new MotionMagicConfigs();
-		this.motor.getConfigurator().refresh(config);
-		config
-			.withMotionMagicExpo_kV(kV)
-			.withMotionMagicExpo_kA(kA)
-			.withMotionMagicCruiseVelocity(maxVelocity)
-		;
-		this.motor.getConfigurator().apply(config);
+	public void configPID(PIDConstants pidConstants) {
+		pidConstants.update(this.motorConfig.Slot0);
 	}
 
 	@Override
-	public void resetMotorPositionRads(double positionRads) {
-		this.motor.setPosition(Units.radiansToRotations(positionRads));
+	public void configSend() {
+		this.motor.getConfigurator().apply(this.motorConfig);
 	}
 }
