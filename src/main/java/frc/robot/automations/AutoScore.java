@@ -2,6 +2,7 @@ package frc.robot.automations;
 
 import static edu.wpi.first.units.Units.Seconds;
 
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -39,7 +40,7 @@ public class AutoScore implements Runnable {
 			this.shooter.aimLeftFlywheelAtHub(),
 			this.shooter.aimRightFlywheelAtHub(),
 			this.shooter.aimHoodAtHub(),
-			this.shooter.aimDriveAtHub(this.drive.rotationalSubsystem),
+			this.shooter.aimDriveAtHub(this.drive, () -> new ChassisSpeeds()),
 			Commands.parallel(
 				this.rollers.agitator.index(),
 				this.rollers.feeder.feed(),

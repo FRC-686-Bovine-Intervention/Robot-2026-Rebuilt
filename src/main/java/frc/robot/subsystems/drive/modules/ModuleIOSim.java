@@ -5,6 +5,8 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
 
+import java.util.Optional;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
@@ -15,6 +17,7 @@ import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
+import frc.util.NeutralMode;
 
 public class ModuleIOSim extends ModuleIOFalcon550 {
 	private final DCMotor driveMotorModel = DCMotor.getFalcon500(1);
@@ -78,5 +81,10 @@ public class ModuleIOSim extends ModuleIOFalcon550 {
 				Units.radiansToRotations(angleRads)
 			)
 		);
+	}
+
+	@Override
+	public void stopAzimuth(Optional<NeutralMode> neutralMode) {
+		this.azimuthSim.setInputVoltage(0);
 	}
 }

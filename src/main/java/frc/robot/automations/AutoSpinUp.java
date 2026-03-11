@@ -27,16 +27,16 @@ public class AutoSpinUp implements Runnable {
 	public AutoSpinUp(Drive drive, Shooter shooter) {
 		this.drive = drive;
 		this.shooter = shooter;
-        this.command = Commands.parallel(
-            this.shooter.aimingSystem.aimAtHub(
-                RobotState.getInstance()::getEstimatedGlobalPose,
-                this.drive::getFieldMeasuredSpeeds,
-                FieldConstants.hubAimPoint::getOurs
-            ).repeatedly(),
-            this.shooter.aimLeftFlywheelAtHub(),
-            this.shooter.aimRightFlywheelAtHub(),
-            this.shooter.aimHoodAtHub()
-        ).withName("Auto Spin Up");
+		this.command = Commands.parallel(
+			this.shooter.aimingSystem.aimAtHub(
+				RobotState.getInstance()::getEstimatedGlobalPose,
+				this.drive::getFieldMeasuredSpeeds,
+				FieldConstants.hubAimPoint::getOurs
+			).repeatedly(),
+			this.shooter.aimLeftFlywheelAtHub(),
+			this.shooter.aimRightFlywheelAtHub(),
+			this.shooter.aimHoodAtHub()
+		).withName("Auto Spin Up");
 	}
 
 	@Override
