@@ -4,7 +4,6 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 
-import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
@@ -78,10 +77,10 @@ public class Shooter {
 
 		double avgSurfaceVelo = getAverageMeasuredFlywheelSurfaceVeloMPS();
 		boolean withinFlywheelTolerance = avgSurfaceVelo < targetSurfaceVelo + flywheelTolerance.get().in(MetersPerSecond) && avgSurfaceVelo > targetSurfaceVelo - flywheelTolerance.get().in(MetersPerSecond);
-		
-		
+
+
 		var targetVector = getLaunchVector(targetSurfaceVelo, targetHoodAngle, targetAzimuth);
-		
+
 		double measuredAzimuth = RobotState.getInstance().getEstimatedGlobalPose().getRotation().getRadians();
 		var measuredAzimuthVector = new double[] {Math.cos(measuredAzimuth), Math.sin(measuredAzimuth)};
 		measuredAzimuthVector = MathExtraUtil.matchVectorLength2d(measuredAzimuthVector, targetVector);
@@ -99,7 +98,7 @@ public class Shooter {
 	}
 
 
-	
+
 	public static double[] getLaunchVector(double flywheelSpeedMPS, double hoodAngleRads, double robotAngleRads) {
 		double exitVelo = Shooter.getExitVelo(flywheelSpeedMPS, Shooter.getFVelo());
 		double x = exitVelo * Math.cos(Math.PI / 2.0 - hoodAngleRads) * Math.cos(robotAngleRads);

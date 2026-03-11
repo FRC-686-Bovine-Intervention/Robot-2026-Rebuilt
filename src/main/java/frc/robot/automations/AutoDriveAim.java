@@ -10,21 +10,21 @@ import frc.robot.HubShifts;
 import frc.robot.RobotState;
 import frc.robot.constants.FieldConstants;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.rollers.Rollers;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.util.EdgeDetector;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 
-public class AutoSpinUp implements Runnable {
+public class AutoDriveAim implements Runnable {
 	private final Drive drive;
 	private final Shooter shooter;
 	private final Command command;
 
 	private final EdgeDetector edgeDetector = new EdgeDetector(false);
 
+	private static final LoggedTunable<Time> drivetrainAimTime = LoggedTunable.from("Automations/AutoDriveAim/AimSecs", Seconds::of, 1.0);
 
-	private static final LoggedTunable<Time> spinUpSeconds = LoggedTunable.from("Automations/Auto Spin Up/Spin Up Time", Seconds::of, 1);
-
-	public AutoSpinUp(Drive drive, Shooter shooter) {
+	public AutoDriveAim(Drive drive, Shooter shooter, Rollers rollers) {
 		this.drive = drive;
 		this.shooter = shooter;
 		this.command = Commands.parallel(
@@ -33,10 +33,9 @@ public class AutoSpinUp implements Runnable {
 				this.drive::getFieldMeasuredSpeeds,
 				FieldConstants.hubAimPoint::getOurs
 			).repeatedly(),
-			this.shooter.aimLeftFlywheelAtHub(),
-			this.shooter.aimRightFlywheelAtHub(),
-			this.shooter.aimHoodAtHub()
-		).withName("Auto Spin Up");
+			this.shooter.aimDriveAtHub(drive.rotationalSubsystem)
+		)
+		.withName("Auto Drive Aim");
 	}
 
 	@Override
@@ -44,10 +43,11 @@ public class AutoSpinUp implements Runnable {
 		var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
 		var currentHubShift = HubShifts.getCurrentShift();
 		this.shooter.aimingSystem.shootingCalc.calculate(robotPose, this.drive.getFieldMeasuredSpeeds(), FieldConstants.hubAimPoint.getOurs());
-		boolean isHubShift = (currentHubShift.isHubActive().getOurs() && currentHubShift.getSecsLeftInShift() > this.shooter.aimingSystem.shootingCalc.getTOFSeconds()) || (currentHubShift.next().isHubActive().getOurs() && currentHubShift.next().getSecsSinceShiftStarted() >= -this.shooter.aimingSystem.shootingCalc.getTOFSeconds() - spinUpSeconds.get().in(Seconds));
+		boolean isHubShift = (currentHubShift.isHubActive().getOurs() && currentHubShift.getSecsLeftInShift() > this.shooter.aimingSystem.shootingCalc.getTOFSeconds()) || (currentHubShift.next().isHubActive().getOurs() && currentHubShift.next().getSecsSinceShiftStarted() >= -this.shooter.aimingSystem.shootingCalc.getTOFSeconds() - drivetrainAimTime.get().in(Seconds));
 
 		this.edgeDetector.update(
 			FieldConstants.allianceZone.getOurs().withinBounds(robotPose.getTranslation())
+			&& this.drive.rotationalSubsystem.getCurrentCommand() == null
 			&& isHubShift
 		);
 
