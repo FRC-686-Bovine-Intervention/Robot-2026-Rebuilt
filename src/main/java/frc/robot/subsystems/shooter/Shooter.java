@@ -77,7 +77,10 @@ public class Shooter {
 					drive.translationSubsystem.driveVelocity(desiredSpeeds.get());
 					isInactive = false;
 				}
-				if (!withinTolerance("Drive")) {
+				if (Math.abs(desiredSpeeds.get().omegaRadiansPerSecond) > 0) {
+					drive.rotationalSubsystem.driveVelocity(desiredSpeeds.get());
+					isInactive = false;
+				} else if (!withinTolerance("Drive")) {
 					var measuredHeadingRads = RobotState.getInstance().getEstimatedGlobalPose().getRotation().getRadians();
 					var targetHeadingRads = aimingSystem.shootingCalc.getTargetAzimuthHeadingRads();
 
