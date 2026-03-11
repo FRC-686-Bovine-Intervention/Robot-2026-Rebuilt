@@ -8,7 +8,9 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.HubShifts;
 import frc.robot.RobotState;
 import frc.robot.constants.FieldConstants;
+import frc.robot.subsystems.ExtensionSystem;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.intake.slam.IntakeSlam;
 import frc.robot.subsystems.rollers.Rollers;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.util.EdgeDetector;
@@ -17,22 +19,25 @@ public class AutoScore implements Runnable {
 	private final Drive drive;
 	private final Shooter shooter;
 	private final Rollers rollers;
+
 	private final Command command;
 
 	private final Trigger disableTrigger;
 
 	private final EdgeDetector edgeDetector = new EdgeDetector(false);
 
-	public AutoScore(Drive drive, Shooter shooter, Rollers rollers, Trigger disableTrigger) {
+	public AutoScore(Drive drive, Shooter shooter, Rollers rollers, IntakeSlam intakeSlam, ExtensionSystem extensionSystem, Trigger disableTrigger) {
 		this.drive = drive;
 		this.shooter = shooter;
 		this.rollers = rollers;
+
 		this.disableTrigger = disableTrigger;
 
 		this.command = Commands.parallel(
 			this.rollers.agitator.index(),
 			this.rollers.feeder.feed(),
-			this.rollers.indexer.index()
+			this.rollers.indexer.index(),
+			intakeSlam.stow().andThen(intakeSlam.deploy(extensionSystem)).repeatedly()
 		)
 		.withName("Auto Score");
 	}
