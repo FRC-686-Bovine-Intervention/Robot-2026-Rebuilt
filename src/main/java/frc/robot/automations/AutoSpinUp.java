@@ -19,14 +19,18 @@ public class AutoSpinUp implements Runnable {
 	private final Shooter shooter;
 	private final Command command;
 
+	private final Command intakeCommand;
+
 	private final EdgeDetector edgeDetector = new EdgeDetector(false);
 
 
 	private static final LoggedTunable<Time> spinUpSeconds = LoggedTunable.from("Automations/Auto Spin Up/Spin Up Time", Seconds::of, 1);
 
-	public AutoSpinUp(Drive drive, Shooter shooter) {
+	public AutoSpinUp(Drive drive, Shooter shooter, Command intakeCommand) {
 		this.drive = drive;
 		this.shooter = shooter;
+		this.intakeCommand = intakeCommand;
+
 		this.command = Commands.parallel(
 			this.shooter.aimingSystem.aimAtHub(
 				RobotState.getInstance()::getEstimatedGlobalPose,
@@ -49,6 +53,7 @@ public class AutoSpinUp implements Runnable {
 		this.edgeDetector.update(
 			FieldConstants.allianceZone.getOurs().withinBounds(robotPose.getTranslation())
 			&& isHubShift
+			&& !intakeCommand.isScheduled()
 		);
 
 		if (this.edgeDetector.risingEdge() && !this.command.isScheduled()) {

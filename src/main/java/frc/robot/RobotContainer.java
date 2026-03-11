@@ -551,8 +551,8 @@ public class RobotContainer {
 		this.automationsLoop.bind(new BumpMitigation(this.drive));
 		this.automationsLoop.bind(new IntakeDeployHysteresis(this.intake.slam, intakeDeployCommand));
 		this.automationsLoop.bind(new HookAutoDeployHysteresis(this.climber.hook, climberHookAutoDeployCommand));
-		this.automationsLoop.bind(new AutoSpinUp(this.drive, this.shooter));
-		this.automationsLoop.bind(new AutoDriveAim(this.drive, this.shooter, this.rollers));
+		this.automationsLoop.bind(new AutoSpinUp(this.drive, this.shooter, intakeRollersIntakeCommand));
+		this.automationsLoop.bind(new AutoDriveAim(this.drive, this.shooter, intakeRollersIntakeCommand));
 		this.automationsLoop.bind(new AutoScore(this.drive, this.shooter, this.rollers, this.driveController.povUp()));
 		this.automationsLoop.bind(new HubShiftNotifications(this.driveController));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());

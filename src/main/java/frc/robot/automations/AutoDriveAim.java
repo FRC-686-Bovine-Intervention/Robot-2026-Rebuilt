@@ -10,7 +10,6 @@ import frc.robot.HubShifts;
 import frc.robot.RobotState;
 import frc.robot.constants.FieldConstants;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.rollers.Rollers;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.util.EdgeDetector;
 import frc.util.loggerUtil.tunables.LoggedTunable;
@@ -20,13 +19,17 @@ public class AutoDriveAim implements Runnable {
 	private final Shooter shooter;
 	private final Command command;
 
+	private final Command intakeCommand;
+
 	private final EdgeDetector edgeDetector = new EdgeDetector(false);
 
-	private static final LoggedTunable<Time> drivetrainAimTime = LoggedTunable.from("Automations/AutoDriveAim/AimSecs", Seconds::of, 1.0);
+	private static final LoggedTunable<Time> drivetrainAimTime = LoggedTunable.from("Automations/Auto Drive Aim/AimSecs", Seconds::of, 1.0);
 
-	public AutoDriveAim(Drive drive, Shooter shooter, Rollers rollers) {
+	public AutoDriveAim(Drive drive, Shooter shooter, Command intakeCommand) {
 		this.drive = drive;
 		this.shooter = shooter;
+		this.intakeCommand = intakeCommand;
+
 		this.command = Commands.parallel(
 			this.shooter.aimingSystem.aimAtHub(
 				RobotState.getInstance()::getEstimatedGlobalPose,
@@ -49,6 +52,7 @@ public class AutoDriveAim implements Runnable {
 			FieldConstants.allianceZone.getOurs().withinBounds(robotPose.getTranslation())
 			&& (this.drive.rotationalSubsystem.getCurrentCommand() == null || this.drive.rotationalSubsystem.getCurrentCommand() == this.command)
 			&& isHubShift
+			&& !intakeCommand.isScheduled()
 		);
 
 		if (this.edgeDetector.risingEdge() && !this.command.isScheduled()) {
