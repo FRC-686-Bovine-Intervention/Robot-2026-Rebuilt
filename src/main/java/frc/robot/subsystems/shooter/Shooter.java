@@ -13,7 +13,6 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import frc.robot.RobotState;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.shooter.aiming.AimingSystem;
@@ -100,7 +99,7 @@ public class Shooter {
 				// drive.translationSubsystem.stop();
 				// drive.rotationalSubsystem.stop();
 			}
-		}.repeatedly().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("Aim at Hub");
+		}.repeatedly().withName("Aim at Hub");
 	}
 
 	public Command aimLeftFlywheelToPass() {

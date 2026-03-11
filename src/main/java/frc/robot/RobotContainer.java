@@ -28,7 +28,6 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
-import frc.robot.automations.AutoScore;
 import frc.robot.automations.BumpMitigation;
 import frc.robot.automations.TrenchMitigation;
 import frc.robot.automations.HookAutoDeployHysteresis;
@@ -91,6 +90,7 @@ import frc.robot.subsystems.vision.cameras.Camera;
 import frc.robot.subsystems.vision.cameras.CameraIO;
 import frc.robot.subsystems.vision.cameras.CameraIOPhoton;
 import frc.robot.subsystems.vision.object.ObjectVision;
+import frc.util.EdgeDetector;
 import frc.util.Perspective;
 import frc.util.controllers.XboxController;
 import frc.util.loggerUtil.tunables.LoggedTunable;
@@ -562,8 +562,35 @@ public class RobotContainer {
 		new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
 
 		// Bind buttons
-		new Trigger(() -> translationJoystick.magnitude() > 0.0).whileTrue(driveTranslationCommand);
-		new Trigger(() -> Math.abs(rotateAxis.getAsDouble()) > 0.0).whileTrue(driveRotateCommand);
+		// new Trigger(() -> translationJoystick.magnitude() > 0.0).whileTrue(driveTranslationCommand);
+		// new Trigger(() -> Math.abs(rotateAxis.getAsDouble()) > 0.0).whileTrue(driveRotateCommand);
+		EdgeDetector translationEdgeDetector = new EdgeDetector(false);
+		EdgeDetector rotationEdgeDetector = new EdgeDetector(false);
+		CommandScheduler.getInstance().getDefaultButtonLoop().bind(() -> {
+			boolean canTranslate = drive.translationSubsystem.getCurrentCommand() != null ? drive.translationSubsystem.getCurrentCommand().getName() != "Aim at Hub" : true;
+			boolean canRotate = drive.rotationalSubsystem.getCurrentCommand() != null ? drive.rotationalSubsystem.getCurrentCommand().getName() != "Aim at Hub" : true;
+
+			translationEdgeDetector.update(
+				translationJoystick.magnitude() > 0.0
+				&& canTranslate
+			);
+			rotationEdgeDetector.update(
+				Math.abs(rotateAxis.getAsDouble()) > 0.0
+				&& canRotate
+			);
+
+			if (translationEdgeDetector.risingEdge() && !driveTranslationCommand.isScheduled()) {
+				driveTranslationCommand.schedule();
+			} else if (translationEdgeDetector.fallingEdge() && driveTranslationCommand.isScheduled()) {
+				driveTranslationCommand.cancel();
+			}
+
+			if (rotationEdgeDetector.risingEdge() && !driveRotateCommand.isScheduled()) {
+				driveRotateCommand.schedule();
+			} else if (rotationEdgeDetector.fallingEdge() && driveRotateCommand.isScheduled()) {
+				driveRotateCommand.cancel();
+			}
+		});
 
 		// this.automationsLoop.bind(new ShootingDriveLock(this.drive, this.shooter));
 		// Setup position reset command
