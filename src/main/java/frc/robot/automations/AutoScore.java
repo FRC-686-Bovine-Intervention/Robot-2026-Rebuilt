@@ -1,8 +1,11 @@
 package frc.robot.automations;
 
+import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.HubShifts;
 import frc.robot.RobotState;
 import frc.robot.constants.FieldConstants;
@@ -17,17 +20,21 @@ public class AutoScore implements Runnable {
 	private final Rollers rollers;
 	private final Command command;
 
+	private final Trigger disableTrigger;
+
 	private final EdgeDetector edgeDetector = new EdgeDetector(false);
 
-	public AutoScore(Drive drive, Shooter shooter, Rollers rollers) {
+	public AutoScore(Drive drive, Shooter shooter, Rollers rollers, Trigger disableTrigger) {
 		this.drive = drive;
 		this.shooter = shooter;
 		this.rollers = rollers;
+		this.disableTrigger = disableTrigger;
+
 		this.command = Commands.parallel(
 			this.rollers.agitator.index(),
 			this.rollers.feeder.feed(),
 			this.rollers.indexer.index()
-		).onlyWhile(this.shooter::withinTolerance)
+		)
 		.withName("Auto Score");
 	}
 
@@ -40,7 +47,9 @@ public class AutoScore implements Runnable {
 
 		this.edgeDetector.update(
 			FieldConstants.allianceZone.getOurs().withinBounds(robotPose.getTranslation())
+			&& this.shooter.withinTolerance()
 			&& isHubShift
+			&& !disableTrigger.getAsBoolean()
 		);
 
 		if (this.edgeDetector.risingEdge() && !this.command.isScheduled()) {

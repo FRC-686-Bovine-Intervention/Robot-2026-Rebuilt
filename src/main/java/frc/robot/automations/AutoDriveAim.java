@@ -47,7 +47,7 @@ public class AutoDriveAim implements Runnable {
 
 		this.edgeDetector.update(
 			FieldConstants.allianceZone.getOurs().withinBounds(robotPose.getTranslation())
-			&& this.drive.rotationalSubsystem.getCurrentCommand() == null
+			&& (this.drive.rotationalSubsystem.getCurrentCommand() == null || this.drive.rotationalSubsystem.getCurrentCommand() == this.command)
 			&& isHubShift
 		);
 
