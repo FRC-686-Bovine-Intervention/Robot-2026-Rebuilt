@@ -81,7 +81,11 @@ public class Shooter {
 				if (!withinTolerance("Drive")) {
 					var measuredHeadingRads = RobotState.getInstance().getEstimatedGlobalPose().getRotation().getRadians();
 					var targetHeadingRads = aimingSystem.shootingCalc.getTargetAzimuthHeadingRads();
-					drive.rotationalSubsystem.driveVelocity(this.pid.calculate(measuredHeadingRads, targetHeadingRads));
+
+					double error = targetHeadingRads - measuredHeadingRads;
+					error = Math.IEEEremainder(error, 2 * Math.PI);
+
+					drive.rotationalSubsystem.driveVelocity(this.pid.calculate(0, error));
 					isInactive = false;
 				}
 				if (isInactive) {
@@ -93,8 +97,8 @@ public class Shooter {
 
 			@Override
 			public void end(boolean interrupted) {
-				drive.translationSubsystem.stop();
-				drive.rotationalSubsystem.stop();
+				// drive.translationSubsystem.stop();
+				// drive.rotationalSubsystem.stop();
 			}
 		}.repeatedly().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("Aim at Hub");
 	}

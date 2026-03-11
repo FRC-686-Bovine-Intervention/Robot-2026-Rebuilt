@@ -2,6 +2,9 @@ package frc.robot.automations;
 
 import static edu.wpi.first.units.Units.Seconds;
 
+import java.util.function.Supplier;
+
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -24,7 +27,7 @@ public class AutoDriveAim implements Runnable {
 
 	private static final LoggedTunable<Time> drivetrainAimTime = LoggedTunable.from("Automations/AutoDriveAim/AimSecs", Seconds::of, 1.0);
 
-	public AutoDriveAim(Drive drive, Shooter shooter, Rollers rollers) {
+	public AutoDriveAim(Drive drive, Shooter shooter, Rollers rollers, Supplier<ChassisSpeeds> desiredSpeeds) {
 		this.drive = drive;
 		this.shooter = shooter;
 		this.command = Commands.parallel(
@@ -33,7 +36,7 @@ public class AutoDriveAim implements Runnable {
 				this.drive::getFieldMeasuredSpeeds,
 				FieldConstants.hubAimPoint::getOurs
 			).repeatedly(),
-			this.shooter.aimDriveAtHub(drive.rotationalSubsystem)
+			this.shooter.aimDriveAtHub(drive, desiredSpeeds)
 		)
 		.withName("Auto Drive Aim");
 	}
