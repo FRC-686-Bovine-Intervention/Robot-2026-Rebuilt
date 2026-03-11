@@ -7,6 +7,7 @@ import static edu.wpi.first.units.Units.Seconds;
 
 import java.util.Arrays;
 
+import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -23,6 +24,8 @@ import frc.util.loggerUtil.tunables.LoggedTunable;
 public class BumpMitigation implements Runnable {
 	private final Drive drive;
 	private final Command command;
+
+	private static final LoggedNetworkBoolean enabled = new LoggedNetworkBoolean("Automations/Bump Mitigation/Enabled", true);
 
 	private static final double[] staticBoxTopBlue = new double[] {
 		FieldConstants.bumpInnerX.getBlue().in(Meters),
@@ -112,6 +115,7 @@ public class BumpMitigation implements Runnable {
 				|| this.withinBounds(dynamicBoxBottomRed, robotPose.getTranslation())
 			)
 			&& this.drive.rotationalSubsystem.getCurrentCommand() == null
+			&& enabled.getAsBoolean()
 		);
 
 		if (this.edgeDetector.risingEdge() && !this.command.isScheduled()) {
