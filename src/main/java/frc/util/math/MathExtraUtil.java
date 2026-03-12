@@ -46,4 +46,11 @@ public class MathExtraUtil {
 		}
 		return output;
 	}
+
+	public static double[] matchVectorLength2d(double[] x, double[] reference) {
+		double referenceLength = Math.sqrt(Math.pow(reference[0], 2) + Math.pow(reference[1], 2));
+		double xLength = Math.sqrt(Math.pow(x[0], 2) + Math.pow(x[1], 2));
+
+		return scalarMultiply(x, referenceLength/xLength);
+	}
 }

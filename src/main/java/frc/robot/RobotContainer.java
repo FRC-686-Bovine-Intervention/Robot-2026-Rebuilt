@@ -10,6 +10,7 @@ import static edu.wpi.first.units.Units.Seconds;
 
 import java.util.Arrays;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -31,6 +32,7 @@ import frc.robot.automations.BumpMitigation;
 import frc.robot.automations.TrenchMitigation;
 import frc.robot.automations.HookAutoDeployHysteresis;
 import frc.robot.automations.IntakeDeployHysteresis;
+import frc.robot.automations.HubShiftNotifications;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
@@ -88,6 +90,7 @@ import frc.robot.subsystems.vision.cameras.Camera;
 import frc.robot.subsystems.vision.cameras.CameraIO;
 import frc.robot.subsystems.vision.cameras.CameraIOPhoton;
 import frc.robot.subsystems.vision.object.ObjectVision;
+import frc.util.EdgeDetector;
 import frc.util.Perspective;
 import frc.util.controllers.XboxController;
 import frc.util.loggerUtil.tunables.LoggedTunable;
@@ -118,7 +121,7 @@ public class RobotContainer {
 	public final EventLoop automationsLoop = new EventLoop();
 
 	// Controllers
-	private final XboxController driveController = new XboxController(0);
+	private final XboxController driveController = new XboxController(0, "Drive Controller");
 	@SuppressWarnings("unused")
 	private final CommandJoystick simJoystick = new CommandJoystick(5);
 
@@ -428,6 +431,25 @@ public class RobotContainer {
 			.smoothDeadband(0.05)
 			.sensitivity(0.5)
 		;
+
+		final Supplier<ChassisSpeeds> speedsSupplier = () -> {
+			var joyX = +translationJoystick.y().getAsDouble();
+			var joyY = -translationJoystick.x().getAsDouble();
+
+			var perspectiveForward = Perspective.getCurrent().getForwardDirection();
+			var fieldX = joyX * perspectiveForward.getCos() - joyY * perspectiveForward.getSin();
+			var fieldY = joyX * perspectiveForward.getSin() + joyY * perspectiveForward.getCos();
+			var robotRot = RobotState.getInstance().getEstimatedGlobalPose().getRotation();
+			var robotX = fieldX * robotRot.getCos() - fieldY * -robotRot.getSin();
+			var robotY = fieldX * -robotRot.getSin() + fieldY * robotRot.getCos();
+			var driveX = robotX * DriveConstants.maxDriveSpeed.in(MetersPerSecond);
+			var driveY = robotY * DriveConstants.maxDriveSpeed.in(MetersPerSecond);
+
+			var omega = rotateAxis.getAsDouble() * DriveConstants.maxTurnRate.in(RadiansPerSecond);
+
+			return new ChassisSpeeds(driveX, driveY, omega);
+		};
+
 		final var driveTranslationCommand = new Command() {
 			{
 				this.setName("Driver Controlled");
@@ -436,21 +458,7 @@ public class RobotContainer {
 
 			@Override
 			public void execute() {
-				var joyX = +translationJoystick.y().getAsDouble();
-				var joyY = -translationJoystick.x().getAsDouble();
-
-				var perspectiveForward = Perspective.getCurrent().getForwardDirection();
-				var fieldX = joyX * perspectiveForward.getCos() - joyY * perspectiveForward.getSin();
-				var fieldY = joyX * perspectiveForward.getSin() + joyY * perspectiveForward.getCos();
-
-				var robotRot = RobotState.getInstance().getEstimatedGlobalPose().getRotation();
-				var robotX = fieldX * robotRot.getCos() - fieldY * -robotRot.getSin();
-				var robotY = fieldX * -robotRot.getSin() + fieldY * robotRot.getCos();
-
-				var driveX = robotX * DriveConstants.maxDriveSpeed.in(MetersPerSecond);
-				var driveY = robotY * DriveConstants.maxDriveSpeed.in(MetersPerSecond);
-
-				drive.translationSubsystem.driveVelocity(driveX, driveY);
+				drive.translationSubsystem.driveVelocity(speedsSupplier.get());
 			}
 
 			@Override
@@ -466,9 +474,7 @@ public class RobotContainer {
 
 			@Override
 			public void execute() {
-				var omega = rotateAxis.getAsDouble() * DriveConstants.maxTurnRate.in(RadiansPerSecond);
-
-				drive.rotationalSubsystem.driveVelocity(omega);
+				drive.rotationalSubsystem.driveVelocity(speedsSupplier.get());
 			}
 
 			@Override
@@ -484,12 +490,12 @@ public class RobotContainer {
 
 		final var rollersIndexerIdleCommand = this.rollers.indexer.idle();
 		final var rollersFeederIdleCommand = this.rollers.feeder.idle();
-		final var rollersAgitatorIdleCommand = this.rollers.agitiator.idle();
+		final var rollersAgitatorIdleCommand = this.rollers.agitator.idle();
 		final var rollersFeedCommand =
 			Commands.parallel(
 				this.rollers.indexer.index(),
 				this.rollers.feeder.feed(),
-				this.rollers.agitiator.index()
+				this.rollers.agitator.index()
 			)
 			.withName("Feed")
 		;
@@ -508,7 +514,7 @@ public class RobotContainer {
 				this.shooter.aimLeftFlywheelAtHub(),
 				this.shooter.aimRightFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
-				this.shooter.aimDriveAtHub(this.drive.rotationalSubsystem)
+				this.shooter.aimDriveAtHub(this.drive, speedsSupplier)
 			)
 			.withName("Aim at Hub")
 		;
@@ -538,7 +544,7 @@ public class RobotContainer {
 
 		this.rollers.indexer.setDefaultCommand(rollersIndexerIdleCommand);
 		this.rollers.feeder.setDefaultCommand(rollersFeederIdleCommand);
-		this.rollers.agitiator.setDefaultCommand(rollersAgitatorIdleCommand);
+		this.rollers.agitator.setDefaultCommand(rollersAgitatorIdleCommand);
 
 		this.shooter.hood.setDefaultCommand(hoodStowCommand);
 		this.shooter.leftFlywheel.setDefaultCommand(leftFlywheelIdleCommand);
@@ -550,13 +556,43 @@ public class RobotContainer {
 		this.automationsLoop.bind(new TrenchMitigation(this.drive, this.intake.slam, this.extensionSystem, this.shooter.hood, intakeDeployCommand));
 		this.automationsLoop.bind(new IntakeDeployHysteresis(this.intake.slam, intakeDeployCommand));
 		this.automationsLoop.bind(new HookAutoDeployHysteresis(this.climber.hook, climberHookAutoDeployCommand));
+		// this.automationsLoop.bind(new AutoScore(this.drive, this.shooter, this.rollers));
+		this.automationsLoop.bind(new HubShiftNotifications(this.driveController));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
 
 		// Bind buttons
-		new Trigger(() -> translationJoystick.magnitude() > 0.0).whileTrue(driveTranslationCommand);
-		new Trigger(() -> Math.abs(rotateAxis.getAsDouble()) > 0.0).whileTrue(driveRotateCommand);
+		// new Trigger(() -> translationJoystick.magnitude() > 0.0).whileTrue(driveTranslationCommand);
+		// new Trigger(() -> Math.abs(rotateAxis.getAsDouble()) > 0.0).whileTrue(driveRotateCommand);
+		EdgeDetector translationEdgeDetector = new EdgeDetector(false);
+		EdgeDetector rotationEdgeDetector = new EdgeDetector(false);
+		CommandScheduler.getInstance().getDefaultButtonLoop().bind(() -> {
+			boolean canTranslate = drive.translationSubsystem.getCurrentCommand() != null ? drive.translationSubsystem.getCurrentCommand().getName() != "Aim at Hub" : true;
+			boolean canRotate = drive.rotationalSubsystem.getCurrentCommand() != null ? drive.rotationalSubsystem.getCurrentCommand().getName() != "Aim at Hub" : true;
 
+			translationEdgeDetector.update(
+				translationJoystick.magnitude() > 0.0
+				&& canTranslate
+			);
+			rotationEdgeDetector.update(
+				Math.abs(rotateAxis.getAsDouble()) > 0.0
+				&& canRotate
+			);
+
+			if (translationEdgeDetector.risingEdge() && !driveTranslationCommand.isScheduled()) {
+				driveTranslationCommand.schedule();
+			} else if (translationEdgeDetector.fallingEdge() && driveTranslationCommand.isScheduled()) {
+				driveTranslationCommand.cancel();
+			}
+
+			if (rotationEdgeDetector.risingEdge() && !driveRotateCommand.isScheduled()) {
+				driveRotateCommand.schedule();
+			} else if (rotationEdgeDetector.fallingEdge() && driveRotateCommand.isScheduled()) {
+				driveRotateCommand.cancel();
+			}
+		});
+
+		// this.automationsLoop.bind(new ShootingDriveLock(this.drive, this.shooter));
 		// Setup position reset command
 		this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(FieldConstants.hubFrontRobotPose.getOurs())).ignoringDisable(true));
 		/*
@@ -586,7 +622,6 @@ public class RobotContainer {
 				intakeDoublePressTimer.reset();
 			}
 		});
-
 
 		CommandScheduler.getInstance().getDefaultButtonLoop().bind(() -> {
 			if (this.driveController.hid.getRightBumperButtonPressed()) {
