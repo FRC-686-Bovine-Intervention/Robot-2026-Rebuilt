@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.shooter.flywheel.FlywheelConstants.FlywheelConfig;
 import frc.util.FFConstants;
 import frc.util.NeutralMode;
@@ -39,14 +40,14 @@ public class Flywheel extends SubsystemBase {
 		new FFConstants(
 			0.0,
 			0.0,
-			3.22,
+			3.9,
 			0.0
 		)
 	);
 	private static final LoggedTunable<PIDConstants> pidGains = LoggedTunable.from(
 		"Subsystems/Shooter/Flywheels/Mechanism/PID",
 		new PIDConstants(
-			0.0,
+			5.0,
 			0.0,
 			0.0
 		)
@@ -94,6 +95,16 @@ public class Flywheel extends SubsystemBase {
 		SmartDashboard.putData("SysID/Shooter/Flywheel/" + config.name + "/Dynamic Forward", sysidRoutine.dynamic(SysIdRoutine.Direction.kForward));
 		SmartDashboard.putData("SysID/Shooter/Flywheel/" + config.name + "/Dynamic Reverse", sysidRoutine.dynamic(SysIdRoutine.Direction.kReverse));
 
+		if (!RobotConstants.tuningMode) {
+			this.io.configProfile(
+				FlywheelConstants.wheel.metersToRadians(Flywheel.profileMaxAcceleration.get().in(MetersPerSecondPerSecond)),
+				FlywheelConstants.wheel.metersToRadians(Flywheel.profileMaxJerk.get().in(MetersPerSecondPerSecond.per(Second)))
+			);
+			this.io.configFF(Flywheel.ffGains.get().map((x) -> FlywheelConstants.wheel.radiansToMeters(x)));
+			this.io.configPID(Flywheel.pidGains.get().map((x) -> FlywheelConstants.wheel.radiansToMeters(x)));
+			this.io.configSend();
+		}
+
 		this.periodic();
 	}
 
@@ -104,8 +115,8 @@ public class Flywheel extends SubsystemBase {
 
 		this.measuredSurfaceVeloMPS = FlywheelConstants.wheel.radiansToMeters(FlywheelConstants.motorToMechanism.applyUnsigned(this.inputs.masterMotor.encoder.getVelocityRadsPerSec()));
 
-		this.setpointSurfaceVeloMPS = FlywheelConstants.wheel.radiansToMeters(FlywheelConstants.motorToMechanism.applyUnsigned(this.inputs.motorProfilePositionRads));
-		this.setpointSurfaceAccelMPSS = FlywheelConstants.wheel.radiansToMeters(FlywheelConstants.motorToMechanism.applyUnsigned(this.inputs.motorProfileVelocityRadsPerSec));
+		this.setpointSurfaceVeloMPS = FlywheelConstants.wheel.radiansToMeters(this.inputs.motorProfilePositionRads);
+		this.setpointSurfaceAccelMPSS = FlywheelConstants.wheel.radiansToMeters(this.inputs.motorProfileVelocityRadsPerSec);
 
 		Logger.recordOutput("Subsystems/Shooter/Flywheels/" + this.config.name + "/Surface Velocity/Measured", this.getMeasuredSurfaceVeloMPS(), MetersPerSecond);
 		Logger.recordOutput("Subsystems/Shooter/Flywheels/" + this.config.name + "/Surface Velocity/Setpoint", this.getSetpointSurfaceVeloMPS(), MetersPerSecond);

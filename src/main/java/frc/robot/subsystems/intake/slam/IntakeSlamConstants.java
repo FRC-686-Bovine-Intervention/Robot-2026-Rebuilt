@@ -24,10 +24,10 @@ public class IntakeSlamConstants {
 	public static final GearRatio motorToMechanism = new GearRatio()
 		.planetary(5.0)
 		.planetary(5.0)
-		.gear(40).gear(44).gear(40).axle()
+		.gear(40).gear(44).gear(44).gear(40).axle()
 	;
 	public static final GearRatio sensorToMechanism = new GearRatio()
-
+		.gear(44).gear(40).axle()
 	;
 
 

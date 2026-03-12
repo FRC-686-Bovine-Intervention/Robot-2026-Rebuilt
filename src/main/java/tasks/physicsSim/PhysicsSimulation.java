@@ -27,7 +27,7 @@ public class PhysicsSimulation {
 		boolean isLinux = System.getProperty("os.name").toLowerCase().contains("lin");
 
 		if (SHOULD_SIM_DURING_BUILD) {
-			ShooterConfig oldConfig = fromFile("./tools/physicsSim/shooter.json");
+			// ShooterConfig oldConfig = fromFile("./tools/physicsSim/shooter.json");
 
 			ShooterConfig config = new ShooterConfig(
 				HoodConstants.hoodBase.getZ(),
@@ -36,27 +36,27 @@ public class PhysicsSimulation {
 				HoodConstants.hoodRadius.in(Meters),
 				(FlywheelConstants.flywheelToHood.reductionUnsigned() / FlywheelConstants.wheel.effectiveRadius().in(Meters)) * FlywheelConstants.hoodRoller.effectiveRadius().in(Meters),
 				FlywheelConstants.wheel.rotationsToMeters(FlywheelConstants.motorToMechanism.reductionSigned() * 6000) / 60,
-				oldConfig.minVFly,
-				oldConfig.vFlyMaxTries,
+				0.0,
+				30,
 				HoodConstants.minAngle.in(Degrees),
 				HoodConstants.maxAngle.in(Degrees),
-				oldConfig.angleRes,
+				20,
 				-DriveConstants.maxDriveSpeed.in(MetersPerSecond),
 				DriveConstants.maxDriveSpeed.in(MetersPerSecond),
-				oldConfig.vxRes,
-				oldConfig.minX,
-				oldConfig.maxX,
-				oldConfig.xRes,
-				oldConfig.angleDev,
-				oldConfig.vFlyDev,
-				oldConfig.robustnessFactor,
-				oldConfig.heightFactor
+				20,
+				2,
+				10.0,
+				30,
+				0.5,
+				0.5,
+				1.0,
+				150.0
 			);
 
 			saveShooterConfig(config);
 		}
 		if (isWindows && SHOULD_SIM_DURING_BUILD) {
-			Path exePath = Paths.get("./tools/physicsSim/windows/Headless.exe").toAbsolutePath();
+			Path exePath = Paths.get("./tools/physicsSim/windows/BBP-Headless.exe").toAbsolutePath();
 
 			ProcessBuilder pb = new ProcessBuilder(
 				exePath.toString(),
@@ -79,7 +79,7 @@ public class PhysicsSimulation {
 			System.out.println("Physics tool completed successfully.");
 		}
 		if (isLinux && SHOULD_SIM_DURING_BUILD) {
-			Path exePath = Paths.get("./tools/physicsSim/linux/Headless").toAbsolutePath();
+			Path exePath = Paths.get("./tools/physicsSim/linux/BBP-Headless").toAbsolutePath();
 
 			ProcessBuilder pb = new ProcessBuilder(
 				exePath.toString(),
@@ -125,7 +125,7 @@ public class PhysicsSimulation {
 	private static void saveShooterConfig(ShooterConfig config) throws JsonIOException, IOException {
 		Gson parser = new Gson();
 		String json = parser.toJson(config);
-		FileWriter writer = new FileWriter("./tools/shooter.json");
+		FileWriter writer = new FileWriter("./tools/physicsSim/shooter.json");
 		writer.write(json);
 		writer.flush();
 		writer.close();
