@@ -17,6 +17,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -121,6 +122,9 @@ public class RobotContainer {
 
 	// Controllers
 	private final XboxController driveController = new XboxController(0, "Drive Controller");
+	private final Joystick secondDriverJoystick = new Joystick(1);
+	private final Trigger secondDriverOverride = new Trigger(() -> secondDriverJoystick.button(3, CommandScheduler.getInstance().getDefaultButtonLoop()).or(secondDriverJoystick.button(4, CommandScheduler.getInstance().getDefaultButtonLoop())).getAsBoolean());
+
 	@SuppressWarnings("unused")
 	private final CommandJoystick simJoystick = new CommandJoystick(5);
 
@@ -553,7 +557,7 @@ public class RobotContainer {
 		this.automationsLoop.bind(new HookAutoDeployHysteresis(this.climber.hook, climberHookAutoDeployCommand));
 		this.automationsLoop.bind(new AutoSpinUp(this.drive, this.shooter, intakeRollersIntakeCommand));
 		this.automationsLoop.bind(new AutoDriveAim(this.drive, this.shooter, intakeRollersIntakeCommand));
-		this.automationsLoop.bind(new AutoScore(this.drive, this.shooter, this.rollers, this.intake.slam, this.extensionSystem, this.driveController.povUp()));
+		this.automationsLoop.bind(new AutoScore(this.drive, this.shooter, this.rollers, this.intake.slam, this.extensionSystem, this.driveController.povUp().or(secondDriverOverride)));
 		this.automationsLoop.bind(new HubShiftNotifications(this.driveController));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
