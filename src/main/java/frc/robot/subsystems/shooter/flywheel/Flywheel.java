@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.shooter.flywheel.FlywheelConstants.FlywheelConfig;
 import frc.util.FFConstants;
 import frc.util.NeutralMode;
@@ -39,14 +40,14 @@ public class Flywheel extends SubsystemBase {
 		new FFConstants(
 			0.0,
 			0.0,
-			3.22,
+			3.9,
 			0.0
 		)
 	);
 	private static final LoggedTunable<PIDConstants> pidGains = LoggedTunable.from(
 		"Subsystems/Shooter/Flywheels/Mechanism/PID",
 		new PIDConstants(
-			0.0,
+			5.0,
 			0.0,
 			0.0
 		)
@@ -93,6 +94,16 @@ public class Flywheel extends SubsystemBase {
 		SmartDashboard.putData("SysID/Shooter/Flywheel/" + config.name + "/Quasi Reverse", sysidRoutine.quasistatic(SysIdRoutine.Direction.kReverse));
 		SmartDashboard.putData("SysID/Shooter/Flywheel/" + config.name + "/Dynamic Forward", sysidRoutine.dynamic(SysIdRoutine.Direction.kForward));
 		SmartDashboard.putData("SysID/Shooter/Flywheel/" + config.name + "/Dynamic Reverse", sysidRoutine.dynamic(SysIdRoutine.Direction.kReverse));
+
+		if (!RobotConstants.tuningMode) {
+			this.io.configProfile(
+				FlywheelConstants.wheel.metersToRadians(Flywheel.profileMaxAcceleration.get().in(MetersPerSecondPerSecond)),
+				FlywheelConstants.wheel.metersToRadians(Flywheel.profileMaxJerk.get().in(MetersPerSecondPerSecond.per(Second)))
+			);
+			this.io.configFF(Flywheel.ffGains.get().map((x) -> FlywheelConstants.wheel.radiansToMeters(x)));
+			this.io.configPID(Flywheel.pidGains.get().map((x) -> FlywheelConstants.wheel.radiansToMeters(x)));
+			this.io.configSend();
+		}
 
 		this.periodic();
 	}

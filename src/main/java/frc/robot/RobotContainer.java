@@ -11,6 +11,7 @@ import static edu.wpi.first.units.Units.Seconds;
 import java.util.Arrays;
 import java.util.Set;
 
+
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -27,18 +28,10 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
-import frc.robot.automations.BumpMitigation;
-import frc.robot.automations.TrenchMitigation;
-import frc.robot.automations.HookAutoDeployHysteresis;
 import frc.robot.automations.IntakeDeployHysteresis;
-import frc.robot.constants.FieldConstants;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.ExtensionSystem;
-import frc.robot.subsystems.climber.Climber;
-import frc.robot.subsystems.climber.hook.Hook;
-import frc.robot.subsystems.climber.hook.HookIO;
-import frc.robot.subsystems.climber.hook.HookIOSim;
 import frc.robot.subsystems.commonDevices.CommonCANdi;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -59,6 +52,7 @@ import frc.robot.subsystems.intake.slam.IntakeSlam;
 import frc.robot.subsystems.intake.slam.IntakeSlamIO;
 import frc.robot.subsystems.intake.slam.IntakeSlamIOSim;
 import frc.robot.subsystems.intake.slam.IntakeSlamIOTalonFX;
+import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.rollers.RollerSensorsIO;
 import frc.robot.subsystems.rollers.RollerSensorsIOCANdi;
 import frc.robot.subsystems.rollers.Rollers;
@@ -101,7 +95,7 @@ public class RobotContainer {
 	public final Shooter shooter;
 	public final Intake intake;
 	public final Rollers rollers;
-	public final Climber climber;
+	// public final Climber climber;
 	public final ExtensionSystem extensionSystem;
 
 	// Vision
@@ -112,6 +106,7 @@ public class RobotContainer {
 	public final Camera leftBroadCamera;
 	public final Camera rightBroadCamera;
 	public final Camera backBroadCamera;
+	public final Camera intakeCamera;
 
 	// Auto
 	public final AutoManager autoManager;
@@ -159,33 +154,39 @@ public class RobotContainer {
 					new Feeder(new FeederIOTalonFX()),
 					new RollerSensorsIOCANdi(commonCANdi)
 				);
-				this.climber = new Climber(
-					new Hook(new HookIO() {})
-				);
+				// this.climber = new Climber(
+				// 	new Hook(new HookIO() {})
+				// );
 
 				this.hubZoomCamera = new Camera(
 					new CameraIOPhoton("Left Top"),
 					"Hub Zoom",
 					VisionConstants.topLeftMount,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().hubZoomCamConnection.setStatus(connected);}
 				);
 				this.leftBroadCamera = new Camera(
 					new CameraIOPhoton("Left Bottom"),
 					"Left Broad",
 					VisionConstants.bottomLeftMount,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().leftBroadCamConnection.setStatus(connected);}
 				);
 				this.rightBroadCamera = new Camera(
 					new CameraIOPhoton("Right Top"),
 					"Right Broad",
 					VisionConstants.topRightMount,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().rightBroadCamConnection.setStatus(connected);}
 				);
 				this.backBroadCamera = new Camera(
 					new CameraIOPhoton("Right Bottom"),
 					"Back Broad",
 					VisionConstants.bottomRightMount,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().backBroadCamConnection.setStatus(connected);}
+				);
+				this.intakeCamera = new Camera(
+					new CameraIO() {},
+					"Intake",
+					VisionConstants.intakeMount,
+					(connected) -> {Leds.getInstance().intakeCamConnection.setStatus(connected);}
 				);
 
 				commonCANdi.configSend();
@@ -219,33 +220,39 @@ public class RobotContainer {
 					new Feeder(new FeederIO() {}),
 					new RollerSensorsIOCANdi(commonCANdi)
 				);
-				this.climber = new Climber(
-					new Hook(new HookIOSim())
-				);
+				// this.climber = new Climber(
+				// 	new Hook(new HookIOSim())
+				// );
 
 				this.hubZoomCamera = new Camera(
 					new CameraIO() {},
 					"Top Left",
 					Transform3d.kZero,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().hubZoomCamConnection.setStatus(connected);}
 				);
 				this.leftBroadCamera = new Camera(
 					new CameraIO() {},
 					"Bottom Left",
 					Transform3d.kZero,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().leftBroadCamConnection.setStatus(connected);}
 				);
 				this.rightBroadCamera = new Camera(
 					new CameraIO() {},
 					"Top Right",
 					Transform3d.kZero,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().rightBroadCamConnection.setStatus(connected);}
 				);
 				this.backBroadCamera = new Camera(
 					new CameraIO() {},
 					"Bottom Right",
 					Transform3d.kZero,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().backBroadCamConnection.setStatus(connected);}
+				);
+				this.intakeCamera = new Camera(
+					new CameraIO() {},
+					"Intake",
+					VisionConstants.intakeMount,
+					(connected) -> {Leds.getInstance().intakeCamConnection.setStatus(connected);}
 				);
 
 				commonCANdi.configSend();
@@ -278,33 +285,39 @@ public class RobotContainer {
 					new Feeder(new FeederIO() {}),
 					new RollerSensorsIO() {}
 				);
-				this.climber = new Climber(
-					new Hook(new HookIO() {})
-				);
+				// this.climber = new Climber(
+				// 	new Hook(new HookIO() {})
+				// );
 
 				this.hubZoomCamera = new Camera(
 					new CameraIO() {},
 					"Top Left",
 					Transform3d.kZero,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().hubZoomCamConnection.setStatus(connected);}
 				);
 				this.leftBroadCamera = new Camera(
 					new CameraIO() {},
 					"Bottom Left",
 					Transform3d.kZero,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().leftBroadCamConnection.setStatus(connected);}
 				);
 				this.rightBroadCamera = new Camera(
 					new CameraIO() {},
 					"Top Right",
 					Transform3d.kZero,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().rightBroadCamConnection.setStatus(connected);}
 				);
 				this.backBroadCamera = new Camera(
 					new CameraIO() {},
 					"Bottom Right",
 					Transform3d.kZero,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().backBroadCamConnection.setStatus(connected);}
+				);
+				this.intakeCamera = new Camera(
+					new CameraIO() {},
+					"Intake",
+					VisionConstants.intakeMount,
+					(connected) -> {Leds.getInstance().intakeCamConnection.setStatus(connected);}
 				);
 			}
 		}
@@ -326,7 +339,7 @@ public class RobotContainer {
 			)
 			.addChild(this.intake.slam.followerMech)
 			.addChild(this.shooter.hood.mech)
-			.addChild(this.climber.hook.mech)
+			// .addChild(this.climber.hook.mech)
 			.addChild(this.hubZoomCamera.mount)
 			.addChild(this.leftBroadCamera.mount)
 			.addChild(this.rightBroadCamera.mount)
@@ -338,8 +351,8 @@ public class RobotContainer {
 			this.shooter.hood.mech,
 			this.intake.slam.followerMech,
 			this.intake.slam.driverMech,
-			this.intake.slam.couplerMech,
-			this.climber.hook.mech
+			this.intake.slam.couplerMech
+			// this.climber.hook.mech
 		);
 
 		System.out.println("[Init RobotContainer] Configuring Commands");
@@ -428,7 +441,7 @@ public class RobotContainer {
 		final var rotateAxis = this.driveController.leftTrigger
 			.add(this.driveController.rightTrigger.invert())
 			.smoothDeadband(0.05)
-			.sensitivity(0.5)
+			.sensitivity(1.0)
 		;
 		final var driveTranslationCommand = new Command() {
 			{
@@ -529,10 +542,10 @@ public class RobotContainer {
 			.withName("Aim to Pass")
 		;
 
-		final var climberHookStowCommand = this.climber.hook.stow();
-		final var climberHookDeployCommand = this.climber.hook.deploy();
-		final var climberHookAutoDeployCommand = this.climber.hook.deploy().withName("Auto Deploy");
-		final var climberHookClimbCommand = this.climber.hook.climb();
+		// final var climberHookStowCommand = this.climber.hook.stow();
+		// final var climberHookDeployCommand = this.climber.hook.deploy();
+		// final var climberHookAutoDeployCommand = this.climber.hook.deploy().withName("Auto Deploy");
+		// final var climberHookClimbCommand = this.climber.hook.climb();
 
 		// Set default commands
 		this.intake.rollers.setDefaultCommand(intakeRollersIdleCommand);
@@ -545,15 +558,22 @@ public class RobotContainer {
 		this.shooter.hood.setDefaultCommand(hoodStowCommand);
 		this.shooter.leftFlywheel.setDefaultCommand(leftFlywheelIdleCommand);
 		this.shooter.rightFlywheel.setDefaultCommand(rightFlywheelIdleCommand);
-		this.climber.hook.setDefaultCommand(climberHookStowCommand);
+
+		// this.climber.hook.setDefaultCommand(climberHookStowCommand);
+
+		this.hubZoomCamera.setDefaultCommand(this.hubZoomCamera.setPipelineIndex(0));
+		this.leftBroadCamera.setDefaultCommand(this.leftBroadCamera.setPipelineIndex(0));
+		this.rightBroadCamera.setDefaultCommand(this.rightBroadCamera.setPipelineIndex(0));
+		this.backBroadCamera.setDefaultCommand(this.backBroadCamera.setPipelineIndex(0));
+		this.intakeCamera.setDefaultCommand(this.intakeCamera.setPipelineIndex(0));
 
 		// Bind automations
-		this.automationsLoop.bind(new BumpMitigation(this.drive));
-		this.automationsLoop.bind(new TrenchMitigation(this.drive, this.intake.slam, this.extensionSystem, this.shooter.hood, intakeDeployCommand));
+		// this.automationsLoop.bind(new BumpMitigation(this.drive));
+		// this.automationsLoop.bind(new TrenchMitigation(this.drive, this.intake.slam, this.extensionSystem, this.shooter.hood, intakeDeployCommand));
 		this.automationsLoop.bind(new IntakeDeployHysteresis(this.intake.slam, intakeDeployCommand));
-		this.automationsLoop.bind(new HookAutoDeployHysteresis(this.climber.hook, climberHookAutoDeployCommand));
+		// this.automationsLoop.bind(new HookAutoDeployHysteresis(this.climber.hook, climberHookAutoDeployCommand));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
-		new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
+		// new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
 
 		// Bind buttons
 		new Trigger(() -> translationJoystick.magnitude() > 0.0).whileTrue(driveTranslationCommand);

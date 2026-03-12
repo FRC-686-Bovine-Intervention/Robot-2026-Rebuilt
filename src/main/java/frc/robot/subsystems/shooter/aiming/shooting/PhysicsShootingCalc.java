@@ -21,6 +21,12 @@ public class PhysicsShootingCalc implements ShootingCalc {
 	private Translation3d aimPoint;
 	private double tofSeconds;
 
+	public PhysicsShootingCalc() {
+		// Preload polynomials
+		ShooterConstants.flywheelPolynomial.evaluate(0.0, 0.0);
+		ShooterConstants.hoodPolynomial.evaluate(0.0, 0.0);
+	}
+
 	@Override
 	public void calculate(Pose2d robotPose, ChassisSpeeds fieldSpeeds, Translation3d aimPoint) {
 		var shooterHubSpaceCartesian = new Pose3d(robotPose).transformBy(HoodConstants.hoodBase).getTranslation().toTranslation2d().minus(aimPoint.toTranslation2d());

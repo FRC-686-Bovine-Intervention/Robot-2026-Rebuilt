@@ -13,6 +13,7 @@ import com.ctre.phoenix6.controls.StaticBrake;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
@@ -69,6 +70,10 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 			.withReverseSoftLimitThreshold(IntakeSlamConstants.minAngle.minus(IntakeSlamConstants.encoderZeroOffset))
 			.withForwardSoftLimitEnable(true)
 			.withForwardSoftLimitThreshold(IntakeSlamConstants.maxAngle.minus(IntakeSlamConstants.encoderZeroOffset))
+		;
+		this.motorConfig.Slot0
+			.withGravityType(GravityTypeValue.Arm_Cosine)
+			.withGravityArmPositionOffset(IntakeSlamConstants.minAngle)
 		;
 
 		// Encoder Configuration
