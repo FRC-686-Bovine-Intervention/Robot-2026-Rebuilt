@@ -3,6 +3,7 @@ package frc.robot.subsystems.intake.slam;
 import java.util.Optional;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
@@ -37,6 +38,8 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 	// Status Signal caches
 	private final EncodedMotorStatusSignalCache motorStatusSignalCache;
 	private final EncoderStatusSignalCache encoderStatusSignalCache;
+	private final StatusSignal<Double> motorProfilePositionStatusSignal;
+	private final StatusSignal<Double> motorProfileVelocityStatusSignal;
 
 	// Quick reference arrays
 	private final BaseStatusSignal[] refreshSignals;
@@ -53,7 +56,7 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 	public IntakeSlamIOTalonFX() {
 		// Motor Configuration
 		this.motorConfig.MotorOutput
-			.withInverted(InvertedValue.Clockwise_Positive)
+			.withInverted(InvertedValue.CounterClockwise_Positive)
 			.withNeutralMode(NeutralModeValue.Brake)
 		;
 		this.motorConfig.Feedback
@@ -72,12 +75,14 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 		this.encoder.getConfigurator().refresh(this.encoderConfig.MagnetSensor);
 
 		this.encoderConfig.MagnetSensor
-			.withSensorDirection(SensorDirectionValue.CounterClockwise_Positive)
+			.withSensorDirection(SensorDirectionValue.Clockwise_Positive)
 		;
 
 		// Cache Status Signals
 		this.motorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.motor);
 		this.encoderStatusSignalCache = EncoderStatusSignalCache.from(this.encoder);
+		this.motorProfilePositionStatusSignal = this.motor.getClosedLoopReference();
+		this.motorProfileVelocityStatusSignal = this.motor.getClosedLoopReferenceSlope();
 
 		// Make quick reference arrays
 		this.refreshSignals = new BaseStatusSignal[] {
@@ -90,6 +95,8 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 			this.motorStatusSignalCache.motor().supplyCurrent(),
 			this.motorStatusSignalCache.motor().torqueCurrent(),
 			this.motorStatusSignalCache.motor().deviceTemperature(),
+			this.motorProfilePositionStatusSignal,
+			this.motorProfileVelocityStatusSignal,
 		};
 		this.motorConnectedSignals = new BaseStatusSignal[] {
 			this.motorStatusSignalCache.encoder().position(),
@@ -99,6 +106,8 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 			this.motorStatusSignalCache.motor().supplyCurrent(),
 			this.motorStatusSignalCache.motor().torqueCurrent(),
 			this.motorStatusSignalCache.motor().deviceTemperature(),
+			this.motorProfilePositionStatusSignal,
+			this.motorProfileVelocityStatusSignal,
 		};
 		this.encoderConnectedSignals = new BaseStatusSignal[] {
 			this.encoderStatusSignalCache.position(),
@@ -107,7 +116,8 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 
 		// Set Status Signal update frequency
 		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.motorStatusSignalCache.encoder().getStatusSignals());
-		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.motorStatusSignalCache.motor().getStatusSignals());
+		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.motorProfilePositionStatusSignal, this.motorProfileVelocityStatusSignal);
+		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency.div(2.0), this.motorStatusSignalCache.motor().getStatusSignals());
 		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.encoderStatusSignalCache.getStatusSignals());
 		this.motor.optimizeBusUtilization();
 		this.encoder.optimizeBusUtilization();
@@ -120,6 +130,9 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 		inputs.motorConnected = BaseStatusSignal.isAllGood(this.motorConnectedSignals);
 		inputs.encoder.updateFrom(this.encoderStatusSignalCache);
 		inputs.motor.updateFrom(this.motorStatusSignalCache);
+
+		inputs.motorProfilePositionRads = Units.rotationsToRadians(this.motorProfilePositionStatusSignal.getValueAsDouble());
+		inputs.motorProfileVelocityRadsPerSec = Units.rotationsToRadians(this.motorProfileVelocityStatusSignal.getValueAsDouble());
 	}
 
 	@Override

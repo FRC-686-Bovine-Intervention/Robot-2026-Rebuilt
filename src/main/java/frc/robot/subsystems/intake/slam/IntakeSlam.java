@@ -37,8 +37,8 @@ public class IntakeSlam extends SubsystemBase {
 	private static final LoggedTunable<Angle> deployAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Angle", Degrees::of, IntakeSlamConstants.minAngle.in(Degrees));
 	private static final LoggedTunable<Angle> deployFlopAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Flop Angle", Degrees::of, IntakeSlamConstants.maxAngle.minus(Degrees.of(10.0)).in(Degrees));
 
-	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kV", 24.0);
-	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kA", 24.0);
+	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kV", 6.0);
+	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kA", 6.0);
 	private static final LoggedTunable<AngularVelocity> profileMaxVel = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/Max Velocity", DegreesPerSecond::of, 0.0);
 
 	private static final LoggedTunable<FFConstants> ffConsts = LoggedTunable.from(
@@ -46,7 +46,7 @@ public class IntakeSlam extends SubsystemBase {
 		new FFConstants(
 			0.0,
 			0.0,
-			2.4,
+			0.0,
 			0.0
 		)
 	);
@@ -54,7 +54,7 @@ public class IntakeSlam extends SubsystemBase {
 	private static final LoggedTunable<PIDConstants> pidConsts = LoggedTunable.from(
 		"Subsystems/Intake/Slam/Mechanism/PID",
 		new PIDConstants(
-			1.5,
+			12.0,
 			0.0,
 			0.0
 		)
@@ -132,8 +132,8 @@ public class IntakeSlam extends SubsystemBase {
 		this.measuredAngleRads = IntakeSlamConstants.sensorToMechanism.applyUnsigned(this.inputs.encoder.getPositionRads() + IntakeSlamConstants.encoderZeroOffset.in(Radians));
 		this.measuredVelocityRadsPerSec = IntakeSlamConstants.sensorToMechanism.applyUnsigned(this.inputs.encoder.getVelocityRadsPerSec());
 
-		this.setpointAngleRads = IntakeSlamConstants.sensorToMechanism.applyUnsigned(this.inputs.encoder.getPositionRads() + IntakeSlamConstants.encoderZeroOffset.in(Radians));
-		this.setpointVelocityRadsPerSec = IntakeSlamConstants.sensorToMechanism.applyUnsigned(this.inputs.encoder.getVelocityRadsPerSec());
+		this.setpointAngleRads = this.inputs.motorProfilePositionRads + IntakeSlamConstants.sensorToMechanism.applyUnsigned(IntakeSlamConstants.encoderZeroOffset.in(Radians));
+		this.setpointVelocityRadsPerSec = this.inputs.motorProfileVelocityRadsPerSec;
 
 		Logger.recordOutput("Subsystems/Intake/Slam/Angle/Measured", this.getMeasuredAngleRads(), Radians);
 		Logger.recordOutput("Subsystems/Intake/Slam/Velocity/Measured", this.getMeasuredVelocityRadsPerSec(), RadiansPerSecond);
