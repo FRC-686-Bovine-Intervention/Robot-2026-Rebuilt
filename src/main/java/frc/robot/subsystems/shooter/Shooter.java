@@ -61,6 +61,8 @@ public class Shooter {
 			{
 				setName("Aim at Hub");
 				addRequirements(drive.translationSubsystem, drive.rotationalSubsystem);
+
+				this.pid.enableContinuousInput(-Math.PI, Math.PI);
 			}
 
 			@Override
@@ -84,10 +86,7 @@ public class Shooter {
 					var measuredHeadingRads = RobotState.getInstance().getEstimatedGlobalPose().getRotation().getRadians();
 					var targetHeadingRads = aimingSystem.shootingCalc.getTargetAzimuthHeadingRads();
 
-					double error = targetHeadingRads - measuredHeadingRads;
-					error = Math.IEEEremainder(error, 2 * Math.PI);
-
-					drive.rotationalSubsystem.driveVelocity(this.pid.calculate(0, error));
+					drive.rotationalSubsystem.driveVelocity(this.pid.calculate(measuredHeadingRads, targetHeadingRads));
 					isInactive = false;
 				}
 				if (isInactive) {
