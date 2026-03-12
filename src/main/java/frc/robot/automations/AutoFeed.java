@@ -1,12 +1,13 @@
 package frc.robot.automations;
 
 
+import java.util.function.BooleanSupplier;
+
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.HubShifts;
 import frc.robot.RobotState;
 import frc.robot.constants.FieldConstants;
@@ -17,18 +18,18 @@ import frc.robot.subsystems.rollers.Rollers;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.util.EdgeDetector;
 
-public class AutoScore implements Runnable {
+public class AutoFeed implements Runnable {
 	private final Drive drive;
 	private final Shooter shooter;
 	private final Rollers rollers;
 
 	private final Command command;
 
-	private final Trigger disableTrigger;
+	private final BooleanSupplier disableTrigger;
 
 	private final EdgeDetector edgeDetector = new EdgeDetector(false);
 
-	public AutoScore(Drive drive, Shooter shooter, Rollers rollers, IntakeSlam intakeSlam, ExtensionSystem extensionSystem, Trigger disableTrigger) {
+	public AutoFeed(Drive drive, Shooter shooter, Rollers rollers, IntakeSlam intakeSlam, ExtensionSystem extensionSystem, BooleanSupplier disableTrigger) {
 		this.drive = drive;
 		this.shooter = shooter;
 		this.rollers = rollers;
