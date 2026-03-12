@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
@@ -16,6 +17,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
@@ -517,7 +519,21 @@ public class RobotContainer {
 				this.shooter.aimingSystem.aimToPass(
 					RobotState.getInstance()::getEstimatedGlobalPose,
 					this.drive::getFieldMeasuredSpeeds,
-					() -> Translation3d.kZero
+					() -> {
+						if (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Blue) {
+							if (RobotState.getInstance().getEstimatedGlobalPose().getX() > FieldConstants.fieldWidth.div(2.0).in(Meters)) {
+								return FieldConstants.leftPassPoint.getBlue();
+							} else {
+								return FieldConstants.rightPassPoint.getBlue();
+							}
+						} else {
+							if (RobotState.getInstance().getEstimatedGlobalPose().getX() < FieldConstants.fieldWidth.div(2.0).in(Meters)) {
+								return FieldConstants.leftPassPoint.getRed();
+							} else {
+								return FieldConstants.rightPassPoint.getRed();
+							}
+						}
+					}
 				).repeatedly(),
 				this.shooter.aimLeftFlywheelToPass(),
 				this.shooter.aimRightFlywheelToPass(),
@@ -589,11 +605,15 @@ public class RobotContainer {
 
 
 		CommandScheduler.getInstance().getDefaultButtonLoop().bind(() -> {
-			if (this.driveController.hid.getRightBumperButtonPressed()) {
+			if ((this.driveController.hid.getRightBumperButtonPressed() && FieldConstants.allianceZone.getOurs().withinBounds(RobotState.getInstance().getEstimatedGlobalPose().getTranslation())) && !aimAtHubCommand.isScheduled()) {
 				CommandScheduler.getInstance().schedule(aimAtHubCommand);
+			} else if (this.driveController.hid.getRightBumperButtonPressed() && !FieldConstants.allianceZone.getOurs().withinBounds(RobotState.getInstance().getEstimatedGlobalPose().getTranslation()) && !aimToPassCommand.isScheduled()) {
+				CommandScheduler.getInstance().schedule(aimToPassCommand);
 			}
-			if (this.driveController.hid.getRightBumperButtonReleased()) {
+			if ((this.driveController.hid.getRightBumperButtonReleased() || !FieldConstants.allianceZone.getOurs().withinBounds(RobotState.getInstance().getEstimatedGlobalPose().getTranslation())) && aimAtHubCommand.isScheduled()) {
 				CommandScheduler.getInstance().cancel(aimAtHubCommand);
+			} else if (this.driveController.hid.getRightBumperButtonReleased() && aimToPassCommand.isScheduled()) {
+				CommandScheduler.getInstance().cancel(aimToPassCommand);
 			}
 		});
 
