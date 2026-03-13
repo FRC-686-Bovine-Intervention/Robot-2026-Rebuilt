@@ -12,12 +12,8 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.Set;
 
-import choreo.Choreo;
-import choreo.trajectory.SwerveSample;
-import choreo.trajectory.Trajectory;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -49,7 +45,6 @@ import frc.robot.subsystems.ExtensionSystem;
 import frc.robot.subsystems.commonDevices.CommonCANdi;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
-import frc.robot.subsystems.drive.commands.FollowTrajectoryCommand;
 import frc.robot.subsystems.drive.commands.WheelRadiusCalibration;
 import frc.robot.subsystems.drive.gyro.GyroIO;
 import frc.robot.subsystems.drive.gyro.GyroIOPigeon2;
@@ -102,7 +97,6 @@ import frc.robot.subsystems.vision.object.ObjectVision;
 import frc.util.PIDGains;
 import frc.util.Perspective;
 import frc.util.controllers.XboxController;
-import frc.util.flipping.AllianceFlipped;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.loggerUtil.tunables.LoggedTunableNumber;
 import frc.util.robotStructure.Mechanism3d;
@@ -679,7 +673,7 @@ public class RobotContainer {
 		// this.automationsLoop.bind(new HookAutoDeployHysteresis(this.climber.hook, climberHookAutoDeployCommand));
 		// this.automationsLoop.bind(new AutoSpinUp(this.drive, this.shooter, intakeRollersIntakeCommand));
 		// this.automationsLoop.bind(new AutoDriveAim(this.drive, this.shooter, intakeRollersIntakeCommand));
-		this.automationsLoop.bind(new AutoFeed(this.drive, this.shooter, this.rollers, this.intake.slam, this.extensionSystem, this.driveController.povUp().or(secondDriverOverride)));
+		this.automationsLoop.bind(new AutoFeed(this.drive, this.shooter, this.rollers, this.intake.slam, this.extensionSystem, this.driveController.x().or(secondDriverOverride)));
 		this.automationsLoop.bind(new HubShiftNotifications(this.driveController));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		// new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
@@ -729,14 +723,14 @@ public class RobotContainer {
 			}
 		});
 
-		this.driveController.x().whileTrue(rollersFeedCommand);
+		// this.driveController.x().whileTrue(rollersFeedCommand);
 
 
 
-		Optional<Trajectory<SwerveSample>> trajopt = Choreo.loadTrajectory("TestPath");
+		// Optional<Trajectory<SwerveSample>> trajopt = Choreo.loadTrajectory("TestPath");
 
-		var flippath = AllianceFlipped.fromBlue(trajopt.get());
+		// var flippath = AllianceFlipped.fromBlue(trajopt.get());
 
-		this.driveController.povUp().whileTrue(Commands.defer(() -> new FollowTrajectoryCommand(this.drive, flippath.getOurs(), false), Set.of(this.drive.translationSubsystem, this.drive.rotationalSubsystem)));
+		// this.driveController.povUp().whileTrue(Commands.defer(() -> new FollowTrajectoryCommand(this.drive, flippath.getOurs(), false), Set.of(this.drive.translationSubsystem, this.drive.rotationalSubsystem)));
 	}
 }

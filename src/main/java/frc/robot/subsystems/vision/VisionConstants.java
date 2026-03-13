@@ -27,7 +27,7 @@ public final class VisionConstants {
 		),
 		GeomUtil.rotation3dBuilder()
 			.yaw(Degrees.of(-5.374629))
-			.pitch(Degrees.of(-15))
+			.pitch(Degrees.of(-20))
 		.build()
 	);
 
