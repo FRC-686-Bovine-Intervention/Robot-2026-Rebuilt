@@ -12,8 +12,12 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.Set;
 
+import choreo.Choreo;
+import choreo.trajectory.SwerveSample;
+import choreo.trajectory.Trajectory;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -45,6 +49,7 @@ import frc.robot.subsystems.ExtensionSystem;
 import frc.robot.subsystems.commonDevices.CommonCANdi;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.subsystems.drive.commands.FollowTrajectoryCommand;
 import frc.robot.subsystems.drive.commands.WheelRadiusCalibration;
 import frc.robot.subsystems.drive.gyro.GyroIO;
 import frc.robot.subsystems.drive.gyro.GyroIOPigeon2;
@@ -97,6 +102,7 @@ import frc.robot.subsystems.vision.object.ObjectVision;
 import frc.util.PIDConstants;
 import frc.util.Perspective;
 import frc.util.controllers.XboxController;
+import frc.util.flipping.AllianceFlipped;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.loggerUtil.tunables.LoggedTunableNumber;
 import frc.util.robotStructure.Mechanism3d;
@@ -724,5 +730,13 @@ public class RobotContainer {
 		});
 
 		this.driveController.x().whileTrue(rollersFeedCommand);
+
+
+
+		Optional<Trajectory<SwerveSample>> trajopt = Choreo.loadTrajectory("TestPath");
+
+		var flippath = AllianceFlipped.fromBlue(trajopt.get());
+
+		this.driveController.povUp().whileTrue(Commands.defer(() -> new FollowTrajectoryCommand(this.drive, flippath.getOurs(), false), Set.of(this.drive.translationSubsystem, this.drive.rotationalSubsystem)));
 	}
 }
