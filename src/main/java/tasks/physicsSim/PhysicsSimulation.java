@@ -21,7 +21,7 @@ import frc.robot.subsystems.shooter.flywheel.FlywheelConstants;
 import frc.robot.subsystems.shooter.hood.HoodConstants;
 
 public class PhysicsSimulation {
-	private static final boolean SHOULD_SIM_DURING_BUILD = false;
+	private static final boolean SHOULD_SIM_DURING_BUILD = true;
 	public static void main(String[] args) throws InterruptedException, IOException {
 		boolean isWindows = System.getProperty("os.name").toLowerCase().contains("win");
 		boolean isLinux = System.getProperty("os.name").toLowerCase().contains("lin");
@@ -50,7 +50,7 @@ public class PhysicsSimulation {
 				0.5,
 				0.5,
 				1.0,
-				150.0
+				5.0
 			);
 
 			saveShooterConfig(config);
@@ -79,7 +79,7 @@ public class PhysicsSimulation {
 			System.out.println("Physics tool completed successfully.");
 		}
 		if (isLinux && SHOULD_SIM_DURING_BUILD) {
-			Path exePath = Paths.get("./tools/physicsSim/linux/BBP-Headless").toAbsolutePath();
+			Path exePath = Paths.get("./tools/physicsSim/linux/Headless").toAbsolutePath();
 
 			ProcessBuilder pb = new ProcessBuilder(
 				exePath.toString(),
