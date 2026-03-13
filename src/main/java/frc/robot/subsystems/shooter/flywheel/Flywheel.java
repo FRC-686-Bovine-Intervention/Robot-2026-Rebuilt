@@ -33,7 +33,7 @@ public class Flywheel extends SubsystemBase {
 
 	private static final LoggedTunable<LinearVelocity> spinupSurfaceVelo = LoggedTunable.from("Subsystems/Shooter/Flywheels/Commands/Spinup/Velocity", MetersPerSecond::of, +20.0);
 
-	private static final LoggedTunable<LinearAcceleration> profileMaxAcceleration = LoggedTunable.from("Subsystems/Shooter/Flywheels/Mechanism/Profile/Max Acceleration", MetersPerSecondPerSecond::of, 10.0);
+	private static final LoggedTunable<LinearAcceleration> profileMaxAcceleration = LoggedTunable.from("Subsystems/Shooter/Flywheels/Mechanism/Profile/Max Acceleration", MetersPerSecondPerSecond::of, 7.0);
 	private static final LoggedTunable<Velocity<LinearAccelerationUnit>> profileMaxJerk = LoggedTunable.from("Subsystems/Shooter/Flywheels/Mechanism/Profile/Max Jerk", MetersPerSecondPerSecond.per(Second)::of, 0.0);
 	private static final LoggedTunable<FFConstants> ffGains = LoggedTunable.from(
 		"Subsystems/Shooter/Flywheels/Mechanism/FF",

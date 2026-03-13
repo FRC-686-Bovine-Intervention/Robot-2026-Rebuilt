@@ -26,9 +26,9 @@ public class Shooter {
 	public final Hood hood;
 	public final AimingSystem aimingSystem;
 
-	private static final LoggedTunable<LinearVelocity> flywheelTolerance = LoggedTunable.from("Shooter/Tolerances/Flywheel", MetersPerSecond::of, 0.5);
-	private static final LoggedTunable<Distance>        azimuthTolerance = LoggedTunable.from("Shooter/Tolerances/Azimuth", Inches::of, 5);
-	private static final LoggedTunable<Distance>          pitchTolerance = LoggedTunable.from("Shooter/Tolerances/Pitch", Inches::of, 5);
+	private static final LoggedTunable<LinearVelocity> flywheelTolerance = LoggedTunable.from("Shooter/Tolerances/Flywheel", MetersPerSecond::of, 1.5);
+	private static final LoggedTunable<Distance>        azimuthTolerance = LoggedTunable.from("Shooter/Tolerances/Azimuth", Inches::of, 10.0);
+	private static final LoggedTunable<Distance>          pitchTolerance = LoggedTunable.from("Shooter/Tolerances/Pitch", Inches::of, 10.0);
 
 	public Command aimLeftFlywheelAtHub() {
 		return this.leftFlywheel.genSurfaceVeloCommand("Aim at Hub", this.aimingSystem.shootingCalc::getTargetFlywheelSurfaceVeloMPS);
@@ -42,7 +42,7 @@ public class Shooter {
 	public Command aimDriveAtHub(Drive.Rotational rotational) {
 		return rotational.genHeadingPIDCommand(
 			"Aim at Hub",
-			LoggedTunable.from("Shooting/Aiming/Rotational PID", new PIDConstants(5.0, 0.0, 0.0)),
+			LoggedTunable.from("Shooting/Aiming/Rotational PID", new PIDConstants(3.5, 0.0, 0.0)),
 			() -> RobotState.getInstance().getEstimatedGlobalPose().getRotation().getRadians(),
 			this.aimingSystem.shootingCalc::getTargetAzimuthHeadingRads
 		);

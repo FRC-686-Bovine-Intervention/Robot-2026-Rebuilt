@@ -39,8 +39,8 @@ public class AutoFeed implements Runnable {
 		this.command = Commands.parallel(
 			this.rollers.agitator.index(),
 			this.rollers.feeder.feed(),
-			this.rollers.indexer.index(),
-			intakeSlam.stow().andThen(intakeSlam.deploy(extensionSystem)).repeatedly()
+			this.rollers.indexer.index()
+			// intakeSlam.stow().andThen(intakeSlam.deploy(extensionSystem)).repeatedly()
 		)
 		.withName("Auto Score");
 	}

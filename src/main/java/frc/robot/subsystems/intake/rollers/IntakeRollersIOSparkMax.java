@@ -21,14 +21,14 @@ public class IntakeRollersIOSparkMax implements IntakeRollersIO {
 		leftConfig
 			.idleMode(IdleMode.kBrake)
 			.inverted(false)
-			.smartCurrentLimit(40)
+			.smartCurrentLimit(80)
 		;
 		this.leftMotor.configure(leftConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 		final var rightConfig = new SparkMaxConfig();
 		rightConfig
 			.idleMode(IdleMode.kBrake)
 			.inverted(true)
-			.smartCurrentLimit(40)
+			.smartCurrentLimit(80)
 		;
 		this.rightMotor.configure(rightConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 	}
