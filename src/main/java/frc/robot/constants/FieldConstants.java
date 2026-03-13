@@ -18,6 +18,7 @@ import frc.util.geometry.PoseBoundingBoxUtil.BoundingBox;
 import frc.util.geometry.PoseBoundingBoxUtil.OrBox;
 import frc.util.geometry.PoseBoundingBoxUtil.RectangularBoundingBox;
 import frc.util.geometry.PoseBoundingBoxUtil.VerticalLine;
+import frc.util.misc.ApriltagUtil.AprilTagPair;
 
 public final class FieldConstants {
 	public static final Distance fieldLength = Inches.of(651.2);
@@ -155,4 +156,24 @@ public final class FieldConstants {
 		hubCenter.getBlue().getMeasureY(),
 		hubHeight
 	));
+
+	public static final AllianceFlipped<AprilTagPair> hubLeft = new AllianceFlipped<AprilTagPair>(
+		new AprilTagPair(21, 24),
+		new AprilTagPair(5, 8)
+	);
+
+	public static final AllianceFlipped<AprilTagPair> hubRight = new AllianceFlipped<AprilTagPair>(
+		new AprilTagPair(18, 27),
+		new AprilTagPair(2, 11)
+	);
+
+	public static final AllianceFlipped<AprilTagPair> hubFront = new AllianceFlipped<AprilTagPair>(
+		new AprilTagPair(26, 25),
+		new AprilTagPair(10, 9)
+	);
+
+	public static final AllianceFlipped<AprilTagPair> hubRear = new AllianceFlipped<AprilTagPair>(
+		new AprilTagPair(20, 19),
+		new AprilTagPair(4, 3)
+	);
 }

@@ -17,6 +17,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -27,6 +28,7 @@ import edu.wpi.first.wpilibj.Timer;
 import frc.robot.constants.FieldConstants;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.util.loggerUtil.tunables.LoggedTunable;
+import frc.util.misc.ApriltagUtil.AprilTagPair;
 
 public class RobotState {
 	private static RobotState instance;
@@ -202,6 +204,76 @@ public class RobotState {
 		}
 
 		return Optional.of(observation.pose().plus(new Transform2d(odometrySample.get(), this.odometryPose)));
+	}
+
+	public Optional<Pose2d> getRobotPoseFromTags(AprilTagPair pair) {
+		var firstPoseOpt = this.getRobotPoseFromTag(pair.primaryTag);
+		var secondPoseOpt = this.getRobotPoseFromTag(pair.secondaryTag);
+
+		if (firstPoseOpt.isEmpty() && secondPoseOpt.isEmpty()) {
+			return Optional.empty();
+		} else if (firstPoseOpt.isPresent() && secondPoseOpt.isPresent()) {
+			var firstPose = firstPoseOpt.get();
+			var secondPose = secondPoseOpt.get();
+
+			var averagedPose = new Pose2d(
+				firstPose.getTranslation().plus(secondPose.getTranslation()).div(2.0),
+				new Rotation2d(
+					Math.atan2(
+						firstPose.getRotation().getSin() + secondPose.getRotation().getSin(),
+						firstPose.getRotation().getCos() + secondPose.getRotation().getCos()
+					)
+				)
+			);
+
+			return Optional.of(averagedPose);
+		} else if (firstPoseOpt.isPresent()) {
+			return firstPoseOpt;
+		} else {
+			return secondPoseOpt;
+		}
+	}
+
+	public Optional<Pose2d> getRobotPoseFromTags(int... tagIDs) {
+		Translation2d accumulatedPose = new Translation2d();
+		Translation2d accumulatedRotationPoints = new Translation2d();
+
+		int validPoses = 0;
+
+		for (var tagID : tagIDs) {
+			var poseOpt = this.getRobotPoseFromTag(tagID);
+			if (poseOpt.isPresent()) {
+				var pose = poseOpt.get();
+				accumulatedPose = accumulatedPose.plus(pose.getTranslation());
+				accumulatedRotationPoints = accumulatedRotationPoints.plus(new Translation2d(pose.getRotation().getCos(), pose.getRotation().getSin()));
+				validPoses++;
+			}
+		}
+
+		if (validPoses == 0) {
+			return Optional.empty();
+		}
+
+		var averagedPose = new Pose2d(
+			accumulatedPose.div(validPoses),
+			new Rotation2d(
+				Math.atan2(
+					accumulatedRotationPoints.getY() / validPoses,
+					accumulatedRotationPoints.getX() / validPoses
+				)
+			)
+		);
+
+		return Optional.of(averagedPose);
+	}
+
+	public Optional<Pose2d> getRobotPoseFromTags(AprilTagPair... pairs) {
+		int[] tagIDs = new int[pairs.length * 2];
+		for (int i = 0; i < pairs.length; i++) {
+			tagIDs[i * 2 + 0] = pairs[i].primaryTag;
+			tagIDs[i * 2 + 1] = pairs[i].secondaryTag;
+		}
+		return this.getRobotPoseFromTags(tagIDs);
 	}
 
 	public static record OdometryObservation(
