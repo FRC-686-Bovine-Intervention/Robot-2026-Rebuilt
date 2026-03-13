@@ -6,15 +6,18 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 
 import java.util.Arrays;
 import java.util.Set;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
@@ -501,7 +504,8 @@ public class RobotContainer {
 		};
 
 		final var driveTankCommand = new Command() {
-			private static final LoggedTunable<LinearVelocity> linearThreshold = LoggedTunable.from("Controls/Tank Drive/", MetersPerSecond::of, 0.1);
+			private static final LoggedTunable<LinearVelocity> linearThreshold = LoggedTunable.from("Controls/Tank Drive/Velo Threshold", MetersPerSecond::of, 0.5);
+			private static final LoggedTunable<AngularVelocity> maxOmega = LoggedTunable.from("Controls/Tank Drive/Max Omega", RotationsPerSecond::of, 0.5);
 			private static final LoggedTunable<PIDConstants> pidGains = LoggedTunable.from(
 				"Controls/Tank Drive/Azimuth PID",
 				new PIDConstants(
@@ -554,8 +558,10 @@ public class RobotContainer {
 
 				var pidOut = this.pid.calculate(robotRot.getRadians(), this.targetHeadingRads);
 
+				var omega = MathUtil.clamp(pidOut, -maxOmega.get().in(RadiansPerSecond), +maxOmega.get().in(RadiansPerSecond));
+
 				drive.translationSubsystem.driveVelocity(robotX, robotY);
-				drive.rotationalSubsystem.driveVelocity(pidOut);
+				drive.rotationalSubsystem.driveVelocity(omega);
 			}
 
 			@Override
