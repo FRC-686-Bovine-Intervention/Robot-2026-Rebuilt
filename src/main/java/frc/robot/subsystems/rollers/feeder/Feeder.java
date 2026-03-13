@@ -7,6 +7,8 @@ import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.util.NeutralMode;
@@ -17,8 +19,11 @@ public class Feeder extends SubsystemBase {
 	private final FeederIOInputsAutoLogged inputs = new FeederIOInputsAutoLogged();
 
 	private static final LoggedTunable<Voltage> idleVoltage = LoggedTunable.from("Subsystems/Rollers/Feeder/Commands/Idle/Voltage", Volts::of, 0.0);
-	private static final LoggedTunable<Voltage> feedVoltage = LoggedTunable.from("Subsystems/Rollers/Feeder/Commands/Feed/Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> feedVoltage = LoggedTunable.from("Subsystems/Rollers/Feeder/Commands/Feed/Voltage", Volts::of, 8.0);
 	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Subsystems/Rollers/Feeder/Commands/Eject/Voltage", Volts::of, 0.0);
+
+	private final Alert motorDisconnectedAlert = new Alert("Subsystems/Rollers/Feeder/Alerts", "Motor Disconnected", AlertType.kError);
+	private final Alert motorDisconnectedGlobalAlert = new Alert("Feeder Motor Disconnected!", AlertType.kError);
 
 	public Feeder(FeederIO io) {
 		super("Rollers/Feeder");
@@ -29,6 +34,9 @@ public class Feeder extends SubsystemBase {
 	public void periodic() {
 		this.io.updateInputs(this.inputs);
 		Logger.processInputs("Inputs/Rollers/Feeder", this.inputs);
+
+		this.motorDisconnectedAlert.set(!this.inputs.motorConnected);
+		this.motorDisconnectedGlobalAlert.set(!this.inputs.motorConnected);
 	}
 
 	private Command genVoltageCommand(String name, DoubleSupplier voltsSupplier) {

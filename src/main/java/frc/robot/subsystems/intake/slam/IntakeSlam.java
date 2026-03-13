@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.ExtensionSystem;
 import frc.util.FFConstants;
 import frc.util.LoggedTracer;
@@ -37,16 +38,16 @@ public class IntakeSlam extends SubsystemBase {
 	private static final LoggedTunable<Angle> deployAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Angle", Degrees::of, IntakeSlamConstants.minAngle.in(Degrees));
 	private static final LoggedTunable<Angle> deployFlopAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Flop Angle", Degrees::of, IntakeSlamConstants.maxAngle.minus(Degrees.of(10.0)).in(Degrees));
 
-	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kV", 24.0);
-	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kA", 24.0);
+	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kV", 12.0);
+	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kA", 0.0);
 	private static final LoggedTunable<AngularVelocity> profileMaxVel = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/Max Velocity", DegreesPerSecond::of, 0.0);
 
 	private static final LoggedTunable<FFConstants> ffConsts = LoggedTunable.from(
 		"Subsystems/Intake/Slam/Mechanism/FF",
 		new FFConstants(
 			0.0,
-			0.0,
-			2.4,
+			0.5,
+			29.0,
 			0.0
 		)
 	);
@@ -54,7 +55,7 @@ public class IntakeSlam extends SubsystemBase {
 	private static final LoggedTunable<PIDConstants> pidConsts = LoggedTunable.from(
 		"Subsystems/Intake/Slam/Mechanism/PID",
 		new PIDConstants(
-			1.5,
+			500.0,
 			0.0,
 			0.0
 		)
@@ -118,6 +119,17 @@ public class IntakeSlam extends SubsystemBase {
 		SmartDashboard.putData("SysID/Intake/Slam/Dynamic Forward", sysidRoutine.dynamic(SysIdRoutine.Direction.kForward).until(() -> this.getMeasuredAngleRads() >= IntakeSlamConstants.maxAngle.in(Radians)));
 		SmartDashboard.putData("SysID/Intake/Slam/Dynamic Reverse", sysidRoutine.dynamic(SysIdRoutine.Direction.kReverse).until(() -> this.getMeasuredAngleRads() <= IntakeSlamConstants.minAngle.in(Radians)));
 
+		if (!RobotConstants.tuningMode) {
+			this.io.configProfile(
+				IntakeSlam.profilekV.getAsDouble(),
+				IntakeSlam.profilekA.getAsDouble(),
+				IntakeSlam.profileMaxVel.get().in(RadiansPerSecond)
+			);
+			this.io.configFF(IntakeSlam.ffConsts.get());
+			this.io.configPID(IntakeSlam.pidConsts.get());
+			this.io.configSend();
+		}
+
 		this.periodic();
 	}
 
@@ -132,8 +144,8 @@ public class IntakeSlam extends SubsystemBase {
 		this.measuredAngleRads = IntakeSlamConstants.sensorToMechanism.applyUnsigned(this.inputs.encoder.getPositionRads() + IntakeSlamConstants.encoderZeroOffset.in(Radians));
 		this.measuredVelocityRadsPerSec = IntakeSlamConstants.sensorToMechanism.applyUnsigned(this.inputs.encoder.getVelocityRadsPerSec());
 
-		this.setpointAngleRads = IntakeSlamConstants.sensorToMechanism.applyUnsigned(this.inputs.encoder.getPositionRads() + IntakeSlamConstants.encoderZeroOffset.in(Radians));
-		this.setpointVelocityRadsPerSec = IntakeSlamConstants.sensorToMechanism.applyUnsigned(this.inputs.encoder.getVelocityRadsPerSec());
+		this.setpointAngleRads = this.inputs.motorProfilePositionRads + IntakeSlamConstants.sensorToMechanism.applyUnsigned(IntakeSlamConstants.encoderZeroOffset.in(Radians));
+		this.setpointVelocityRadsPerSec = this.inputs.motorProfileVelocityRadsPerSec;
 
 		Logger.recordOutput("Subsystems/Intake/Slam/Angle/Measured", this.getMeasuredAngleRads(), Radians);
 		Logger.recordOutput("Subsystems/Intake/Slam/Velocity/Measured", this.getMeasuredVelocityRadsPerSec(), RadiansPerSecond);
