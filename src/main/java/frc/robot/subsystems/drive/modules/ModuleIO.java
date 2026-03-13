@@ -41,4 +41,7 @@ public interface ModuleIO {
 
 	public default void configDrivePID(PIDGains pidGains) {}
 	public default void configAzimuthPID(PIDGains pidGains) {}
+
+	public default void configSendDrive() {}
+	public default void configSendAzimuth() {}
 }

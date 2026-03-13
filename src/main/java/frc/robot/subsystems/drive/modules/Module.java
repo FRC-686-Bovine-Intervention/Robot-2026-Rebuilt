@@ -17,6 +17,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
 import frc.robot.subsystems.drive.odometry.OdometryThread;
@@ -97,6 +98,15 @@ public class Module {
 		this.driveMotorDisconnectedGlobalAlert = new Alert("Module " + this.config.name + " Drive Motor Disconnected!", AlertType.kError);
 		this.azimuthMotorDisconnectedGlobalAlert = new Alert("Module " + this.config.name + " Azimuth Motor Disconnected!", AlertType.kError);
 		this.azimuthEncoderDisconnectedGlobalAlert = new Alert("Module " + this.config.name + " Azimuth Encoder Disconnected!", AlertType.kError);
+
+		if (!RobotConstants.tuningMode) {
+			this.io.configDrivePID(drivePIDGains.get());
+			this.io.configAzimuthPID(azimuthPIDGains.get());
+			this.io.configSendDrive();
+			this.io.configSendAzimuth();
+		}
+
+		this.periodic();
 	}
 
 	public void periodic() {
@@ -135,9 +145,11 @@ public class Module {
 
 		if (drivePIDGains.hasChanged(this.hashCode())) {
 			this.io.configDrivePID(drivePIDGains.get());
+			this.io.configSendDrive();
 		}
 		if (azimuthPIDGains.hasChanged(this.hashCode())) {
 			this.io.configAzimuthPID(azimuthPIDGains.get());
+			this.io.configSendAzimuth();
 		}
 
 		// this.driveMotorActiveFaultsAlert.updateFrom(this.inputs.driveMotorFaults.activeFaults);

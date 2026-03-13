@@ -43,7 +43,9 @@ public class ModuleIOFalcon550 implements ModuleIO {
 	protected final SparkMax azimuthMotor;
 	protected final AbsoluteEncoder azimuthAbsoluteEncoder;
 	protected final SparkClosedLoopController azimuthClosedLoopController;
-	private final SparkMaxConfig azimuthConfig;
+
+	private final TalonFXConfiguration driveConfig = new TalonFXConfiguration();
+	private final SparkMaxConfig azimuthConfig = new SparkMaxConfig();
 
 	private final BaseStatusSignal[] refreshSignals;
 	private final BaseStatusSignal[] driveMotorConnectedSignals;
@@ -63,20 +65,18 @@ public class ModuleIOFalcon550 implements ModuleIO {
 		this.azimuthMotor = config.azimuthMotorID.sparkMax(MotorType.kBrushless);
 		this.azimuthAbsoluteEncoder = this.azimuthMotor.getAbsoluteEncoder();
 		this.azimuthClosedLoopController = this.azimuthMotor.getClosedLoopController();
-		this.azimuthConfig = new SparkMaxConfig();
 
-		var driveConfig = new TalonFXConfiguration();
-		driveConfig.MotorOutput
+		this.driveConfig.MotorOutput
 			.withInverted(config.driveInverted)
 			.withNeutralMode(NeutralModeValue.Brake)
 		;
-		driveConfig.ClosedLoopRamps
+		this.driveConfig.ClosedLoopRamps
 			.withVoltageClosedLoopRampPeriod(Seconds.of(0.075))
 		;
-		// driveConfig.OpenLoopRamps
+		// this.driveConfig.OpenLoopRamps
 		//     .withVoltageOpenLoopRampPeriod(Seconds.of(0.1875))
 		// ;
-		driveConfig.CurrentLimits
+		this.driveConfig.CurrentLimits
 			// .withSupplyCurrentLimit(Amps.of(70))
 			// .withSupplyCurrentLowerLimit(Amps.of(70))
 			// .withSupplyCurrentLowerTime(Seconds.of(0))
@@ -84,8 +84,6 @@ public class ModuleIOFalcon550 implements ModuleIO {
 			// .withStatorCurrentLimit(Amps.of(80))
 			// .withStatorCurrentLimitEnable(true)
 		;
-
-		this.driveMotor.getConfigurator().apply(driveConfig);
 
 		this.azimuthConfig
 			.idleMode(IdleMode.kCoast)
@@ -106,8 +104,6 @@ public class ModuleIOFalcon550 implements ModuleIO {
 			.feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
 			.allowedClosedLoopError(Units.degreesToRotations(1.0), ClosedLoopSlot.kSlot0)
 		;
-
-		this.azimuthMotor.configure(this.azimuthConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
 		this.driveMotorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.driveMotor);
 		this.refreshSignals = new BaseStatusSignal[] {
@@ -145,7 +141,7 @@ public class ModuleIOFalcon550 implements ModuleIO {
 		inputs.azimuthMotorConnected = true;
 		inputs.azimuthEncoderConnected = true;
 		inputs.driveMotor.updateFrom(this.driveMotorStatusSignalCache);
-		// inputs.azimuthMotor.updateFrom(this.azimuthMotor);
+		inputs.azimuthMotor.updateFrom(this.azimuthMotor);
 		inputs.azimuthEncoder.updateFrom(this.azimuthAbsoluteEncoder);
 
 		inputs.odometrySampleCount = this.drivePositionBuffer.getSize();
@@ -208,11 +204,17 @@ public class ModuleIOFalcon550 implements ModuleIO {
 
 	@Override
 	public void configAzimuthPID(PIDGains pidGains) {
-		this.azimuthConfig.closedLoop
-			.p(pidGains.kP())
-			.i(pidGains.kI())
-			.d(pidGains.kD())
-		;
+		pidGains.update(this.azimuthConfig.closedLoop);
+		this.azimuthMotor.configure(this.azimuthConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+	}
+
+	@Override
+	public void configSendDrive() {
+		this.driveMotor.getConfigurator().apply(this.driveConfig);
+	}
+
+	@Override
+	public void configSendAzimuth() {
 		this.azimuthMotor.configure(this.azimuthConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 	}
 }

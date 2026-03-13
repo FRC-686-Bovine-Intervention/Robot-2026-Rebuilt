@@ -6,6 +6,7 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.Slot1Configs;
 import com.ctre.phoenix6.configs.Slot2Configs;
 import com.ctre.phoenix6.configs.SlotConfigs;
+import com.revrobotics.spark.config.ClosedLoopConfig;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -93,6 +94,15 @@ public record PIDGains(double kP, double kI, double kD) implements Tunable<PIDGa
 			.withKP(this.kP())
 			.withKI(this.kI())
 			.withKD(this.kD())
+		;
+		return pid;
+	}
+
+	public ClosedLoopConfig update(ClosedLoopConfig pid) {
+		pid
+			.p(this.kP())
+			.i(this.kI())
+			.d(this.kD())
 		;
 		return pid;
 	}
