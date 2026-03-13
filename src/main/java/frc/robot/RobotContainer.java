@@ -510,7 +510,7 @@ public class RobotContainer {
 		final var driveTankCommand = new Command() {
 			private static final LoggedTunableNumber offsetThreshold = LoggedTunable.from("Controls/Tank Drive/Offset/Threshold", 0.25);
 			private static final LoggedTunable<Angle> offsetAngle = LoggedTunable.from("Controls/Tank Drive/Offset/Angle", Degrees::of, 20.0);
-			
+
 			private static final LoggedTunable<LinearVelocity> linearThreshold = LoggedTunable.from("Controls/Tank Drive/Velo Threshold", MetersPerSecond::of, 0.5);
 			private static final LoggedTunable<AngularVelocity> maxOmega = LoggedTunable.from("Controls/Tank Drive/Max Omega", RotationsPerSecond::of, 0.5);
 
@@ -555,20 +555,25 @@ public class RobotContainer {
 				var driveY = fieldY * DriveConstants.maxDriveSpeed.in(MetersPerSecond);
 
 				var robotRot = RobotState.getInstance().getEstimatedGlobalPose().getRotation();
-				var robotX = driveX * +robotRot.getCos() - driveY * -robotRot.getSin();
-				var robotY = driveX * -robotRot.getSin() + driveY * +robotRot.getCos();
+				double robotX;
+				double robotY;
 
 				if (Math.hypot(driveX, driveY) > linearThreshold.get().in(MetersPerSecond)) {
-					var driveHeadingRads = Math.atan2(fieldY, fieldX);
+					var rawTargetHeadingRads = Math.atan2(fieldY, fieldX);
 					var offsetRads = 0.0;
 					if (rotateAxis.getAsDouble() >= offsetThreshold.getAsDouble()) {
 						offsetRads = +offsetAngle.get().in(Radians);
 					} else if (rotateAxis.getAsDouble() <= -offsetThreshold.getAsDouble()) {
 						offsetRads = -offsetAngle.get().in(Radians);
 					}
-					this.targetHeadingRads = MathUtil.angleModulus(driveHeadingRads + offsetRads);
-					robotX = Math.max(robotX, 0.0);
-					robotY = 0.0;
+					var robotHeadingOffsetRads = MathUtil.angleModulus(robotRot.getRadians() - offsetRads);
+					this.targetHeadingRads = MathUtil.angleModulus(rawTargetHeadingRads + offsetRads);
+					var offsetX = Math.max(driveX * +Math.cos(robotHeadingOffsetRads) - driveY * -Math.sin(robotHeadingOffsetRads), 0.0);
+					robotX = offsetX * +Math.cos(offsetRads);
+					robotY = offsetX * -Math.sin(offsetRads);
+				} else {
+					robotX = driveX * +robotRot.getCos() - driveY * -robotRot.getSin();
+					robotY = driveX * -robotRot.getSin() + driveY * +robotRot.getCos();
 				}
 
 				var pidOut = this.pid.calculate(robotRot.getRadians(), this.targetHeadingRads);
