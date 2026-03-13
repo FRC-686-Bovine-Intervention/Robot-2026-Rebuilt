@@ -553,6 +553,7 @@ public class RobotContainer {
 
 				if (Math.hypot(driveX, driveY) > linearThreshold.get().in(MetersPerSecond)) {
 					this.targetHeadingRads = Math.atan2(fieldY, fieldX);
+					robotX = Math.max(robotX, 0.0);
 					robotY = 0.0;
 				}
 
