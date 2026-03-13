@@ -50,7 +50,7 @@ public class PhysicsSimulation {
 				0.5,
 				0.5,
 				1.0,
-				5.0
+				1.0
 			);
 
 			saveShooterConfig(config);
