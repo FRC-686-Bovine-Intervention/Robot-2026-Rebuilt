@@ -11,13 +11,13 @@ import static edu.wpi.first.units.Units.Seconds;
 import java.util.Arrays;
 import java.util.Set;
 
-
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -28,6 +28,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
+import frc.robot.automations.AutoFeed;
+import frc.robot.automations.HubShiftNotifications;
 import frc.robot.automations.IntakeDeployHysteresis;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
@@ -115,7 +117,10 @@ public class RobotContainer {
 	public final EventLoop automationsLoop = new EventLoop();
 
 	// Controllers
-	private final XboxController driveController = new XboxController(0);
+	private final XboxController driveController = new XboxController(0, "Drive Controller");
+	private final Joystick secondDriverJoystick = new Joystick(1);
+	private final Trigger secondDriverOverride = new Trigger(() -> secondDriverJoystick.button(3, CommandScheduler.getInstance().getDefaultButtonLoop()).or(secondDriverJoystick.button(4, CommandScheduler.getInstance().getDefaultButtonLoop())).getAsBoolean());
+
 	@SuppressWarnings("unused")
 	private final CommandJoystick simJoystick = new CommandJoystick(5);
 
@@ -499,12 +504,12 @@ public class RobotContainer {
 
 		final var rollersIndexerIdleCommand = this.rollers.indexer.idle();
 		final var rollersFeederIdleCommand = this.rollers.feeder.idle();
-		final var rollersAgitatorIdleCommand = this.rollers.agitiator.idle();
+		final var rollersAgitatorIdleCommand = this.rollers.agitator.idle();
 		final var rollersFeedCommand =
 			Commands.parallel(
 				this.rollers.indexer.index(),
 				this.rollers.feeder.feed(),
-				this.rollers.agitiator.index()
+				this.rollers.agitator.index()
 			)
 			.withName("Feed")
 		;
@@ -553,7 +558,7 @@ public class RobotContainer {
 
 		this.rollers.indexer.setDefaultCommand(rollersIndexerIdleCommand);
 		this.rollers.feeder.setDefaultCommand(rollersFeederIdleCommand);
-		this.rollers.agitiator.setDefaultCommand(rollersAgitatorIdleCommand);
+		this.rollers.agitator.setDefaultCommand(rollersAgitatorIdleCommand);
 
 		this.shooter.hood.setDefaultCommand(hoodStowCommand);
 		this.shooter.leftFlywheel.setDefaultCommand(leftFlywheelIdleCommand);
@@ -572,6 +577,10 @@ public class RobotContainer {
 		// this.automationsLoop.bind(new TrenchMitigation(this.drive, this.intake.slam, this.extensionSystem, this.shooter.hood, intakeDeployCommand));
 		this.automationsLoop.bind(new IntakeDeployHysteresis(this.intake.slam, intakeDeployCommand));
 		// this.automationsLoop.bind(new HookAutoDeployHysteresis(this.climber.hook, climberHookAutoDeployCommand));
+		// this.automationsLoop.bind(new AutoSpinUp(this.drive, this.shooter, intakeRollersIntakeCommand));
+		// this.automationsLoop.bind(new AutoDriveAim(this.drive, this.shooter, intakeRollersIntakeCommand));
+		this.automationsLoop.bind(new AutoFeed(this.drive, this.shooter, this.rollers, this.intake.slam, this.extensionSystem, this.driveController.povUp().or(secondDriverOverride)));
+		this.automationsLoop.bind(new HubShiftNotifications(this.driveController));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		// new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
 
