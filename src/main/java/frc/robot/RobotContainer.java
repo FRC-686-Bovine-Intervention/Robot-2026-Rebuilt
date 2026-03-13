@@ -11,9 +11,11 @@ import static edu.wpi.first.units.Units.Seconds;
 import java.util.Arrays;
 import java.util.Set;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -86,6 +88,7 @@ import frc.robot.subsystems.vision.cameras.Camera;
 import frc.robot.subsystems.vision.cameras.CameraIO;
 import frc.robot.subsystems.vision.cameras.CameraIOPhoton;
 import frc.robot.subsystems.vision.object.ObjectVision;
+import frc.util.PIDConstants;
 import frc.util.Perspective;
 import frc.util.controllers.XboxController;
 import frc.util.loggerUtil.tunables.LoggedTunable;
@@ -445,8 +448,8 @@ public class RobotContainer {
 		;
 		final var rotateAxis = this.driveController.leftTrigger
 			.add(this.driveController.rightTrigger.invert())
-			.smoothDeadband(0.05)
-			.sensitivity(1.0)
+			.smoothDeadband(0.01)
+			.sensitivity(0.75)
 		;
 		final var driveTranslationCommand = new Command() {
 			{
@@ -486,13 +489,77 @@ public class RobotContainer {
 
 			@Override
 			public void execute() {
-				var omega = rotateAxis.getAsDouble() * DriveConstants.maxTurnRate.in(RadiansPerSecond);
+				var omega = rotateAxis.getAsDouble() * DriveConstants.maxTurnRate.in(RadiansPerSecond) * 0.5;
 
 				drive.rotationalSubsystem.driveVelocity(omega);
 			}
 
 			@Override
 			public void end(boolean interrupted) {
+				drive.rotationalSubsystem.stop();
+			}
+		};
+
+		final var driveTankCommand = new Command() {
+			private static final LoggedTunable<LinearVelocity> linearThreshold = LoggedTunable.from("Controls/Tank Drive/", MetersPerSecond::of, 0.1);
+			private static final LoggedTunable<PIDConstants> pidGains = LoggedTunable.from(
+				"Controls/Tank Drive/Azimuth PID",
+				new PIDConstants(
+					3.5,
+					0.0,
+					0.0
+				)
+			);
+			private final PIDController pid = new PIDController(pidGains.get().kP(), pidGains.get().kI(), pidGains.get().kD());
+
+			{
+				this.setName("Tank");
+				this.addRequirements(drive.translationSubsystem, drive.rotationalSubsystem);
+
+				pid.enableContinuousInput(-Math.PI, Math.PI);
+			}
+
+			private double targetHeadingRads = 0.0;
+
+			@Override
+			public void initialize() {
+				if (pidGains.hasChanged(this.hashCode())) {
+					pidGains.get().update(this.pid);
+				}
+
+				this.targetHeadingRads = RobotState.getInstance().getEstimatedGlobalPose().getRotation().getRadians();
+			}
+
+			@Override
+			public void execute() {
+				var joyX = +translationJoystick.y().getAsDouble();
+				var joyY = -translationJoystick.x().getAsDouble();
+
+				var perspectiveForward = Perspective.getCurrent().getForwardDirection();
+				var fieldX = joyX * perspectiveForward.getCos() - joyY * perspectiveForward.getSin();
+				var fieldY = joyX * perspectiveForward.getSin() + joyY * perspectiveForward.getCos();
+
+				var driveX = fieldX * DriveConstants.maxDriveSpeed.in(MetersPerSecond);
+				var driveY = fieldY * DriveConstants.maxDriveSpeed.in(MetersPerSecond);
+
+				var robotRot = RobotState.getInstance().getEstimatedGlobalPose().getRotation();
+				var robotX = driveX * +robotRot.getCos() - driveY * -robotRot.getSin();
+				// var robotY = driveX * -robotRot.getSin() + driveY * +robotRot.getCos();
+
+
+				if (Math.hypot(driveX, driveY) > linearThreshold.get().in(MetersPerSecond)) {
+					this.targetHeadingRads = Math.atan2(fieldY, fieldX);
+				}
+
+				var pidOut = this.pid.calculate(robotRot.getRadians(), this.targetHeadingRads);
+
+				drive.translationSubsystem.driveVelocity(robotX, 0.0);
+				drive.rotationalSubsystem.driveVelocity(pidOut);
+			}
+
+			@Override
+			public void end(boolean interrupted) {
+				drive.translationSubsystem.stop();
 				drive.rotationalSubsystem.stop();
 			}
 		};
@@ -585,8 +652,9 @@ public class RobotContainer {
 		// new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
 
 		// Bind buttons
-		new Trigger(() -> translationJoystick.magnitude() > 0.0).whileTrue(driveTranslationCommand);
-		new Trigger(() -> Math.abs(rotateAxis.getAsDouble()) > 0.0).whileTrue(driveRotateCommand);
+		this.driveController.leftBumper().whileTrue(driveTankCommand);
+		new Trigger(() -> translationJoystick.magnitude() > 0.0 && !driveTankCommand.isScheduled()).whileTrue(driveTranslationCommand);
+		new Trigger(() -> Math.abs(rotateAxis.getAsDouble()) > 0.0 && !driveTankCommand.isScheduled()).whileTrue(driveRotateCommand);
 
 		// Setup position reset command
 		this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(FieldConstants.hubFrontRobotPose.getOurs())).ignoringDisable(true));

@@ -63,7 +63,7 @@ public class ModuleIOFalcon550 implements ModuleIO {
 		var driveConfig = new TalonFXConfiguration();
 		driveConfig.MotorOutput
 			.withInverted(config.driveInverted)
-			.withNeutralMode(NeutralModeValue.Coast)
+			.withNeutralMode(NeutralModeValue.Brake)
 		;
 		driveConfig.ClosedLoopRamps
 			.withVoltageClosedLoopRampPeriod(Seconds.of(0.075))
