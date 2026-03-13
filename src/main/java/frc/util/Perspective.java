@@ -117,7 +117,7 @@ public class Perspective {
 		map.put(negYName, negY);
 		map.put(customName, custom);
 
-		selectedName = posYName;
+		selectedName = negXName;
 
 		var table = NetworkTableInstance.getDefault().getTable(key);
 		namePublisher = table.getStringTopic(".name").publish();
