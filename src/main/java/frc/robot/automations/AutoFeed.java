@@ -43,7 +43,7 @@ public class AutoFeed implements Runnable {
 			this.rollers.indexer.index()
 			// intakeSlam.stow().andThen(intakeSlam.deploy(extensionSystem)).repeatedly()
 		)
-		.withName("Auto Score");
+		.withName("Auto Feed");
 	}
 
 	@Override
@@ -55,7 +55,7 @@ public class AutoFeed implements Runnable {
 
 		this.edgeDetector.update(
 			FieldConstants.allianceZone.getOurs().withinBounds(robotPose.getTranslation())
-			&& this.shooter.withinTolerance()
+		&& this.shooter.withinTolerance()
 			&& isHubShift
 			&& !disableTrigger.getAsBoolean()
 		);

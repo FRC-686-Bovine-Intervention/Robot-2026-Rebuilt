@@ -173,7 +173,7 @@ public class Flywheel extends SubsystemBase {
 			public void execute() {
 				var goalSurfaceVeloMPS = surfaceVeloSupplierMPS.getAsDouble();
 				var goalAngularVeloRadsPerSec = FlywheelConstants.wheel.metersToRadians(goalSurfaceVeloMPS);
-				flywheel.io.setVelocityRadsPerSec(FlywheelConstants.motorToMechanism.inverse().applyUnsigned(goalAngularVeloRadsPerSec));
+				flywheel.io.setVelocityRadsPerSec(goalAngularVeloRadsPerSec);
 			}
 
 			@Override
