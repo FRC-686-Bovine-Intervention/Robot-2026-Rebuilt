@@ -50,7 +50,7 @@ public class PhysicsSimulation {
 				0.5,
 				0.5,
 				1.0,
-				150.0
+				5.0
 			);
 
 			saveShooterConfig(config);
@@ -79,7 +79,7 @@ public class PhysicsSimulation {
 			System.out.println("Physics tool completed successfully.");
 		}
 		if (isLinux && SHOULD_SIM_DURING_BUILD) {
-			Path exePath = Paths.get("./tools/physicsSim/linux/BBP-Headless").toAbsolutePath();
+			Path exePath = Paths.get("./tools/physicsSim/linux/Headless").toAbsolutePath();
 
 			ProcessBuilder pb = new ProcessBuilder(
 				exePath.toString(),
