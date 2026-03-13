@@ -544,7 +544,7 @@ public class RobotContainer {
 
 				var robotRot = RobotState.getInstance().getEstimatedGlobalPose().getRotation();
 				var robotX = driveX * +robotRot.getCos() - driveY * -robotRot.getSin();
-				var robotY = driveX * -robotRot.getSin() + driveY * +robotRot.getCos();
+				// var robotY = driveX * -robotRot.getSin() + driveY * +robotRot.getCos();
 
 
 				if (Math.hypot(driveX, driveY) > linearThreshold.get().in(MetersPerSecond)) {
@@ -553,7 +553,7 @@ public class RobotContainer {
 
 				var pidOut = this.pid.calculate(robotRot.getRadians(), this.targetHeadingRads);
 
-				drive.translationSubsystem.driveVelocity(robotX, robotY);
+				drive.translationSubsystem.driveVelocity(robotX, 0.0);
 				drive.rotationalSubsystem.driveVelocity(pidOut);
 			}
 
