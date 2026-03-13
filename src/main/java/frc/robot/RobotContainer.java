@@ -4,7 +4,9 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
@@ -17,6 +19,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.Alert;
@@ -95,6 +98,7 @@ import frc.util.PIDConstants;
 import frc.util.Perspective;
 import frc.util.controllers.XboxController;
 import frc.util.loggerUtil.tunables.LoggedTunable;
+import frc.util.loggerUtil.tunables.LoggedTunableNumber;
 import frc.util.robotStructure.Mechanism3d;
 
 public class RobotContainer {
@@ -504,8 +508,12 @@ public class RobotContainer {
 		};
 
 		final var driveTankCommand = new Command() {
+			private static final LoggedTunableNumber offsetThreshold = LoggedTunable.from("Controls/Tank Drive/Offset/Threshold", 0.25);
+			private static final LoggedTunable<Angle> offsetAngle = LoggedTunable.from("Controls/Tank Drive/Offset/Angle", Degrees::of, 20.0);
+			
 			private static final LoggedTunable<LinearVelocity> linearThreshold = LoggedTunable.from("Controls/Tank Drive/Velo Threshold", MetersPerSecond::of, 0.5);
 			private static final LoggedTunable<AngularVelocity> maxOmega = LoggedTunable.from("Controls/Tank Drive/Max Omega", RotationsPerSecond::of, 0.5);
+
 			private static final LoggedTunable<PIDConstants> pidGains = LoggedTunable.from(
 				"Controls/Tank Drive/Azimuth PID",
 				new PIDConstants(
@@ -550,9 +558,15 @@ public class RobotContainer {
 				var robotX = driveX * +robotRot.getCos() - driveY * -robotRot.getSin();
 				var robotY = driveX * -robotRot.getSin() + driveY * +robotRot.getCos();
 
-
 				if (Math.hypot(driveX, driveY) > linearThreshold.get().in(MetersPerSecond)) {
-					this.targetHeadingRads = Math.atan2(fieldY, fieldX);
+					var driveHeadingRads = Math.atan2(fieldY, fieldX);
+					var offsetRads = 0.0;
+					if (rotateAxis.getAsDouble() >= offsetThreshold.getAsDouble()) {
+						offsetRads = +offsetAngle.get().in(Radians);
+					} else if (rotateAxis.getAsDouble() <= -offsetThreshold.getAsDouble()) {
+						offsetRads = -offsetAngle.get().in(Radians);
+					}
+					this.targetHeadingRads = MathUtil.angleModulus(driveHeadingRads + offsetRads);
 					robotX = Math.max(robotX, 0.0);
 					robotY = 0.0;
 				}
