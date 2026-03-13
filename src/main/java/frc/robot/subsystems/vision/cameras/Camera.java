@@ -59,12 +59,18 @@ public class Camera extends SubsystemBase {
 		var subsystem = this;
 		return new Command() {
 			{
-				addRequirements(subsystem);
-				setName("Pipeline " + pipelineIndex);
+				this.addRequirements(subsystem);
+				this.setName("Pipeline " + pipelineIndex);
 			}
+
 			@Override
 			public void initialize() {
 				io.setPipeline(pipelineIndex);
+			}
+
+			@Override
+			public boolean runsWhenDisabled() {
+				return true;
 			}
 		};
 	}

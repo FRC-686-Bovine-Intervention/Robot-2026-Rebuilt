@@ -1,5 +1,7 @@
 package frc.util;
 
+import java.util.function.DoubleUnaryOperator;
+
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.Slot1Configs;
 import com.ctre.phoenix6.configs.Slot2Configs;
@@ -93,5 +95,21 @@ public record PIDGains(double kP, double kI, double kD) implements Tunable<PIDGa
 			.withKD(this.kD())
 		;
 		return pid;
+	}
+
+	public PIDGains mul(double mul) {
+		return new PIDGains(
+			this.kP * mul,
+			this.kI * mul,
+			this.kD * mul
+		);
+	}
+
+	public PIDGains map(DoubleUnaryOperator mappingFunction) {
+		return new PIDGains(
+			mappingFunction.applyAsDouble(this.kP()),
+			mappingFunction.applyAsDouble(this.kI()),
+			mappingFunction.applyAsDouble(this.kD())
+		);
 	}
 }

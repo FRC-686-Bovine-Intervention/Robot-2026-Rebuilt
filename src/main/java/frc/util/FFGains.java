@@ -1,5 +1,7 @@
 package frc.util;
 
+import java.util.function.DoubleUnaryOperator;
+
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.Slot1Configs;
 import com.ctre.phoenix6.configs.Slot2Configs;
@@ -105,5 +107,23 @@ public record FFGains(double kS, double kG, double kV, double kA) implements Tun
 			.withKA(this.kA())
 		;
 		return ff;
+	}
+
+	public FFGains mul(double mul) {
+		return new FFGains(
+			this.kS() * mul,
+			this.kG() * mul,
+			this.kV() * mul,
+			this.kA() * mul
+		);
+	}
+
+	public FFGains map(DoubleUnaryOperator mappingFunction) {
+		return new FFGains(
+			mappingFunction.applyAsDouble(this.kS()),
+			mappingFunction.applyAsDouble(this.kG()),
+			mappingFunction.applyAsDouble(this.kV()),
+			mappingFunction.applyAsDouble(this.kA())
+		);
 	}
 }

@@ -5,6 +5,7 @@ import java.util.Arrays;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Unit;
+import frc.util.math.MathExtraUtil;
 
 public class MeasureUtil {
 	@SafeVarargs
