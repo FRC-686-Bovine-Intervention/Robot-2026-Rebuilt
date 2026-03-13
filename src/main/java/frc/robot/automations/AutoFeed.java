@@ -17,6 +17,7 @@ import frc.robot.subsystems.intake.slam.IntakeSlam;
 import frc.robot.subsystems.rollers.Rollers;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.util.EdgeDetector;
+import frc.util.Environment;
 
 public class AutoFeed implements Runnable {
 	private final Drive drive;
@@ -50,7 +51,7 @@ public class AutoFeed implements Runnable {
 		var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
 		var currentHubShift = HubShifts.getCurrentShift();
 		this.shooter.aimingSystem.shootingCalc.calculate(robotPose, this.drive.getFieldMeasuredSpeeds(), FieldConstants.hubAimPoint.getOurs());
-		boolean isHubShift = (currentHubShift.isHubActive().getOurs() && currentHubShift.getSecsLeftInShift() > this.shooter.aimingSystem.shootingCalc.getTOFSeconds()) || (currentHubShift.next().isHubActive().getOurs() && currentHubShift.next().getSecsSinceShiftStarted() >= -this.shooter.aimingSystem.shootingCalc.getTOFSeconds());
+		boolean isHubShift = !Environment.isCompetition() || ((currentHubShift.isHubActive().getOurs() && currentHubShift.getSecsLeftInShift() > this.shooter.aimingSystem.shootingCalc.getTOFSeconds()) || (currentHubShift.next().isHubActive().getOurs() && currentHubShift.next().getSecsSinceShiftStarted() >= -this.shooter.aimingSystem.shootingCalc.getTOFSeconds()));
 
 		this.edgeDetector.update(
 			FieldConstants.allianceZone.getOurs().withinBounds(robotPose.getTranslation())
