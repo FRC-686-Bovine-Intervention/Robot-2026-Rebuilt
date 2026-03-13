@@ -3,20 +3,16 @@ package frc.robot.subsystems.drive.commands;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 
-import org.littletonrobotics.junction.Logger;
-
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotState;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.DriveConstants;
-import frc.util.PIDConstants;
+import frc.util.PIDGains;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 
 public class FollowTrajectoryCommand extends Command {
@@ -25,12 +21,20 @@ public class FollowTrajectoryCommand extends Command {
 	private final Timer trajectoryTimer = new Timer();
 	private final boolean endWhenFinished;
 
-	private static final LoggedTunable<Distance> MAX_ERROR = LoggedTunable.from("Drive/Trajectory Following/Max Error", Inches::of, 2400.0);
-	private static final LoggedTunable<PIDConstants> TRANS_PID_CONSTS = LoggedTunable.from("Drive/Trajectory Following/Trans PID", new PIDConstants(1, 0, 0));
-	private static final LoggedTunable<PIDConstants> ROT_PID_CONSTS = LoggedTunable.from("Drive/Trajectory Following/Rot PID", new PIDConstants(1, 0, 0));
+	private static final LoggedTunable<Distance> MAX_ERROR = LoggedTunable.from("Drive/Trajectory Following/Max Error", Inches::of, 24.0);
+	private static final LoggedTunable<PIDGains> TRANS_PID_GAINS = LoggedTunable.from("Drive/Trajectory Following/Trans PID", new PIDGains(
+		0.0,
+		0.0,
+		0.0
+	));
+	private static final LoggedTunable<PIDGains> ROT_PID_GAINS = LoggedTunable.from("Drive/Trajectory Following/Rot PID", new PIDGains(
+		0.0,
+		0.0,
+		0.0
+	));
 
-	private final PIDController translationalPID = new PIDController(TRANS_PID_CONSTS.get().kP(), TRANS_PID_CONSTS.get().kI(), TRANS_PID_CONSTS.get().kD());
-	private final PIDController rotationalPID = new PIDController(ROT_PID_CONSTS.get().kP(), ROT_PID_CONSTS.get().kI(), ROT_PID_CONSTS.get().kD());
+	private final PIDController translationalPID = TRANS_PID_GAINS.get().update(new PIDController(0.0, 0.0, 0.0));
+	private final PIDController rotationalPID = ROT_PID_GAINS.get().update(new PIDController(0.0, 0.0, 0.0));
 
 	public FollowTrajectoryCommand(Drive drive, Trajectory<SwerveSample> trajectory, boolean endWhenFinished) {
 		this.drive = drive;
@@ -43,16 +47,16 @@ public class FollowTrajectoryCommand extends Command {
 	@Override
 	public void initialize() {
 		this.trajectoryTimer.reset();
+		if (TRANS_PID_GAINS.hasChanged(this.hashCode())) {
+			TRANS_PID_GAINS.get().update(this.translationalPID);
+		}
+		if (ROT_PID_GAINS.hasChanged(this.hashCode())) {
+			ROT_PID_GAINS.get().update(this.rotationalPID);
+		}
 	}
 
 	@Override
 	public void execute() {
-		if (LoggedTunable.hasChanged(this.hashCode(), TRANS_PID_CONSTS)) {
-			TRANS_PID_CONSTS.get().update(this.translationalPID);
-		}
-		if (LoggedTunable.hasChanged(this.hashCode(), ROT_PID_CONSTS)) {
-			ROT_PID_CONSTS.get().update(this.rotationalPID);
-		}
 		var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
 		var sample = this.trajectory.sampleAt(this.trajectoryTimer.get(), false).get();
 		var errX = sample.x - robotPose.getX();
@@ -76,31 +80,49 @@ public class FollowTrajectoryCommand extends Command {
 		var pidY = transPidOut * errYNorm;
 		var pidOmega = rotPidOut;
 
-		double ffX;
-		double ffY;
-		double ffOmega;
+		double vX;
+		double vY;
+		double omega;
+		// double aX;
+		// double aY;
+		// double alpha;
 		if (this.trajectoryTimer.isRunning()) {
-			ffX = sample.vx;
-			ffY = sample.vy;
-			ffOmega = sample.omega;
+			vX = sample.vx;
+			vY = sample.vy;
+			omega = sample.omega;
+			// aX = sample.ax;
+			// aY = sample.ay;
+			// alpha = sample.alpha;
 		} else {
-			ffX = 0.0;
-			ffY = 0.0;
-			ffOmega = 0.0;
+			vX = 0.0;
+			vY = 0.0;
+			omega = 0.0;
+			// aX = 0.0;
+			// aY = 0.0;
+			// alpha = 0.0;
 		}
 
-		var fieldX = ffX + pidX;
-		var fieldY = ffY + pidY;
-		var fieldOmega = ffOmega + pidOmega;
+		var fieldVX = vX + pidX;
+		var fieldVY = vY + pidY;
+		var fieldOmega = omega + pidOmega;
 
-		var robotX = fieldX * +robotPose.getRotation().getCos() - fieldY * -robotPose.getRotation().getSin();
-		var robotY = fieldX * -robotPose.getRotation().getSin() + fieldY * +robotPose.getRotation().getCos();
+		var robotVX = fieldVX * +robotPose.getRotation().getCos() + fieldVY * +robotPose.getRotation().getSin();
+		var robotVY = fieldVX * -robotPose.getRotation().getSin() + fieldVY * +robotPose.getRotation().getCos();
 		var robotOmega = fieldOmega;
 
-		Logger.recordOutput("Trajectory/Setpoint Pose", sample.getPose());
-		Logger.recordOutput("Trajectory/Setpoint Speeds", DriveConstants.kinematics.toSwerveModuleStates(ChassisSpeeds.fromFieldRelativeSpeeds(sample.getChassisSpeeds(), sample.getPose().getRotation())));
+		// var robotAX = aX * +robotPose.getRotation().getCos() + aY * +robotPose.getRotation().getSin();
+		// var robotAY = aX * -robotPose.getRotation().getSin() + aY * +robotPose.getRotation().getCos();
+		// var robotAlpha = alpha;
 
-		this.drive.runRobotSpeeds(robotX, robotY, robotOmega);
+		// Logger.recordOutput("Trajectory/Setpoint Pose", sample.getPose());
+		// Logger.recordOutput("Trajectory/Setpoint Speeds", DriveConstants.kinematics.toSwerveModuleStates(ChassisSpeeds.fromFieldRelativeSpeeds(sample.getChassisSpeeds(), sample.getPose().getRotation())));
+		// Logger.recordOutput("Trajectory/Raw sample", sample);
+
+		this.drive.runRobotSpeeds(
+			robotVX,
+			robotVY,
+			robotOmega
+		);
 	}
 
 	@Override

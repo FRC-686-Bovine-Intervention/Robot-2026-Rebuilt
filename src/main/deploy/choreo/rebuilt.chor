@@ -4,7 +4,22 @@
  "type":"Swerve",
  "variables":{
   "expressions":{},
-  "poses":{}
+  "poses":{
+   "Origin":{
+    "x":{
+     "exp":"0 m",
+     "val":0.0
+    },
+    "y":{
+     "exp":"0 m",
+     "val":0.0
+    },
+    "heading":{
+     "exp":"0 rad",
+     "val":0.0
+    }
+   }
+  }
  },
  "config":{
   "frontLeft":{

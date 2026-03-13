@@ -63,7 +63,7 @@ public enum Environment {
 
 		selectedName = practiceName;
 
-		var table = NetworkTableInstance.getDefault().getTable("SmartDashboard").getSubTable(key);
+		var table = NetworkTableInstance.getDefault().getTable(key);
 		namePublisher = table.getStringTopic(".name").publish();
 		typePublisher = table.getStringTopic(".type").publish();
 		optionsPublisher = table.getStringArrayTopic("options").publish();

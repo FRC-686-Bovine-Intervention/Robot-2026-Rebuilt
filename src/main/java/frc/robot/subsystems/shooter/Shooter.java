@@ -14,7 +14,7 @@ import frc.robot.subsystems.shooter.aiming.AimingSystem;
 import frc.robot.subsystems.shooter.flywheel.Flywheel;
 import frc.robot.subsystems.shooter.flywheel.FlywheelConstants;
 import frc.robot.subsystems.shooter.hood.Hood;
-import frc.util.PIDConstants;
+import frc.util.PIDGains;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.math.MathExtraUtil;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +42,7 @@ public class Shooter {
 	public Command aimDriveAtHub(Drive.Rotational rotational) {
 		return rotational.genHeadingPIDCommand(
 			"Aim at Hub",
-			LoggedTunable.from("Shooting/Aiming/Rotational PID", new PIDConstants(3.5, 0.0, 0.0)),
+			LoggedTunable.from("Shooting/Aiming/Rotational PID", new PIDGains(3.5, 0.0, 0.0)),
 			() -> RobotState.getInstance().getEstimatedGlobalPose().getRotation().getRadians(),
 			this.aimingSystem.shootingCalc::getTargetAzimuthHeadingRads
 		);
@@ -60,7 +60,7 @@ public class Shooter {
 	public Command aimDriveToPass(Drive.Rotational rotational) {
 		return rotational.genHeadingPIDCommand(
 			"Aim to Pass",
-			LoggedTunable.from("Shooting/Passing/Rotational PID", new PIDConstants(0.0, 0.0, 0.0)),
+			LoggedTunable.from("Shooting/Passing/Rotational PID", new PIDGains(0.0, 0.0, 0.0)),
 			() -> RobotState.getInstance().getEstimatedGlobalPose().getRotation().getRadians(),
 			this.aimingSystem.passingCalc::getTargetAzimuthHeadingRads
 		);

@@ -19,9 +19,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.shooter.flywheel.FlywheelConstants.FlywheelConfig;
-import frc.util.FFConstants;
+import frc.util.FFGains;
 import frc.util.NeutralMode;
-import frc.util.PIDConstants;
+import frc.util.PIDGains;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 import lombok.Getter;
 
@@ -35,18 +35,18 @@ public class Flywheel extends SubsystemBase {
 
 	private static final LoggedTunable<LinearAcceleration> profileMaxAcceleration = LoggedTunable.from("Subsystems/Shooter/Flywheels/Mechanism/Profile/Max Acceleration", MetersPerSecondPerSecond::of, 7.0);
 	private static final LoggedTunable<Velocity<LinearAccelerationUnit>> profileMaxJerk = LoggedTunable.from("Subsystems/Shooter/Flywheels/Mechanism/Profile/Max Jerk", MetersPerSecondPerSecond.per(Second)::of, 0.0);
-	private static final LoggedTunable<FFConstants> ffGains = LoggedTunable.from(
+	private static final LoggedTunable<FFGains> ffGains = LoggedTunable.from(
 		"Subsystems/Shooter/Flywheels/Mechanism/FF",
-		new FFConstants(
+		new FFGains(
 			0.0,
 			0.0,
 			3.9,
 			0.0
 		)
 	);
-	private static final LoggedTunable<PIDConstants> pidGains = LoggedTunable.from(
+	private static final LoggedTunable<PIDGains> pidGains = LoggedTunable.from(
 		"Subsystems/Shooter/Flywheels/Mechanism/PID",
-		new PIDConstants(
+		new PIDGains(
 			5.0,
 			0.0,
 			0.0

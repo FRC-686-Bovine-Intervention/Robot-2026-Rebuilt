@@ -99,7 +99,7 @@ import frc.robot.subsystems.vision.cameras.Camera;
 import frc.robot.subsystems.vision.cameras.CameraIO;
 import frc.robot.subsystems.vision.cameras.CameraIOPhoton;
 import frc.robot.subsystems.vision.object.ObjectVision;
-import frc.util.PIDConstants;
+import frc.util.PIDGains;
 import frc.util.Perspective;
 import frc.util.controllers.XboxController;
 import frc.util.flipping.AllianceFlipped;
@@ -520,9 +520,9 @@ public class RobotContainer {
 			private static final LoggedTunable<LinearVelocity> linearThreshold = LoggedTunable.from("Controls/Tank Drive/Velo Threshold", MetersPerSecond::of, 0.5);
 			private static final LoggedTunable<AngularVelocity> maxOmega = LoggedTunable.from("Controls/Tank Drive/Max Omega", RotationsPerSecond::of, 0.5);
 
-			private static final LoggedTunable<PIDConstants> pidGains = LoggedTunable.from(
+			private static final LoggedTunable<PIDGains> pidGains = LoggedTunable.from(
 				"Controls/Tank Drive/Azimuth PID",
-				new PIDConstants(
+				new PIDGains(
 					3.5,
 					0.0,
 					0.0
