@@ -1,5 +1,7 @@
 package frc.robot.subsystems.leds;
 
+import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.util.Color;
 import frc.robot.HubShifts;
@@ -20,6 +22,7 @@ public class HubShiftAnimation extends LEDAnimation {
 		this.strip.apply((pos) -> {
 			var curShift = HubShifts.getCurrentShift();
 			var activeBarPos = MathUtil.inverseInterpolate(0.0, curShift.getShiftLength(), curShift.getSecsLeftInShift());
+			Logger.recordOutput("DEGByA/activebarpos", activeBarPos);
 			if (pos <= activeBarPos) {
 				if (curShift.isHubActive().getOurs()) {
 					return this.activeNowColor;
