@@ -57,7 +57,7 @@ public class Leds extends VirtualSubsystem {
 		this.hoodNotCalibratedAnimation = new FlashingAnimation(sideStrips.substrip(13, 16), WaveFunction.Sawtooth.frequency(2.0), InterpolationFunction.step.gradient(Color.kBlack, Color.kRed));
 		this.hoodCalibratedAnimation = new FillAnimation(sideStrips.substrip(13, 16), Color.kGreen);
 
-		this.hubShiftAnimation = new HubShiftAnimation(leftTowerStrip.parallel(rightTowerStrip), Color.kGreen, Color.kRed, Color.kDarkGreen, Color.kRed);
+		this.hubShiftAnimation = new HubShiftAnimation(leftTowerStrip.parallel(rightTowerStrip), Color.kGreen, Color.kRed, new Color(0.0, 0.2, 0.0), Color.kRed);
 
 		this.loadingNotifier = new Notifier(() -> {
 			synchronized(this) {
