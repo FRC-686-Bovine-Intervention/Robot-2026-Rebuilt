@@ -713,8 +713,8 @@ public class RobotContainer {
 
 		// Bind buttons
 		this.driveController.leftBumper().whileTrue(driveTankCommand);
-		new Trigger(() -> translationJoystick.magnitude() > 0.0 && !driveTankCommand.isScheduled()).whileTrue(driveTranslationCommand);
-		new Trigger(() -> Math.abs(rotateAxis.getAsDouble()) > 0.0 && !driveTankCommand.isScheduled()).whileTrue(driveRotateCommand);
+		new Trigger(() -> translationJoystick.magnitude() > 0.0 && !driveTankCommand.isScheduled() && !aimAtHubCommand.isScheduled()).whileTrue(driveTranslationCommand);
+		new Trigger(() -> Math.abs(rotateAxis.getAsDouble()) > 0.0 && !driveTankCommand.isScheduled() && !aimAtHubCommand.isScheduled()).whileTrue(driveRotateCommand);
 
 		// Setup position reset command
 		this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(FieldConstants.hubFrontRobotPose.getOurs())).ignoringDisable(true));
