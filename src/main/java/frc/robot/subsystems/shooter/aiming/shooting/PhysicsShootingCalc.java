@@ -46,25 +46,25 @@ public class PhysicsShootingCalc implements ShootingCalc {
 		var hubRobotSpaceCartesian = aimPoint.toTranslation2d().minus(robotPose.getTranslation());
 		double robotAngleRads = Math.atan2(hubRobotSpaceCartesian.getY(), hubRobotSpaceCartesian.getX());
 
-		// var staticAimVector = Shooter.getLaunchVector(flywheelSpeedMPS, hoodAngleRads, robotAngleRads);
-		// var radialVector = MathExtraUtil.scalarMultiply(radialUnitVectorCartesian, radialVelocity);
-		// var offsetVector = MathExtraUtil.scalarMultiply(tangentialUnitVectorCartesian, -tangentialVelocity);
-		// var newVector = MathExtraUtil.addVectors(staticAimVector, offsetVector);
-		// Logger.recordOutput("DEBUG/PhysicsShooting/NewVector", new Translation3d(newVector[0], newVector[1], newVector[2]));
-		// Logger.recordOutput("DEBUG/PhysicsShooting/staticVector", new Translation3d(staticAimVector[0], staticAimVector[1], staticAimVector[2]));
-		// Logger.recordOutput("DEBUG/PhysicsShooting/radialVector", new Translation2d(radialVector[0], radialVector[1]));
-		// Logger.recordOutput("DEBUG/PhysicsShooting/offsetVector", new Translation2d(offsetVector[0], offsetVector[1]));
-		// Logger.recordOutput("DEBUG/PhysicsShooting/tangentialVeloUnitVec", new Translation2d(tangentialUnitVectorCartesian[0], tangentialUnitVectorCartesian[1]));
-		// var launchValues = getLaunchValues(newVector, radialVector);
+		var staticAimVector = Shooter.getLaunchVector(flywheelSpeedMPS, hoodAngleRads, robotAngleRads);
+		var radialVector = MathExtraUtil.scalarMultiply(radialUnitVectorCartesian, radialVelocity);
+		var offsetVector = MathExtraUtil.scalarMultiply(tangentialUnitVectorCartesian, -tangentialVelocity);
+		var newVector = MathExtraUtil.addVectors(staticAimVector, offsetVector);
+		Logger.recordOutput("DEBUG/PhysicsShooting/NewVector", new Translation3d(newVector[0], newVector[1], newVector[2]));
+		Logger.recordOutput("DEBUG/PhysicsShooting/staticVector", new Translation3d(staticAimVector[0], staticAimVector[1], staticAimVector[2]));
+		Logger.recordOutput("DEBUG/PhysicsShooting/radialVector", new Translation2d(radialVector[0], radialVector[1]));
+		Logger.recordOutput("DEBUG/PhysicsShooting/offsetVector", new Translation2d(offsetVector[0], offsetVector[1]));
+		Logger.recordOutput("DEBUG/PhysicsShooting/tangentialVeloUnitVec", new Translation2d(tangentialUnitVectorCartesian[0], tangentialUnitVectorCartesian[1]));
+		var launchValues = getLaunchValues(newVector, radialVector);
 
-		// this.robotRotationRads = launchValues[2];
-		// this.hoodAngleRads = launchValues[1];
-		// Logger.recordOutput("DEBUG/PhysicsShooting/HoodAngle", this.hoodAngleRads);
-		// this.flywheelSpeedMS = launchValues[0];
-		// Logger.recordOutput("DEBUG/PhysicsShooting/FlywheelSpeed", this.flywheelSpeedMS);
-		this.robotRotationRads = robotAngleRads;
-		this.hoodAngleRads = hoodAngleRads;
-		this.flywheelSpeedMS = flywheelSpeedMPS;
+		this.robotRotationRads = launchValues[2];
+		this.hoodAngleRads = launchValues[1];
+		Logger.recordOutput("DEBUG/PhysicsShooting/HoodAngle", this.hoodAngleRads);
+		this.flywheelSpeedMS = launchValues[0];
+		Logger.recordOutput("DEBUG/PhysicsShooting/FlywheelSpeed", this.flywheelSpeedMS);
+		// this.robotRotationRads = robotAngleRads;
+		// this.hoodAngleRads = hoodAngleRads;
+		// this.flywheelSpeedMS = flywheelSpeedMPS;
 		this.aimPoint = aimPoint;
 		this.tofSeconds = tofSeconds;
 	}

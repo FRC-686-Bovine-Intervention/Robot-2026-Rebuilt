@@ -36,6 +36,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
+import frc.robot.auto.routines.DoubleSwipe;
 import frc.robot.automations.AutoFeed;
 import frc.robot.automations.HubShiftNotifications;
 import frc.robot.automations.IntakeDeployHysteresis;
@@ -78,6 +79,7 @@ import frc.robot.subsystems.rollers.indexer.IndexerIOTalonFX;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.aiming.AimingSystem;
 import frc.robot.subsystems.shooter.aiming.passing.InterpolationPassingCalc;
+import frc.robot.subsystems.shooter.aiming.shooting.InterpolationShootingCalc;
 import frc.robot.subsystems.shooter.aiming.shooting.PhysicsShootingCalc;
 import frc.robot.subsystems.shooter.flywheel.Flywheel;
 import frc.robot.subsystems.shooter.flywheel.FlywheelConstants;
@@ -155,7 +157,7 @@ public class RobotContainer {
 					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIOTalonFX(FlywheelConstants.rightFlywheelConfig)),
 					new Hood(new HoodIOTalonFXS(commonCANdi)),
 					new AimingSystem(
-						new PhysicsShootingCalc(),
+						new InterpolationShootingCalc(),
 						new InterpolationPassingCalc()
 					)
 				);
@@ -377,8 +379,9 @@ public class RobotContainer {
 
 		System.out.println("[Init RobotContainer] Configuring Autonomous Modes");
 
-		var autoSelector = new AutoSelector("Auto Selector");
+		final var autoSelector = new AutoSelector("Auto Selector");
 		// Add autonomous routines to autonomous selector
+		autoSelector.addDefaultRoutine(new DoubleSwipe(this));
 
 		this.autoManager = new AutoManager(autoSelector);
 
