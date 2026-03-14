@@ -5,6 +5,7 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
@@ -17,7 +18,6 @@ import java.util.Set;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -25,14 +25,15 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
@@ -101,6 +102,7 @@ import frc.robot.subsystems.vision.object.ObjectVision;
 import frc.util.PIDGains;
 import frc.util.Perspective;
 import frc.util.controllers.XboxController;
+import frc.util.flipping.AllianceFlipUtil;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.loggerUtil.tunables.LoggedTunableNumber;
 import frc.util.robotStructure.Mechanism3d;
@@ -637,7 +639,13 @@ public class RobotContainer {
 				this.shooter.aimingSystem.aimToPass(
 					RobotState.getInstance()::getEstimatedGlobalPose,
 					this.drive::getFieldMeasuredSpeeds,
-					() -> Translation3d.kZero
+					() -> {
+						if (RobotState.getInstance().getEstimatedGlobalPose().getY() > FieldConstants.fieldWidth.div(2.0).in(Meters)) {
+							return FieldConstants.topPassPoint.getOurs();
+						} else {
+							return FieldConstants.botPassPoint.getOurs();
+						}
+					}
 				).repeatedly(),
 				this.shooter.aimLeftFlywheelToPass(),
 				this.shooter.aimRightFlywheelToPass(),
@@ -679,7 +687,7 @@ public class RobotContainer {
 		// this.automationsLoop.bind(new HookAutoDeployHysteresis(this.climber.hook, climberHookAutoDeployCommand));
 		// this.automationsLoop.bind(new AutoSpinUp(this.drive, this.shooter, intakeRollersIntakeCommand));
 		// this.automationsLoop.bind(new AutoDriveAim(this.drive, this.shooter, intakeRollersIntakeCommand));
-		this.automationsLoop.bind(new AutoFeed(this.drive, this.shooter, this.rollers, this.intake.slam, this.extensionSystem, this.driveController.x().or(secondDriverOverride)));
+		this.automationsLoop.bind(new AutoFeed(this.drive, this.shooter, this.rollers, this.intake.slam, this.extensionSystem, this.driveController.y().or(secondDriverOverride)));
 		this.automationsLoop.bind(new HubShiftNotifications(this.driveController));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		// new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
@@ -719,26 +727,20 @@ public class RobotContainer {
 			}
 		});
 
-
 		CommandScheduler.getInstance().getDefaultButtonLoop().bind(() -> {
 			if (this.driveController.hid.getRightBumperButtonPressed()) {
-				CommandScheduler.getInstance().schedule(aimAtHubCommand);
+				if (FieldConstants.allianceZone.getOurs().withinBounds(RobotState.getInstance().getEstimatedGlobalPose().getTranslation())) {
+					CommandScheduler.getInstance().schedule(aimAtHubCommand);
+				} else {
+					CommandScheduler.getInstance().schedule(aimToPassCommand);
+				}
 			}
 			if (this.driveController.hid.getRightBumperButtonReleased()) {
 				CommandScheduler.getInstance().cancel(aimAtHubCommand);
+				CommandScheduler.getInstance().cancel(aimToPassCommand);
 			}
 		});
 
-		// this.driveController.x().whileTrue(rollersFeedCommand);
-
-
-
-		// Optional<Trajectory<SwerveSample>> trajopt = Choreo.loadTrajectory("TestPath");
-
-		// var flippath = AllianceFlipped.fromBlue(trajopt.get());
-
-		// this.driveController.povUp().whileTrue(Commands.defer(() -> new FollowTrajectoryCommand(this.drive, flippath.getOurs(), false), Set.of(this.drive.translationSubsystem, this.drive.rotationalSubsystem)));
-
-		this.driveController.y().whileTrue(this.rollers.feed().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("Force Feed"));
+		this.driveController.x().whileTrue(this.rollers.feed().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("Force Feed"));
 	}
 }

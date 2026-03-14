@@ -61,7 +61,7 @@ public class AimingSystem extends SubsystemBase {
 			@Override
 			public void initialize() {
 				aimingSystem.passingCalc.calculate(
-					robotPoseSupplier.get().getTranslation(),
+					robotPoseSupplier.get(),
 					fieldSpeedsSupplier.get(),
 					aimPointSupplier.get()
 				);

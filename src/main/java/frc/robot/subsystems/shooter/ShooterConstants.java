@@ -50,6 +50,16 @@ public class ShooterConstants {
 		hubTargetTimeOfFlightSecs.put(Inches.of(183.623178366).in(Meters), Seconds.of(1.26).in(Seconds)); // Outpost Shot
 	}
 
+	public static final InterpolatingDoubleTreeMap passFlyWheelVeloMPS = new InterpolatingDoubleTreeMap();
+	static {
+		hubTargetFlyWheelVeloMPS.put(Inches.of(40.125).in(Meters), MetersPerSecond.of(9.0).in(MetersPerSecond));
+	}
+
+	public static final InterpolatingDoubleTreeMap passHoodAngleRads = new InterpolatingDoubleTreeMap();
+	static {
+		hubTargetHoodAngleRads.put(Inches.of(40.125).in(Meters), Degrees.of(35.0).in(Radians));
+	}
+
 	// Physics Shooting Calc
 	public static final Transform3d flywheelBase = new Transform3d(
 		new Translation3d(

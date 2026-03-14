@@ -155,4 +155,19 @@ public final class FieldConstants {
 		hubCenter.getBlue().getMeasureY(),
 		hubHeight
 	));
+
+	public static final AllianceFlipped<Translation3d> leftPassPoint = AllianceFlipped.fromBlue(new Translation3d(
+		Inches.zero().plus(hubCenter.getBlue().getMeasureX()).div(2.0),
+		fieldWidth.div(4).times(3),
+		hubHeight
+	));
+
+	public static final AllianceFlipped<Translation3d> rightPassPoint = AllianceFlipped.fromBlue(new Translation3d(
+		Inches.zero().plus(hubCenter.getBlue().getMeasureX()).div(2.0),
+		fieldWidth.div(4).times(1),
+		hubHeight
+	));
+
+	public static final AllianceFlipped<Translation3d> topPassPoint = new AllianceFlipped<>(leftPassPoint.getBlue(), rightPassPoint.getRed());
+	public static final AllianceFlipped<Translation3d> botPassPoint = new AllianceFlipped<>(rightPassPoint.getBlue(), leftPassPoint.getRed());
 }
