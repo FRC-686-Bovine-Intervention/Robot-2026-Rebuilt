@@ -1,7 +1,5 @@
 package frc.robot.subsystems.leds;
 
-import org.littletonrobotics.junction.Logger;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.util.Color;
 import frc.robot.HubShifts;

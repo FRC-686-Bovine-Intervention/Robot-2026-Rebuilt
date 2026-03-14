@@ -12,7 +12,7 @@ import frc.robot.constants.RobotConstants;
 import frc.util.flipping.AllianceFlipped;
 
 public final class AutoConstants {
-	public static final Time allottedAutoTime = Seconds.of(15.3);
+	public static final Time allottedAutoTime = Seconds.of(20.3);
 	public static final Time disabledTime = Seconds.of(3.0);
 
 	public static final AllianceFlipped<Pose2d> startHubFront = FieldConstants.hubFrontRobotPose;
