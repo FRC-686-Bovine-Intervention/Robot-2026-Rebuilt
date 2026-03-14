@@ -345,7 +345,7 @@ public class RobotContainer {
 
 		// Initialize vision systems with camera pipelines
 		this.apriltagVision = new ApriltagVision(
-			new ApriltagPipeline(this.hubZoomCamera, 0, 1.0),
+			new ApriltagPipeline(this.hubZoomCamera, 0, 1.0)
 			// new ApriltagPipeline(this.leftBroadCamera, 0, 2.0),
 			// new ApriltagPipeline(this.rightBroadCamera, 0, 2.0),
 			// new ApriltagPipeline(this.backBroadCamera, 0, 2.0)
