@@ -60,7 +60,7 @@ public class Shooter {
 	public Command aimDriveToPass(Drive.Rotational rotational) {
 		return rotational.genHeadingPIDCommand(
 			"Aim to Pass",
-			LoggedTunable.from("Shooting/Passing/Rotational PID", new PIDGains(0.0, 0.0, 0.0)),
+			LoggedTunable.from("Shooting/Passing/Rotational PID", new PIDGains(3.5, 0.0, 0.0)),
 			() -> RobotState.getInstance().getEstimatedGlobalPose().getRotation().getRadians(),
 			this.aimingSystem.passingCalc::getTargetAzimuthHeadingRads
 		);
