@@ -28,8 +28,8 @@
    "GlobalMaxLinAccel":{
     "dimension":"LinAcc",
     "var":{
-     "exp":"15 m / s / s",
-     "val":15.0
+     "exp":"8 m / s / s",
+     "val":8.0
     }
    },
    "GlobalMaxLinVelo":{
