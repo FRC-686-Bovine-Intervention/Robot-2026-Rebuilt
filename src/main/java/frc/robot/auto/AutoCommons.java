@@ -16,11 +16,11 @@ public class AutoCommons {
 		return Commands.runOnce(() -> RobotState.getInstance().resetPose(pose.getOurs()));
 	}
 
-	public static Trajectory<SwerveSample> loadChoreoTrajectory(String name) {
+	public static AllianceFlipped<Trajectory<SwerveSample>> loadBlueChoreoTrajectory(String name) {
 		Optional<Trajectory<SwerveSample>> traj = Choreo.loadTrajectory(name);
 		if (traj.isEmpty()) {
 			throw new NullPointerException("No such Choreo trajectory: " + name);
 		}
-		return traj.get();
+		return AllianceFlipped.fromBlue(traj.get());
 	}
 }

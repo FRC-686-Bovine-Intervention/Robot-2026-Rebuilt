@@ -44,8 +44,19 @@ public class DoubleSwipe extends AutoRoutine {
 	public Command generateCommand() {
 		final var startPosition = DoubleSwipe.startPosition.getResponse();
 
-		final var firstTrajToCenterline = AutoCommons.loadChoreoTrajectory("");
-		final var firstTrajToTrench = AutoCommons.loadChoreoTrajectory("");
+		final String firstTrajBallGrabName;
+		final String secondTrajBallGrabName;
+
+		if (startPosition == AutoConstants.startInLeftTrench) {
+			firstTrajBallGrabName = "";
+			secondTrajBallGrabName = "";
+		} else {
+			firstTrajBallGrabName = "";
+			secondTrajBallGrabName = "";
+		}
+
+		final var firstTrajBallGrab = AutoCommons.loadBlueChoreoTrajectory(firstTrajBallGrabName).getOurs();
+		final var secondTrajBallGrab = AutoCommons.loadBlueChoreoTrajectory(secondTrajBallGrabName).getOurs();
 
 		return Commands.parallel(
 			AutoCommons.setOdometryFlipped(startPosition),
@@ -53,20 +64,40 @@ public class DoubleSwipe extends AutoRoutine {
 			Commands.sequence(
 				Commands.deadline(
 					Commands.sequence(
-						new FollowTrajectoryCommand(this.robot.drive, firstTrajToCenterline, true).withName("To Centerline").asProxy(),
 						Commands.deadline(
-							new FollowTrajectoryCommand(this.robot.drive, firstTrajToTrench, true).withName("Grab Balls").asProxy(),
+							new FollowTrajectoryCommand(this.robot.drive, firstTrajBallGrab, true).withName("First Grab Ball").asProxy(),
 							this.robot.intake.rollers.intake().asProxy()
 						),
 						Commands.deadline(
-							Commands.waitSeconds(5.0),
+							Commands.waitSeconds(4.0),
 							this.robot.shooter.aimHoodAtHub().asProxy(),
 							this.robot.shooter.aimDriveAtHub(this.robot.drive.rotationalSubsystem).asProxy(),
-							this.robot.rollers.feed().asProxy()
+							this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy()
 						)
 					),
 					this.robot.shooter.aimingSystem.aimAtHub(
-						FunctionalUtil.evalNow(firstTrajToTrench.getFinalPose(false).get()),
+						FunctionalUtil.evalNow(firstTrajBallGrab.getFinalPose(false).get()),
+						FunctionalUtil.evalNow(new ChassisSpeeds()),
+						FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs())
+					).asProxy(),
+					this.robot.shooter.aimLeftFlywheelAtHub().asProxy(),
+					this.robot.shooter.aimRightFlywheelAtHub().asProxy()
+				),
+				Commands.deadline(
+					Commands.sequence(
+						Commands.deadline(
+							new FollowTrajectoryCommand(this.robot.drive, secondTrajBallGrab, true).withName("Second Grab Ball").asProxy(),
+							this.robot.intake.rollers.intake().asProxy()
+						),
+						Commands.parallel(
+							// Commands.waitSeconds(5.0),
+							this.robot.shooter.aimHoodAtHub().asProxy(),
+							this.robot.shooter.aimDriveAtHub(this.robot.drive.rotationalSubsystem).asProxy(),
+							this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy()
+						)
+					),
+					this.robot.shooter.aimingSystem.aimAtHub(
+						FunctionalUtil.evalNow(secondTrajBallGrab.getFinalPose(false).get()),
 						FunctionalUtil.evalNow(new ChassisSpeeds()),
 						FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs())
 					).asProxy(),
