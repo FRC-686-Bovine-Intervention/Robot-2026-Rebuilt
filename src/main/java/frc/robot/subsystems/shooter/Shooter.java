@@ -76,7 +76,7 @@ public class Shooter {
 				var pidOut = this.pid.calculate(measuredHeadingRads, targetHeadingRads);
 
 				var translationalVelo = desiredVeloSupplier.get();
-				
+
 				if (Math.hypot(translationalVelo.vxMetersPerSecond, translationalVelo.vyMetersPerSecond) >= 0.1 || pidOut >= 0.1) {
 					drive.translationSubsystem.driveVelocity(translationalVelo.vxMetersPerSecond, translationalVelo.vyMetersPerSecond);
 					drive.rotationalSubsystem.driveVelocity(pidOut);

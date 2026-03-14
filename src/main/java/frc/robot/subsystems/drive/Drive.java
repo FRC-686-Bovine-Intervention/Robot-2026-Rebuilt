@@ -578,12 +578,9 @@ public class Drive extends VirtualSubsystem {
 			module.stopDrive(NeutralMode.DEFAULT);
 			// module.config.moduleTranslation;
 		}
-		IntStream.range(0, DriveConstants.moduleConstants.length).forEach((i) -> {
-			this.setpointStates[i] = new SwerveModuleState(
-				0,
-				DriveConstants.moduleConstants[i].moduleTransform.getTranslation().getAngle()
-			);
-		});
+		for (int i = 0; i < this.modules.length; i++) {
+			this.modules[i].runSetpoint(new SwerveModuleState(0.0, this.modules[i].config.moduleTransform.getTranslation().getAngle()));
+		}
 	}
 
 	/** Returns the current pitch velocity (Y rotation) in radians per second. */
