@@ -52,12 +52,12 @@ public class ShooterConstants {
 
 	public static final InterpolatingDoubleTreeMap passFlyWheelVeloMPS = new InterpolatingDoubleTreeMap();
 	static {
-		hubTargetFlyWheelVeloMPS.put(Inches.of(40.125).in(Meters), MetersPerSecond.of(9.0).in(MetersPerSecond));
+		passFlyWheelVeloMPS.put(Inches.of(40.125).in(Meters), MetersPerSecond.of(9.0).in(MetersPerSecond));
 	}
 
 	public static final InterpolatingDoubleTreeMap passHoodAngleRads = new InterpolatingDoubleTreeMap();
 	static {
-		hubTargetHoodAngleRads.put(Inches.of(40.125).in(Meters), Degrees.of(35.0).in(Radians));
+		passHoodAngleRads.put(Inches.of(40.125).in(Meters), Degrees.of(35.0).in(Radians));
 	}
 
 	// Physics Shooting Calc
