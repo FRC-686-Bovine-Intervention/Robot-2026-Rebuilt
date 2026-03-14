@@ -48,11 +48,11 @@ public class DoubleSwipe extends AutoRoutine {
 		final String secondTrajBallGrabName;
 
 		if (startPosition == AutoConstants.startInLeftTrench) {
-			firstTrajBallGrabName = "";
-			secondTrajBallGrabName = "";
+			firstTrajBallGrabName = "LeftTrenchGrab1";
+			secondTrajBallGrabName = "LeftTrenchGrab2";
 		} else {
-			firstTrajBallGrabName = "";
-			secondTrajBallGrabName = "";
+			firstTrajBallGrabName = "RightTrenchGrab1";
+			secondTrajBallGrabName = "RightTrenchGrab2";
 		}
 
 		final var firstTrajBallGrab = AutoCommons.loadBlueChoreoTrajectory(firstTrajBallGrabName).getOurs();
