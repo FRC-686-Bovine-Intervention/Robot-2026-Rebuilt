@@ -19,7 +19,7 @@ public class HubShiftAnimation extends LEDAnimation {
 	public void apply() {
 		this.strip.apply((pos) -> {
 			var curShift = HubShifts.getCurrentShift();
-			var activeBarPos = MathUtil.inverseInterpolate(curShift.getShiftLength(), 0.0, curShift.getSecsLeftInShift());
+			var activeBarPos = MathUtil.inverseInterpolate(0.0, curShift.getShiftLength(), curShift.getSecsLeftInShift());
 			if (pos <= activeBarPos) {
 				if (curShift.isHubActive().getOurs()) {
 					return this.activeNowColor;
