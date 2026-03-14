@@ -573,10 +573,6 @@ public class Drive extends VirtualSubsystem {
 	 * requested.
 	 */
 	public void stopWithX() {
-		for (var module : this.modules) {
-			module.stopDrive(NeutralMode.DEFAULT);
-			// module.config.moduleTranslation;
-		}
 		for (int i = 0; i < this.modules.length; i++) {
 			this.modules[i].runSetpoint(new SwerveModuleState(0.0, this.modules[i].config.moduleTransform.getTranslation().getAngle()));
 		}
@@ -634,8 +630,10 @@ public class Drive extends VirtualSubsystem {
 			this.driveVelocity(0.0, 0.0);
 			if (!this.drive.rotationalSubsystem.needsPostProcessing) {
 				this.drive.stop();
-				System.out.println("STOPPING DRIVE FROM TRANSLATIONAL");
 			}
+		}
+		public void cancelPostProcessing() {
+			this.needsPostProcessing = false;
 		}
 
 		public Command fieldRelative(Supplier<ChassisSpeeds> speeds) {
@@ -724,8 +722,10 @@ public class Drive extends VirtualSubsystem {
 			this.driveVelocity(0.0);
 			if (!this.drive.translationSubsystem.needsPostProcessing) {
 				this.drive.stop();
-				System.out.println("STOPPING DRIVE FROM ROTATIONAL");
 			}
+		}
+		public void cancelPostProcessing() {
+			this.needsPostProcessing = false;
 		}
 
 		public Command spin(DoubleSupplier omega) {
