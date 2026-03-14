@@ -14,6 +14,7 @@ import static edu.wpi.first.units.Units.Seconds;
 
 import java.util.Arrays;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
@@ -462,6 +463,23 @@ public class RobotContainer {
 			.smoothRadialDeadband(0.05)
 			.radialSensitivity(0.5)
 		;
+		final Supplier<ChassisSpeeds> desiredTranslationalRobotVelo = () -> {
+			var joyX = +translationJoystick.y().getAsDouble();
+			var joyY = -translationJoystick.x().getAsDouble();
+
+			var perspectiveForward = Perspective.getCurrent().getForwardDirection();
+			var fieldX = joyX * perspectiveForward.getCos() - joyY * perspectiveForward.getSin();
+			var fieldY = joyX * perspectiveForward.getSin() + joyY * perspectiveForward.getCos();
+
+			var robotRot = RobotState.getInstance().getEstimatedGlobalPose().getRotation();
+			var robotX = fieldX * robotRot.getCos() - fieldY * -robotRot.getSin();
+			var robotY = fieldX * -robotRot.getSin() + fieldY * robotRot.getCos();
+
+			var driveX = robotX * DriveConstants.maxDriveSpeed.in(MetersPerSecond);
+			var driveY = robotY * DriveConstants.maxDriveSpeed.in(MetersPerSecond);
+
+			return new ChassisSpeeds(driveX, driveY, 0.0);
+		};
 		final var rotateAxis = this.driveController.leftTrigger
 			.add(this.driveController.rightTrigger.invert())
 			.smoothDeadband(0.01)
@@ -631,7 +649,7 @@ public class RobotContainer {
 				this.shooter.aimLeftFlywheelAtHub(),
 				this.shooter.aimRightFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
-				this.shooter.aimDriveAtHub(this.drive.rotationalSubsystem)
+				this.shooter.aimDriveAtHubWithXLock(this.drive, desiredTranslationalRobotVelo)
 			)
 			.withName("Aim at Hub")
 		;
