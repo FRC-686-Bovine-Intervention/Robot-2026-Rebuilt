@@ -28,6 +28,7 @@ public class Leds extends VirtualSubsystem {
 
 	public Leds() {
 		System.out.println("[Init Leds] Instantiating Leds");
+		
 		this.hardwareStrip = new AddressableStrip(HardwareDevices.ledPort, 61);
 
 		final var rightTowerStrip = this.hardwareStrip.substrip(0, 16);
@@ -56,6 +57,8 @@ public class Leds extends VirtualSubsystem {
 		this.hoodNotCalibratedAnimation = new FlashingAnimation(sideStrips.substrip(13, 16), WaveFunction.Sawtooth.frequency(2.0), InterpolationFunction.step.gradient(Color.kBlack, Color.kRed));
 		this.hoodCalibratedAnimation = new FillAnimation(sideStrips.substrip(13, 16), Color.kGreen);
 
+		this.hubShiftAnimation = new HubShiftAnimation(leftTowerStrip.parallel(rightTowerStrip), Color.kGreen, Color.kRed, Color.kDarkGreen, Color.kRed);
+
 		this.loadingNotifier = new Notifier(() -> {
 			synchronized(this) {
 				this.bootingAnimation.apply();
@@ -82,6 +85,8 @@ public class Leds extends VirtualSubsystem {
 	public final FlashingAnimation autonomousOverrunAnimation;
 	public final FlashingAnimation tipped;
 	public final AllianceColorAnimation allianceColorAnimation;
+
+	public final HubShiftAnimation hubShiftAnimation;
 
 	public final FlashingAnimation hoodNotCalibratedAnimation;
 	public final FillAnimation hoodCalibratedAnimation;
@@ -121,7 +126,7 @@ public class Leds extends VirtualSubsystem {
 
 			this.hoodCalibratedAnimation.applyIfFlagged();
 		} else {
-
+			this.hubShiftAnimation.apply();
 		}
 
 		this.autonomousBackgroundAnimation.applyIfFlagged();

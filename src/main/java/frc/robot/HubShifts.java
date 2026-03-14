@@ -127,6 +127,18 @@ public class HubShifts {
 			};
 			return shiftEndSecs - (Timer.getTimestamp() - teleopEnableTime);
 		}
+		public double getShiftLength() {
+			return switch (this) {
+				case Auto -> 20.0;
+				case Transition -> 10.0;
+				case Shift1 -> 25.0;
+				case Shift2 -> 25.0;
+				case Shift3 -> 25.0;
+				case Shift4 -> 25.0;
+				case Endgame -> 30.0;
+				case Disabled -> Double.POSITIVE_INFINITY;
+			};
+		}
 	}
 
 	@Getter
