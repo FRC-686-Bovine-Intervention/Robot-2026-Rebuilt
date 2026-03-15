@@ -128,6 +128,7 @@ public class FollowTrajectoryCommand extends Command {
 	@Override
 	public void end(boolean interrupted) {
 		this.trajectoryTimer.stop();
+		this.drive.stop();
 	}
 
 	@Override
