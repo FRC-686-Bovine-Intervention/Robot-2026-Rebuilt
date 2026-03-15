@@ -81,7 +81,7 @@ public class DoubleSwipe extends AutoRoutine {
 
 		return Commands.parallel(
 			AutoCommons.setOdometryFlipped(startPosition),
-			this.robot.intake.slam.deploy(this.robot.extensionSystem).asProxy(),
+			this.robot.intake.slam.pushdown(this.robot.extensionSystem).asProxy(),
 			Commands.sequence(
 				Commands.deadline(
 					Commands.sequence(
