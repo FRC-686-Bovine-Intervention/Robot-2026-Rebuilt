@@ -15,7 +15,7 @@ public final class AutoConstants {
 	public static final Time allottedAutoTime = Seconds.of(20.3);
 	public static final Time disabledTime = Seconds.of(3.0);
 
-	public static final AllianceFlipped<Pose2d> startHubFront = FieldConstants.hubFrontRobotPose;
+	public static final AllianceFlipped<Pose2d> startHubFront = FieldConstants.hubFlatFrontRobotPose;
 
 	public static final AllianceFlipped<Pose2d> startInLeftTrench = AllianceFlipped.fromBlue(
 		new Pose2d(

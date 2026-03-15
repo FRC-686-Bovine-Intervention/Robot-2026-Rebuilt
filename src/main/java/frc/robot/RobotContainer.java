@@ -717,7 +717,7 @@ public class RobotContainer {
 		new Trigger(() -> Math.abs(rotateAxis.getAsDouble()) > 0.0 && !driveTankCommand.isScheduled() && !aimAtHubCommand.isScheduled()).whileTrue(driveRotateCommand);
 
 		// Setup position reset command
-		this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(FieldConstants.hubFrontRobotPose.getOurs())).ignoringDisable(true));
+	this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(FieldConstants.hubIntakeFrontRobotPose.getOurs())).ignoringDisable(true));
 		/*
 		 * (A)
 		 *  | Press: Deploy intake (if not deployed) and roll in
