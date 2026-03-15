@@ -4,6 +4,13 @@
  "type":"Swerve",
  "variables":{
   "expressions":{
+   "BumpMaxVelo":{
+    "dimension":"LinVel",
+    "var":{
+     "exp":"2 m / s",
+     "val":2.0
+    }
+   },
    "CenterToFrontBumper":{
     "dimension":"Length",
     "var":{
@@ -37,6 +44,13 @@
     "var":{
      "exp":"4 m / s",
      "val":4.0
+    }
+   },
+   "IntakeMaxVelo":{
+    "dimension":"LinVel",
+    "var":{
+     "exp":"3 m / s",
+     "val":3.0
     }
    },
    "LeftTrenchCenterY":{
@@ -255,8 +269,8 @@
   },
   "bumper":{
    "front":{
-    "exp":"12 in + 27 in / 2 + 3.625 in",
-    "val":0.739775
+    "exp":"12 in + 27 in / 2",
+    "val":0.6476999999999999
    },
    "side":{
     "exp":"27 in / 2 + 3.625 in",

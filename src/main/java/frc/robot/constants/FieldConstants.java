@@ -142,9 +142,16 @@ public final class FieldConstants {
 
 
 
-	public static final AllianceFlipped<Pose2d> hubFrontRobotPose = AllianceFlipped.fromBlue(new Pose2d(
+	public static final AllianceFlipped<Pose2d> hubFlatFrontRobotPose = AllianceFlipped.fromBlue(new Pose2d(
 		new Translation2d(
 			allianceZoneBoundaryX.getBlue().minus(RobotConstants.centerToFrontBumper),
+			hubCenter.getBlue().getMeasureY()
+		),
+		Rotation2d.kZero
+	));
+	public static final AllianceFlipped<Pose2d> hubIntakeFrontRobotPose = AllianceFlipped.fromBlue(new Pose2d(
+		new Translation2d(
+			allianceZoneBoundaryX.getBlue().minus(Inches.of(12.0)),
 			hubCenter.getBlue().getMeasureY()
 		),
 		Rotation2d.kZero
