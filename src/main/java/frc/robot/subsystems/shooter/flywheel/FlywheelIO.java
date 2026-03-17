@@ -13,9 +13,17 @@ public interface FlywheelIO {
 	@AutoLog
 	public static class FlywheelIOInputs {
 		boolean masterMotorConnected = false;
-		boolean slaveMotorConnected = false;
+		boolean[] slaveMotorsConnected = new boolean[] {
+			false,
+			false,
+			false
+		};
 		LoggedEncodedMotor masterMotor = new LoggedEncodedMotor();
-		LoggedEncodedMotor slaveMotor = new LoggedEncodedMotor();
+		LoggedEncodedMotor[] slaveMotors = new LoggedEncodedMotor[] {
+			new LoggedEncodedMotor(),
+			new LoggedEncodedMotor(),
+			new LoggedEncodedMotor()
+		};
 		double motorProfilePositionRads = 0.0;
 		double motorProfileVelocityRadsPerSec = 0.0;
 	}

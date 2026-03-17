@@ -33,9 +33,7 @@ public class Preloads extends AutoRoutine {
 				FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs())
 			).asProxy(),
 			this.robot.shooter.aimHoodAtHub().asProxy(),
-			this.robot.shooter.aimLeftFlywheelAtHub().asProxy(),
-			this.robot.shooter.aimRightFlywheelAtHub().asProxy(),
-			this.robot.shooter.aimRightFlywheelAtHub().asProxy(),
+			this.robot.shooter.aimFlywheelAtHub().asProxy(),
 			this.robot.shooter.aimDriveAtHub(this.robot.drive.rotationalSubsystem).asProxy(),
 			this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy()
 		);

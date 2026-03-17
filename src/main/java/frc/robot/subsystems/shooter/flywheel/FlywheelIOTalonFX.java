@@ -1,5 +1,6 @@
 package frc.robot.subsystems.shooter.flywheel;
 
+import java.util.ArrayList;
 import java.util.Optional;
 
 import com.ctre.phoenix6.BaseStatusSignal;
@@ -26,22 +27,26 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 	private final FlywheelConfig config;
 	// Hardware devices
 	protected final TalonFX masterMotor;
-	protected final TalonFX slaveMotor;
+	protected final TalonFX[] slaveMotors = new TalonFX[3];
 
 	// Device configuration
 	private final TalonFXConfiguration masterConfig = new TalonFXConfiguration();
-	private final TalonFXConfiguration slaveConfig = new TalonFXConfiguration();
+	private final TalonFXConfiguration[] slaveConfigs = new TalonFXConfiguration[] {
+		new TalonFXConfiguration(),
+		new TalonFXConfiguration(),
+		new TalonFXConfiguration()
+	};
 
 	// Status Signal caches
 	private final EncodedMotorStatusSignalCache masterMotorStatusSignalCache;
-	private final EncodedMotorStatusSignalCache slaveMotorStatusSignalCache;
+	private final EncodedMotorStatusSignalCache[] slaveMotorStatusSignalCaches = new EncodedMotorStatusSignalCache[3];
 	private final StatusSignal<Double> motorProfilePositionStatusSignal;
 	private final StatusSignal<Double> motorProfileVelocityStatusSignal;
 
 	// Quick reference arrays
 	private final BaseStatusSignal[] refreshSignals;
 	private final BaseStatusSignal[] masterMotorConnectedSignals;
-	private final BaseStatusSignal[] slaveMotorConnectedSignals;
+	private final BaseStatusSignal[][] slaveMotorConnectedSignals = new BaseStatusSignal[3][];
 
 	// Control Requests
 	private final NeutralOut neutralRequest = new NeutralOut();
@@ -55,7 +60,9 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 		this.config = config;
 		// Construct hardware devices
 		this.masterMotor = this.config.masterMotorID.talonFX();
-		this.slaveMotor = this.config.slaveMotorID.talonFX();
+		for (int i = 0; i < this.slaveMotors.length; i++) {
+			this.slaveMotors[i] = this.config.slaveMotorIDs[i].talonFX();
+		}
 
 		// Motor Configuration
 		this.masterConfig.MotorOutput
@@ -66,39 +73,52 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 			.withSensorToMechanismRatio(FlywheelConstants.motorToMechanism.reductionUnsigned())
 		;
 
-		this.slaveConfig.MotorOutput
-			.withNeutralMode(NeutralModeValue.Coast)
-			.withInverted(config.slaveInvertedValue)
-		;
-		this.slaveConfig.Feedback
-			.withSensorToMechanismRatio(FlywheelConstants.motorToMechanism.reductionUnsigned())
-		;
+		for (int i = 0; i < this.slaveConfigs.length; i++) {
+			var slaveConfig = this.slaveConfigs[i];
+			slaveConfig.MotorOutput
+				.withNeutralMode(NeutralModeValue.Coast)
+				.withInverted(config.slaveInvertedValues[i])
+			;
+
+			slaveConfig.Feedback
+				.withSensorToMechanismRatio(FlywheelConstants.motorToMechanism.reductionUnsigned())
+			;
+		}
 
 		// Cache Status Signals
 		this.masterMotorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.masterMotor);
-		this.slaveMotorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.slaveMotor);
+		for (int i = 0; i < this.slaveMotorStatusSignalCaches.length; i++) {
+			this.slaveMotorStatusSignalCaches[i] = EncodedMotorStatusSignalCache.from(this.slaveMotors[i]);
+		}
 		this.motorProfilePositionStatusSignal = this.masterMotor.getClosedLoopReference();
 		this.motorProfileVelocityStatusSignal = this.masterMotor.getClosedLoopReferenceSlope();
 
 		// Make quick reference arrays
-		this.refreshSignals = new BaseStatusSignal[] {
-			this.masterMotorStatusSignalCache.encoder().position(),
-			this.masterMotorStatusSignalCache.encoder().velocity(),
-			this.masterMotorStatusSignalCache.motor().appliedVoltage(),
-			this.masterMotorStatusSignalCache.motor().statorCurrent(),
-			this.masterMotorStatusSignalCache.motor().supplyCurrent(),
-			this.masterMotorStatusSignalCache.motor().torqueCurrent(),
-			this.masterMotorStatusSignalCache.motor().deviceTemperature(),
-			this.slaveMotorStatusSignalCache.encoder().position(),
-			this.slaveMotorStatusSignalCache.encoder().velocity(),
-			this.slaveMotorStatusSignalCache.motor().appliedVoltage(),
-			this.slaveMotorStatusSignalCache.motor().statorCurrent(),
-			this.slaveMotorStatusSignalCache.motor().supplyCurrent(),
-			this.slaveMotorStatusSignalCache.motor().torqueCurrent(),
-			this.slaveMotorStatusSignalCache.motor().deviceTemperature(),
-			this.motorProfilePositionStatusSignal,
-			this.motorProfileVelocityStatusSignal,
-		};
+		var refreshSignals = new ArrayList<BaseStatusSignal>();
+		refreshSignals.add(this.masterMotorStatusSignalCache.encoder().position());
+		refreshSignals.add(this.masterMotorStatusSignalCache.encoder().velocity());
+		refreshSignals.add(this.masterMotorStatusSignalCache.motor().appliedVoltage());
+		refreshSignals.add(this.masterMotorStatusSignalCache.motor().statorCurrent());
+		refreshSignals.add(this.masterMotorStatusSignalCache.motor().supplyCurrent());
+		refreshSignals.add(this.masterMotorStatusSignalCache.motor().torqueCurrent());
+		refreshSignals.add(this.masterMotorStatusSignalCache.motor().deviceTemperature());
+
+		for (int i = 0; i < this.slaveMotorStatusSignalCaches.length; i++) {
+			var slaveMotorStatusSignalCache = this.slaveMotorStatusSignalCaches[i];
+			refreshSignals.add(slaveMotorStatusSignalCache.encoder().position());
+			refreshSignals.add(slaveMotorStatusSignalCache.encoder().velocity());
+			refreshSignals.add(slaveMotorStatusSignalCache.motor().appliedVoltage());
+			refreshSignals.add(slaveMotorStatusSignalCache.motor().statorCurrent());
+			refreshSignals.add(slaveMotorStatusSignalCache.motor().supplyCurrent());
+			refreshSignals.add(slaveMotorStatusSignalCache.motor().torqueCurrent());
+			refreshSignals.add(slaveMotorStatusSignalCache.motor().deviceTemperature());
+		}
+
+		refreshSignals.add(this.motorProfilePositionStatusSignal);
+		refreshSignals.add(this.motorProfileVelocityStatusSignal);
+
+		this.refreshSignals = refreshSignals.toArray(BaseStatusSignal[]::new);
+
 		this.masterMotorConnectedSignals = new BaseStatusSignal[] {
 			this.masterMotorStatusSignalCache.encoder().position(),
 			this.masterMotorStatusSignalCache.encoder().velocity(),
@@ -110,33 +130,46 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 			this.motorProfilePositionStatusSignal,
 			this.motorProfileVelocityStatusSignal,
 		};
-		this.slaveMotorConnectedSignals = new BaseStatusSignal[] {
-			this.slaveMotorStatusSignalCache.encoder().position(),
-			this.slaveMotorStatusSignalCache.encoder().velocity(),
-			this.slaveMotorStatusSignalCache.motor().appliedVoltage(),
-			this.slaveMotorStatusSignalCache.motor().statorCurrent(),
-			this.slaveMotorStatusSignalCache.motor().supplyCurrent(),
-			this.slaveMotorStatusSignalCache.motor().torqueCurrent(),
-			this.slaveMotorStatusSignalCache.motor().deviceTemperature(),
-		};
+
+		for (int i = 0; i < this.slaveMotorConnectedSignals.length; i++) {
+			var slaveMotorStatusSignalCache = this.slaveMotorStatusSignalCaches[i];
+			this.slaveMotorConnectedSignals[i] = new BaseStatusSignal[] {
+				slaveMotorStatusSignalCache.encoder().position(),
+				slaveMotorStatusSignalCache.encoder().velocity(),
+				slaveMotorStatusSignalCache.motor().appliedVoltage(),
+				slaveMotorStatusSignalCache.motor().statorCurrent(),
+				slaveMotorStatusSignalCache.motor().supplyCurrent(),
+				slaveMotorStatusSignalCache.motor().torqueCurrent(),
+				slaveMotorStatusSignalCache.motor().deviceTemperature(),
+			};
+		}
 
 		// Set Status Signal update frequency
 		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.masterMotorStatusSignalCache.encoder().getStatusSignals());
 		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.masterMotorStatusSignalCache.motor().getStatusSignals());
 		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.motorProfilePositionStatusSignal, this.motorProfileVelocityStatusSignal);
-		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency.div(10.0), this.slaveMotorStatusSignalCache.encoder().getStatusSignals());
-		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency.div(10.0), this.slaveMotorStatusSignalCache.motor().getStatusSignals());
+		for (int i = 0; i < this.slaveMotorStatusSignalCaches.length; i++) {
+			var slaveMotorStatusSignalCache = this.slaveMotorStatusSignalCaches[i];
+			BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency.div(10.0), slaveMotorStatusSignalCache.encoder().getStatusSignals());
+			BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency.div(10.0), slaveMotorStatusSignalCache.motor().getStatusSignals());
+		}
 		this.masterMotor.optimizeBusUtilization();
-		this.slaveMotor.optimizeBusUtilization();
+		for (var slaveMotor : this.slaveMotors) {
+			slaveMotor.optimizeBusUtilization();
+		}
 	}
 
 	@Override
 	public void updateInputs(FlywheelIOInputs inputs) {
 		BaseStatusSignal.refreshAll(this.refreshSignals);
 		inputs.masterMotorConnected = BaseStatusSignal.isAllGood(this.masterMotorConnectedSignals);
-		inputs.slaveMotorConnected = BaseStatusSignal.isAllGood(this.slaveMotorConnectedSignals);
+		for (int i = 0; i < this.slaveMotorConnectedSignals.length; i++) {
+			inputs.slaveMotorsConnected[i] = BaseStatusSignal.isAllGood(this.slaveMotorConnectedSignals[i]);
+		}
 		inputs.masterMotor.updateFrom(this.masterMotorStatusSignalCache);
-		inputs.slaveMotor.updateFrom(this.slaveMotorStatusSignalCache);
+		for (int i = 0; i < this.slaveMotors.length; i++) {
+			inputs.slaveMotors[i].updateFrom(this.slaveMotorStatusSignalCaches[i]);
+		}
 		inputs.motorProfilePositionRads = Units.rotationsToRadians(this.motorProfilePositionStatusSignal.getValueAsDouble());
 		inputs.motorProfileVelocityRadsPerSec = Units.rotationsToRadians(this.motorProfileVelocityStatusSignal.getValueAsDouble());
 	}
@@ -146,7 +179,9 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 		this.masterMotor.setControl(this.voltageRequest
 			.withOutput(volts)
 		);
-		this.slaveMotor.setControl(this.followerRequest.withLeaderID(this.masterMotor.getDeviceID()));
+		for (int i = 0; i < this.slaveMotors.length; i++) {
+			this.slaveMotors[i].setControl(this.followerRequest.withLeaderID(this.masterMotor.getDeviceID()));
+		}
 	}
 
 	@Override
@@ -154,14 +189,18 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 		this.masterMotor.setControl(this.velocityRequest
 			.withVelocity(Units.radiansToRotations(velocityRadsPerSec))
 		);
-		this.slaveMotor.setControl(this.followerRequest.withLeaderID(this.masterMotor.getDeviceID()));
+		for (int i = 0; i < this.slaveMotors.length; i++) {
+			this.slaveMotors[i].setControl(this.followerRequest.withLeaderID(this.masterMotor.getDeviceID()));
+		}
 	}
 
 	@Override
 	public void stop(Optional<NeutralMode> neutralMode) {
 		var controlRequest = NeutralMode.selectControlRequest(neutralMode, this.neutralRequest, this.coastRequest, this.brakeRequest);
 		this.masterMotor.setControl(controlRequest);
-		this.slaveMotor.setControl(controlRequest);
+		for (int i = 0; i < this.slaveMotors.length; i++) {
+			this.slaveMotors[i].setControl(controlRequest);
+		}
 	}
 
 	@Override
@@ -185,6 +224,8 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 	@Override
 	public void configSend() {
 		this.masterMotor.getConfigurator().apply(this.masterConfig);
-		this.slaveMotor.getConfigurator().apply(this.slaveConfig);
+		for (int i = 0; i < this.slaveMotors.length; i++) {
+			this.slaveMotors[i].getConfigurator().apply(this.slaveConfigs[i]);
+		}
 	}
 }

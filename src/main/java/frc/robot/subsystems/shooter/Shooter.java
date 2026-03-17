@@ -24,8 +24,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class Shooter {
-	public final Flywheel leftFlywheel;
-	public final Flywheel rightFlywheel;
+	public final Flywheel flywheel;
 	public final Hood hood;
 	public final AimingSystem aimingSystem;
 
@@ -33,12 +32,10 @@ public class Shooter {
 	private static final LoggedTunable<Distance>        azimuthTolerance = LoggedTunable.from("Shooter/Tolerances/Azimuth", Inches::of, 10.0);
 	private static final LoggedTunable<Distance>          pitchTolerance = LoggedTunable.from("Shooter/Tolerances/Pitch", Inches::of, 10.0);
 
-	public Command aimLeftFlywheelAtHub() {
-		return this.leftFlywheel.genSurfaceVeloCommand("Aim at Hub", this.aimingSystem.shootingCalc::getTargetFlywheelSurfaceVeloMPS);
+	public Command aimFlywheelAtHub() {
+		return this.flywheel.genSurfaceVeloCommand("Aim at Hub", this.aimingSystem.shootingCalc::getTargetFlywheelSurfaceVeloMPS);
 	}
-	public Command aimRightFlywheelAtHub() {
-		return this.rightFlywheel.genSurfaceVeloCommand("Aim at Hub", this.aimingSystem.shootingCalc::getTargetFlywheelSurfaceVeloMPS);
-	}
+
 	public Command aimHoodAtHub() {
 		return this.hood.genAngleCommand("Aim at Hub", this.aimingSystem.shootingCalc::getTargetHoodAngleRads);
 	}
@@ -95,12 +92,10 @@ public class Shooter {
 		};
 	}
 
-	public Command aimLeftFlywheelToPass() {
-		return this.leftFlywheel.genSurfaceVeloCommand("Aim to Pass", this.aimingSystem.passingCalc::getTargetFlywheelSurfaceVeloMPS);
+	public Command aimFlywheelToPass() {
+		return this.flywheel.genSurfaceVeloCommand("Aim to Pass", this.aimingSystem.passingCalc::getTargetFlywheelSurfaceVeloMPS);
 	}
-	public Command aimRightFlywheelToPass() {
-		return this.rightFlywheel.genSurfaceVeloCommand("Aim to Pass", this.aimingSystem.passingCalc::getTargetFlywheelSurfaceVeloMPS);
-	}
+
 	public Command aimHoodToPass() {
 		return this.hood.genAngleCommand("Aim to Pass", this.aimingSystem.passingCalc::getTargetHoodAngleRads);
 	}
@@ -114,7 +109,7 @@ public class Shooter {
 	}
 
 	public double getAverageMeasuredFlywheelSurfaceVeloMPS() {
-		return (this.leftFlywheel.getMeasuredSurfaceVeloMPS() + this.rightFlywheel.getMeasuredSurfaceVeloMPS()) / 2.0;
+		return this.flywheel.getMeasuredSurfaceVeloMPS();
 	}
 
 	public boolean withinTolerance() {

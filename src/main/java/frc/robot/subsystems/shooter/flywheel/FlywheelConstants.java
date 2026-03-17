@@ -27,23 +27,39 @@ public class FlywheelConstants {
 	public static class FlywheelConfig {
 		public final String name;
 		public final CANDevice masterMotorID;
-		public final CANDevice slaveMotorID;
+		public final CANDevice[] slaveMotorIDs;
 		public final InvertedValue masterInvertedValue;
-		public final InvertedValue slaveInvertedValue;
+		public final InvertedValue[] slaveInvertedValues;
 	}
+
+	public static final FlywheelConfig drumFlywheelConfig = new FlywheelConfig(
+		"Drum",
+		HardwareDevices.leftFlywheelMotorMasterID,
+		new CANDevice[] {
+			HardwareDevices.leftFlywheelMotorSlaveID,
+			HardwareDevices.rightFlywheelMotorMasterID,
+			HardwareDevices.rightFlywheelMotorSlaveID
+		},
+		InvertedValue.CounterClockwise_Positive,
+		new InvertedValue[] {
+			InvertedValue.CounterClockwise_Positive,
+			InvertedValue.Clockwise_Positive,
+			InvertedValue.Clockwise_Positive
+		}
+	);
 
 	public static final FlywheelConfig leftFlywheelConfig = new FlywheelConfig(
 		"Left",
 		HardwareDevices.leftFlywheelMotorMasterID,
-		HardwareDevices.leftFlywheelMotorSlaveID,
+		new CANDevice[] {HardwareDevices.leftFlywheelMotorSlaveID},
 		InvertedValue.CounterClockwise_Positive,
-		InvertedValue.CounterClockwise_Positive
+		new InvertedValue[] {InvertedValue.CounterClockwise_Positive}
 	);
 	public static final FlywheelConfig rightFlywheelConfig = new FlywheelConfig(
 		"Right",
 		HardwareDevices.rightFlywheelMotorMasterID,
-		HardwareDevices.rightFlywheelMotorSlaveID,
+		new CANDevice[] {HardwareDevices.rightFlywheelMotorSlaveID},
 		InvertedValue.Clockwise_Positive,
-		InvertedValue.Clockwise_Positive
+		new InvertedValue[] {InvertedValue.Clockwise_Positive}
 	);
 }
