@@ -4,6 +4,111 @@
  "type":"Swerve",
  "variables":{
   "expressions":{
+   "BumpLength":{
+    "dimension":"Length",
+    "var":{
+     "exp":"44.136297 in",
+     "val":1.1210619438
+    }
+   },
+   "BumpWidth":{
+    "dimension":"Length",
+    "var":{
+     "exp":"73 in",
+     "val":1.8542
+    }
+   },
+   "CenterToBumper":{
+    "dimension":"Length",
+    "var":{
+     "exp":"17.5 in",
+     "val":0.4445
+    }
+   },
+   "DeployIntakeToBumper":{
+    "dimension":"Length",
+    "var":{
+     "exp":"7.874 in",
+     "val":0.19999959999999997
+    }
+   },
+   "DepoCenterY":{
+    "dimension":"Length",
+    "var":{
+     "exp":"FieldWidth - DepoToLeftWall - DepoWidth / 2",
+     "val":5.9589955496
+    }
+   },
+   "DepoLength":{
+    "dimension":"Length",
+    "var":{
+     "exp":"27 in",
+     "val":0.6858
+    }
+   },
+   "DepoToLeftWall":{
+    "dimension":"Length",
+    "var":{
+     "exp":"62.093876 in",
+     "val":1.5771844504
+    }
+   },
+   "DepoWidth":{
+    "dimension":"Length",
+    "var":{
+     "exp":"42 in",
+     "val":1.0668
+    }
+   },
+   "FieldLength":{
+    "dimension":"Length",
+    "var":{
+     "exp":"651.2 in",
+     "val":16.54048
+    }
+   },
+   "FieldWidth":{
+    "dimension":"Length",
+    "var":{
+     "exp":"317.7 in",
+     "val":8.06958
+    }
+   },
+   "NeutralZoneClusterWidth":{
+    "dimension":"Length",
+    "var":{
+     "exp":"177.3 in",
+     "val":4.50342
+    }
+   },
+   "OutpostCenterY":{
+    "dimension":"Length",
+    "var":{
+     "exp":"26.1505 in",
+     "val":0.6642226999999999
+    }
+   },
+   "StartLineX":{
+    "dimension":"Length",
+    "var":{
+     "exp":"157.6 in",
+     "val":4.0030399999999995
+    }
+   },
+   "TowerToWall":{
+    "dimension":"Length",
+    "var":{
+     "exp":"45.0625 in",
+     "val":1.1445875
+    }
+   },
+   "TrenchWidth":{
+    "dimension":"Length",
+    "var":{
+     "exp":"49.85 in",
+     "val":1.26619
+    }
+   },
    "test":{
     "dimension":"Angle",
     "var":{
@@ -57,12 +162,12 @@
    },
    "BottomOfRightTower":{
     "x":{
-     "exp":"0.569615364074707 m",
-     "val":0.569615364074707
+     "exp":"0.5381408333778381 m",
+     "val":0.5381408333778381
     },
     "y":{
-     "exp":"2.517399787902832 m",
-     "val":2.517399787902832
+     "exp":"2.4952876567840576 m",
+     "val":2.4952876567840576
     },
     "heading":{
      "exp":"3.141592653589793 rad",
@@ -71,26 +176,26 @@
    },
    "Center":{
     "x":{
-     "exp":"3.5734100341796875 m",
-     "val":3.5734100341796875
+     "exp":"StartLineX - CenterToBumper",
+     "val":3.55854
     },
     "y":{
-     "exp":"4.052423000335693 m",
-     "val":4.052423000335693
+     "exp":"FieldWidth / 2",
+     "val":4.03479
     },
     "heading":{
-     "exp":"0 rad",
-     "val":0.0
+     "exp":"-180 deg",
+     "val":-3.141592653589793
     }
    },
    "CenterShooter":{
     "x":{
-     "exp":"2.979863405227661 m",
-     "val":2.979863405227661
+     "exp":"(StartLineX + TowerToWall) / 2",
+     "val":2.57381375
     },
     "y":{
-     "exp":"4.041109085083008 m",
-     "val":4.041109085083008
+     "exp":"FieldWidth / 2",
+     "val":4.03479
     },
     "heading":{
      "exp":"0 rad",
@@ -113,26 +218,26 @@
    },
    "Depo":{
     "x":{
-     "exp":"1.1825040578842163 m",
-     "val":1.1825040578842163
+     "exp":"DepoLength + CenterToBumper",
+     "val":1.1303
     },
     "y":{
-     "exp":"5.967689514160156 m",
-     "val":5.967689514160156
+     "exp":"DepoCenterY",
+     "val":5.9589955496
     },
     "heading":{
-     "exp":"3.141592653589793 rad",
+     "exp":"180 deg",
      "val":3.141592653589793
     }
    },
    "FarLeft":{
     "x":{
-     "exp":"3.5734100341796875 m",
-     "val":3.5734100341796875
+     "exp":"StartLineX - CenterToBumper",
+     "val":3.55854
     },
     "y":{
-     "exp":"7.399608135223389 m",
-     "val":7.399608135223389
+     "exp":"FieldWidth - TrenchWidth / 2",
+     "val":7.436485
     },
     "heading":{
      "exp":"0 rad",
@@ -141,12 +246,12 @@
    },
    "FarRight":{
     "x":{
-     "exp":"3.5734100341796875 m",
-     "val":3.5734100341796875
+     "exp":"StartLineX - CenterToBumper",
+     "val":3.55854
     },
     "y":{
-     "exp":"0.6738224029541016 m",
-     "val":0.6738224029541016
+     "exp":"TrenchWidth / 2",
+     "val":0.633095
     },
     "heading":{
      "exp":"0 rad",
@@ -183,86 +288,86 @@
    },
    "FullL":{
     "x":{
-     "exp":"7.805125713348389 m",
-     "val":7.805125713348389
+     "exp":"FieldLength / 2 - CenterToBumper",
+     "val":7.825740000000001
     },
     "y":{
-     "exp":"1.779328465461731 m",
-     "val":1.779328465461731
+     "exp":"FieldWidth / 2 - (NeutralZoneClusterWidth / 2)",
+     "val":1.78308
     },
     "heading":{
-     "exp":"-1.5707963267948966 rad",
+     "exp":"-90 deg",
      "val":-1.5707963267948966
     }
    },
    "FullR":{
     "x":{
-     "exp":"7.787227153778076 m",
-     "val":7.787227153778076
+     "exp":"FieldLength / 2 - CenterToBumper",
+     "val":7.825740000000001
     },
     "y":{
-     "exp":"6.343568325042725 m",
-     "val":6.343568325042725
+     "exp":"FieldWidth / 2 + (NeutralZoneClusterWidth / 2)",
+     "val":6.2865
     },
     "heading":{
-     "exp":"1.5707963267948966 rad",
+     "exp":"90 deg",
      "val":1.5707963267948966
     }
    },
    "HalfL":{
     "x":{
-     "exp":"7.805125713348389 m",
-     "val":7.805125713348389
+     "exp":"FieldLength / 2 - CenterToBumper",
+     "val":7.825740000000001
     },
     "y":{
-     "exp":"4.070397853851318 m",
-     "val":4.070397853851318
+     "exp":"FieldWidth / 2",
+     "val":4.03479
     },
     "heading":{
-     "exp":"-1.5707963267948966 rad",
+     "exp":"-90 deg",
      "val":-1.5707963267948966
     }
    },
    "HalfR":{
     "x":{
-     "exp":"7.82096529006958 m",
-     "val":7.82096529006958
+     "exp":"FieldLength / 2 - CenterToBumper",
+     "val":7.825740000000001
     },
     "y":{
-     "exp":"4.013098239898682 m",
-     "val":4.013098239898682
+     "exp":"FieldWidth / 2",
+     "val":4.03479
     },
     "heading":{
-     "exp":"1.5707963267948966 rad",
+     "exp":"90 deg",
      "val":1.5707963267948966
     }
    },
    "HalfScatterL":{
     "x":{
-     "exp":"8.455531120300293 m",
-     "val":8.455531120300293
+     "exp":"FieldLength / 2",
+     "val":8.27024
     },
     "y":{
-     "exp":"4.049190998077393 m",
-     "val":4.049190998077393
+     "exp":"FieldWidth / 2",
+     "val":4.03479
     },
     "heading":{
-     "exp":"-2.278227764112338 rad",
-     "val":-2.278227764112338
+     "exp":"-135 deg",
+     "val":-2.356194490192345
     }
    },
    "HalfScatterR":{
     "x":{
-     "exp":"8.380236625671387 m",
-     "val":8.380236625671387
+     "exp":"FieldLength / 2",
+     "val":8.27024
     },
     "y":{
-     "exp":"4.142615795135498 m",
-     "val":4.142615795135498
+     "exp":"FieldWidth / 2",
+     "val":4.03479
     },
     "heading":{
-     "exp":"2.393510426482946 rad",
-     "val":2.393510426482946
+     "exp":"135 deg",
+     "val":2.356194490192345
     }
    },
    "Hub":{
@@ -281,58 +386,58 @@
    },
    "IncomingNeutralL":{
     "x":{
-     "exp":"6.623793125152588 m",
-     "val":6.623793125152588
+     "exp":"(StartLineX + BumpLength + FieldLength / 2) / 2",
+     "val":6.697170971899999
     },
     "y":{
-     "exp":"6.952133655548096 m",
-     "val":6.952133655548096
+     "exp":"FieldWidth - TrenchWidth / 0.95",
+     "val":6.736748421052631
     },
     "heading":{
-     "exp":"-0.9699409903360445 rad",
-     "val":-0.9699409903360444
+     "exp":"-45 deg",
+     "val":-0.7853981633974483
     }
    },
    "IncomingNeutralR":{
     "x":{
-     "exp":"6.52476167678833 m",
-     "val":6.52476167678833
+     "exp":"(StartLineX + BumpLength + FieldLength / 2) / 2",
+     "val":6.697170971899999
     },
     "y":{
-     "exp":"1.1531788110733032 m",
-     "val":1.1531788110733032
+     "exp":"TrenchWidth",
+     "val":1.26619
     },
     "heading":{
-     "exp":"0.97 rad",
-     "val":0.97
+     "exp":"45 degrees",
+     "val":0.7853981633974483
     }
    },
-   "InsideTrenchLeft":{
+   "InsideTrenchL":{
     "x":{
-     "exp":"4.114273548126221 m",
-     "val":4.114273548126221
+     "exp":"StartLineX + CenterToBumper",
+     "val":4.447539999999999
     },
     "y":{
-     "exp":"7.426833629608154 m",
-     "val":7.426833629608154
+     "exp":"FieldWidth - TrenchWidth / 2",
+     "val":7.436485
     },
     "heading":{
-     "exp":"-1.5707963267948966 rad",
-     "val":-1.5707963267948966
+     "exp":"180 deg",
+     "val":3.141592653589793
     }
    },
-   "InsideTrenchRight":{
+   "InsideTrenchR":{
     "x":{
-     "exp":"4.130237102508545 m",
-     "val":4.130237102508545
+     "exp":"StartLineX + CenterToBumper",
+     "val":4.447539999999999
     },
     "y":{
-     "exp":"0.6423468589782715 m",
-     "val":0.6423468589782715
+     "exp":"TrenchWidth / 2",
+     "val":0.633095
     },
     "heading":{
-     "exp":"1.5707963267948966 rad",
-     "val":1.5707963267948966
+     "exp":"180 deg",
+     "val":3.141592653589793
     }
    },
    "LeftRampPointDown":{
@@ -351,12 +456,12 @@
    },
    "LeftShooter":{
     "x":{
-     "exp":"3.0320658683776855 m",
-     "val":3.0320658683776855
+     "exp":"((DepoLength + StartLineX) / 2)",
+     "val":2.3444199999999995
     },
     "y":{
-     "exp":"5.454585075378418 m",
-     "val":5.454585075378418
+     "exp":"DepoCenterY",
+     "val":5.9589955496
     },
     "heading":{
      "exp":"-0.8156920210794066 rad",
@@ -379,16 +484,16 @@
    },
    "LeftStart":{
     "x":{
-     "exp":"3.5734100341796875 m",
-     "val":3.5734100341796875
+     "exp":"StartLineX - CenterToBumper",
+     "val":3.55854
     },
     "y":{
-     "exp":"5.887160301208496 m",
-     "val":5.887160301208496
+     "exp":"FieldWidth - TrenchWidth - BumpWidth / 2",
+     "val":5.87629
     },
     "heading":{
-     "exp":"0 rad",
-     "val":0.0
+     "exp":"-180 deg",
+     "val":-3.141592653589793
     }
    },
    "LeftTower":{
@@ -435,16 +540,16 @@
    },
    "Outpost":{
     "x":{
-     "exp":"0.5560399889945984 m",
-     "val":0.5560399889945984
+     "exp":"DeployIntakeToBumper + CenterToBumper",
+     "val":0.6444996
     },
     "y":{
-     "exp":"0.633793830871582 m",
-     "val":0.633793830871582
+     "exp":"OutpostCenterY",
+     "val":0.6642226999999999
     },
     "heading":{
-     "exp":"0 rad",
-     "val":0.0
+     "exp":"180 deg",
+     "val":3.141592653589793
     }
    },
    "OutsideTrenchL":{
@@ -475,88 +580,130 @@
      "val":0.0
     }
    },
-   "QuarterL":{
+   "PreInsideTrenchL":{
     "x":{
-     "exp":"7.787226676940918 m",
-     "val":7.787226676940918
+     "exp":"5.9029741287231445 m",
+     "val":5.9029741287231445
     },
     "y":{
-     "exp":"5.251730442047119 m",
-     "val":5.251730442047119
+     "exp":"FieldWidth - PreInsideTrenchR.y",
+     "val":7.434265654640198
     },
     "heading":{
-     "exp":"-1.5621758229673304 rad",
-     "val":-1.5621758229673304
+     "exp":"3.1151255588689635 deg",
+     "val":0.05436919761529186
+    }
+   },
+   "PreInsideTrenchR":{
+    "x":{
+     "exp":"5.9029741287231445 m",
+     "val":5.9029741287231445
+    },
+    "y":{
+     "exp":"0.6353143453598022 m",
+     "val":0.6353143453598022
+    },
+    "heading":{
+     "exp":"InsideTrenchR.heading",
+     "val":3.141592653589793
+    }
+   },
+   "PreLeftShooter":{
+    "x":{
+     "exp":"2.9292171001434326 m",
+     "val":2.9292171001434326
+    },
+    "y":{
+     "exp":"7.222527027130127 m",
+     "val":7.222527027130127
+    },
+    "heading":{
+     "exp":"0 rad",
+     "val":0.0
+    }
+   },
+   "QuarterL":{
+    "x":{
+     "exp":"FieldLength / 2 - CenterToBumper",
+     "val":7.825740000000001
+    },
+    "y":{
+     "exp":"FieldWidth / 2 + (NeutralZoneClusterWidth / 4)",
+     "val":5.160645000000001
+    },
+    "heading":{
+     "exp":"-90 deg",
+     "val":-1.5707963267948966
     }
    },
    "QuarterR":{
     "x":{
-     "exp":"7.800574779510498 m",
-     "val":7.800574779510498
+     "exp":"FieldLength / 2 - CenterToBumper",
+     "val":7.825740000000001
     },
     "y":{
-     "exp":"2.932417154312134 m",
-     "val":2.932417154312134
+     "exp":"FieldWidth / 2 - (NeutralZoneClusterWidth / 4)",
+     "val":2.908935
     },
     "heading":{
-     "exp":"1.5707963267948966 rad",
+     "exp":"90 deg",
      "val":1.5707963267948966
     }
    },
    "QuarterScatterL":{
     "x":{
-     "exp":"8.455531120300293 m",
-     "val":8.455531120300293
+     "exp":"FieldLength / 2",
+     "val":8.27024
     },
     "y":{
-     "exp":"5.307754993438721 m",
-     "val":5.307754993438721
+     "exp":"FieldWidth / 2 + (NeutralZoneClusterWidth / 4)",
+     "val":5.160645000000001
     },
     "heading":{
-     "exp":"-2.278227764112338 rad",
-     "val":-2.278227764112338
+     "exp":"-135 deg",
+     "val":-2.356194490192345
     }
    },
    "QuarterScatterR":{
     "x":{
-     "exp":"8.342095375061035 m",
-     "val":8.342095375061035
+     "exp":"FieldLength / 2",
+     "val":8.27024
     },
     "y":{
-     "exp":"2.9427621364593506 m",
-     "val":2.9427621364593506
+     "exp":"FieldWidth / 2 - (NeutralZoneClusterWidth / 4)",
+     "val":2.908935
     },
     "heading":{
-     "exp":"2.214297613191292 rad",
-     "val":2.214297613191292
+     "exp":"135 deg",
+     "val":2.356194490192345
     }
    },
    "RightShooter":{
     "x":{
-     "exp":"3.0320658683776855 m",
-     "val":3.0320658683776855
+     "exp":"((DepoLength + StartLineX) / 2)",
+     "val":2.3444199999999995
     },
     "y":{
-     "exp":"2.823435068130493 m",
-     "val":2.823435068130493
+     "exp":"FieldWidth - DepoCenterY",
+     "val":2.1105844504
     },
     "heading":{
-     "exp":"0.745419603944161 rad",
-     "val":0.745419603944161
+     "exp":"0.8818719622911372 rad",
+     "val":0.8818719622911372
     }
    },
    "RightStart":{
     "x":{
-     "exp":"3.5734100341796875 m",
-     "val":3.5734100341796875
+     "exp":"StartLineX - CenterToBumper",
+     "val":3.55854
     },
     "y":{
-     "exp":"2.307185649871826 m",
-     "val":2.307185649871826
+     "exp":"TrenchWidth + BumpWidth / 2",
+     "val":2.1932899999999997
     },
     "heading":{
-     "exp":"0 rad",
-     "val":0.0
+     "exp":"-180 deg",
+     "val":-3.141592653589793
     }
    },
    "RightTower":{
@@ -617,58 +764,58 @@
    },
    "ThreeQuarterScatterR":{
     "x":{
-     "exp":"8.377893447875977 m",
-     "val":8.377893447875977
+     "exp":"FieldLength / 2",
+     "val":8.27024
     },
     "y":{
-     "exp":"5.26962947845459 m",
-     "val":5.26962947845459
+     "exp":"FieldWidth / 2 - (NeutralZoneClusterWidth / 4)",
+     "val":2.908935
     },
     "heading":{
-     "exp":"2.214297613191292 rad",
-     "val":2.214297613191292
+     "exp":"-135 deg",
+     "val":-2.356194490192345
     }
    },
    "ThreeQuartersL":{
     "x":{
-     "exp":"7.805125713348389 m",
-     "val":7.805125713348389
+     "exp":"FieldLength / 2 - CenterToBumper",
+     "val":7.825740000000001
     },
     "y":{
-     "exp":"2.923752546310425 m",
-     "val":2.923752546310425
+     "exp":"FieldWidth / 2 - (NeutralZoneClusterWidth / 4)",
+     "val":2.908935
     },
     "heading":{
-     "exp":"-1.5707963267948966 rad",
+     "exp":"-90 deg",
      "val":-1.5707963267948966
     }
    },
    "ThreeQuartersR":{
     "x":{
-     "exp":"7.82096529006958 m",
-     "val":7.82096529006958
+     "exp":"FieldLength / 2 - CenterToBumper",
+     "val":7.825740000000001
     },
     "y":{
-     "exp":"5.277291774749756 m",
-     "val":5.277291774749756
+     "exp":"FieldWidth / 2 + (NeutralZoneClusterWidth / 4)",
+     "val":5.160645000000001
     },
     "heading":{
-     "exp":"1.5707963267948966 rad",
+     "exp":"90 deg",
      "val":1.5707963267948966
     }
    },
    "ThreeQuartersScatterL":{
     "x":{
-     "exp":"8.493611335754395 m",
-     "val":8.493611335754395
+     "exp":"FieldLength / 2",
+     "val":8.27024
     },
     "y":{
-     "exp":"2.8135204315185547 m",
-     "val":2.8135204315185547
+     "exp":"FieldWidth / 2 + (NeutralZoneClusterWidth / 4)",
+     "val":5.160645000000001
     },
     "heading":{
-     "exp":"-2.278227764112338 rad",
-     "val":-2.278227764112338
+     "exp":"135 deg",
+     "val":2.356194490192345
     }
    },
    "TopPreBackIn":{
