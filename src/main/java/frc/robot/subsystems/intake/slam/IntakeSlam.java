@@ -20,10 +20,10 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.ExtensionSystem;
-import frc.util.FFConstants;
+import frc.util.FFGains;
 import frc.util.LoggedTracer;
 import frc.util.NeutralMode;
-import frc.util.PIDConstants;
+import frc.util.PIDGains;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.loggerUtil.tunables.LoggedTunableNumber;
 import frc.util.robotStructure.FourBarLinkage;
@@ -42,9 +42,9 @@ public class IntakeSlam extends SubsystemBase {
 	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kA", 0.0);
 	private static final LoggedTunable<AngularVelocity> profileMaxVel = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/Max Velocity", DegreesPerSecond::of, 0.0);
 
-	private static final LoggedTunable<FFConstants> ffConsts = LoggedTunable.from(
+	private static final LoggedTunable<FFGains> ffConsts = LoggedTunable.from(
 		"Subsystems/Intake/Slam/Mechanism/FF",
-		new FFConstants(
+		new FFGains(
 			0.0,
 			0.5,
 			29.0,
@@ -52,9 +52,9 @@ public class IntakeSlam extends SubsystemBase {
 		)
 	);
 
-	private static final LoggedTunable<PIDConstants> pidConsts = LoggedTunable.from(
+	private static final LoggedTunable<PIDGains> pidConsts = LoggedTunable.from(
 		"Subsystems/Intake/Slam/Mechanism/PID",
-		new PIDConstants(
+		new PIDGains(
 			500.0,
 			0.0,
 			0.0

@@ -20,10 +20,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.util.FFConstants;
+import frc.util.FFGains;
 import frc.util.LoggedTracer;
 import frc.util.NeutralMode;
-import frc.util.PIDConstants;
+import frc.util.PIDGains;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.loggerUtil.tunables.LoggedTunableNumber;
 import frc.util.robotStructure.linear.ElevatorMech;
@@ -51,18 +51,18 @@ public class Hook extends SubsystemBase {
 	private static final LoggedTunableNumber climbingProfilekA = LoggedTunable.from("Subsystems/Climber/Hook/Mechanism/Climbing Profile/kA", 1.0);
 	private static final LoggedTunable<LinearVelocity> climbingProfileMaxVel = LoggedTunable.from("Subsystems/Climber/Hook/Mechanism/Climbing Profile/Max Velocity", InchesPerSecond::of, 0.0);
 
-	private static final LoggedTunable<FFConstants> ffConsts = LoggedTunable.from(
+	private static final LoggedTunable<FFGains> ffGains = LoggedTunable.from(
 		"Subsystems/Climber/Hook/Mechanism/FF",
-		new FFConstants(
+		new FFGains(
 			0.0,
 			0.0,
 			1.0,
 			0.0
 		)
 	);
-	private static final LoggedTunable<PIDConstants> pidConsts = LoggedTunable.from(
+	private static final LoggedTunable<PIDGains> pidGains = LoggedTunable.from(
 		"Subsystems/Climber/Hook/Mechanism/PID",
-		new PIDConstants(
+		new PIDGains(
 			1.0,
 			0.0,
 			0.0
@@ -189,12 +189,12 @@ public class Hook extends SubsystemBase {
 				HookConstants.spool.metersToRadians(Hook.climbingProfileMaxVel.get().in(MetersPerSecond))
 			);
 		}
-		if (Hook.ffConsts.hasChanged(this.hashCode())) {
-			this.io.configFF(Hook.ffConsts.get().map((x) -> HookConstants.spool.radiansToMeters(x)));
+		if (Hook.ffGains.hasChanged(this.hashCode())) {
+			this.io.configFF(Hook.ffGains.get().map((x) -> HookConstants.spool.radiansToMeters(x)));
 			configChanged = true;
 		}
-		if (Hook.pidConsts.hasChanged(this.hashCode())) {
-			this.io.configPID(Hook.pidConsts.get().map((x) -> HookConstants.spool.radiansToMeters(x)));
+		if (Hook.pidGains.hasChanged(this.hashCode())) {
+			this.io.configPID(Hook.pidGains.get().map((x) -> HookConstants.spool.radiansToMeters(x)));
 			configChanged = true;
 		}
 		if (configChanged) {

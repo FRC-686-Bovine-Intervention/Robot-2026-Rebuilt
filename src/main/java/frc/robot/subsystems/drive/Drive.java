@@ -3,14 +3,16 @@ package frc.robot.subsystems.drive;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.DegreesPerSecond;
 import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.DoubleSupplier;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
@@ -20,6 +22,7 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -31,12 +34,12 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearAcceleration;
+import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.RobotState;
 import frc.robot.RobotState.OdometryObservation;
 import frc.robot.constants.RobotConstants;
@@ -48,24 +51,16 @@ import frc.robot.subsystems.drive.odometry.OdometryThread;
 import frc.robot.subsystems.drive.odometry.OdometryTimestampIO;
 import frc.robot.subsystems.drive.odometry.OdometryTimestampIOInputsAutoLogged;
 import frc.util.Environment;
+import frc.util.FFGains;
 import frc.util.LoggedTracer;
 import frc.util.NeutralMode;
-import frc.util.PIDConstants;
+import frc.util.PIDGains;
 import frc.util.VirtualSubsystem;
 import frc.util.loggerUtil.tunables.LoggedTunable;
-import frc.util.loggerUtil.tunables.LoggedTunableNumber;
 import frc.util.robotStructure.Root;
 
 public class Drive extends VirtualSubsystem {
-	private final OdometryTimestampIO odometryTimestampIO;
-	private final OdometryTimestampIOInputsAutoLogged odometryTimestamps = new OdometryTimestampIOInputsAutoLogged();
-
-	private final GyroIO gyroIO;
-	private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
-
-	public final Module[] modules = new Module[DriveConstants.moduleConstants.length];
-
-	private static final LoggedTunableNumber rotationCorrection = LoggedTunable.from("Subsystems/Drive/Rotation Correction", 0.125);
+	private static final LoggedTunable<Time> discretizationCorrection = LoggedTunable.from("Drive/Discretization Correction", Seconds::of, 0.125);
 	public static final Supplier<DoubleSupplier> maxDriveSpeedEnvCoef = Environment.switchVar(
 		() -> 1.0,
 		new LoggedNetworkNumber("Demo Constraints/Max Translational Percentage", 0.25)::get
@@ -74,6 +69,33 @@ public class Drive extends VirtualSubsystem {
 		() -> 1.0,
 		new LoggedNetworkNumber("Demo Constraints/Max Rotational Percentage", 0.5)::get
 	);
+
+	private static final LoggedTunable<FFGains> translationalFFGains = LoggedTunable.from("Drive/FF/Translational",
+		new FFGains(
+			0.14097,
+			0,
+			1.9406,
+			0.042101
+		)
+	);
+	private static final LoggedTunable<FFGains> rotationalFFGains = LoggedTunable.from("Drive/FF/Rotational",
+		new FFGains(
+			0,
+			0,
+			0.91433,
+			0.25931
+		)
+	);
+	private final SimpleMotorFeedforward translationalFF = translationalFFGains.get().update(new SimpleMotorFeedforward(0.0, 0.0, 0.0));
+	private final SimpleMotorFeedforward rotationalFF = rotationalFFGains.get().update(new SimpleMotorFeedforward(0.0, 0.0, 0.0));
+
+	public final Module[] modules = new Module[DriveConstants.moduleConstants.length];
+
+	private final GyroIO gyroIO;
+	private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
+
+	private final OdometryTimestampIO odometryTimestampIO;
+	private final OdometryTimestampIOInputsAutoLogged odometryTimestamps = new OdometryTimestampIOInputsAutoLogged();
 
 	public final Root structureRoot = new Root();
 
@@ -114,34 +136,122 @@ public class Drive extends VirtualSubsystem {
 		this.translationSubsystem = new Translational(this);
 		this.rotationalSubsystem = new Rotational(this);
 
-		var routine = new SysIdRoutine(
+		var moduleInitialPositions = new double[DriveConstants.moduleConstants.length];
+		var translationalRoutine = new SysIdRoutine(
 			new SysIdRoutine.Config(
 				null,
 				null,
 				null,
 				(state) -> {
-					Logger.recordOutput("SysID/Drive/State", state.toString());
+					Logger.recordOutput("SysID/Drive/Translational/State", state.toString());
 				}
 			),
 			new SysIdRoutine.Mechanism(
 				(volts) -> {
-					Arrays.stream(this.modules).forEach((module) -> module.runVolts(volts.in(Volts), Rotation2d.kZero));
+					for (var module : this.modules) {
+						module.runVolts(volts.in(Volts), Rotation2d.kZero);
+					}
 				},
 				(log) -> {
-					Arrays.stream(this.modules).forEach((module) -> {
-						Logger.recordOutput("SysID/Drive/" + module.config.name + "/Position", module.getWheelAngularPositionRads());
-						Logger.recordOutput("SysID/Drive/" + module.config.name + "/Velocity", module.getWheelAngularVelocityRadsPerSec());
-						Logger.recordOutput("SysID/Drive/" + module.config.name + "/Voltage", module.getDriveAppliedVolts());
-					});
+					var position = 0.0;
+					var velocity = 0.0;
+					var voltage = 0.0;
+					for (int i = 0; i < this.modules.length; i++) {
+						position += (this.modules[i].getWheelLinearPositionMeters() - moduleInitialPositions[i]) / DriveConstants.moduleConstants.length;
+						velocity += this.modules[i].getWheelLinearVelocityMetersPerSec() / DriveConstants.moduleConstants.length;
+						voltage += this.modules[i].getDriveAppliedVolts() / DriveConstants.moduleConstants.length;
+					}
+					Logger.recordOutput("SysID/Drive/Translational/Position", position, Meters);
+					Logger.recordOutput("SysID/Drive/Translational/Velocity", velocity, MetersPerSecond);
+					Logger.recordOutput("SysID/Drive/Translational/Voltage", voltage, Volts);
 				},
 				this.translationSubsystem
 			)
 		);
+		var rotationalRoutine = new SysIdRoutine(
+			new SysIdRoutine.Config(
+				null,
+				null,
+				null,
+				(state) -> {
+					Logger.recordOutput("SysID/Drive/Rotational/State", state.toString());
+				}
+			),
+			new SysIdRoutine.Mechanism(
+				(volts) -> {
+					for (var module : this.modules) {
+						module.runVolts(volts.in(Volts), module.config.positiveRotVec);
+					}
+				},
+				(log) -> {
+					var position = 0.0;
+					var velocity = 0.0;
+					var voltage = 0.0;
+					for (int i = 0; i < this.modules.length; i++) {
+						position += (this.modules[i].getWheelLinearPositionMeters() - moduleInitialPositions[i]) / this.modules[i].config.moduleTransform.getTranslation().getNorm() / DriveConstants.moduleConstants.length;
+						velocity += this.modules[i].getWheelLinearVelocityMetersPerSec() / this.modules[i].config.moduleTransform.getTranslation().getNorm() / DriveConstants.moduleConstants.length;
+						voltage += this.modules[i].getDriveAppliedVolts() / DriveConstants.moduleConstants.length;
+					}
+					Logger.recordOutput("SysID/Drive/Rotational/Position", position, Radians);
+					Logger.recordOutput("SysID/Drive/Rotational/Velocity", velocity, RadiansPerSecond);
+					Logger.recordOutput("SysID/Drive/Rotational/Voltage", voltage, Volts);
+				},
+				this.rotationalSubsystem
+			)
+		);
 
-		SmartDashboard.putData("SysID/Drive/Quasi Forward", routine.quasistatic(Direction.kForward).alongWith(Commands.idle(this.rotationalSubsystem)).withName("SysID Quasistatic Forward").asProxy());
-		SmartDashboard.putData("SysID/Drive/Quasi Reverse", routine.quasistatic(Direction.kReverse).alongWith(Commands.idle(this.rotationalSubsystem)).withName("SysID Quasistatic Reverse").asProxy());
-		SmartDashboard.putData("SysID/Drive/Dynamic Forward", routine.dynamic(Direction.kForward).alongWith(Commands.idle(this.rotationalSubsystem)).withName("SysID Dynamic Forward").asProxy());
-		SmartDashboard.putData("SysID/Drive/Dynamic Reverse", routine.dynamic(Direction.kReverse).alongWith(Commands.idle(this.rotationalSubsystem)).withName("SysID Dynamic Reverse").asProxy());
+		Function<Command, Command> translationalCommandMap = (sysIDCommand) ->
+			Commands.sequence(
+				this.translationSubsystem.run(() -> {
+					for (var module : this.modules) {
+						module.runVolts(0.0, Rotation2d.kZero);
+					}
+				}).withTimeout(0.5),
+				Commands.runOnce(() -> {
+					for (int i = 0; i < DriveConstants.moduleConstants.length; i++) {
+						moduleInitialPositions[i] = this.modules[i].getWheelLinearPositionMeters();
+					}
+				}),
+				sysIDCommand
+			)
+			.alongWith(this.rotationalSubsystem.idle())
+			.finallyDo(() -> {
+				for (var module : this.modules) {
+					module.stopDrive(NeutralMode.BRAKE);
+				}
+			})
+			.withName("SysID Translational")
+		;
+		SmartDashboard.putData("SysID/Drive/Translational/Quasi Forward", translationalCommandMap.apply(translationalRoutine.quasistatic(SysIdRoutine.Direction.kForward)));
+		SmartDashboard.putData("SysID/Drive/Translational/Quasi Reverse", translationalCommandMap.apply(translationalRoutine.quasistatic(SysIdRoutine.Direction.kReverse)));
+		SmartDashboard.putData("SysID/Drive/Translational/Dynamic Forward", translationalCommandMap.apply(translationalRoutine.dynamic(SysIdRoutine.Direction.kForward)));
+		SmartDashboard.putData("SysID/Drive/Translational/Dynamic Reverse", translationalCommandMap.apply(translationalRoutine.dynamic(SysIdRoutine.Direction.kReverse)));
+		Function<Command, Command> rotationalCommandMap = (sysIDCommand) ->
+			Commands.sequence(
+				this.rotationalSubsystem.run(() -> {
+					for (var module : this.modules) {
+						module.runVolts(0.0, module.config.positiveRotVec);
+					}
+				}).withTimeout(0.5),
+				Commands.runOnce(() -> {
+					for (int i = 0; i < DriveConstants.moduleConstants.length; i++) {
+						moduleInitialPositions[i] = this.modules[i].getWheelLinearPositionMeters();
+					}
+				}),
+				sysIDCommand
+			)
+			.alongWith(this.translationSubsystem.idle())
+			.finallyDo(() -> {
+				for (var module : this.modules) {
+					module.stopDrive(NeutralMode.BRAKE);
+				}
+			})
+			.withName("SysID Rotational")
+		;
+		SmartDashboard.putData("SysID/Drive/Rotational/Quasi Forward", rotationalCommandMap.apply(rotationalRoutine.quasistatic(SysIdRoutine.Direction.kForward)));
+		SmartDashboard.putData("SysID/Drive/Rotational/Quasi Reverse", rotationalCommandMap.apply(rotationalRoutine.quasistatic(SysIdRoutine.Direction.kReverse)));
+		SmartDashboard.putData("SysID/Drive/Rotational/Dynamic Forward", rotationalCommandMap.apply(rotationalRoutine.dynamic(SysIdRoutine.Direction.kForward)));
+		SmartDashboard.putData("SysID/Drive/Rotational/Dynamic Reverse", rotationalCommandMap.apply(rotationalRoutine.dynamic(SysIdRoutine.Direction.kReverse)));
 	}
 
 	private static final SwerveModuleState[] emptyStates = new SwerveModuleState[0];
@@ -170,16 +280,16 @@ public class Drive extends VirtualSubsystem {
 
 		OdometryThread.getInstance().odometryLock.unlock();
 
-		var sampleTimestamps = this.odometryTimestamps.timestamps;
+		var sampleCount = this.odometryTimestamps.odometrySampleCount;
 		var modulePositions = new SwerveModulePosition[this.modules.length];
-		for (int sampleI = 0; sampleI < sampleTimestamps.length; sampleI++) {
+		for (int sampleI = 0; sampleI < sampleCount; sampleI++) {
 			for (int i = 0; i < this.modules.length; i++) {
 				modulePositions[i] = this.modules[i].getModulePositionSamples()[sampleI];
 			}
 
 			if (this.lastMeasuredPositions != null) {
 				RobotState.getInstance().addOdometryObservation(new OdometryObservation(
-					sampleTimestamps[sampleI],
+					this.odometryTimestamps.timestamps[sampleI],
 					(this.gyroInputs.connected) ? (
 						Optional.of(this.gyroInputs.odometryGyroRotation[sampleI])
 					) : (
@@ -237,11 +347,11 @@ public class Drive extends VirtualSubsystem {
 		// Logger.recordOutput("Subsystems/Drive/Skid Detection/Largest From Average", maxDistanceFromAverage);
 
 		// Clearing log fields
-		Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Setpoint", emptySpeeds);
-		Logger.recordOutput("Subsystems/Drive/Swerve States/Setpoints", emptyStates);
-		Logger.recordOutput("Subsystems/Drive/Swerve States/Setpoints Optimized", emptyStates);
+		// Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Setpoint", emptySpeeds);
+		// Logger.recordOutput("Subsystems/Drive/Swerve States/Setpoints", emptyStates);
+		// Logger.recordOutput("Subsystems/Drive/Swerve States/Setpoints Optimized", emptyStates);
 
-		LoggedTracer.logEpoch("CommandScheduler Periodic/VirtualSubsystem Periodic/Drive/Clear Log Fields");
+		// LoggedTracer.logEpoch("CommandScheduler Periodic/VirtualSubsystem Periodic/Drive/Clear Log Fields");
 		LoggedTracer.logEpoch("CommandScheduler Periodic/VirtualSubsystem Periodic/Drive");
 	}
 
@@ -294,9 +404,11 @@ public class Drive extends VirtualSubsystem {
 	public void setTiltLimits(TiltAccelerationLimits tiltLimits) {
 		this.tiltLimits = tiltLimits;
 	}
+
 	public void runRobotSpeeds(ChassisSpeeds robotSpeeds) {
 		this.runRobotSpeeds(robotSpeeds.vxMetersPerSecond, robotSpeeds.vyMetersPerSecond, robotSpeeds.omegaRadiansPerSecond);
 	}
+
 	public void runRobotSpeeds(double vxMetersPerSecond, double vyMetersPerSecond, double omegaRadsPerSecond) {
 		this.desiredRobotSpeeds.vxMetersPerSecond = vxMetersPerSecond;
 		this.desiredRobotSpeeds.vyMetersPerSecond = vyMetersPerSecond;
@@ -357,15 +469,57 @@ public class Drive extends VirtualSubsystem {
 		Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Limited Delta", limitedDelta);
 		Logger.recordOutput("Subsystems/Drive/Chassis Speeds/Limited Speed", limitedSpeeds);
 
-		ChassisSpeeds correctedSpeeds = ChassisSpeeds.discretize(limitedSpeeds, rotationCorrection.get());
+		ChassisSpeeds correctedSpeeds = ChassisSpeeds.discretize(limitedSpeeds, discretizationCorrection.get().in(Seconds));
 		this.setpointStates = DriveConstants.kinematics.toSwerveModuleStates(correctedSpeeds, this.centerOfRotation);
 		SwerveDriveKinematics.desaturateWheelSpeeds(this.setpointStates, DriveConstants.maxDriveSpeed);
 		this.runSetpoints(this.setpointStates);
 	}
+
+	public void runRobotSpeeds(
+		double vXMetersPerSecond,
+		double vYMetersPerSecond,
+		double omegaRadiansPerSecond,
+		double aXMetersPerSecondSqr,
+		double aYMetersPerSecondSqr,
+		double alphaRadiansPerSecondSqr
+	) {
+		this.translationSubsystem.needsPostProcessing = false;
+		this.rotationalSubsystem.needsPostProcessing = false;
+		for (var module : this.modules) {
+			var moduleVXMPS = vXMetersPerSecond + omegaRadiansPerSecond * module.config.moduleTransform.getTranslation().getNorm() * module.config.moduleTransform.getRotation().getCos();
+			var moduleVYMPS = vYMetersPerSecond + omegaRadiansPerSecond * module.config.moduleTransform.getTranslation().getNorm() * module.config.moduleTransform.getRotation().getSin();
+
+			var moduleAXMPSS = aXMetersPerSecondSqr + alphaRadiansPerSecondSqr * module.config.moduleTransform.getTranslation().getNorm() * module.config.moduleTransform.getRotation().getCos();
+			var moduleAYMPSS = aYMetersPerSecondSqr + alphaRadiansPerSecondSqr * module.config.moduleTransform.getTranslation().getNorm() * module.config.moduleTransform.getRotation().getSin();
+
+			var robotFFXVolts = vXMetersPerSecond * translationalFF.getKv() + aXMetersPerSecondSqr * translationalFF.getKa();
+			var robotFFYVolts = vYMetersPerSecond * translationalFF.getKv() + aYMetersPerSecondSqr * translationalFF.getKa();
+			var robotFFRotVolts = omegaRadiansPerSecond * rotationalFF.getKv() + alphaRadiansPerSecondSqr * rotationalFF.getKa();
+
+			var moduleFFXVolts = robotFFXVolts + robotFFRotVolts * module.config.moduleTransform.getRotation().getCos();
+			var moduleFFYVolts = robotFFYVolts + robotFFRotVolts * module.config.moduleTransform.getRotation().getSin();
+
+			module.runSetpoint(
+				moduleVXMPS,
+				moduleVYMPS,
+				moduleAXMPSS,
+				moduleAYMPSS,
+				moduleFFXVolts,
+				moduleFFYVolts
+			);
+		}
+
+		Logger.recordOutput("Drive/FF Drive/Module Velos", this.modules[0].driveVelo, this.modules[1].driveVelo, this.modules[2].driveVelo, this.modules[3].driveVelo);
+		Logger.recordOutput("Drive/FF Drive/Module Accels", this.modules[0].driveAccel, this.modules[1].driveAccel, this.modules[2].driveAccel, this.modules[3].driveAccel);
+		Logger.recordOutput("Drive/FF Drive/Module FFs", this.modules[0].driveFF, this.modules[1].driveFF, this.modules[2].driveFF, this.modules[3].driveFF);
+		Logger.recordOutput("Drive/FF Drive/Module Scaled Velos", this.modules[0].driveScaledVelo, this.modules[1].driveScaledVelo, this.modules[2].driveScaledVelo, this.modules[3].driveScaledVelo);
+		Logger.recordOutput("Drive/FF Drive/Module Scaled Accels", this.modules[0].driveScaledAccel, this.modules[1].driveScaledAccel, this.modules[2].driveScaledAccel, this.modules[3].driveScaledAccel);
+		Logger.recordOutput("Drive/FF Drive/Module Scaled FFs", this.modules[0].driveScaledFF, this.modules[1].driveScaledFF, this.modules[2].driveScaledFF, this.modules[3].driveScaledFF);
+	}
+
 	public void runFieldSpeeds(ChassisSpeeds fieldSpeeds) {
 		this.runRobotSpeeds(ChassisSpeeds.fromFieldRelativeSpeeds(fieldSpeeds, RobotState.getInstance().getEstimatedGlobalPose().getRotation()));
 	}
-
 
 	public Command coast() {
 		final var drive = this;
@@ -427,7 +581,7 @@ public class Drive extends VirtualSubsystem {
 		IntStream.range(0, DriveConstants.moduleConstants.length).forEach((i) -> {
 			this.setpointStates[i] = new SwerveModuleState(
 				0,
-				DriveConstants.moduleConstants[i].moduleTranslation.getAngle()
+				DriveConstants.moduleConstants[i].moduleTransform.getTranslation().getAngle()
 			);
 		});
 	}
@@ -509,15 +663,15 @@ public class Drive extends VirtualSubsystem {
 		public Command simplePIDTo(Supplier<Translation2d> target) {
 			final var translational = this;
 			return new Command() {
-				private static final LoggedTunable<PIDConstants> pidConsts = LoggedTunable.from(
+				private static final LoggedTunable<PIDGains> pidGains = LoggedTunable.from(
 					"Subsystems/Drive/Translational/Simple PID",
-					new PIDConstants(
+					new PIDGains(
 						3.0,
 						0.0,
 						0.0
 					)
 				);
-				private final PIDController pid = new PIDController(pidConsts.get().kP(), pidConsts.get().kI(), pidConsts.get().kD());
+				private final PIDController pid = pidGains.get().update(new PIDController(0.0, 0.0, 0.0));
 
 				{
 					this.addRequirements(translational);
@@ -582,7 +736,7 @@ public class Drive extends VirtualSubsystem {
 			return Commands.runEnd(() -> driveVelocity(omega.getAsDouble()), this::stop, this);
 		}
 
-		public Command genHeadingPIDCommand(String name, LoggedTunable<PIDConstants> pidGains, DoubleSupplier measuredHeadingRadsSupplier, DoubleSupplier targetHeadingRadsSupplier) {
+		public Command genHeadingPIDCommand(String name, LoggedTunable<PIDGains> pidGains, DoubleSupplier measuredHeadingRadsSupplier, DoubleSupplier targetHeadingRadsSupplier) {
 			final var rotational = this;
 			return new Command() {
 				private final PIDController pid = new PIDController(pidGains.get().kP(), pidGains.get().kI(), pidGains.get().kD());
@@ -677,12 +831,19 @@ public class Drive extends VirtualSubsystem {
 		//     };
 		// }
 
-		private static final LoggedTunable<PIDConstants> pidConsts = LoggedTunable.from(
+		private static final LoggedTunable<PIDGains> pidGains = LoggedTunable.from(
 			"Subsystems/Drive/Rotational/PID",
-			new PIDConstants(
+			new PIDGains(
 				0.2,
 				0.0,
 				0.0
+			)
+		);
+		private static final LoggedTunable<Constraints> profileConstraints = LoggedTunable.from(
+			"Subsystems/Drive/Rotational/Profile",
+			new Constraints(
+				DriveConstants.maxTurnRate.in(RadiansPerSecond),
+				5000
 			)
 		);
 		private static final LoggedTunable<Angle> headingTolerance = LoggedTunable.from("Subsystems/Drive/Rotational/Heading Tolerance", Degrees::of, 1.0);
@@ -691,15 +852,7 @@ public class Drive extends VirtualSubsystem {
 		public Command pidControlledOptionalHeading(Supplier<Optional<Rotation2d>> headingSupplier) {
 			var subsystem = this;
 			return new Command() {
-				private final ProfiledPIDController headingPID = new ProfiledPIDController(
-					pidConsts.get().kP(),
-					pidConsts.get().kI(),
-					pidConsts.get().kD(),
-					new Constraints(
-						DriveConstants.maxTurnRate.in(RadiansPerSecond),
-						5000
-					)
-				);
+				private final ProfiledPIDController headingPID = pidGains.get().update(new ProfiledPIDController(0.0, 0.0, 0.0, profileConstraints.get()));
 
 				{
 					this.addRequirements(subsystem);
@@ -716,7 +869,12 @@ public class Drive extends VirtualSubsystem {
 					this.desiredHeading = RobotState.getInstance().getEstimatedGlobalPose().getRotation();
 					this.headingPID.reset(this.desiredHeading.getRadians());
 					this.headingPID.setTolerance(headingTolerance.get().in(Radians), omegaTolerance.get().in(RadiansPerSecond));
-					pidConsts.get().update(this.headingPID);
+					if (pidGains.hasChanged(this.hashCode())) {
+						pidGains.get().update(this.headingPID);
+					}
+					if (profileConstraints.hasChanged(this.hashCode())) {
+						this.headingPID.setConstraints(profileConstraints.get());
+					}
 				}
 
 				@Override
@@ -749,9 +907,9 @@ public class Drive extends VirtualSubsystem {
 			var subsystem = this;
 			return new Command() {
 				private final ProfiledPIDController headingPID = new ProfiledPIDController(
-					pidConsts.get().kP(),
-					pidConsts.get().kI(),
-					pidConsts.get().kD(),
+					pidGains.get().kP(),
+					pidGains.get().kI(),
+					pidGains.get().kD(),
 					new Constraints(
 						DriveConstants.maxTurnRate.in(RadiansPerSecond),
 						5000
@@ -769,7 +927,7 @@ public class Drive extends VirtualSubsystem {
 				public void initialize() {
 					this.headingPID.reset(RobotState.getInstance().getEstimatedGlobalPose().getRotation().getRadians());
 					this.headingPID.setTolerance(headingTolerance.get().in(Radians), omegaTolerance.get().in(RadiansPerSecond));
-					pidConsts.get().update(this.headingPID);
+					pidGains.get().update(this.headingPID);
 				}
 
 				@Override

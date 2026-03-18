@@ -12,6 +12,7 @@ import java.util.Arrays;
 import com.ctre.phoenix6.signals.InvertedValue;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -21,13 +22,12 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Frequency;
 import edu.wpi.first.units.measure.LinearVelocity;
 import frc.robot.constants.HardwareDevices;
-import frc.robot.constants.RobotConstants;
 import frc.util.hardwareID.can.CANDevice;
 import frc.util.mechanismUtil.GearRatio;
 import frc.util.mechanismUtil.LinearRelation;
 
 public final class DriveConstants {
-	public static final double odometryLoopFrequencyHz = RobotConstants.rioUpdateFrequencyHz;
+	public static final double odometryLoopFrequencyHz = 250.0;
 	public static final Frequency odometryLoopFrequency = Hertz.of(odometryLoopFrequencyHz);
 
 	/**Distance between the front and back wheels*/
@@ -40,74 +40,80 @@ public final class DriveConstants {
 		public final CANDevice driveMotorID;
 		public final CANDevice azimuthMotorID;
 		public final InvertedValue driveInverted;
-		public final Rotation2d moduleForwardDirection;
 		public final Angle encoderZeroOffset;
-		public final Translation2d moduleTranslation;
+		public final Transform2d moduleTransform;
 		public final Rotation2d positiveRotVec;
-		ModuleConstants(String name, CANDevice driveMotorID, CANDevice turnMotorID, InvertedValue driveInverted, Rotation2d moduleForwardDirection, Angle encoderZeroOffset, Translation2d moduleTranslation) {
+		ModuleConstants(String name, CANDevice driveMotorID, CANDevice turnMotorID, InvertedValue driveInverted, Angle encoderZeroOffset, Transform2d moduleTransform) {
 			this.name = name;
 			this.driveMotorID = driveMotorID;
 			this.azimuthMotorID = turnMotorID;
 			this.driveInverted = driveInverted;
-			this.moduleForwardDirection = moduleForwardDirection;
 			this.encoderZeroOffset = encoderZeroOffset;
-			this.moduleTranslation = moduleTranslation;
-			this.positiveRotVec = this.moduleTranslation.getAngle().plus(Rotation2d.kCCW_90deg);
+			this.moduleTransform = moduleTransform;
+			this.positiveRotVec = this.moduleTransform.getTranslation().getAngle().plus(Rotation2d.kCCW_90deg);
 		}
 	}
 
 	public static final ModuleConstants[] moduleConstants = {
 		new ModuleConstants(
 			"Front Left",
-			HardwareDevices.frontLeftDriveMotorID, HardwareDevices.frontLeftTurnMotorID,
+			HardwareDevices.frontLeftDriveMotorID, HardwareDevices.frontLeftAzimuthMotorID,
 			InvertedValue.CounterClockwise_Positive,
-			Rotation2d.kCCW_90deg,
 			Rotations.of(0.3238442),
-			new Translation2d(
-				trackWidthX.div(+2),
-				trackWidthY.div(+2)
+			new Transform2d(
+				new Translation2d(
+					trackWidthX.div(+2),
+					trackWidthY.div(+2)
+				),
+				Rotation2d.kCCW_90deg
 			)
 		),
 		new ModuleConstants(
 			"Front Right",
-			HardwareDevices.frontRightDriveMotorID, HardwareDevices.frontRightTurnMotorID,
+			HardwareDevices.frontRightDriveMotorID, HardwareDevices.frontRightAzimuthMotorID,
 			InvertedValue.CounterClockwise_Positive,
-			Rotation2d.kZero,
 			Rotations.of(0.8459126),
-			new Translation2d(
-				trackWidthX.div(+2),
-				trackWidthY.div(-2)
+			new Transform2d(
+				new Translation2d(
+					trackWidthX.div(+2),
+					trackWidthY.div(-2)
+				),
+				Rotation2d.kZero
 			)
 		),
 		new ModuleConstants(
 			"Back Left",
-			HardwareDevices.backLeftDriveMotorID, HardwareDevices.backLeftTurnMotorID,
+			HardwareDevices.backLeftDriveMotorID, HardwareDevices.backLeftAzimuthMotorID,
 			InvertedValue.CounterClockwise_Positive,
-			Rotation2d.k180deg,
 			Rotations.of(0.000863050503),
-			new Translation2d(
-				trackWidthX.div(-2),
-				trackWidthY.div(+2)
+			new Transform2d(
+				new Translation2d(
+					trackWidthX.div(-2),
+					trackWidthY.div(+2)
+				),
+				Rotation2d.k180deg
 			)
 		),
 		new ModuleConstants(
 			"Back Right",
-			HardwareDevices.backRightDriveMotorID, HardwareDevices.backRightTurnMotorID,
+			HardwareDevices.backRightDriveMotorID, HardwareDevices.backRightAzimuthMotorID,
 			InvertedValue.CounterClockwise_Positive,
-			Rotation2d.kCW_90deg,
 			Rotations.of(0.5872595),
-			new Translation2d(
-				trackWidthX.div(-2),
-				trackWidthY.div(-2)
+			new Transform2d(
+				new Translation2d(
+					trackWidthX.div(-2),
+					trackWidthY.div(-2)
+				),
+				Rotation2d.kCW_90deg
 			)
 		),
 	};
-	public static final Translation2d[] moduleTranslations = Arrays.stream(moduleConstants).map((a) -> a.moduleTranslation).toArray(Translation2d[]::new);
+	public static final Translation2d[] moduleTranslations = Arrays.stream(moduleConstants).map((a) -> a.moduleTransform.getTranslation()).toArray(Translation2d[]::new);
 	public static final Distance driveBaseRadius = Meters.of(Arrays.stream(moduleTranslations).mapToDouble((t) -> t.getNorm()).max().orElse(0.5));
 
 	public static final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(moduleTranslations);
 
-	public static final LinearRelation wheel = LinearRelation.wheelRadius(Inches.of(1.53));
+	public static final LinearRelation wheel = LinearRelation.wheelRadius(Inches.of(1.647383));
 
 	public static final GearRatio driveMotorToWheelRatio = new GearRatio()
 		.gear(14).gear(22).axle()

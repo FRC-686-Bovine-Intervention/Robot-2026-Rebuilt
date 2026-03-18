@@ -36,6 +36,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
+import frc.robot.auto.routines.DoubleSwipe;
 import frc.robot.automations.AutoFeed;
 import frc.robot.automations.HubShiftNotifications;
 import frc.robot.automations.IntakeDeployHysteresis;
@@ -78,6 +79,7 @@ import frc.robot.subsystems.rollers.indexer.IndexerIOTalonFX;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.aiming.AimingSystem;
 import frc.robot.subsystems.shooter.aiming.passing.InterpolationPassingCalc;
+import frc.robot.subsystems.shooter.aiming.shooting.InterpolationShootingCalc;
 import frc.robot.subsystems.shooter.aiming.shooting.PhysicsShootingCalc;
 import frc.robot.subsystems.shooter.flywheel.Flywheel;
 import frc.robot.subsystems.shooter.flywheel.FlywheelConstants;
@@ -94,7 +96,7 @@ import frc.robot.subsystems.vision.cameras.Camera;
 import frc.robot.subsystems.vision.cameras.CameraIO;
 import frc.robot.subsystems.vision.cameras.CameraIOPhoton;
 import frc.robot.subsystems.vision.object.ObjectVision;
-import frc.util.PIDConstants;
+import frc.util.PIDGains;
 import frc.util.Perspective;
 import frc.util.controllers.XboxController;
 import frc.util.loggerUtil.tunables.LoggedTunable;
@@ -155,7 +157,7 @@ public class RobotContainer {
 					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIOTalonFX(FlywheelConstants.rightFlywheelConfig)),
 					new Hood(new HoodIOTalonFXS(commonCANdi)),
 					new AimingSystem(
-						new PhysicsShootingCalc(),
+						new InterpolationShootingCalc(),
 						new InterpolationPassingCalc()
 					)
 				);
@@ -377,8 +379,9 @@ public class RobotContainer {
 
 		System.out.println("[Init RobotContainer] Configuring Autonomous Modes");
 
-		var autoSelector = new AutoSelector("Auto Selector");
+		final var autoSelector = new AutoSelector("Auto Selector");
 		// Add autonomous routines to autonomous selector
+		autoSelector.addDefaultRoutine(new DoubleSwipe(this));
 
 		this.autoManager = new AutoManager(autoSelector);
 
@@ -514,9 +517,9 @@ public class RobotContainer {
 			private static final LoggedTunable<LinearVelocity> linearThreshold = LoggedTunable.from("Controls/Tank Drive/Velo Threshold", MetersPerSecond::of, 0.5);
 			private static final LoggedTunable<AngularVelocity> maxOmega = LoggedTunable.from("Controls/Tank Drive/Max Omega", RotationsPerSecond::of, 0.5);
 
-			private static final LoggedTunable<PIDConstants> pidGains = LoggedTunable.from(
+			private static final LoggedTunable<PIDGains> pidGains = LoggedTunable.from(
 				"Controls/Tank Drive/Azimuth PID",
-				new PIDConstants(
+				new PIDGains(
 					3.5,
 					0.0,
 					0.0
@@ -673,7 +676,7 @@ public class RobotContainer {
 		// this.automationsLoop.bind(new HookAutoDeployHysteresis(this.climber.hook, climberHookAutoDeployCommand));
 		// this.automationsLoop.bind(new AutoSpinUp(this.drive, this.shooter, intakeRollersIntakeCommand));
 		// this.automationsLoop.bind(new AutoDriveAim(this.drive, this.shooter, intakeRollersIntakeCommand));
-		this.automationsLoop.bind(new AutoFeed(this.drive, this.shooter, this.rollers, this.intake.slam, this.extensionSystem, this.driveController.povUp().or(secondDriverOverride)));
+		this.automationsLoop.bind(new AutoFeed(this.drive, this.shooter, this.rollers, this.intake.slam, this.extensionSystem, this.driveController.x().or(secondDriverOverride)));
 		this.automationsLoop.bind(new HubShiftNotifications(this.driveController));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		// new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
@@ -723,6 +726,14 @@ public class RobotContainer {
 			}
 		});
 
-		this.driveController.x().whileTrue(rollersFeedCommand);
+		// this.driveController.x().whileTrue(rollersFeedCommand);
+
+
+
+		// Optional<Trajectory<SwerveSample>> trajopt = Choreo.loadTrajectory("TestPath");
+
+		// var flippath = AllianceFlipped.fromBlue(trajopt.get());
+
+		// this.driveController.povUp().whileTrue(Commands.defer(() -> new FollowTrajectoryCommand(this.drive, flippath.getOurs(), false), Set.of(this.drive.translationSubsystem, this.drive.rotationalSubsystem)));
 	}
 }

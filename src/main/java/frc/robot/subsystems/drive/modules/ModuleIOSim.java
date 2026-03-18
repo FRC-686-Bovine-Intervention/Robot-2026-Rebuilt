@@ -1,16 +1,12 @@
 package frc.robot.subsystems.drive.modules;
 
-import static edu.wpi.first.units.Units.Radians;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.Rotations;
-import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.RPM;
 
-import edu.wpi.first.math.MathUtil;
+import com.revrobotics.sim.SparkAbsoluteEncoderSim;
+import com.revrobotics.sim.SparkMaxSim;
+
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.MutVoltage;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -29,19 +25,19 @@ public class ModuleIOSim extends ModuleIOFalcon550 {
 		this.azimuthMotorModel
 	);
 
+	private final SparkMaxSim azimuthSparkMaxSim = new SparkMaxSim(this.azimuthMotor, this.azimuthMotorModel);
+	// private final SparkRelativeEncoderSim azimuthRelativeEncoderSim = this.azimuthSparkMaxSim.getRelativeEncoderSim();
+	private final SparkAbsoluteEncoderSim azimuthAbsoluteEncoderSim = this.azimuthSparkMaxSim.getAbsoluteEncoderSim();
+
 	public ModuleIOSim(ModuleConstants moduleConstants) {
 		super(moduleConstants);
 	}
 
-	private final MutVoltage azimuthAppliedVolts = Volts.mutable(0);
-
+	@Override
 	public void updateInputs(ModuleIOInputs inputs) {
 		var driveSimState = this.driveMotor.getSimState();
-		if (DriverStation.isDisabled()) {
-			this.azimuthAppliedVolts.mut_setBaseUnitMagnitude(0);
-		}
 		this.driveSim.setInputVoltage(driveSimState.getMotorVoltage());
-		this.azimuthSim.setInputVoltage(this.azimuthAppliedVolts.in(Volts));
+		this.azimuthSim.setInputVoltage(this.azimuthSparkMaxSim.getAppliedOutput() * 12.0);
 
 		this.driveSim.update(RobotConstants.rioUpdatePeriodSecs);
 		this.azimuthSim.update(RobotConstants.rioUpdatePeriodSecs);
@@ -50,33 +46,27 @@ public class ModuleIOSim extends ModuleIOFalcon550 {
 		var wheelVelocity = this.driveSim.getAngularVelocity();
 		driveSimState.setRawRotorPosition(DriveConstants.driveMotorToWheelRatio.inverse().applyUnsigned(wheelAngle));
 		driveSimState.setRotorVelocity(DriveConstants.driveMotorToWheelRatio.inverse().applyUnsigned(wheelVelocity));
-		driveSimState.setSupplyVoltage(12 - driveSimState.getSupplyCurrent() * 0.002);
-
-		super.updateInputs(inputs);
+		driveSimState.setSupplyVoltage(12.0 - driveSimState.getSupplyCurrent() * 0.002);
 
 		var carriageAngle = this.azimuthSim.getAngularPosition();
 		var carriageVelocity = this.azimuthSim.getAngularVelocity();
-		inputs.azimuthEncoder.setPositionRads(DriveConstants.azimuthEncoderToCarriageRatio.inverse().applyUnsigned(carriageAngle).in(Radians));
-		inputs.azimuthEncoder.setVelocityRadsPerSec(DriveConstants.azimuthEncoderToCarriageRatio.inverse().applyUnsigned(carriageVelocity).in(RadiansPerSecond));
-		inputs.azimuthMotor.encoder.setPositionRads(DriveConstants.azimuthMotorToCarriageRatio.inverse().applyUnsigned(carriageAngle).in(Radians));
-		inputs.azimuthMotor.encoder.setVelocityRadsPerSec(DriveConstants.azimuthMotorToCarriageRatio.inverse().applyUnsigned(carriageVelocity).in(RadiansPerSecond));
-		inputs.azimuthMotor.motor.updateFrom(this.azimuthSim);
+		this.azimuthAbsoluteEncoderSim.iterate(
+			DriveConstants.azimuthEncoderToCarriageRatio.inverse().applyUnsigned(carriageVelocity).in(RPM),
+			RobotConstants.rioUpdatePeriodSecs
+		);
+		// this.azimuthRelativeEncoderSim.iterate(
+		// 	DriveConstants.azimuthMotorToCarriageRatio.inverse().applyUnsigned(carriageVelocity).in(RPM),
+		// 	RobotConstants.rioUpdatePeriodSecs
+		// );
+		this.azimuthSparkMaxSim.iterate(
+			DriveConstants.azimuthMotorToCarriageRatio.inverse().applyUnsigned(carriageVelocity).in(RPM),
+			12.0,
+			RobotConstants.rioUpdatePeriodSecs
+		);
+
+		super.updateInputs(inputs);
 
 		inputs.odometryDriveRads = new double[] {inputs.driveMotor.encoder.getPositionRads()};
 		inputs.odometryAzimuthRads = new double[] {inputs.azimuthEncoder.getPositionRads()};
-	}
-
-	@Override
-	public void setAzimuthVolts(double volts) {
-		this.azimuthAppliedVolts.mut_replace(MathUtil.clamp(volts, -12, 12), Volts);
-	}
-	@Override
-	public void setAzimuthAngleRads(double angleRads) {
-		this.setAzimuthVolts(
-			this.azimuthPID.calculate(
-				this.azimuthSim.getAngularPosition().in(Rotations),
-				Units.radiansToRotations(angleRads)
-			)
-		);
 	}
 }

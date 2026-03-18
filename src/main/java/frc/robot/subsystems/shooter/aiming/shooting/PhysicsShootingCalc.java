@@ -38,7 +38,9 @@ public class PhysicsShootingCalc implements ShootingCalc {
 		double tangentialVelocity = MathExtraUtil.dotProduct(tangentialUnitVectorCartesian, robotSpeedsArray);
 
 		var hoodAngleRads = ShooterConstants.hoodPolynomial.evaluate(radius, radialVelocity);
+		Logger.recordOutput("DEBUG/PhysicsShooting/Before Hood Angle", hoodAngleRads);
 		var flywheelSpeedMPS = ShooterConstants.flywheelPolynomial.evaluate(radius, radialVelocity);
+		Logger.recordOutput("DEBUG/PhysicsShooting/Before Flywheel Speed", flywheelSpeedMPS);
 		var tofSeconds = ShooterConstants.tofPolynomial.evaluate(radius, radialVelocity);
 
 		var hubRobotSpaceCartesian = aimPoint.toTranslation2d().minus(robotPose.getTranslation());
@@ -60,6 +62,9 @@ public class PhysicsShootingCalc implements ShootingCalc {
 		Logger.recordOutput("DEBUG/PhysicsShooting/HoodAngle", this.hoodAngleRads);
 		this.flywheelSpeedMS = launchValues[0];
 		Logger.recordOutput("DEBUG/PhysicsShooting/FlywheelSpeed", this.flywheelSpeedMS);
+		// this.robotRotationRads = robotAngleRads;
+		// this.hoodAngleRads = hoodAngleRads;
+		// this.flywheelSpeedMS = flywheelSpeedMPS;
 		this.aimPoint = aimPoint;
 		this.tofSeconds = tofSeconds;
 	}

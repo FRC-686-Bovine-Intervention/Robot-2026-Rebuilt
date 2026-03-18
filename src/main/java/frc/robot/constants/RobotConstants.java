@@ -16,7 +16,7 @@ import edu.wpi.first.units.measure.Time;
 import frc.robot.Robot;
 
 public final class RobotConstants {
-	public static final boolean tuningMode = false;
+	public static final boolean tuningMode = true;
 
 	public static final Mass robotWeight = Pounds.of(125);
 	public static final MomentOfInertia robotMOI = KilogramSquareMeters.of(6);
@@ -48,9 +48,4 @@ public final class RobotConstants {
 	public static final Time rioUpdatePeriod = Seconds.of(rioUpdatePeriodSecs);
 	public static final Frequency rioUpdateFrequency = rioUpdatePeriod.asFrequency();
 	public static final double rioUpdateFrequencyHz = rioUpdateFrequency.in(Hertz);
-
-	// public static final double deviceFaultUpdatePeriodSecs = 0.25;
-	// public static final Time deviceFaultUpdatePeriod = Seconds.of(deviceFaultUpdatePeriodSecs);
-	public static final double deviceFaultUpdateFrequencyHz = 0.0;
-	public static final Frequency deviceFaultUpdateFrequency = Hertz.of(deviceFaultUpdateFrequencyHz);
 }

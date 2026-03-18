@@ -21,9 +21,9 @@ import com.ctre.phoenix6.signals.SensorDirectionValue;
 import edu.wpi.first.math.util.Units;
 import frc.robot.constants.HardwareDevices;
 import frc.robot.constants.RobotConstants;
-import frc.util.FFConstants;
+import frc.util.FFGains;
 import frc.util.NeutralMode;
-import frc.util.PIDConstants;
+import frc.util.PIDGains;
 import frc.util.loggerUtil.inputs.LoggedEncodedMotor.EncodedMotorStatusSignalCache;
 import frc.util.loggerUtil.inputs.LoggedEncoder.EncoderStatusSignalCache;
 
@@ -170,13 +170,13 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 	}
 
 	@Override
-	public void configFF(FFConstants ffConstants) {
-		ffConstants.update(this.motorConfig.Slot0);
+	public void configFF(FFGains ffGains) {
+		ffGains.update(this.motorConfig.Slot0);
 	}
 
 	@Override
-	public void configPID(PIDConstants pidConstants) {
-		pidConstants.update(this.motorConfig.Slot0);
+	public void configPID(PIDGains pidGains) {
+		pidGains.update(this.motorConfig.Slot0);
 	}
 
 	@Override

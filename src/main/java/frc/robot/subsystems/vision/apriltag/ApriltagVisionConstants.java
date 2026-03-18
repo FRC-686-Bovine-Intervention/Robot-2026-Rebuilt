@@ -9,7 +9,7 @@ import frc.util.geometry.PoseBoundingBoxUtil.BoundingBox;
 import frc.util.geometry.PoseBoundingBoxUtil.RectangularBoundingBox;
 
 public class ApriltagVisionConstants {
-	public static final Distance zMargin = Inches.of(6);
+	public static final Distance zMargin = Inches.of(18.0);
 	public static final RectangularBoundingBox acceptableFieldBox = BoundingBox.rectangle(
 		new Translation2d(
 

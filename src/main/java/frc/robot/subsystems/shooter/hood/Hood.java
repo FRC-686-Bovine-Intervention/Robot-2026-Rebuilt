@@ -23,10 +23,10 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.leds.Leds;
-import frc.util.FFConstants;
+import frc.util.FFGains;
 import frc.util.LoggedTracer;
 import frc.util.NeutralMode;
-import frc.util.PIDConstants;
+import frc.util.PIDGains;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.loggerUtil.tunables.LoggedTunableNumber;
 import frc.util.robotStructure.angle.ArmMech;
@@ -46,9 +46,9 @@ public class Hood extends SubsystemBase {
 	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Shooter/Hood/Mechanism/Profile/kA", 1.0);
 	private static final LoggedTunable<AngularVelocity> profileMaxVel = LoggedTunable.from("Subsystems/Shooter/Hood/Mechanism/Profile/Max Velocity", DegreesPerSecond::of, 0.0);
 
-	private static final LoggedTunable<FFConstants> ffConsts = LoggedTunable.from(
+	private static final LoggedTunable<FFGains> ffConsts = LoggedTunable.from(
 		"Subsystems/Shooter/Hood/Mechanism/FF",
-		new FFConstants(
+		new FFGains(
 			0.4,
 			0.0,
 			1.0,
@@ -56,9 +56,9 @@ public class Hood extends SubsystemBase {
 		)
 	);
 
-	private static final LoggedTunable<PIDConstants> pidConsts = LoggedTunable.from(
+	private static final LoggedTunable<PIDGains> pidConsts = LoggedTunable.from(
 		"Subsystems/Shooter/Hood/Mechanism/PID",
-		new PIDConstants(
+		new PIDGains(
 			500.0,
 			0.0,
 			0.0
