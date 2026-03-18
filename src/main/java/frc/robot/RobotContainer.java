@@ -543,7 +543,7 @@ public class RobotContainer {
 			private static final LoggedTunable<Angle> offsetAngle = LoggedTunable.from("Controls/Tank Drive/Offset/Angle", Degrees::of, 20.0);
 
 			private static final LoggedTunable<LinearVelocity> linearThreshold = LoggedTunable.from("Controls/Tank Drive/Velo Threshold", MetersPerSecond::of, 0.5);
-			private static final LoggedTunable<AngularVelocity> maxOmega = LoggedTunable.from("Controls/Tank Drive/Max Omega", RotationsPerSecond::of, 0.5);
+			private static final LoggedTunable<AngularVelocity> maxOmega = LoggedTunable.from("Controls/Tank Drive/Max Omega", RotationsPerSecond::of, 1.0);
 
 			private static final LoggedTunable<PIDGains> pidGains = LoggedTunable.from(
 				"Controls/Tank Drive/Azimuth PID",
