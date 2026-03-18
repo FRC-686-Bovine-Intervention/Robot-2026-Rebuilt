@@ -89,7 +89,6 @@ import frc.robot.subsystems.shooter.aiming.passing.InterpolationPassingCalc;
 import frc.robot.subsystems.shooter.aiming.shooting.InterpolationShootingCalc;
 import frc.robot.subsystems.shooter.aiming.shooting.PhysicsShootingCalc;
 import frc.robot.subsystems.shooter.flywheel.Flywheel;
-import frc.robot.subsystems.shooter.flywheel.FlywheelConstants;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIOTalonFX;
 import frc.robot.subsystems.shooter.hood.Hood;
@@ -160,7 +159,7 @@ public class RobotContainer {
 						.toArray(ModuleIO[]::new)
 				);
 				this.shooter = new Shooter(
-					new Flywheel(FlywheelConstants.drumFlywheelConfig, new FlywheelIOTalonFX(FlywheelConstants.drumFlywheelConfig)),
+					new Flywheel(new FlywheelIOTalonFX()),
 					new Hood(new HoodIOTalonFXS(commonCANdi)),
 					new AimingSystem(
 						new InterpolationShootingCalc(),
@@ -225,7 +224,7 @@ public class RobotContainer {
 						.toArray(ModuleIO[]::new)
 				);
 				this.shooter = new Shooter(
-					new Flywheel(FlywheelConstants.drumFlywheelConfig, new FlywheelIO() {}),
+					new Flywheel(new FlywheelIO() {}),
 					new Hood(new HoodIOSim(commonCANdi)),
 					new AimingSystem(
 						new PhysicsShootingCalc(),
@@ -289,7 +288,7 @@ public class RobotContainer {
 					new ModuleIO(){}
 				);
 				this.shooter = new Shooter(
-					new Flywheel(FlywheelConstants.drumFlywheelConfig, new FlywheelIO() {}),
+					new Flywheel(new FlywheelIO() {}),
 					new Hood(new HoodIO() {}),
 					new AimingSystem(
 						new PhysicsShootingCalc(),

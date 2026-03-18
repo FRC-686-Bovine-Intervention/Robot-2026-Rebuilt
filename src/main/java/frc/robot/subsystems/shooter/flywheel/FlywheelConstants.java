@@ -2,13 +2,8 @@ package frc.robot.subsystems.shooter.flywheel;
 
 import static edu.wpi.first.units.Units.Inches;
 
-import com.ctre.phoenix6.signals.InvertedValue;
-
-import frc.robot.constants.HardwareDevices;
-import frc.util.hardwareID.can.CANDevice;
 import frc.util.mechanismUtil.GearRatio;
 import frc.util.mechanismUtil.LinearRelation;
-import lombok.RequiredArgsConstructor;
 
 public class FlywheelConstants {
 	// Gear Ratios
@@ -17,49 +12,13 @@ public class FlywheelConstants {
 		.sprocket(24)
 	;
 
-	public static final GearRatio flywheelToHood = new GearRatio(38/16);
+	public static final GearRatio flywheelToHood = new GearRatio()
+		.sprocket(38)
+		.sprocket(16)
+		.gear(24).gear(24).axle()
+	;
+
 	// Flywheel wheel
 	public static final LinearRelation wheel = LinearRelation.wheelDiameter(Inches.of(3.0));
 	public static final LinearRelation hoodRoller = LinearRelation.wheelDiameter(Inches.of(1.0));
-
-	// Flywheel configuration
-	@RequiredArgsConstructor
-	public static class FlywheelConfig {
-		public final String name;
-		public final CANDevice masterMotorID;
-		public final CANDevice[] slaveMotorIDs;
-		public final InvertedValue masterInvertedValue;
-		public final InvertedValue[] slaveInvertedValues;
-	}
-
-	public static final FlywheelConfig drumFlywheelConfig = new FlywheelConfig(
-		"Drum",
-		HardwareDevices.leftFlywheelMotorMasterID,
-		new CANDevice[] {
-			HardwareDevices.leftFlywheelMotorSlaveID,
-			HardwareDevices.rightFlywheelMotorMasterID,
-			HardwareDevices.rightFlywheelMotorSlaveID
-		},
-		InvertedValue.CounterClockwise_Positive,
-		new InvertedValue[] {
-			InvertedValue.CounterClockwise_Positive,
-			InvertedValue.Clockwise_Positive,
-			InvertedValue.Clockwise_Positive
-		}
-	);
-
-	public static final FlywheelConfig leftFlywheelConfig = new FlywheelConfig(
-		"Left",
-		HardwareDevices.leftFlywheelMotorMasterID,
-		new CANDevice[] {HardwareDevices.leftFlywheelMotorSlaveID},
-		InvertedValue.CounterClockwise_Positive,
-		new InvertedValue[] {InvertedValue.CounterClockwise_Positive}
-	);
-	public static final FlywheelConfig rightFlywheelConfig = new FlywheelConfig(
-		"Right",
-		HardwareDevices.rightFlywheelMotorMasterID,
-		new CANDevice[] {HardwareDevices.rightFlywheelMotorSlaveID},
-		InvertedValue.Clockwise_Positive,
-		new InvertedValue[] {InvertedValue.Clockwise_Positive}
-	);
 }
