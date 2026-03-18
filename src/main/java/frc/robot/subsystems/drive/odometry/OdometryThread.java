@@ -207,16 +207,16 @@ public class OdometryThread extends Thread {
 
 	public static class DoubleBuffer {
 		private final double[] buffer;
-		private int tail = 0;
+		private int size = 0;
 
 		public DoubleBuffer(int capacity) {
 			this.buffer = new double[capacity];
 		}
 
 		public void offer(double value) {
-			if (this.tail < this.buffer.length) {
-				this.buffer[this.tail] = value;
-				this.tail += 1;
+			if (this.size < this.buffer.length) {
+				this.buffer[this.size] = value;
+				this.size += 1;
 			} else {
 				System.arraycopy(this.buffer, 1, this.buffer, 0, this.buffer.length - 1);
 				this.buffer[this.buffer.length - 1] = value;
@@ -224,16 +224,36 @@ public class OdometryThread extends Thread {
 		}
 
 		public double[] popAll() {
-			var retArray = new double[this.tail];
-			System.arraycopy(this.buffer, 0, retArray, 0, this.tail);
-			this.tail = 0;
+			var retArray = new double[this.size];
+			System.arraycopy(this.buffer, 0, retArray, 0, this.size);
+			this.size = 0;
 			return retArray;
+		}
+
+		public int getSize() {
+			return this.size;
+		}
+
+		public int getCapacity() {
+			return this.buffer.length;
+		}
+
+		public double get(int index) {
+			return this.buffer[index];
+		}
+
+		public double[] getInternalBuffer() {
+			return this.buffer;
+		}
+
+		public void clear() {
+			this.size = 0;
 		}
 	}
 	public static class Buffer<T> {
 		private final T[] buffer;
 		private final IntFunction<T[]> arrayConstructor;
-		private int tail = 0;
+		private int size = 0;
 
 		public Buffer(int capacity, IntFunction<T[]> arrayConstructor) {
 			this.arrayConstructor = arrayConstructor;
@@ -241,9 +261,9 @@ public class OdometryThread extends Thread {
 		}
 
 		public void offer(T value) {
-			if (this.tail < this.buffer.length) {
-				this.buffer[this.tail] = value;
-				this.tail += 1;
+			if (this.size < this.buffer.length) {
+				this.buffer[this.size] = value;
+				this.size += 1;
 			} else {
 				System.arraycopy(this.buffer, 1, this.buffer, 0, this.buffer.length - 1);
 				this.buffer[this.buffer.length - 1] = value;
@@ -251,10 +271,30 @@ public class OdometryThread extends Thread {
 		}
 
 		public T[] popAll() {
-			var retArray = this.arrayConstructor.apply(this.tail);
-			System.arraycopy(this.buffer, 0, retArray, 0, this.tail);
-			this.tail = 0;
+			var retArray = this.arrayConstructor.apply(this.size);
+			System.arraycopy(this.buffer, 0, retArray, 0, this.size);
+			this.size = 0;
 			return retArray;
+		}
+
+		public int getSize() {
+			return this.size;
+		}
+
+		public int getCapacity() {
+			return this.buffer.length;
+		}
+
+		public T get(int index) {
+			return this.buffer[index];
+		}
+
+		public T[] getInternalBuffer() {
+			return this.buffer;
+		}
+
+		public void clear() {
+			this.size = 0;
 		}
 	}
 }

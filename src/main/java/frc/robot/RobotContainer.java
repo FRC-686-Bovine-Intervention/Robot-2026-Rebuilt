@@ -4,19 +4,28 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 
 import java.util.Arrays;
 import java.util.Set;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -28,16 +37,12 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.auto.routines.DoubleSwipe;
-import frc.robot.automations.BumpMitigation;
-import frc.robot.automations.HookAutoDeployHysteresis;
+import frc.robot.automations.AutoFeed;
+import frc.robot.automations.HubShiftNotifications;
 import frc.robot.automations.IntakeDeployHysteresis;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.ExtensionSystem;
-import frc.robot.subsystems.climber.Climber;
-import frc.robot.subsystems.climber.hook.Hook;
-import frc.robot.subsystems.climber.hook.HookIO;
-import frc.robot.subsystems.climber.hook.HookIOSim;
 import frc.robot.subsystems.commonDevices.CommonCANdi;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -53,9 +58,12 @@ import frc.robot.subsystems.drive.odometry.OdometryTimestampIOSim;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.rollers.IntakeRollers;
 import frc.robot.subsystems.intake.rollers.IntakeRollersIO;
+import frc.robot.subsystems.intake.rollers.IntakeRollersIOSparkMax;
 import frc.robot.subsystems.intake.slam.IntakeSlam;
 import frc.robot.subsystems.intake.slam.IntakeSlamIO;
 import frc.robot.subsystems.intake.slam.IntakeSlamIOSim;
+import frc.robot.subsystems.intake.slam.IntakeSlamIOTalonFX;
+import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.rollers.RollerSensorsIO;
 import frc.robot.subsystems.rollers.RollerSensorsIOCANdi;
 import frc.robot.subsystems.rollers.Rollers;
@@ -71,6 +79,7 @@ import frc.robot.subsystems.rollers.indexer.IndexerIOTalonFX;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.aiming.AimingSystem;
 import frc.robot.subsystems.shooter.aiming.passing.InterpolationPassingCalc;
+import frc.robot.subsystems.shooter.aiming.shooting.InterpolationShootingCalc;
 import frc.robot.subsystems.shooter.aiming.shooting.PhysicsShootingCalc;
 import frc.robot.subsystems.shooter.flywheel.Flywheel;
 import frc.robot.subsystems.shooter.flywheel.FlywheelConstants;
@@ -87,9 +96,11 @@ import frc.robot.subsystems.vision.cameras.Camera;
 import frc.robot.subsystems.vision.cameras.CameraIO;
 import frc.robot.subsystems.vision.cameras.CameraIOPhoton;
 import frc.robot.subsystems.vision.object.ObjectVision;
+import frc.util.PIDGains;
 import frc.util.Perspective;
 import frc.util.controllers.XboxController;
 import frc.util.loggerUtil.tunables.LoggedTunable;
+import frc.util.loggerUtil.tunables.LoggedTunableNumber;
 import frc.util.robotStructure.Mechanism3d;
 
 public class RobotContainer {
@@ -98,7 +109,7 @@ public class RobotContainer {
 	public final Shooter shooter;
 	public final Intake intake;
 	public final Rollers rollers;
-	public final Climber climber;
+	// public final Climber climber;
 	public final ExtensionSystem extensionSystem;
 
 	// Vision
@@ -109,6 +120,7 @@ public class RobotContainer {
 	public final Camera leftBroadCamera;
 	public final Camera rightBroadCamera;
 	public final Camera backBroadCamera;
+	public final Camera intakeCamera;
 
 	// Auto
 	public final AutoManager autoManager;
@@ -117,7 +129,10 @@ public class RobotContainer {
 	public final EventLoop automationsLoop = new EventLoop();
 
 	// Controllers
-	private final XboxController driveController = new XboxController(0);
+	private final XboxController driveController = new XboxController(0, "Drive Controller");
+	private final Joystick secondDriverJoystick = new Joystick(1);
+	private final Trigger secondDriverOverride = new Trigger(() -> secondDriverJoystick.button(3, CommandScheduler.getInstance().getDefaultButtonLoop()).or(secondDriverJoystick.button(4, CommandScheduler.getInstance().getDefaultButtonLoop())).getAsBoolean());
+
 	@SuppressWarnings("unused")
 	private final CommandJoystick simJoystick = new CommandJoystick(5);
 
@@ -142,13 +157,13 @@ public class RobotContainer {
 					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIOTalonFX(FlywheelConstants.rightFlywheelConfig)),
 					new Hood(new HoodIOTalonFXS(commonCANdi)),
 					new AimingSystem(
-						new PhysicsShootingCalc(),
+						new InterpolationShootingCalc(),
 						new InterpolationPassingCalc()
 					)
 				);
 				this.intake = new Intake(
-					new IntakeRollers(new IntakeRollersIO() {}),
-					new IntakeSlam(new IntakeSlamIO() {})
+					new IntakeRollers(new IntakeRollersIOSparkMax()),
+					new IntakeSlam(new IntakeSlamIOTalonFX())
 				);
 				this.rollers = new Rollers(
 					new Indexer(new IndexerIOTalonFX()),
@@ -156,33 +171,39 @@ public class RobotContainer {
 					new Feeder(new FeederIOTalonFX()),
 					new RollerSensorsIOCANdi(commonCANdi)
 				);
-				this.climber = new Climber(
-					new Hook(new HookIO() {})
-				);
+				// this.climber = new Climber(
+				// 	new Hook(new HookIO() {})
+				// );
 
 				this.hubZoomCamera = new Camera(
 					new CameraIOPhoton("Left Top"),
 					"Hub Zoom",
 					VisionConstants.topLeftMount,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().hubZoomCamConnection.setStatus(connected);}
 				);
 				this.leftBroadCamera = new Camera(
 					new CameraIOPhoton("Left Bottom"),
 					"Left Broad",
 					VisionConstants.bottomLeftMount,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().leftBroadCamConnection.setStatus(connected);}
 				);
 				this.rightBroadCamera = new Camera(
 					new CameraIOPhoton("Right Top"),
 					"Right Broad",
 					VisionConstants.topRightMount,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().rightBroadCamConnection.setStatus(connected);}
 				);
 				this.backBroadCamera = new Camera(
 					new CameraIOPhoton("Right Bottom"),
 					"Back Broad",
 					VisionConstants.bottomRightMount,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().backBroadCamConnection.setStatus(connected);}
+				);
+				this.intakeCamera = new Camera(
+					new CameraIO() {},
+					"Intake",
+					VisionConstants.intakeMount,
+					(connected) -> {Leds.getInstance().intakeCamConnection.setStatus(connected);}
 				);
 
 				commonCANdi.configSend();
@@ -216,33 +237,39 @@ public class RobotContainer {
 					new Feeder(new FeederIO() {}),
 					new RollerSensorsIOCANdi(commonCANdi)
 				);
-				this.climber = new Climber(
-					new Hook(new HookIOSim())
-				);
+				// this.climber = new Climber(
+				// 	new Hook(new HookIOSim())
+				// );
 
 				this.hubZoomCamera = new Camera(
 					new CameraIO() {},
 					"Top Left",
 					Transform3d.kZero,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().hubZoomCamConnection.setStatus(connected);}
 				);
 				this.leftBroadCamera = new Camera(
 					new CameraIO() {},
 					"Bottom Left",
 					Transform3d.kZero,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().leftBroadCamConnection.setStatus(connected);}
 				);
 				this.rightBroadCamera = new Camera(
 					new CameraIO() {},
 					"Top Right",
 					Transform3d.kZero,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().rightBroadCamConnection.setStatus(connected);}
 				);
 				this.backBroadCamera = new Camera(
 					new CameraIO() {},
 					"Bottom Right",
 					Transform3d.kZero,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().backBroadCamConnection.setStatus(connected);}
+				);
+				this.intakeCamera = new Camera(
+					new CameraIO() {},
+					"Intake",
+					VisionConstants.intakeMount,
+					(connected) -> {Leds.getInstance().intakeCamConnection.setStatus(connected);}
 				);
 
 				commonCANdi.configSend();
@@ -275,33 +302,39 @@ public class RobotContainer {
 					new Feeder(new FeederIO() {}),
 					new RollerSensorsIO() {}
 				);
-				this.climber = new Climber(
-					new Hook(new HookIO() {})
-				);
+				// this.climber = new Climber(
+				// 	new Hook(new HookIO() {})
+				// );
 
 				this.hubZoomCamera = new Camera(
 					new CameraIO() {},
 					"Top Left",
 					Transform3d.kZero,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().hubZoomCamConnection.setStatus(connected);}
 				);
 				this.leftBroadCamera = new Camera(
 					new CameraIO() {},
 					"Bottom Left",
 					Transform3d.kZero,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().leftBroadCamConnection.setStatus(connected);}
 				);
 				this.rightBroadCamera = new Camera(
 					new CameraIO() {},
 					"Top Right",
 					Transform3d.kZero,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().rightBroadCamConnection.setStatus(connected);}
 				);
 				this.backBroadCamera = new Camera(
 					new CameraIO() {},
 					"Bottom Right",
 					Transform3d.kZero,
-					(connected) -> {}
+					(connected) -> {Leds.getInstance().backBroadCamConnection.setStatus(connected);}
+				);
+				this.intakeCamera = new Camera(
+					new CameraIO() {},
+					"Intake",
+					VisionConstants.intakeMount,
+					(connected) -> {Leds.getInstance().intakeCamConnection.setStatus(connected);}
 				);
 			}
 		}
@@ -323,7 +356,7 @@ public class RobotContainer {
 			)
 			.addChild(this.intake.slam.followerMech)
 			.addChild(this.shooter.hood.mech)
-			.addChild(this.climber.hook.mech)
+			// .addChild(this.climber.hook.mech)
 			.addChild(this.hubZoomCamera.mount)
 			.addChild(this.leftBroadCamera.mount)
 			.addChild(this.rightBroadCamera.mount)
@@ -335,8 +368,8 @@ public class RobotContainer {
 			this.shooter.hood.mech,
 			this.intake.slam.followerMech,
 			this.intake.slam.driverMech,
-			this.intake.slam.couplerMech,
-			this.climber.hook.mech
+			this.intake.slam.couplerMech
+			// this.climber.hook.mech
 		);
 
 		System.out.println("[Init RobotContainer] Configuring Commands");
@@ -425,8 +458,8 @@ public class RobotContainer {
 		;
 		final var rotateAxis = this.driveController.leftTrigger
 			.add(this.driveController.rightTrigger.invert())
-			.smoothDeadband(0.05)
-			.sensitivity(0.5)
+			.smoothDeadband(0.01)
+			.sensitivity(0.75)
 		;
 		final var driveTranslationCommand = new Command() {
 			{
@@ -466,13 +499,97 @@ public class RobotContainer {
 
 			@Override
 			public void execute() {
-				var omega = rotateAxis.getAsDouble() * DriveConstants.maxTurnRate.in(RadiansPerSecond);
+				var omega = rotateAxis.getAsDouble() * DriveConstants.maxTurnRate.in(RadiansPerSecond) * 0.5;
 
 				drive.rotationalSubsystem.driveVelocity(omega);
 			}
 
 			@Override
 			public void end(boolean interrupted) {
+				drive.rotationalSubsystem.stop();
+			}
+		};
+
+		final var driveTankCommand = new Command() {
+			private static final LoggedTunableNumber offsetThreshold = LoggedTunable.from("Controls/Tank Drive/Offset/Threshold", 0.25);
+			private static final LoggedTunable<Angle> offsetAngle = LoggedTunable.from("Controls/Tank Drive/Offset/Angle", Degrees::of, 20.0);
+
+			private static final LoggedTunable<LinearVelocity> linearThreshold = LoggedTunable.from("Controls/Tank Drive/Velo Threshold", MetersPerSecond::of, 0.5);
+			private static final LoggedTunable<AngularVelocity> maxOmega = LoggedTunable.from("Controls/Tank Drive/Max Omega", RotationsPerSecond::of, 0.5);
+
+			private static final LoggedTunable<PIDGains> pidGains = LoggedTunable.from(
+				"Controls/Tank Drive/Azimuth PID",
+				new PIDGains(
+					3.5,
+					0.0,
+					0.0
+				)
+			);
+			private final PIDController pid = new PIDController(pidGains.get().kP(), pidGains.get().kI(), pidGains.get().kD());
+
+			{
+				this.setName("Tank");
+				this.addRequirements(drive.translationSubsystem, drive.rotationalSubsystem);
+
+				pid.enableContinuousInput(-Math.PI, Math.PI);
+			}
+
+			private double targetHeadingRads = 0.0;
+
+			@Override
+			public void initialize() {
+				if (pidGains.hasChanged(this.hashCode())) {
+					pidGains.get().update(this.pid);
+				}
+
+				this.targetHeadingRads = RobotState.getInstance().getEstimatedGlobalPose().getRotation().getRadians();
+			}
+
+			@Override
+			public void execute() {
+				var joyX = +translationJoystick.y().getAsDouble();
+				var joyY = -translationJoystick.x().getAsDouble();
+
+				var perspectiveForward = Perspective.getCurrent().getForwardDirection();
+				var fieldX = joyX * perspectiveForward.getCos() - joyY * perspectiveForward.getSin();
+				var fieldY = joyX * perspectiveForward.getSin() + joyY * perspectiveForward.getCos();
+
+				var driveX = fieldX * DriveConstants.maxDriveSpeed.in(MetersPerSecond);
+				var driveY = fieldY * DriveConstants.maxDriveSpeed.in(MetersPerSecond);
+
+				var robotRot = RobotState.getInstance().getEstimatedGlobalPose().getRotation();
+				double robotX;
+				double robotY;
+
+				if (Math.hypot(driveX, driveY) > linearThreshold.get().in(MetersPerSecond)) {
+					var rawTargetHeadingRads = Math.atan2(fieldY, fieldX);
+					var offsetRads = 0.0;
+					if (rotateAxis.getAsDouble() >= offsetThreshold.getAsDouble()) {
+						offsetRads = +offsetAngle.get().in(Radians);
+					} else if (rotateAxis.getAsDouble() <= -offsetThreshold.getAsDouble()) {
+						offsetRads = -offsetAngle.get().in(Radians);
+					}
+					var robotHeadingOffsetRads = MathUtil.angleModulus(robotRot.getRadians() - offsetRads);
+					this.targetHeadingRads = MathUtil.angleModulus(rawTargetHeadingRads + offsetRads);
+					var offsetX = Math.max(driveX * +Math.cos(robotHeadingOffsetRads) - driveY * -Math.sin(robotHeadingOffsetRads), 0.0);
+					robotX = offsetX * +Math.cos(offsetRads);
+					robotY = offsetX * -Math.sin(offsetRads);
+				} else {
+					robotX = driveX * +robotRot.getCos() - driveY * -robotRot.getSin();
+					robotY = driveX * -robotRot.getSin() + driveY * +robotRot.getCos();
+				}
+
+				var pidOut = this.pid.calculate(robotRot.getRadians(), this.targetHeadingRads);
+
+				var omega = MathUtil.clamp(pidOut, -maxOmega.get().in(RadiansPerSecond), +maxOmega.get().in(RadiansPerSecond));
+
+				drive.translationSubsystem.driveVelocity(robotX, robotY);
+				drive.rotationalSubsystem.driveVelocity(omega);
+			}
+
+			@Override
+			public void end(boolean interrupted) {
+				drive.translationSubsystem.stop();
 				drive.rotationalSubsystem.stop();
 			}
 		};
@@ -484,12 +601,12 @@ public class RobotContainer {
 
 		final var rollersIndexerIdleCommand = this.rollers.indexer.idle();
 		final var rollersFeederIdleCommand = this.rollers.feeder.idle();
-		final var rollersAgitatorIdleCommand = this.rollers.agitiator.idle();
+		final var rollersAgitatorIdleCommand = this.rollers.agitator.idle();
 		final var rollersFeedCommand =
 			Commands.parallel(
 				this.rollers.indexer.index(),
 				this.rollers.feeder.feed(),
-				this.rollers.agitiator.index()
+				this.rollers.agitator.index()
 			)
 			.withName("Feed")
 		;
@@ -527,10 +644,10 @@ public class RobotContainer {
 			.withName("Aim to Pass")
 		;
 
-		final var climberHookStowCommand = this.climber.hook.stow();
-		final var climberHookDeployCommand = this.climber.hook.deploy();
-		final var climberHookAutoDeployCommand = this.climber.hook.deploy().withName("Auto Deploy");
-		final var climberHookClimbCommand = this.climber.hook.climb();
+		// final var climberHookStowCommand = this.climber.hook.stow();
+		// final var climberHookDeployCommand = this.climber.hook.deploy();
+		// final var climberHookAutoDeployCommand = this.climber.hook.deploy().withName("Auto Deploy");
+		// final var climberHookClimbCommand = this.climber.hook.climb();
 
 		// Set default commands
 		this.intake.rollers.setDefaultCommand(intakeRollersIdleCommand);
@@ -538,24 +655,36 @@ public class RobotContainer {
 
 		this.rollers.indexer.setDefaultCommand(rollersIndexerIdleCommand);
 		this.rollers.feeder.setDefaultCommand(rollersFeederIdleCommand);
-		this.rollers.agitiator.setDefaultCommand(rollersAgitatorIdleCommand);
+		this.rollers.agitator.setDefaultCommand(rollersAgitatorIdleCommand);
 
 		this.shooter.hood.setDefaultCommand(hoodStowCommand);
 		this.shooter.leftFlywheel.setDefaultCommand(leftFlywheelIdleCommand);
 		this.shooter.rightFlywheel.setDefaultCommand(rightFlywheelIdleCommand);
-		this.climber.hook.setDefaultCommand(climberHookStowCommand);
+
+		// this.climber.hook.setDefaultCommand(climberHookStowCommand);
+
+		this.hubZoomCamera.setDefaultCommand(this.hubZoomCamera.setPipelineIndex(0));
+		this.leftBroadCamera.setDefaultCommand(this.leftBroadCamera.setPipelineIndex(0));
+		this.rightBroadCamera.setDefaultCommand(this.rightBroadCamera.setPipelineIndex(0));
+		this.backBroadCamera.setDefaultCommand(this.backBroadCamera.setPipelineIndex(0));
+		this.intakeCamera.setDefaultCommand(this.intakeCamera.setPipelineIndex(0));
 
 		// Bind automations
-		this.automationsLoop.bind(new BumpMitigation(this.drive));
+		// this.automationsLoop.bind(new BumpMitigation(this.drive));
+		// this.automationsLoop.bind(new TrenchMitigation(this.drive, this.intake.slam, this.extensionSystem, this.shooter.hood, intakeDeployCommand));
 		this.automationsLoop.bind(new IntakeDeployHysteresis(this.intake.slam, intakeDeployCommand));
-		this.automationsLoop.bind(new HookAutoDeployHysteresis(this.climber.hook, climberHookAutoDeployCommand));
+		// this.automationsLoop.bind(new HookAutoDeployHysteresis(this.climber.hook, climberHookAutoDeployCommand));
+		// this.automationsLoop.bind(new AutoSpinUp(this.drive, this.shooter, intakeRollersIntakeCommand));
+		// this.automationsLoop.bind(new AutoDriveAim(this.drive, this.shooter, intakeRollersIntakeCommand));
+		this.automationsLoop.bind(new AutoFeed(this.drive, this.shooter, this.rollers, this.intake.slam, this.extensionSystem, this.driveController.x().or(secondDriverOverride)));
+		this.automationsLoop.bind(new HubShiftNotifications(this.driveController));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
-		new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
+		// new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
 
 		// Bind buttons
-		new Trigger(() -> translationJoystick.magnitude() > 0.0).whileTrue(driveTranslationCommand);
-		new Trigger(() -> Math.abs(rotateAxis.getAsDouble()) > 0.0).whileTrue(driveRotateCommand);
-
+		this.driveController.leftBumper().whileTrue(driveTankCommand);
+		new Trigger(() -> translationJoystick.magnitude() > 0.0 && !driveTankCommand.isScheduled()).whileTrue(driveTranslationCommand);
+		new Trigger(() -> Math.abs(rotateAxis.getAsDouble()) > 0.0 && !driveTankCommand.isScheduled()).whileTrue(driveRotateCommand);
 
 		// Setup position reset command
 		this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(FieldConstants.hubFrontRobotPose.getOurs())).ignoringDisable(true));
@@ -597,6 +726,14 @@ public class RobotContainer {
 			}
 		});
 
-		this.driveController.x().whileTrue(rollersFeedCommand);
+		// this.driveController.x().whileTrue(rollersFeedCommand);
+
+
+
+		// Optional<Trajectory<SwerveSample>> trajopt = Choreo.loadTrajectory("TestPath");
+
+		// var flippath = AllianceFlipped.fromBlue(trajopt.get());
+
+		// this.driveController.povUp().whileTrue(Commands.defer(() -> new FollowTrajectoryCommand(this.drive, flippath.getOurs(), false), Set.of(this.drive.translationSubsystem, this.drive.rotationalSubsystem)));
 	}
 }

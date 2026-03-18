@@ -4,9 +4,9 @@ import java.util.Optional;
 
 import org.littletonrobotics.junction.AutoLog;
 
-import frc.util.FFConstants;
+import frc.util.FFGains;
 import frc.util.NeutralMode;
-import frc.util.PIDConstants;
+import frc.util.PIDGains;
 import frc.util.loggerUtil.inputs.LoggedEncodedMotor;
 
 public interface HookIO {
@@ -31,7 +31,7 @@ public interface HookIO {
 
 	public default void setUnloadedProfile(double kVVoltSecsPerRad, double kAVoltSecsSqrPerRad, double maxVelocityRadsPerSec) {}
 	public default void setClimbingProfile(double kVVoltSecsPerRad, double kAVoltSecsSqrPerRad, double maxVelocityRadsPerSec) {}
-	public default void configFF(FFConstants ffConstants) {}
-	public default void configPID(PIDConstants pidConstants) {}
+	public default void configFF(FFGains ffGains) {}
+	public default void configPID(PIDGains pidGains) {}
 	public default void configSend() {}
 }

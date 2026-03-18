@@ -24,10 +24,10 @@ public class ShooterConstants {
 		hubTargetFlyWheelVeloMPS.put(Inches.of(40.125).in(Meters),         MetersPerSecond.of(7.3).in(MetersPerSecond)); // Hub Shot
 		hubTargetFlyWheelVeloMPS.put(Inches.of(90.0).in(Meters),          MetersPerSecond.of(7.899966).in(MetersPerSecond));
 		hubTargetFlyWheelVeloMPS.put(Inches.of(114.8).in(Meters),          MetersPerSecond.of(8.39996).in(MetersPerSecond));
-		hubTargetFlyWheelVeloMPS.put(Inches.of(121.92625).in(Meters),      MetersPerSecond.of(8.39996).in(MetersPerSecond)); // Tower Shot
-		hubTargetFlyWheelVeloMPS.put(Inches.of(140.3).in(Meters),          MetersPerSecond.of(8.920215).in(MetersPerSecond)); // Trench Shot
+		hubTargetFlyWheelVeloMPS.put(Inches.of(121.92625).in(Meters),      MetersPerSecond.of(7.89996).in(MetersPerSecond)); // Tower Shot
+		hubTargetFlyWheelVeloMPS.put(Inches.of(140.3).in(Meters),          MetersPerSecond.of(8.120215).in(MetersPerSecond)); // Trench Shot
 		// hubTargetFlyWheelVeloMPS.put(Inches.of(140.31).in(Meters),          MetersPerSecond.of(9.0).in(MetersPerSecond)); // Trench Shot
-		hubTargetFlyWheelVeloMPS.put(Inches.of(183.623178366).in(Meters),  MetersPerSecond.of(9.629733).in(MetersPerSecond)); // Outpost Shot
+		hubTargetFlyWheelVeloMPS.put(Inches.of(183.623178366).in(Meters),  MetersPerSecond.of(8.979733).in(MetersPerSecond)); // Outpost Shot
 	}
 
 	public static final InterpolatingDoubleTreeMap hubTargetHoodAngleRads = new InterpolatingDoubleTreeMap();

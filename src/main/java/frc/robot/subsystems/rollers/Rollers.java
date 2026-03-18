@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class Rollers extends VirtualSubsystem {
 	public final Indexer indexer;
-	public final Agitator agitiator;
+	public final Agitator agitator;
 	public final Feeder feeder;
 	private final RollerSensorsIO sensorsIO;
 	private final RollerSensorsIOInputsAutoLogged sensorsInputs = new RollerSensorsIOInputsAutoLogged();
@@ -34,7 +34,7 @@ public class Rollers extends VirtualSubsystem {
 		return
 			Commands.parallel(
 				this.indexer.index(),
-				this.agitiator.index(),
+				this.agitator.index(),
 				this.feeder.feed()
 			)
 			.withName("Feed")

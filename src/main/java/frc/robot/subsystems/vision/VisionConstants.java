@@ -27,7 +27,7 @@ public final class VisionConstants {
 		),
 		GeomUtil.rotation3dBuilder()
 			.yaw(Degrees.of(-5.374629))
-			.pitch(Degrees.of(-15))
+			.pitch(Degrees.of(-20))
 		.build()
 	);
 
@@ -44,6 +44,18 @@ public final class VisionConstants {
 	);
 
 	public static final Transform3d topRightMount = new Transform3d(
+		new Translation3d(
+			Inches.of(-9.975120),
+			Inches.of(-12.765165),
+			Inches.of(+14.000000)
+		),
+		GeomUtil.rotation3dBuilder()
+			.yaw(Degrees.of(-45.000000))
+			.pitch(Degrees.of(-12.000000))
+		.build()
+	);
+
+	public static final Transform3d intakeMount = new Transform3d(
 		new Translation3d(
 			Inches.of(-9.975120),
 			Inches.of(-12.765165),
