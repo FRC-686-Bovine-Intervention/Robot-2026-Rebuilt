@@ -26,6 +26,21 @@ public class DoubleSwipe extends AutoRoutine {
 			return AutoQuestion.Settings.from(this.startInLeftTrench, this.startInLeftTrench, this.startInRightTrench);
 		}
 	};
+	private static enum BumpSelection {
+		Trench,
+		Bump,
+		TrenchBump,
+	}
+	private static final AutoQuestion<BumpSelection> bump = new AutoQuestion<>("Bump") {
+		private final Map.Entry<String, BumpSelection> trench = AutoQuestion.Settings.option("Trench", BumpSelection.Trench);
+		private final Map.Entry<String, BumpSelection> bump = AutoQuestion.Settings.option("Bump", BumpSelection.Bump);
+		private final Map.Entry<String, BumpSelection> trenchBump = AutoQuestion.Settings.option("Trench Bump", BumpSelection.TrenchBump);
+
+		@Override
+		protected AutoQuestion.Settings<BumpSelection> generateSettings() {
+			return AutoQuestion.Settings.from(this.trenchBump, this.trench, this.bump, this.trenchBump);
+		}
+	};
 
 	private final RobotContainer robot;
 
@@ -33,7 +48,8 @@ public class DoubleSwipe extends AutoRoutine {
 		super(
 			"Double Swipe",
 			List.of(
-				DoubleSwipe.startPosition
+				DoubleSwipe.startPosition,
+				DoubleSwipe.bump
 			)
 		);
 
@@ -43,16 +59,39 @@ public class DoubleSwipe extends AutoRoutine {
 	@Override
 	public Command generateCommand() {
 		final var startPosition = DoubleSwipe.startPosition.getResponse();
+		final var bump = DoubleSwipe.bump.getResponse();
 
 		final String firstTrajBallGrabName;
 		final String secondTrajBallGrabName;
 
-		if (startPosition == AutoConstants.startInLeftTrench) {
-			firstTrajBallGrabName = "";
-			secondTrajBallGrabName = "";
-		} else {
-			firstTrajBallGrabName = "";
-			secondTrajBallGrabName = "";
+		switch (bump) {
+			case Trench -> {
+				if (startPosition == AutoConstants.startInLeftTrench) {
+					firstTrajBallGrabName = "LeftTrenchGrab1";
+					secondTrajBallGrabName = "LeftTrenchGrab2";
+				} else {
+					firstTrajBallGrabName = "RightTrenchGrab1";
+					secondTrajBallGrabName = "RightTrenchGrab2";
+				}
+			}
+			case Bump -> {
+				if (startPosition == AutoConstants.startInLeftTrench) {
+					firstTrajBallGrabName = "LeftTrenchGrab1Bump";
+					secondTrajBallGrabName = "LeftTrenchGrab2Bump";
+				} else {
+					firstTrajBallGrabName = "RightTrenchGrab1Bump";
+					secondTrajBallGrabName = "RightTrenchGrab2Bump";
+				}
+			}
+			default -> {
+				if (startPosition == AutoConstants.startInLeftTrench) {
+					firstTrajBallGrabName = "LeftTrenchGrab1";
+					secondTrajBallGrabName = "LeftTrenchGrab2TrenchBump";
+				} else {
+					firstTrajBallGrabName = "RightTrenchGrab1";
+					secondTrajBallGrabName = "RightTrenchGrab2TrenchBump";
+				}
+			}
 		}
 
 		final var firstTrajBallGrab = AutoCommons.loadBlueChoreoTrajectory(firstTrajBallGrabName).getOurs();
@@ -60,7 +99,7 @@ public class DoubleSwipe extends AutoRoutine {
 
 		return Commands.parallel(
 			AutoCommons.setOdometryFlipped(startPosition),
-			this.robot.intake.slam.deploy(this.robot.extensionSystem).asProxy(),
+			this.robot.intake.slam.pushdown(this.robot.extensionSystem).asProxy(),
 			Commands.sequence(
 				Commands.deadline(
 					Commands.sequence(

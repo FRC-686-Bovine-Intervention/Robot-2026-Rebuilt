@@ -29,6 +29,10 @@ public class InterpolationShootingCalc implements ShootingCalc {
 	private double targetDriveHeadingRads;
 	private double tofSecs;
 
+	public InterpolationShootingCalc() {
+		ShooterConstants.hubTargetFlyWheelVeloMPS.get(0.0);
+	}
+
 	@Override
 	public void calculate(Pose2d robotPose, ChassisSpeeds fieldSpeeds, Translation3d aimPoint) {
 		var robotPos = robotPose.getTranslation();

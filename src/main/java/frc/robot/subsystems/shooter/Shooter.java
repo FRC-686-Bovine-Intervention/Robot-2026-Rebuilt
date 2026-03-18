@@ -4,7 +4,10 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 
+import java.util.function.Supplier;
 
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -39,13 +42,57 @@ public class Shooter {
 	public Command aimHoodAtHub() {
 		return this.hood.genAngleCommand("Aim at Hub", this.aimingSystem.shootingCalc::getTargetHoodAngleRads);
 	}
+	private static final LoggedTunable<PIDGains> rotationalPIDGains = LoggedTunable.from("Shooting/Aiming/Rotational PID", new PIDGains(3.5, 0.0, 0.0));
 	public Command aimDriveAtHub(Drive.Rotational rotational) {
 		return rotational.genHeadingPIDCommand(
 			"Aim at Hub",
-			LoggedTunable.from("Shooting/Aiming/Rotational PID", new PIDGains(3.5, 0.0, 0.0)),
+			rotationalPIDGains,
 			() -> RobotState.getInstance().getEstimatedGlobalPose().getRotation().getRadians(),
 			this.aimingSystem.shootingCalc::getTargetAzimuthHeadingRads
 		);
+	}
+	public Command aimDriveAtHubWithXLock(Drive drive, Supplier<ChassisSpeeds> desiredVeloSupplier) {
+		return new Command() {
+			private final PIDController pid = new PIDController(rotationalPIDGains.get().kP(), rotationalPIDGains.get().kI(), rotationalPIDGains.get().kD());
+
+			{
+				this.setName("Aim at Hub With Xlock");
+				this.addRequirements(drive.translationSubsystem, drive.rotationalSubsystem);
+
+				this.pid.enableContinuousInput(-Math.PI, Math.PI);
+			}
+
+			@Override
+			public void initialize() {
+				if (rotationalPIDGains.hasChanged(this.hashCode())) {
+					rotationalPIDGains.get().update(this.pid);
+				}
+			}
+
+			@Override
+			public void execute() {
+				var measuredHeadingRads = RobotState.getInstance().getEstimatedGlobalPose().getRotation().getRadians();
+				var targetHeadingRads = aimingSystem.shootingCalc.getTargetAzimuthHeadingRads();
+				var pidOut = this.pid.calculate(measuredHeadingRads, targetHeadingRads);
+
+				var translationalVelo = desiredVeloSupplier.get();
+
+				if (Math.hypot(translationalVelo.vxMetersPerSecond, translationalVelo.vyMetersPerSecond) >= 0.1 || pidOut >= 0.1) {
+					drive.translationSubsystem.driveVelocity(translationalVelo.vxMetersPerSecond, translationalVelo.vyMetersPerSecond);
+					drive.rotationalSubsystem.driveVelocity(pidOut);
+				} else {
+					drive.translationSubsystem.cancelPostProcessing();
+					drive.rotationalSubsystem.cancelPostProcessing();
+					drive.stopWithX();
+				}
+			}
+
+			@Override
+			public void end(boolean interrupted) {
+				drive.translationSubsystem.stop();
+				drive.rotationalSubsystem.stop();
+			}
+		};
 	}
 
 	public Command aimLeftFlywheelToPass() {
@@ -60,7 +107,7 @@ public class Shooter {
 	public Command aimDriveToPass(Drive.Rotational rotational) {
 		return rotational.genHeadingPIDCommand(
 			"Aim to Pass",
-			LoggedTunable.from("Shooting/Passing/Rotational PID", new PIDGains(0.0, 0.0, 0.0)),
+			LoggedTunable.from("Shooting/Passing/Rotational PID", new PIDGains(3.5, 0.0, 0.0)),
 			() -> RobotState.getInstance().getEstimatedGlobalPose().getRotation().getRadians(),
 			this.aimingSystem.passingCalc::getTargetAzimuthHeadingRads
 		);

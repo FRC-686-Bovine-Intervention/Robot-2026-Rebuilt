@@ -12,6 +12,7 @@ import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -37,6 +38,7 @@ public class IntakeSlam extends SubsystemBase {
 	private static final LoggedTunable<Angle> stowAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Stow/Angle", Degrees::of, IntakeSlamConstants.maxAngle.in(Degrees));
 	private static final LoggedTunable<Angle> deployAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Angle", Degrees::of, IntakeSlamConstants.minAngle.in(Degrees));
 	private static final LoggedTunable<Angle> deployFlopAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Flop Angle", Degrees::of, IntakeSlamConstants.maxAngle.minus(Degrees.of(10.0)).in(Degrees));
+	private static final LoggedTunable<Voltage> pushDownVoltage = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Pushdown/Voltage", Volts::of, -2.0);
 
 	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kV", 12.0);
 	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kA", 0.0);
@@ -215,6 +217,26 @@ public class IntakeSlam extends SubsystemBase {
 			@Override
 			public boolean runsWhenDisabled() {
 				return true;
+			}
+		};
+	}
+
+	public Command pushdown(ExtensionSystem extension) {
+		final var slam = this;
+		return new Command() {
+			{
+				this.setName("Pushdown");
+				this.addRequirements(slam, extension);
+			}
+
+			@Override
+			public void execute() {
+				slam.io.setVolts(IntakeSlam.pushDownVoltage.get().in(Volts));
+			}
+
+			@Override
+			public void end(boolean interrupted) {
+				slam.io.stop(NeutralMode.COAST);
 			}
 		};
 	}

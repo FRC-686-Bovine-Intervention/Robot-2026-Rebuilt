@@ -46,8 +46,18 @@ public class ShooterConstants {
 		hubTargetTimeOfFlightSecs.put(Inches.of(40.125).in(Meters),        Seconds.of(0.93).in(Seconds)); // Hub Shot
 		hubTargetTimeOfFlightSecs.put(Inches.of(114.8).in(Meters),         Seconds.of(1.0).in(Seconds));
 		hubTargetTimeOfFlightSecs.put(Inches.of(121.92625).in(Meters),     Seconds.of(1.2).in(Seconds)); // Tower Shot
-		hubTargetTimeOfFlightSecs.put(Inches.of(127.640764646).in(Meters), Seconds.of(0.0).in(Seconds)); // Trench Shot
+		hubTargetTimeOfFlightSecs.put(Inches.of(127.640764646).in(Meters), Seconds.of(1.3).in(Seconds)); // Trench Shot
 		hubTargetTimeOfFlightSecs.put(Inches.of(183.623178366).in(Meters), Seconds.of(1.26).in(Seconds)); // Outpost Shot
+	}
+
+	public static final InterpolatingDoubleTreeMap passFlyWheelVeloMPS = new InterpolatingDoubleTreeMap();
+	static {
+		passFlyWheelVeloMPS.put(Inches.of(40.125).in(Meters), MetersPerSecond.of(9.0).in(MetersPerSecond));
+	}
+
+	public static final InterpolatingDoubleTreeMap passHoodAngleRads = new InterpolatingDoubleTreeMap();
+	static {
+		passHoodAngleRads.put(Inches.of(40.125).in(Meters), Degrees.of(35.0).in(Radians));
 	}
 
 	// Physics Shooting Calc
