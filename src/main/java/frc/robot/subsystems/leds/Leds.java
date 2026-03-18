@@ -28,7 +28,7 @@ public class Leds extends VirtualSubsystem {
 
 	public Leds() {
 		System.out.println("[Init Leds] Instantiating Leds");
-		
+
 		this.hardwareStrip = new AddressableStrip(HardwareDevices.ledPort, 61);
 
 		final var rightTowerStrip = this.hardwareStrip.substrip(0, 16);
