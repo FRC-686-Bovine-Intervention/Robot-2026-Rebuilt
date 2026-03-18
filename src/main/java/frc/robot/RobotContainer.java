@@ -32,6 +32,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
@@ -737,5 +738,7 @@ public class RobotContainer {
 		// var flippath = AllianceFlipped.fromBlue(trajopt.get());
 
 		// this.driveController.povUp().whileTrue(Commands.defer(() -> new FollowTrajectoryCommand(this.drive, flippath.getOurs(), false), Set.of(this.drive.translationSubsystem, this.drive.rotationalSubsystem)));
+
+		this.driveController.y().whileTrue(this.rollers.feed().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("Force Feed"));
 	}
 }
