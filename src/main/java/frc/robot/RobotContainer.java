@@ -657,16 +657,16 @@ public class RobotContainer {
 						if (Math.hypot(joyX, joyY) < 0.75) {
 							return FieldConstants.hubAimPoint.getOurs();
 						}
-		
+
 						var perspectiveForward = Perspective.getCurrent().getForwardDirection();
 						var fieldX = joyX * perspectiveForward.getCos() - joyY * perspectiveForward.getSin();
 						var fieldY = joyX * perspectiveForward.getSin() + joyY * perspectiveForward.getCos();
-		
+
 						var fieldNormX = fieldX / Math.hypot(fieldX, fieldY);
 						var fieldNormY = fieldY / Math.hypot(fieldX, fieldY);
-		
+
 						var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
-		
+
 						return new Translation3d(
 							robotPose.getTranslation().getX() + fieldNormX * manualAimDist.get().in(Meters),
 							robotPose.getTranslation().getY() + fieldNormY * manualAimDist.get().in(Meters),
