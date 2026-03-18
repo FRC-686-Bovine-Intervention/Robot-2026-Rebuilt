@@ -4,7 +4,7 @@ public enum RobotType {
 	ROBOT_2025_COMP,
 	ROBOT_2025_PRAC,
 	;
-	private static final boolean isReplay = false;
+	private static final boolean isReplay = true;
 	public static Mode getMode() {
 		return Robot.isReal() ? Mode.REAL : (isReplay ? Mode.REPLAY : Mode.SIM);
 	}

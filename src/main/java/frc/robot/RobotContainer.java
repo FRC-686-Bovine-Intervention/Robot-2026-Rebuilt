@@ -245,25 +245,25 @@ public class RobotContainer {
 
 				this.hubZoomCamera = new Camera(
 					new CameraIO() {},
-					"Top Left",
+					"Hub Zoom",
 					Transform3d.kZero,
 					(connected) -> {Leds.getInstance().hubZoomCamConnection.setStatus(connected);}
 				);
 				this.leftBroadCamera = new Camera(
 					new CameraIO() {},
-					"Bottom Left",
+					"Left Broad",
 					Transform3d.kZero,
 					(connected) -> {Leds.getInstance().leftBroadCamConnection.setStatus(connected);}
 				);
 				this.rightBroadCamera = new Camera(
 					new CameraIO() {},
-					"Top Right",
+					"Right Broad",
 					Transform3d.kZero,
 					(connected) -> {Leds.getInstance().rightBroadCamConnection.setStatus(connected);}
 				);
 				this.backBroadCamera = new Camera(
 					new CameraIO() {},
-					"Bottom Right",
+					"Back Broad",
 					Transform3d.kZero,
 					(connected) -> {Leds.getInstance().backBroadCamConnection.setStatus(connected);}
 				);
@@ -310,25 +310,25 @@ public class RobotContainer {
 
 				this.hubZoomCamera = new Camera(
 					new CameraIO() {},
-					"Top Left",
+					"Hub Zoom",
 					Transform3d.kZero,
 					(connected) -> {Leds.getInstance().hubZoomCamConnection.setStatus(connected);}
 				);
 				this.leftBroadCamera = new Camera(
 					new CameraIO() {},
-					"Bottom Left",
+					"Left Broad",
 					Transform3d.kZero,
 					(connected) -> {Leds.getInstance().leftBroadCamConnection.setStatus(connected);}
 				);
 				this.rightBroadCamera = new Camera(
 					new CameraIO() {},
-					"Top Right",
+					"Right Broad",
 					Transform3d.kZero,
 					(connected) -> {Leds.getInstance().rightBroadCamConnection.setStatus(connected);}
 				);
 				this.backBroadCamera = new Camera(
 					new CameraIO() {},
-					"Bottom Right",
+					"Back Broad",
 					Transform3d.kZero,
 					(connected) -> {Leds.getInstance().backBroadCamConnection.setStatus(connected);}
 				);
@@ -346,9 +346,9 @@ public class RobotContainer {
 		// Initialize vision systems with camera pipelines
 		this.apriltagVision = new ApriltagVision(
 			new ApriltagPipeline(this.hubZoomCamera, 0, 1.0),
-			new ApriltagPipeline(this.leftBroadCamera, 0, 2.0),
-			new ApriltagPipeline(this.rightBroadCamera, 0, 2.0),
-			new ApriltagPipeline(this.backBroadCamera, 0, 2.0)
+			// new ApriltagPipeline(this.leftBroadCamera, 0, 2.0),
+			// new ApriltagPipeline(this.rightBroadCamera, 0, 2.0),
+			// new ApriltagPipeline(this.backBroadCamera, 0, 2.0)
 		);
 		this.objectVision = new ObjectVision(
 
