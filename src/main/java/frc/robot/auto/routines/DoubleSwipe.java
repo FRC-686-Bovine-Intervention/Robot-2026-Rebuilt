@@ -26,13 +26,19 @@ public class DoubleSwipe extends AutoRoutine {
 			return AutoQuestion.Settings.from(this.startInLeftTrench, this.startInLeftTrench, this.startInRightTrench);
 		}
 	};
-	private static final AutoQuestion<Boolean> bump1 = new AutoQuestion<>("Bump") {
-		private final Map.Entry<String, Boolean> yes = AutoQuestion.Settings.option("Yes", true);
-		private final Map.Entry<String, Boolean> no = AutoQuestion.Settings.option("No", false);
+	private static enum BumpSelection {
+		Trench,
+		Bump,
+		TrenchBump,
+	}
+	private static final AutoQuestion<BumpSelection> bump = new AutoQuestion<>("Bump") {
+		private final Map.Entry<String, BumpSelection> trench = AutoQuestion.Settings.option("Trench", BumpSelection.Trench);
+		private final Map.Entry<String, BumpSelection> bump = AutoQuestion.Settings.option("Bump", BumpSelection.Bump);
+		private final Map.Entry<String, BumpSelection> trenchBump = AutoQuestion.Settings.option("Trench Bump", BumpSelection.TrenchBump);
 
 		@Override
-		protected AutoQuestion.Settings<Boolean> generateSettings() {
-			return AutoQuestion.Settings.from(this.yes, this.yes, this.no);
+		protected AutoQuestion.Settings<BumpSelection> generateSettings() {
+			return AutoQuestion.Settings.from(this.trenchBump, this.trench, this.bump, this.trenchBump);
 		}
 	};
 
@@ -43,7 +49,7 @@ public class DoubleSwipe extends AutoRoutine {
 			"Double Swipe",
 			List.of(
 				DoubleSwipe.startPosition,
-				DoubleSwipe.bump1
+				DoubleSwipe.bump
 			)
 		);
 
@@ -53,26 +59,38 @@ public class DoubleSwipe extends AutoRoutine {
 	@Override
 	public Command generateCommand() {
 		final var startPosition = DoubleSwipe.startPosition.getResponse();
-		final var bump1 = DoubleSwipe.bump1.getResponse();
+		final var bump = DoubleSwipe.bump.getResponse();
 
 		final String firstTrajBallGrabName;
 		final String secondTrajBallGrabName;
 
-		if (bump1) {
-			if (startPosition == AutoConstants.startInLeftTrench) {
-				firstTrajBallGrabName = "LeftTrenchGrab1Bump";
-				secondTrajBallGrabName = "LeftTrenchGrab2Bump";
-			} else {
-				firstTrajBallGrabName = "RightTrenchGrab1Bump";
-				secondTrajBallGrabName = "RightTrenchGrab2Bump";
+		switch (bump) {
+			case Trench -> {
+				if (startPosition == AutoConstants.startInLeftTrench) {
+					firstTrajBallGrabName = "LeftTrenchGrab1";
+					secondTrajBallGrabName = "LeftTrenchGrab2";
+				} else {
+					firstTrajBallGrabName = "RightTrenchGrab1";
+					secondTrajBallGrabName = "RightTrenchGrab2";
+				}
 			}
-		} else {
-			if (startPosition == AutoConstants.startInLeftTrench) {
-				firstTrajBallGrabName = "LeftTrenchGrab1";
-				secondTrajBallGrabName = "LeftTrenchGrab2";
-			} else {
-				firstTrajBallGrabName = "RightTrenchGrab1";
-				secondTrajBallGrabName = "RightTrenchGrab2";
+			case Bump -> {
+				if (startPosition == AutoConstants.startInLeftTrench) {
+					firstTrajBallGrabName = "LeftTrenchGrab1Bump";
+					secondTrajBallGrabName = "LeftTrenchGrab2Bump";
+				} else {
+					firstTrajBallGrabName = "RightTrenchGrab1Bump";
+					secondTrajBallGrabName = "RightTrenchGrab2Bump";
+				}
+			}
+			default -> {
+				if (startPosition == AutoConstants.startInLeftTrench) {
+					firstTrajBallGrabName = "LeftTrenchGrab1";
+					secondTrajBallGrabName = "LeftTrenchGrab2TrenchBump";
+				} else {
+					firstTrajBallGrabName = "RightTrenchGrab1";
+					secondTrajBallGrabName = "RightTrenchGrab2TrenchBump";
+				}
 			}
 		}
 
