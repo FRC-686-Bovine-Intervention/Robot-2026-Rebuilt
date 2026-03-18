@@ -81,8 +81,8 @@ public class Shooter {
 					drive.translationSubsystem.driveVelocity(translationalVelo.vxMetersPerSecond, translationalVelo.vyMetersPerSecond);
 					drive.rotationalSubsystem.driveVelocity(pidOut);
 				} else {
-					drive.translationSubsystem.stop();
-					drive.rotationalSubsystem.stop();
+					drive.translationSubsystem.cancelPostProcessing();
+					drive.rotationalSubsystem.cancelPostProcessing();
 					drive.stopWithX();
 				}
 			}
