@@ -6,8 +6,8 @@ import edu.wpi.first.units.Unit;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
-import frc.util.FFConstants;
-import frc.util.PIDConstants;
+import frc.util.FFGains;
+import frc.util.PIDGains;
 
 public class GearRatio {
 	public static double planetaryReduction(int sunCount, int ringCount) {
@@ -73,16 +73,16 @@ public class GearRatio {
 	public AngularAcceleration applySigned(AngularAcceleration angle) {
 		return angle.times(this.inverse().reductionSigned());
 	}
-	public FFConstants applySigned(FFConstants ff) {
-		return new FFConstants(
+	public FFGains applySigned(FFGains ff) {
+		return new FFGains(
 			ff.kS(),
 			ff.kG() * this.inverse().reductionSigned(),
 			ff.kV() * this.inverse().reductionSigned(),
 			ff.kA() * this.inverse().reductionSigned()
 		);
 	}
-	public PIDConstants applySigned(PIDConstants pid) {
-		return new PIDConstants(
+	public PIDGains applySigned(PIDGains pid) {
+		return new PIDGains(
 			pid.kP() * this.inverse().reductionSigned(),
 			pid.kI() * this.inverse().reductionSigned(),
 			pid.kD() * this.inverse().reductionSigned()
@@ -104,16 +104,16 @@ public class GearRatio {
 	public AngularAcceleration applyUnsigned(AngularAcceleration angle) {
 		return angle.times(this.inverse().reductionUnsigned());
 	}
-	public FFConstants applyUnsigned(FFConstants ff) {
-		return new FFConstants(
+	public FFGains applyUnsigned(FFGains ff) {
+		return new FFGains(
 			ff.kS(),
 			ff.kG() * this.inverse().reductionUnsigned(),
 			ff.kV() * this.inverse().reductionUnsigned(),
 			ff.kA() * this.inverse().reductionUnsigned()
 		);
 	}
-	public PIDConstants applyUnsigned(PIDConstants pid) {
-		return new PIDConstants(
+	public PIDGains applyUnsigned(PIDGains pid) {
+		return new PIDGains(
 			pid.kP() * this.inverse().reductionUnsigned(),
 			pid.kI() * this.inverse().reductionUnsigned(),
 			pid.kD() * this.inverse().reductionUnsigned()

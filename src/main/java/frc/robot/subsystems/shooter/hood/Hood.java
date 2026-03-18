@@ -21,10 +21,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.util.FFConstants;
+import frc.robot.constants.RobotConstants;
+import frc.robot.subsystems.leds.Leds;
+import frc.util.FFGains;
 import frc.util.LoggedTracer;
 import frc.util.NeutralMode;
-import frc.util.PIDConstants;
+import frc.util.PIDGains;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.loggerUtil.tunables.LoggedTunableNumber;
 import frc.util.robotStructure.angle.ArmMech;
@@ -38,26 +40,26 @@ public class Hood extends SubsystemBase {
 	private static final LoggedTunable<Angle> stowPulldownThreshold = LoggedTunable.from("Subsystems/Shooter/Hood/Commands/Stow/Pulldown Threshold", Degrees::of, HoodConstants.minAngle.plus(Degrees.of(1.0)).in(Degrees));
 	private static final LoggedTunable<Voltage> stowPulldownVoltage = LoggedTunable.from("Subsystems/Shooter/Hood/Commands/Stow/Pulldown Voltage", Volts::of, -1.0);
 
-	private static final LoggedTunable<Voltage> calibrationVoltage = LoggedTunable.from("Subsystems/Shooter/Hood/Commands/Calibration/Voltage", Volts::of, -2.0);
+	private static final LoggedTunable<Voltage> calibrationVoltage = LoggedTunable.from("Subsystems/Shooter/Hood/Commands/Calibration/Voltage", Volts::of, -0.5);
 
-	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Shooter/Hood/Mechanism/Profile/kV", 24.0);
-	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Shooter/Hood/Mechanism/Profile/kA", 24.0);
+	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Shooter/Hood/Mechanism/Profile/kV", 7.0);
+	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Shooter/Hood/Mechanism/Profile/kA", 1.0);
 	private static final LoggedTunable<AngularVelocity> profileMaxVel = LoggedTunable.from("Subsystems/Shooter/Hood/Mechanism/Profile/Max Velocity", DegreesPerSecond::of, 0.0);
 
-	private static final LoggedTunable<FFConstants> ffConsts = LoggedTunable.from(
+	private static final LoggedTunable<FFGains> ffConsts = LoggedTunable.from(
 		"Subsystems/Shooter/Hood/Mechanism/FF",
-		new FFConstants(
+		new FFGains(
+			0.4,
 			0.0,
-			0.0,
-			2.4,
+			1.0,
 			0.0
 		)
 	);
 
-	private static final LoggedTunable<PIDConstants> pidConsts = LoggedTunable.from(
+	private static final LoggedTunable<PIDGains> pidConsts = LoggedTunable.from(
 		"Subsystems/Shooter/Hood/Mechanism/PID",
-		new PIDConstants(
-			1.5,
+		new PIDGains(
+			500.0,
 			0.0,
 			0.0
 		)
@@ -92,8 +94,8 @@ public class Hood extends SubsystemBase {
 
 		final var sysidRoutine = new SysIdRoutine(
 			new SysIdRoutine.Config(
-				Volts.of(1.0).per(Second),
-				Volts.of(7.0),
+				Volts.of(0.125).per(Second),
+				Volts.of(1.0),
 				Seconds.of(10.0),
 				(state) -> {
 					Logger.recordOutput("SysID/Shooter-Hood/State", state.toString());
@@ -117,6 +119,17 @@ public class Hood extends SubsystemBase {
 		SmartDashboard.putData("SysID/Shooter/Hood/Dynamic Forward", sysidRoutine.dynamic(SysIdRoutine.Direction.kForward).until(() -> this.getMeasuredAngleRads() >= HoodConstants.maxAngle.in(Radians)));
 		SmartDashboard.putData("SysID/Shooter/Hood/Dynamic Reverse", sysidRoutine.dynamic(SysIdRoutine.Direction.kReverse).until(() -> this.getMeasuredAngleRads() <= HoodConstants.minAngle.in(Radians)));
 
+		if (!RobotConstants.tuningMode) {
+			this.io.configProfile(
+				Hood.profilekV.getAsDouble(),
+				Hood.profilekA.getAsDouble(),
+				Hood.profileMaxVel.get().in(RadiansPerSecond)
+			);
+			this.io.configFF(Hood.ffConsts.get());
+			this.io.configPID(Hood.pidConsts.get());
+			this.io.configSend();
+		}
+
 		this.periodic();
 	}
 
@@ -132,11 +145,16 @@ public class Hood extends SubsystemBase {
 			this.calibrated = true;
 		}
 
+		Leds.getInstance().hoodNotCalibratedAnimation.setFlag(!this.isCalibrated());
+		Leds.getInstance().hoodCalibratedAnimation.setFlag(this.isCalibrated());
+
 		this.measuredAngleRads = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motor.encoder.getPositionRads());
 		this.measuredVelocityRadsPerSec = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motor.encoder.getVelocityRadsPerSec());
 
-		this.setpointAngleRads = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motorProfilePositionRads);
-		this.setpointVelocityRadsPerSec = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motorProfileVelocityRadsPerSec);
+		// this.setpointAngleRads = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motorProfilePositionRads);
+		// this.setpointVelocityRadsPerSec = HoodConstants.motorToMechanism.applyUnsigned(this.inputs.motorProfileVelocityRadsPerSec);
+		this.setpointAngleRads = this.inputs.motorProfilePositionRads;
+		this.setpointVelocityRadsPerSec = this.inputs.motorProfileVelocityRadsPerSec;
 
 		Logger.recordOutput("Subsystems/Shooter/Hood/Angle/Measured", this.getMeasuredAngleRads(), Radians);
 		Logger.recordOutput("Subsystems/Shooter/Hood/Velocity/Measured", this.getMeasuredVelocityRadsPerSec(), RadiansPerSecond);

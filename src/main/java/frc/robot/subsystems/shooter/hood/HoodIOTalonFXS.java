@@ -1,5 +1,7 @@
 package frc.robot.subsystems.shooter.hood;
 
+import static edu.wpi.first.units.Units.Amps;
+
 import java.util.Optional;
 
 import com.ctre.phoenix6.BaseStatusSignal;
@@ -13,6 +15,7 @@ import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFXS;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.MotorArrangementValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.ReverseLimitTypeValue;
 import com.ctre.phoenix6.signals.S1CloseStateValue;
@@ -22,9 +25,9 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.constants.HardwareDevices;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.commonDevices.CommonCANdi;
-import frc.util.FFConstants;
+import frc.util.FFGains;
 import frc.util.NeutralMode;
-import frc.util.PIDConstants;
+import frc.util.PIDGains;
 import frc.util.loggerUtil.inputs.LoggedEncodedMotor.EncodedMotorStatusSignalCache;
 
 public class HoodIOTalonFXS implements HoodIO {
@@ -53,11 +56,18 @@ public class HoodIOTalonFXS implements HoodIO {
 
 	public HoodIOTalonFXS(CommonCANdi candi) {
 		this.motorConfig.MotorOutput
-			.withInverted(InvertedValue.Clockwise_Positive)
+			.withInverted(InvertedValue.CounterClockwise_Positive)
 			.withNeutralMode(NeutralModeValue.Brake)
+		;
+		this.motorConfig.Commutation
+			.withMotorArrangement(MotorArrangementValue.NEO550_JST)
 		;
 		this.motorConfig.ExternalFeedback
 			.withSensorToMechanismRatio(HoodConstants.motorToMechanism.reductionUnsigned())
+		;
+		this.motorConfig.CurrentLimits
+			.withStatorCurrentLimitEnable(true)
+			.withStatorCurrentLimit(Amps.of(40.0))
 		;
 		this.motorConfig.SoftwareLimitSwitch
 			.withReverseSoftLimitEnable(false)
@@ -86,7 +96,7 @@ public class HoodIOTalonFXS implements HoodIO {
 		this.motorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.motor);
 		this.motorProfilePositionStatusSignal = this.motor.getClosedLoopReference();
 		this.motorProfileVelocityStatusSignal = this.motor.getClosedLoopReferenceSlope();
-		this.limitSwitchStatusSignal = this.motor.getFault_ReverseHardLimit();
+		this.limitSwitchStatusSignal = candi.candi.getS1Closed();
 
 		this.refreshSignals = new BaseStatusSignal[] {
 			this.motorStatusSignalCache.encoder().position(),
@@ -118,8 +128,6 @@ public class HoodIOTalonFXS implements HoodIO {
 		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency.div(2), this.motorStatusSignalCache.motor().getStatusSignals());
 		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.limitSwitchStatusSignal);
 		this.motor.optimizeBusUtilization();
-
-		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, candi.candi.getS1Closed());
 	}
 
 	@Override
@@ -156,20 +164,22 @@ public class HoodIOTalonFXS implements HoodIO {
 	@Override
 	public void configProfile(double kVVoltSecsPerRad, double kAVoltSecsSqrPerRad, double maxVelocityRadsPerSec) {
 		this.motorConfig.MotionMagic
-			.withMotionMagicExpo_kV(Units.rotationsToRadians(kVVoltSecsPerRad))
-			.withMotionMagicExpo_kA(Units.rotationsToRadians(kAVoltSecsSqrPerRad))
+			// .withMotionMagicExpo_kV(Units.rotationsToRadians(kVVoltSecsPerRad))
+			// .withMotionMagicExpo_kA(Units.rotationsToRadians(kAVoltSecsSqrPerRad))
+			.withMotionMagicExpo_kV(kVVoltSecsPerRad)
+			.withMotionMagicExpo_kA(kAVoltSecsSqrPerRad)
 			.withMotionMagicCruiseVelocity(Units.radiansToRotations(maxVelocityRadsPerSec))
 		;
 	}
 
 	@Override
-	public void configFF(FFConstants ffConstants) {
-		ffConstants.update(this.motorConfig.Slot0);
+	public void configFF(FFGains ffGains) {
+		ffGains.update(this.motorConfig.Slot0);
 	}
 
 	@Override
-	public void configPID(PIDConstants pidConstants) {
-		pidConstants.update(this.motorConfig.Slot0);
+	public void configPID(PIDGains pidGains) {
+		pidGains.update(this.motorConfig.Slot0);
 	}
 
 	@Override

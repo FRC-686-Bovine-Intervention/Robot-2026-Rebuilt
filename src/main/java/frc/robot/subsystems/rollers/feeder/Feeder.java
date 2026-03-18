@@ -19,7 +19,7 @@ public class Feeder extends SubsystemBase {
 	private final FeederIOInputsAutoLogged inputs = new FeederIOInputsAutoLogged();
 
 	private static final LoggedTunable<Voltage> idleVoltage = LoggedTunable.from("Subsystems/Rollers/Feeder/Commands/Idle/Voltage", Volts::of, 0.0);
-	private static final LoggedTunable<Voltage> feedVoltage = LoggedTunable.from("Subsystems/Rollers/Feeder/Commands/Feed/Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> feedVoltage = LoggedTunable.from("Subsystems/Rollers/Feeder/Commands/Feed/Voltage", Volts::of, 8.0);
 	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Subsystems/Rollers/Feeder/Commands/Eject/Voltage", Volts::of, 0.0);
 
 	private final Alert motorDisconnectedAlert = new Alert("Subsystems/Rollers/Feeder/Alerts", "Motor Disconnected", AlertType.kError);

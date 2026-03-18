@@ -9,13 +9,17 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.shooter.aiming.passing.PassingCalc;
 import frc.robot.subsystems.shooter.aiming.shooting.ShootingCalc;
-import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
 public class AimingSystem extends SubsystemBase {
 	public final ShootingCalc shootingCalc;
 	public final PassingCalc passingCalc;
 
+	public AimingSystem(ShootingCalc shootingCalc, PassingCalc passingCalc) {
+		super("Shooter/Aiming");
+
+		this.shootingCalc = shootingCalc;
+		this.passingCalc = passingCalc;
+	}
 
 	public Command aimAtHub(Supplier<Pose2d> robotPoseSupplier, Supplier<ChassisSpeeds> fieldSpeedsSupplier, Supplier<Translation3d> aimPointSupplier) {
 		final var aimingSystem = this;
@@ -28,7 +32,7 @@ public class AimingSystem extends SubsystemBase {
 			@Override
 			public void initialize() {
 				aimingSystem.shootingCalc.calculate(
-					robotPoseSupplier.get().getTranslation(),
+					robotPoseSupplier.get(),
 					fieldSpeedsSupplier.get(),
 					aimPointSupplier.get()
 				);
@@ -57,7 +61,7 @@ public class AimingSystem extends SubsystemBase {
 			@Override
 			public void initialize() {
 				aimingSystem.passingCalc.calculate(
-					robotPoseSupplier.get().getTranslation(),
+					robotPoseSupplier.get(),
 					fieldSpeedsSupplier.get(),
 					aimPointSupplier.get()
 				);

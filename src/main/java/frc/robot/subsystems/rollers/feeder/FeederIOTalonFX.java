@@ -34,7 +34,7 @@ public class FeederIOTalonFX implements FeederIO {
 		var motorConfig = new TalonFXConfiguration();
 		motorConfig.MotorOutput
 			.withInverted(InvertedValue.CounterClockwise_Positive)
-			.withNeutralMode(NeutralModeValue.Brake)
+			.withNeutralMode(NeutralModeValue.Coast)
 		;
 		this.motor.getConfigurator().apply(motorConfig);
 

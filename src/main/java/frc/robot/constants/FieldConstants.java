@@ -102,12 +102,56 @@ public final class FieldConstants {
 		barrierCenterX.getRed().minus(bumpLength.div(2.0))
 	);
 
+	public static final AllianceFlipped<Distance> trenchInnerX = new AllianceFlipped<Distance>(
+		barrierCenterX.getBlue().minus(bumpLength.div(2.0)),
+		barrierCenterX.getRed().plus(bumpLength.div(2.0))
+	);
+
+	public static final AllianceFlipped<Distance> trenchOuterX = new AllianceFlipped<Distance>(
+		barrierCenterX.getBlue().plus(bumpLength.div(2.0)),
+		barrierCenterX.getRed().minus(bumpLength.div(2.0))
+	);
+
+	public static final Distance bottomTrenchTopY = fieldWidth.div(2.0).minus(hubWidth.div(2.0)).minus(bumpWidth);
+	public static final Distance bottomTrenchBottomY = Inches.of(-60);
+	public static final Distance topTrenchTopY = fieldWidth.div(2.0).plus(hubWidth.div(2.0)).plus(bumpWidth);
+	public static final Distance topTrenchBottomY = fieldWidth.plus(Inches.of(60));
+
+	public static final AllianceFlipped<RectangularBoundingBox> bottomTrench = AllianceFlipped.fromBlue(BoundingBox.rectangle(
+		new Translation2d(
+			barrierCenterX.getBlue().minus(bumpLength.div(2.0)),
+			bottomTrenchBottomY
+
+		), new Translation2d(
+			barrierCenterX.getBlue().plus(bumpLength.div(2.0)),
+			bottomTrenchTopY
+		)
+	));
+	public static final AllianceFlipped<RectangularBoundingBox> topTrench = AllianceFlipped.fromBlue(BoundingBox.rectangle(
+		new Translation2d(
+			barrierCenterX.getBlue().minus(bumpLength.div(2.0)),
+			topTrenchBottomY
+		),
+		new Translation2d(
+			barrierCenterX.getBlue().plus(bumpLength.div(2.0)),
+			topTrenchTopY
+		)
+	));
+	public static final AllianceFlipped<OrBox> anyTrench = AllianceFlipped.fromFunction((alliance) -> bottomTrench.get(alliance).or(topTrench.get(alliance)));
 
 
 
-	public static final AllianceFlipped<Pose2d> hubFrontRobotPose = AllianceFlipped.fromBlue(new Pose2d(
+
+	public static final AllianceFlipped<Pose2d> hubFlatFrontRobotPose = AllianceFlipped.fromBlue(new Pose2d(
 		new Translation2d(
 			allianceZoneBoundaryX.getBlue().minus(RobotConstants.centerToFrontBumper),
+			hubCenter.getBlue().getMeasureY()
+		),
+		Rotation2d.kZero
+	));
+	public static final AllianceFlipped<Pose2d> hubIntakeFrontRobotPose = AllianceFlipped.fromBlue(new Pose2d(
+		new Translation2d(
+			allianceZoneBoundaryX.getBlue().minus(Inches.of(12.0)),
 			hubCenter.getBlue().getMeasureY()
 		),
 		Rotation2d.kZero
@@ -118,4 +162,19 @@ public final class FieldConstants {
 		hubCenter.getBlue().getMeasureY(),
 		hubHeight
 	));
+
+	public static final AllianceFlipped<Translation3d> leftPassPoint = AllianceFlipped.fromBlue(new Translation3d(
+		Inches.zero().plus(hubCenter.getBlue().getMeasureX()).div(2.0),
+		fieldWidth.div(4).times(3),
+		hubHeight
+	));
+
+	public static final AllianceFlipped<Translation3d> rightPassPoint = AllianceFlipped.fromBlue(new Translation3d(
+		Inches.zero().plus(hubCenter.getBlue().getMeasureX()).div(2.0),
+		fieldWidth.div(4).times(1),
+		hubHeight
+	));
+
+	public static final AllianceFlipped<Translation3d> topPassPoint = new AllianceFlipped<>(leftPassPoint.getBlue(), rightPassPoint.getRed());
+	public static final AllianceFlipped<Translation3d> botPassPoint = new AllianceFlipped<>(rightPassPoint.getBlue(), leftPassPoint.getRed());
 }
