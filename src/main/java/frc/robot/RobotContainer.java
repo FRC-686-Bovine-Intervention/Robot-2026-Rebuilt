@@ -762,6 +762,6 @@ public class RobotContainer {
 
 		this.driveController.x().whileTrue(this.rollers.feed().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("Force Feed"));
 
-		// this.driveController.povUp().whileTrue(this.intake.slam.pushdown(this.extensionSystem));
+		this.driveController.povUp().whileTrue(this.intake.slam.pushdown(this.extensionSystem));
 	}
 }
