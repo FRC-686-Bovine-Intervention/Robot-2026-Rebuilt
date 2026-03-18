@@ -13,21 +13,29 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotContainer;
 import frc.robot.auto.AutoCommons;
 import frc.robot.auto.AutoCommons.AutoPaths;
-import frc.robot.auto.AutoCommons.CoralStationPosition;
+import frc.robot.auto.AutoConstants.IntakeLocation;
+import frc.robot.auto.AutoConstants.ScoringLocation;
+import frc.robot.auto.AutoConstants.StartingPosition;
 import frc.robot.auto.AutoConstants;
 import frc.robot.auto.AutoRoutine;
+import frc.robot.constants.FieldConstants;
 import frc.robot.constants.FieldConstants.Reef.BranchLevel;
 import frc.robot.constants.FieldConstants.Reef.PipeConcept;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.rollers.Rollers;
+import frc.robot.subsystems.rollers.feeder.Feeder;
+import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.superstructure.Superstructure.Direction;
 import frc.util.flipping.AllianceFlipped;
+import frc.util.misc.FunctionalUtil;
 import frc.util.misc.MathExtraUtil;
 
 public class ScoreFuel extends AutoRoutine {
@@ -37,296 +45,199 @@ public class ScoreFuel extends AutoRoutine {
     // scoring coral 2 (1/2 reef pipes - 2)
     // which part of the coral station (close, mid, far)
 
-    private static final AutoQuestion<AllianceFlipped<Pose2d>> startPosition = new AutoQuestion<AllianceFlipped<Pose2d>>("Starting Position") {
-        private static final Map.Entry<String, AllianceFlipped<Pose2d>> startLeftLeftCage = Settings.option("LL", AutoConstants.startLeftLeftCage);
-        private static final Map.Entry<String, AllianceFlipped<Pose2d>> startLeftMiddleCage = Settings.option("LM", AutoConstants.startLeftMiddleCage);
-        private static final Map.Entry<String, AllianceFlipped<Pose2d>> startLeftRightCage = Settings.option("LR", AutoConstants.startLeftRightCage);
-        private static final Map.Entry<String, AllianceFlipped<Pose2d>> startDeadCenter = Settings.option("C", AutoConstants.startDeadCenter);
-        private static final Map.Entry<String, AllianceFlipped<Pose2d>> startRightLeftCage = Settings.option("RL", AutoConstants.startRightLeftCage);
-        private static final Map.Entry<String, AllianceFlipped<Pose2d>> startRightMiddleCage = Settings.option("RM", AutoConstants.startRightMiddleCage);
-        private static final Map.Entry<String, AllianceFlipped<Pose2d>> startRightRightCage = Settings.option("RR", AutoConstants.startRightRightCage);
+	private static final AutoQuestion<Boolean> scorePreloadFirst = new AutoQuestion<Boolean>("Score Preload") {
+		private static final Map.Entry<String, Boolean> yes = Settings.option("Y", true);
+		private static final Map.Entry<String, Boolean> no = Settings.option("N", false);
+
+		@Override
+		protected Settings<Boolean> generateSettings() {
+			return Settings.from(no, yes, no);
+		}
+	};
+
+    private static final AutoQuestion<StartingPosition> startPosition = new AutoQuestion<StartingPosition>("Starting Position") {
+        private static final Map.Entry<String, StartingPosition> startOutsideLeftTrench =  Settings.option("OLT", StartingPosition.OUTSIDE_LEFT_TRENCH);
+        private static final Map.Entry<String, StartingPosition> startOutsideRightTrench = Settings.option("ORT", StartingPosition.OUTSIDE_RIGHT_TRENCH);
+        private static final Map.Entry<String, StartingPosition> startLeftBump =           Settings.option("LB",  StartingPosition.LEFT_BUMP);
+        private static final Map.Entry<String, StartingPosition> startRightBump =          Settings.option("RB",  StartingPosition.RIGHT_BUMP);
+        private static final Map.Entry<String, StartingPosition> startCenter =             Settings.option("C",   StartingPosition.CENTER);
+        private static final Map.Entry<String, StartingPosition> startInsideLeftTrench =   Settings.option("ILT", StartingPosition.INSIDE_LEFT_TRENCH);
+        private static final Map.Entry<String, StartingPosition> startInsideRightTrench =  Settings.option("IRT", StartingPosition.INSIDE_RIGHT_TRENCH);
 
         @Override
-        protected Settings<AllianceFlipped<Pose2d>> generateSettings() {
-            return Settings.from(startDeadCenter, startLeftLeftCage, startLeftMiddleCage, startLeftRightCage, startDeadCenter, startRightLeftCage, startRightMiddleCage, startRightRightCage);
+        protected Settings<StartingPosition> generateSettings() {
+            return Settings.from(startInsideRightTrench, startInsideLeftTrench, startOutsideLeftTrench, startLeftBump, startCenter, startRightBump, startOutsideRightTrench, startInsideRightTrench);
         }
     };
 
-    private static final AutoQuestion<CoralStationPosition> stationPosition = new AutoQuestion<CoralStationPosition>("Coral Station Position") {
-        private static final Map.Entry<String, CoralStationPosition> stationFar = Settings.option("Far", CoralStationPosition.FAR);
-        private static final Map.Entry<String, CoralStationPosition> stationMid = Settings.option("Mid", CoralStationPosition.MID);
-        private static final Map.Entry<String, CoralStationPosition> stationClose = Settings.option("Close", CoralStationPosition.CLOSE);
+    private static final AutoQuestion<IntakeLocation> firstIntakeLocation = new AutoQuestion<IntakeLocation>("First Intake Location") {
+        private static final Map.Entry<String, IntakeLocation> fullOuterSwipe = Settings.option("FOS", IntakeLocation.FULL_OUTER_SWIPE);
+        private static final Map.Entry<String, IntakeLocation> fullInnerSwipe = Settings.option("FIS", IntakeLocation.FULL_INNER_SWIPE);
+        private static final Map.Entry<String, IntakeLocation> halfOuterSwipe = Settings.option("HOS", IntakeLocation.HALF_OUTER_SWIPE);
+        private static final Map.Entry<String, IntakeLocation> halfInnerSwipe = Settings.option("HIS", IntakeLocation.HALF_INNER_SWIPE);
+        private static final Map.Entry<String, IntakeLocation> opponentSwipe = Settings.option("OS", IntakeLocation.OPPONENT_SWIPE);
+        private static final Map.Entry<String, IntakeLocation> depot = Settings.option("D", IntakeLocation.DEPOT);
+        private static final Map.Entry<String, IntakeLocation> outpost = Settings.option("O", IntakeLocation.OUTPOST);
         
         @Override
-        protected Settings<CoralStationPosition> generateSettings() {
-            return Settings.from(stationFar, stationClose, stationMid, stationFar);
-        }
-    };
-    
-    private static boolean isRightCoralStation(PipeConcept pipe) {
-        return isRightCoralStation(pipe.id);
-    }
-    private static boolean isRightCoralStation(int pipeID) {
-        return MathExtraUtil.isWithin(pipeID, 1, 6);
-    }
-
-    private static final AutoQuestion<PipeConcept> firstCoralPipe = new AutoQuestion<PipeConcept>("Score First Pipe") {
-        @Override
-        protected Settings<PipeConcept> generateSettings() {
-            var startPosition = ScoreCoral.startPosition.getResponse();
-            if (
-                startPosition == AutoConstants.startLeftLeftCage ||
-                startPosition == AutoConstants.startLeftMiddleCage
-            ) {
-                return Settings.from(pipeOptions[9],
-                    pipeOptions[0],
-                    pipeOptions[8],
-                    pipeOptions[9],
-                    pipeOptions[10],
-                    pipeOptions[11]
-                );
-            } else if (startPosition == AutoConstants.startLeftRightCage) {
-                return Settings.from(pipeOptions[9],
-                    pipeOptions[6],
-                    pipeOptions[7],
-                    pipeOptions[8],
-                    pipeOptions[9]
-                );
-            } else if (startPosition == AutoConstants.startDeadCenter) {
-                return Settings.from(pipeOptions[6],
-                    pipeOptions[4],
-                    pipeOptions[5],
-                    pipeOptions[6],
-                    pipeOptions[7],
-                    pipeOptions[8],
-                    pipeOptions[9]
-                );
-            } else if (startPosition == AutoConstants.startRightLeftCage) {
-                return Settings.from(pipeOptions[4],
-                    pipeOptions[4],
-                    pipeOptions[5],
-                    pipeOptions[6],
-                    pipeOptions[7]
-                );
-            } else if (
-                startPosition == AutoConstants.startRightMiddleCage ||
-                startPosition == AutoConstants.startRightRightCage
-            ) {
-                return Settings.from(pipeOptions[4],
-                    pipeOptions[1],
-                    pipeOptions[2],
-                    pipeOptions[3],
-                    pipeOptions[4],
-                    pipeOptions[5]
-                );
-            } else {
-                return null;
-            }
-        }
-
-    };
-
-    private static final AutoQuestion<Optional<PipeConcept>> secondCoralPipe = new AutoQuestion<Optional<PipeConcept>>("Score Second Pipe") {
-        @Override
-        protected Settings<Optional<PipeConcept>> generateSettings() {
-            Predicate<Map.Entry<String, Optional<PipeConcept>>> notInPreviousResponses = (option) -> option.getValue().isEmpty() || !option.getValue().equals(Optional.of(firstCoralPipe.getResponse()));
-            if (isRightCoralStation(firstCoralPipe.getResponse())) {
-                var options = Stream.of(
-                    pipeOptionalOptions[12],
-                    pipeOptionalOptions[1],
-                    pipeOptionalOptions[2],
-                    pipeOptionalOptions[3],
-                    pipeOptionalOptions[4],
-                    pipeOptionalOptions[5],
-                    pipeOptionalOptions[6]
-                )
-                    .filter(notInPreviousResponses)
-                    .toArray((IntFunction<Map.Entry<String, Optional<PipeConcept>>[]>) Map.Entry[]::new)
-                ;
-                var defaultOption = Stream.of(
-                    pipeOptionalOptions[2],
-                    pipeOptionalOptions[3],
-                    pipeOptionalOptions[1]
-                )
-                    .filter(notInPreviousResponses)
-                    .findFirst()
-                    .get()
-                ;
-                return Settings.from(defaultOption, options);
-            } else {
-                var options = Stream.of(
-                    pipeOptionalOptions[12],
-                    pipeOptionalOptions[0],
-                    pipeOptionalOptions[11],
-                    pipeOptionalOptions[10],
-                    pipeOptionalOptions[9],
-                    pipeOptionalOptions[8],
-                    pipeOptionalOptions[7]
-                )
-                    .filter(notInPreviousResponses)
-                    .toArray((IntFunction<Map.Entry<String, Optional<PipeConcept>>[]>) Map.Entry[]::new)
-                ;
-                var defaultOption = Stream.of(
-                    pipeOptionalOptions[11],
-                    pipeOptionalOptions[10],
-                    pipeOptionalOptions[0]
-                )
-                    .filter(notInPreviousResponses)
-                    .findFirst()
-                    .get()
-                ;
-                return Settings.from(defaultOption, options);
-            }
+        protected Settings<IntakeLocation> generateSettings() {
+            return Settings.from(halfOuterSwipe, halfOuterSwipe, fullOuterSwipe, opponentSwipe, outpost, depot, halfInnerSwipe, fullInnerSwipe);
         }
     };
 
-    private static final AutoQuestion<Optional<PipeConcept>> thirdCoralPipe = new AutoQuestion<Optional<PipeConcept>>("Score Third Pipe") {
+    private static final AutoQuestion<ScoringLocation> firstScoringLocation = new AutoQuestion<ScoringLocation>("First Score Location") {
+		private static final Map.Entry<String, ScoringLocation> left = Settings.option("L", ScoringLocation.LEFT);
+		private static final Map.Entry<String, ScoringLocation> right = Settings.option("R", ScoringLocation.RIGHT);
+		private static final Map.Entry<String, ScoringLocation> center = Settings.option("C", ScoringLocation.CENTER);
+		private static final Map.Entry<String, ScoringLocation> insideLeftTrench = Settings.option("ILT", ScoringLocation.INSIDE_LEFT_TRENCH);
+		private static final Map.Entry<String, ScoringLocation> insideRightTrench = Settings.option("IRT", ScoringLocation.INSIDE_RIGHT_TRENCH);
+		private static final Map.Entry<String, ScoringLocation> outsideLeftTrench = Settings.option("OLT", ScoringLocation.OUTSIDE_LEFT_TRENCH);
+		private static final Map.Entry<String, ScoringLocation> outsideRightTrench = Settings.option("ORT", ScoringLocation.OUTSIDE_RIGHT_TRENCH);
+
+		@Override
+		protected Settings<ScoringLocation> generateSettings() {
+			return Settings.from(outsideRightTrench, insideLeftTrench, outsideLeftTrench, left, center, right, outsideRightTrench, insideRightTrench);
+		}
+    };
+
+	private static final AutoQuestion<IntakeLocation> secondIntakeLocation = new AutoQuestion<IntakeLocation>("Second Intake Location") {
+        private static final Map.Entry<String, IntakeLocation> fullOuterSwipe = Settings.option("FOS", IntakeLocation.FULL_OUTER_SWIPE);
+        private static final Map.Entry<String, IntakeLocation> fullInnerSwipe = Settings.option("FIS", IntakeLocation.FULL_INNER_SWIPE);
+        private static final Map.Entry<String, IntakeLocation> halfOuterSwipe = Settings.option("HOS", IntakeLocation.HALF_OUTER_SWIPE);
+        private static final Map.Entry<String, IntakeLocation> halfInnerSwipe = Settings.option("HIS", IntakeLocation.HALF_INNER_SWIPE);
+        private static final Map.Entry<String, IntakeLocation> opponentSwipe = Settings.option("OS", IntakeLocation.OPPONENT_SWIPE);
+        private static final Map.Entry<String, IntakeLocation> depot = Settings.option("D", IntakeLocation.DEPOT);
+        private static final Map.Entry<String, IntakeLocation> outpost = Settings.option("O", IntakeLocation.OUTPOST);
+        
         @Override
-        protected Settings<Optional<PipeConcept>> generateSettings() {
-            if (secondCoralPipe.getResponse().isEmpty()) {
-                return Settings.from(pipeOptionalOptions[12], pipeOptionalOptions[12]);
-            }
-            Predicate<Map.Entry<String, Optional<PipeConcept>>> notInPreviousResponses = (option) -> option.getValue().isEmpty() || (!option.getValue().equals(Optional.of(firstCoralPipe.getResponse())) && !option.getValue().equals(secondCoralPipe.getResponse()));
-            if (isRightCoralStation(secondCoralPipe.getResponse().get())) {
-                var options = Stream.of(
-                    pipeOptionalOptions[12],
-                    pipeOptionalOptions[1],
-                    pipeOptionalOptions[2],
-                    pipeOptionalOptions[3],
-                    pipeOptionalOptions[4],
-                    pipeOptionalOptions[5],
-                    pipeOptionalOptions[6]
-                )
-                    .filter(notInPreviousResponses)
-                    .toArray((IntFunction<Map.Entry<String, Optional<PipeConcept>>[]>) Map.Entry[]::new)
-                ;
-                var defaultOption = Stream.of(
-                    pipeOptionalOptions[2],
-                    pipeOptionalOptions[3],
-                    pipeOptionalOptions[1]
-                )
-                    .filter(notInPreviousResponses)
-                    .findFirst()
-                    .get()
-                ;
-                return Settings.from(defaultOption, options);
-            } else {
-                var options = Stream.of(
-                    pipeOptionalOptions[12],
-                    pipeOptionalOptions[0],
-                    pipeOptionalOptions[11],
-                    pipeOptionalOptions[10],
-                    pipeOptionalOptions[9],
-                    pipeOptionalOptions[8],
-                    pipeOptionalOptions[7]
-                )
-                    .filter(notInPreviousResponses)
-                    .toArray((IntFunction<Map.Entry<String, Optional<PipeConcept>>[]>) Map.Entry[]::new)
-                ;
-                var defaultOption = Stream.of(
-                    pipeOptionalOptions[11],
-                    pipeOptionalOptions[10],
-                    pipeOptionalOptions[0]
-                )
-                    .filter(notInPreviousResponses)
-                    .findFirst()
-                    .get()
-                ;
-                return Settings.from(defaultOption, options);
-            }
+        protected Settings<IntakeLocation> generateSettings() {
+            return Settings.from(halfOuterSwipe, halfOuterSwipe, fullOuterSwipe, opponentSwipe, outpost, depot, halfInnerSwipe, fullInnerSwipe);
         }
     };
 
-    private static final AutoQuestion<Optional<PipeConcept>> fourthCoralPipe = new AutoQuestion<Optional<PipeConcept>>("Score Fourth Pipe") {
+    private static final AutoQuestion<ScoringLocation> secondScoringLocation = new AutoQuestion<ScoringLocation>("Second Score Location") {
+		private static final Map.Entry<String, ScoringLocation> left = Settings.option("L", ScoringLocation.LEFT);
+		private static final Map.Entry<String, ScoringLocation> right = Settings.option("R", ScoringLocation.RIGHT);
+		private static final Map.Entry<String, ScoringLocation> center = Settings.option("C", ScoringLocation.CENTER);
+		private static final Map.Entry<String, ScoringLocation> insideLeftTrench = Settings.option("ILT", ScoringLocation.INSIDE_LEFT_TRENCH);
+		private static final Map.Entry<String, ScoringLocation> insideRightTrench = Settings.option("IRT", ScoringLocation.INSIDE_RIGHT_TRENCH);
+		private static final Map.Entry<String, ScoringLocation> outsideLeftTrench = Settings.option("OLT", ScoringLocation.OUTSIDE_LEFT_TRENCH);
+		private static final Map.Entry<String, ScoringLocation> outsideRightTrench = Settings.option("ORT", ScoringLocation.OUTSIDE_RIGHT_TRENCH);
+
+		@Override
+		protected Settings<ScoringLocation> generateSettings() {
+			return Settings.from(outsideRightTrench, insideLeftTrench, outsideLeftTrench, left, center, right, outsideRightTrench, insideRightTrench);
+		}
+    };
+
+	private static final AutoQuestion<IntakeLocation> thirdIntakeLocation = new AutoQuestion<IntakeLocation>("Third Intake Location") {
+        private static final Map.Entry<String, IntakeLocation> fullOuterSwipe = Settings.option("FOS", IntakeLocation.FULL_OUTER_SWIPE);
+        private static final Map.Entry<String, IntakeLocation> fullInnerSwipe = Settings.option("FIS", IntakeLocation.FULL_INNER_SWIPE);
+        private static final Map.Entry<String, IntakeLocation> halfOuterSwipe = Settings.option("HOS", IntakeLocation.HALF_OUTER_SWIPE);
+        private static final Map.Entry<String, IntakeLocation> halfInnerSwipe = Settings.option("HIS", IntakeLocation.HALF_INNER_SWIPE);
+        private static final Map.Entry<String, IntakeLocation> opponentSwipe = Settings.option("OS", IntakeLocation.OPPONENT_SWIPE);
+        private static final Map.Entry<String, IntakeLocation> depot = Settings.option("D", IntakeLocation.DEPOT);
+        private static final Map.Entry<String, IntakeLocation> outpost = Settings.option("O", IntakeLocation.OUTPOST);
+        
         @Override
-        protected Settings<Optional<PipeConcept>> generateSettings() {
-            if (thirdCoralPipe.getResponse().isEmpty()) {
-                return Settings.from(pipeOptionalOptions[12], pipeOptionalOptions[12]);
-            }
-            Predicate<Map.Entry<String, Optional<PipeConcept>>> notInPreviousResponses = (option) -> option.getValue().isEmpty() || (!option.getValue().equals(Optional.of(firstCoralPipe.getResponse())) && !option.getValue().equals(secondCoralPipe.getResponse()) && !option.getValue().equals(thirdCoralPipe.getResponse()));
-            if (isRightCoralStation(thirdCoralPipe.getResponse().get())) {
-                var options = Stream.of(
-                    pipeOptionalOptions[12],
-                    pipeOptionalOptions[1],
-                    pipeOptionalOptions[2],
-                    pipeOptionalOptions[3],
-                    pipeOptionalOptions[4],
-                    pipeOptionalOptions[5],
-                    pipeOptionalOptions[6]
-                )
-                    .filter(notInPreviousResponses)
-                    .toArray((IntFunction<Map.Entry<String, Optional<PipeConcept>>[]>) Map.Entry[]::new)
-                ;
-                var defaultOption = Stream.of(
-                    pipeOptionalOptions[2],
-                    pipeOptionalOptions[3],
-                    pipeOptionalOptions[1]
-                )
-                    .filter(notInPreviousResponses)
-                    .findFirst()
-                    .get()
-                ;
-                return Settings.from(defaultOption, options);
-            } else {
-                var options = Stream.of(
-                    pipeOptionalOptions[12],
-                    pipeOptionalOptions[0],
-                    pipeOptionalOptions[11],
-                    pipeOptionalOptions[10],
-                    pipeOptionalOptions[9],
-                    pipeOptionalOptions[8],
-                    pipeOptionalOptions[7]
-                )
-                    .filter(notInPreviousResponses)
-                    .toArray((IntFunction<Map.Entry<String, Optional<PipeConcept>>[]>) Map.Entry[]::new)
-                ;
-                var defaultOption = Stream.of(
-                    pipeOptionalOptions[11],
-                    pipeOptionalOptions[10],
-                    pipeOptionalOptions[0]
-                )
-                    .filter(notInPreviousResponses)
-                    .findFirst()
-                    .get()
-                ;
-                return Settings.from(defaultOption, options);
-            }
+        protected Settings<IntakeLocation> generateSettings() {
+            return Settings.from(halfOuterSwipe, halfOuterSwipe, fullOuterSwipe, opponentSwipe, outpost, depot, halfInnerSwipe, fullInnerSwipe);
         }
+    };
+
+    private static final AutoQuestion<ScoringLocation> thirdScoringLocation = new AutoQuestion<ScoringLocation>("Third Score Location") {
+		private static final Map.Entry<String, ScoringLocation> left = Settings.option("L", ScoringLocation.LEFT);
+		private static final Map.Entry<String, ScoringLocation> right = Settings.option("R", ScoringLocation.RIGHT);
+		private static final Map.Entry<String, ScoringLocation> center = Settings.option("C", ScoringLocation.CENTER);
+		private static final Map.Entry<String, ScoringLocation> insideLeftTrench = Settings.option("ILT", ScoringLocation.INSIDE_LEFT_TRENCH);
+		private static final Map.Entry<String, ScoringLocation> insideRightTrench = Settings.option("IRT", ScoringLocation.INSIDE_RIGHT_TRENCH);
+		private static final Map.Entry<String, ScoringLocation> outsideLeftTrench = Settings.option("OLT", ScoringLocation.OUTSIDE_LEFT_TRENCH);
+		private static final Map.Entry<String, ScoringLocation> outsideRightTrench = Settings.option("ORT", ScoringLocation.OUTSIDE_RIGHT_TRENCH);
+
+		@Override
+		protected Settings<ScoringLocation> generateSettings() {
+			return Settings.from(outsideRightTrench, insideLeftTrench, outsideLeftTrench, left, center, right, outsideRightTrench, insideRightTrench);
+		}
+    };
+
+	private static final AutoQuestion<ScoringLocation> fourthScoringLocation = new AutoQuestion<ScoringLocation>("Optional Fourth Score Location") {
+		private static final Map.Entry<String, ScoringLocation> left = Settings.option("L", ScoringLocation.LEFT);
+		private static final Map.Entry<String, ScoringLocation> right = Settings.option("R", ScoringLocation.RIGHT);
+		private static final Map.Entry<String, ScoringLocation> center = Settings.option("C", ScoringLocation.CENTER);
+		private static final Map.Entry<String, ScoringLocation> insideLeftTrench = Settings.option("ILT", ScoringLocation.INSIDE_LEFT_TRENCH);
+		private static final Map.Entry<String, ScoringLocation> insideRightTrench = Settings.option("IRT", ScoringLocation.INSIDE_RIGHT_TRENCH);
+		private static final Map.Entry<String, ScoringLocation> outsideLeftTrench = Settings.option("OLT", ScoringLocation.OUTSIDE_LEFT_TRENCH);
+		private static final Map.Entry<String, ScoringLocation> outsideRightTrench = Settings.option("ORT", ScoringLocation.OUTSIDE_RIGHT_TRENCH);
+
+		@Override
+		protected Settings<ScoringLocation> generateSettings() {
+			return Settings.from(outsideRightTrench, insideLeftTrench, outsideLeftTrench, left, center, right, outsideRightTrench, insideRightTrench);
+		}
     };
 
     private final Drive drive;
-    private final Superstructure superstructure;
+    private final Shooter shooter;
+	private final Rollers rollers;
     private final Intake intake;
 
-    public ScoreCoral(RobotContainer robot) {
-        super("Score Coral", List.of(
-            startPosition,
-            stationPosition,
-            firstCoralPipe,
-            secondCoralPipe,
-            thirdCoralPipe,
-            fourthCoralPipe
+    public ScoreFuel(RobotContainer robot) {
+        super("Score Fuel", List.of(
+            scorePreloadFirst,
+			startPosition,
+			firstIntakeLocation,
+			firstScoringLocation,
+			secondIntakeLocation,
+			secondScoringLocation,
+			thirdIntakeLocation,
+			thirdScoringLocation,
+			fourthScoringLocation
         ));
         this.drive = robot.drive;
-        this.superstructure = robot.superstructure;
+		this.shooter = robot.shooter;
+		this.rollers = robot.rollers;
         this.intake = robot.intake;
     }
     
     @Override
     public Command generateCommand() {
-        var startPosition = ScoreCoral.startPosition.getResponse();
-        var stationPosition = ScoreCoral.stationPosition.getResponse();
-        var firstCoralPipe = ScoreCoral.firstCoralPipe.getResponse();
-        var secondCoralPipe = ScoreCoral.secondCoralPipe.getResponse();
-        var thirdCoralPipe = ScoreCoral.thirdCoralPipe.getResponse();
-        var fourthCoralPipe = ScoreCoral.fourthCoralPipe.getResponse();
-        var commands = new ArrayList<Command>();
-        boolean shouldUseForwardCoralStation = false;
+        var startPosition = ScoreFuel.startPosition.getResponse();
+        var scorePreloadFirst = ScoreFuel.scorePreloadFirst.getResponse();
+        var firstIntakeLocation = ScoreFuel.firstIntakeLocation.getResponse();
+        var firstScoringLocation = ScoreFuel.firstScoringLocation.getResponse();
+        var secondIntakeLocation = ScoreFuel.secondIntakeLocation.getResponse();
+        var secondScoringLocation = ScoreFuel.secondScoringLocation.getResponse();
+        var thirdIntakeLocation = ScoreFuel.thirdIntakeLocation.getResponse();
+        var thirdScoringLocation = ScoreFuel.thirdScoringLocation.getResponse();
+        var fourthScoringLocation = ScoreFuel.fourthScoringLocation.getResponse();
+        
+		var commands = new ArrayList<Command>();
 
-        String startToScorePath;
-        startToScorePath = getStartingPositionAsString(startPosition) + " To " + firstCoralPipe.getLetter();
-        var startToScorePreload = AutoPaths.loadChoreoTrajectory(startToScorePath);
-        commands.add(AutoCommons.scoreOnReef(startToScorePreload, firstCoralPipe.getBranch(BranchLevel.Level4), Direction.Forward, drive, superstructure, intake));
+		if (scorePreloadFirst.booleanValue()) {
+			String startToScorePath;
+        	startToScorePath = startPosition.alias + " Score " + firstScoringLocation.alias;
+			var startToScorePreloadTraj = AutoCommons.loadBlueChoreoTrajectory(startToScorePath).getOurs();
+        	var startToScorePreload = AutoCommons.followPathCommand(startToScorePreloadTraj, drive);
+        	commands.add(
+				Commands.deadline(
+					Commands.sequence(
+						startToScorePreload,
+						Commands.deadline(
+							Commands.waitSeconds(4.0),
+							this.shooter.aimHoodAtHub().asProxy(),
+							this.shooter.aimDriveAtHub(this.drive.rotationalSubsystem).asProxy(),
+							this.rollers.feed().onlyWhile(() -> this.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy()
+						)
+					),
+					this.shooter.aimingSystem.aimAtHub(
+						FunctionalUtil.evalNow(startToScorePreloadTraj.getFinalPose(false).get()),
+						FunctionalUtil.evalNow(new ChassisSpeeds()),
+						FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs())
+					).asProxy(),
+					this.shooter.aimLeftFlywheelAtHub().asProxy(),
+					this.shooter.aimRightFlywheelAtHub().asProxy()
+				)
+			);
+		}
 
 
         if (secondCoralPipe.isPresent()) {
