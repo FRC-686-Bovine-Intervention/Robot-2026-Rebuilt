@@ -18,6 +18,7 @@ import java.util.function.Supplier;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
@@ -717,7 +718,8 @@ public class RobotContainer {
 		new Trigger(() -> Math.abs(rotateAxis.getAsDouble()) > 0.0 && !driveTankCommand.isScheduled() && !aimAtHubCommand.isScheduled()).whileTrue(driveRotateCommand);
 
 		// Setup position reset command
-	this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(FieldConstants.hubIntakeFrontRobotPose.getOurs())).ignoringDisable(true));
+		this.driveController.leftStickButton().and(this.driveController.rightStickButton()).onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(FieldConstants.hubIntakeFrontRobotPose.getOurs())).ignoringDisable(true));
+		this.driveController.rightStickButton().onTrue(Commands.runOnce(() -> RobotState.getInstance().resetPose(new Pose2d(FieldConstants.hubIntakeFrontRobotPose.getOurs().getTranslation(), RobotState.getInstance().getEstimatedGlobalPose().getRotation()))).ignoringDisable(true));
 		/*
 		 * (A)
 		 *  | Press: Deploy intake (if not deployed) and roll in
