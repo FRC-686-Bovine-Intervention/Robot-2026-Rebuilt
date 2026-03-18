@@ -36,6 +36,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
+import frc.robot.auto.routines.DoubleSwipe;
 import frc.robot.automations.AutoFeed;
 import frc.robot.automations.HubShiftNotifications;
 import frc.robot.automations.IntakeDeployHysteresis;
@@ -378,8 +379,9 @@ public class RobotContainer {
 
 		System.out.println("[Init RobotContainer] Configuring Autonomous Modes");
 
-		var autoSelector = new AutoSelector("Auto Selector");
+		final var autoSelector = new AutoSelector("Auto Selector");
 		// Add autonomous routines to autonomous selector
+		autoSelector.addDefaultRoutine(new DoubleSwipe(this));
 
 		this.autoManager = new AutoManager(autoSelector);
 
