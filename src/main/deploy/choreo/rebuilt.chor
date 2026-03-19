@@ -176,20 +176,6 @@
    },
    "Center":{
     "x":{
-     "exp":"StartLineX - CenterToBumper",
-     "val":3.55854
-    },
-    "y":{
-     "exp":"FieldWidth / 2",
-     "val":4.03479
-    },
-    "heading":{
-     "exp":"-180 deg",
-     "val":-3.141592653589793
-    }
-   },
-   "CenterShooter":{
-    "x":{
      "exp":"(StartLineX + TowerToWall) / 2",
      "val":2.57381375
     },
@@ -228,34 +214,6 @@
     "heading":{
      "exp":"180 deg",
      "val":3.141592653589793
-    }
-   },
-   "FarLeft":{
-    "x":{
-     "exp":"StartLineX - CenterToBumper",
-     "val":3.55854
-    },
-    "y":{
-     "exp":"FieldWidth - TrenchWidth / 2",
-     "val":7.436485
-    },
-    "heading":{
-     "exp":"0 rad",
-     "val":0.0
-    }
-   },
-   "FarRight":{
-    "x":{
-     "exp":"StartLineX - CenterToBumper",
-     "val":3.55854
-    },
-    "y":{
-     "exp":"TrenchWidth / 2",
-     "val":0.633095
-    },
-    "heading":{
-     "exp":"0 rad",
-     "val":0.0
     }
    },
    "FirstPoseInNeutral":{
@@ -384,6 +342,34 @@
      "val":0.0
     }
    },
+   "ILT":{
+    "x":{
+     "exp":"StartLineX",
+     "val":4.0030399999999995
+    },
+    "y":{
+     "exp":"FieldWidth - IRT.y",
+     "val":7.436485
+    },
+    "heading":{
+     "exp":"0 rad",
+     "val":0.0
+    }
+   },
+   "IRT":{
+    "x":{
+     "exp":"StartLineX",
+     "val":4.0030399999999995
+    },
+    "y":{
+     "exp":"TrenchWidth / 2",
+     "val":0.633095
+    },
+    "heading":{
+     "exp":"0 rad",
+     "val":0.0
+    }
+   },
    "IncomingNeutralL":{
     "x":{
      "exp":"(StartLineX + BumpLength + FieldLength / 2) / 2",
@@ -412,32 +398,18 @@
      "val":0.7853981633974483
     }
    },
-   "InsideTrenchL":{
+   "Left":{
     "x":{
-     "exp":"StartLineX + CenterToBumper",
-     "val":4.447539999999999
+     "exp":"((DepoLength + StartLineX) / 2)",
+     "val":2.3444199999999995
     },
     "y":{
-     "exp":"FieldWidth - TrenchWidth / 2",
-     "val":7.436485
+     "exp":"DepoCenterY",
+     "val":5.9589955496
     },
     "heading":{
-     "exp":"180 deg",
-     "val":3.141592653589793
-    }
-   },
-   "InsideTrenchR":{
-    "x":{
-     "exp":"StartLineX + CenterToBumper",
-     "val":4.447539999999999
-    },
-    "y":{
-     "exp":"TrenchWidth / 2",
-     "val":0.633095
-    },
-    "heading":{
-     "exp":"180 deg",
-     "val":3.141592653589793
+     "exp":"-0.8156920210794066 rad",
+     "val":-0.8156920210794066
     }
    },
    "LeftRampPointDown":{
@@ -454,20 +426,6 @@
      "val":-2.071809815585341
     }
    },
-   "LeftShooter":{
-    "x":{
-     "exp":"((DepoLength + StartLineX) / 2)",
-     "val":2.3444199999999995
-    },
-    "y":{
-     "exp":"DepoCenterY",
-     "val":5.9589955496
-    },
-    "heading":{
-     "exp":"-0.8156920210794066 rad",
-     "val":-0.8156920210794066
-    }
-   },
    "LeftShooterTranslation":{
     "x":{
      "exp":"2.3692612648010254 m",
@@ -480,20 +438,6 @@
     "heading":{
      "exp":"0.7044941201870896 rad",
      "val":0.7044941201870896
-    }
-   },
-   "LeftStart":{
-    "x":{
-     "exp":"StartLineX - CenterToBumper",
-     "val":3.55854
-    },
-    "y":{
-     "exp":"FieldWidth - TrenchWidth - BumpWidth / 2",
-     "val":5.87629
-    },
-    "heading":{
-     "exp":"-180 deg",
-     "val":-3.141592653589793
     }
    },
    "LeftTower":{
@@ -536,6 +480,34 @@
     "heading":{
      "exp":"2.214297613191292 rad",
      "val":2.214297613191292
+    }
+   },
+   "OLT":{
+    "x":{
+     "exp":"StartLineX - CenterToBumper - 12 in",
+     "val":3.2537399999999996
+    },
+    "y":{
+     "exp":"FieldWidth - ORT.y",
+     "val":7.436485
+    },
+    "heading":{
+     "exp":"0 rad",
+     "val":0.0
+    }
+   },
+   "ORT":{
+    "x":{
+     "exp":"StartLineX - CenterToBumper - 12 in",
+     "val":3.2537399999999996
+    },
+    "y":{
+     "exp":"TrenchWidth / 2",
+     "val":0.633095
+    },
+    "heading":{
+     "exp":"0 rad",
+     "val":0.0
     }
    },
    "Outpost":{
@@ -604,7 +576,7 @@
      "val":0.6353143453598022
     },
     "heading":{
-     "exp":"InsideTrenchR.heading",
+     "exp":"SIRT.heading",
      "val":3.141592653589793
     }
    },
@@ -678,7 +650,7 @@
      "val":2.356194490192345
     }
    },
-   "RightShooter":{
+   "Right":{
     "x":{
      "exp":"((DepoLength + StartLineX) / 2)",
      "val":2.3444199999999995
@@ -690,20 +662,6 @@
     "heading":{
      "exp":"0.8818719622911372 rad",
      "val":0.8818719622911372
-    }
-   },
-   "RightStart":{
-    "x":{
-     "exp":"StartLineX - CenterToBumper",
-     "val":3.55854
-    },
-    "y":{
-     "exp":"TrenchWidth + BumpWidth / 2",
-     "val":2.1932899999999997
-    },
-    "heading":{
-     "exp":"-180 deg",
-     "val":-3.141592653589793
     }
    },
    "RightTower":{
@@ -732,6 +690,104 @@
     "heading":{
      "exp":"-3.119857330008472 rad",
      "val":-3.119857330008472
+    }
+   },
+   "SC":{
+    "x":{
+     "exp":"StartLineX - CenterToBumper",
+     "val":3.55854
+    },
+    "y":{
+     "exp":"FieldWidth / 2",
+     "val":4.03479
+    },
+    "heading":{
+     "exp":"-180 deg",
+     "val":-3.141592653589793
+    }
+   },
+   "SILT":{
+    "x":{
+     "exp":"StartLineX + CenterToBumper",
+     "val":4.447539999999999
+    },
+    "y":{
+     "exp":"FieldWidth - SIRT.y",
+     "val":7.62508
+    },
+    "heading":{
+     "exp":"180 deg",
+     "val":3.141592653589793
+    }
+   },
+   "SIRT":{
+    "x":{
+     "exp":"StartLineX + CenterToBumper",
+     "val":4.447539999999999
+    },
+    "y":{
+     "exp":"CenterToBumper",
+     "val":0.4445
+    },
+    "heading":{
+     "exp":"180 deg",
+     "val":3.141592653589793
+    }
+   },
+   "SLB":{
+    "x":{
+     "exp":"StartLineX - CenterToBumper",
+     "val":3.55854
+    },
+    "y":{
+     "exp":"FieldWidth - TrenchWidth - BumpWidth / 2",
+     "val":5.87629
+    },
+    "heading":{
+     "exp":"-180 deg",
+     "val":-3.141592653589793
+    }
+   },
+   "SOLT":{
+    "x":{
+     "exp":"StartLineX - CenterToBumper",
+     "val":3.55854
+    },
+    "y":{
+     "exp":"FieldWidth - SORT.y",
+     "val":7.62508
+    },
+    "heading":{
+     "exp":"0 rad",
+     "val":0.0
+    }
+   },
+   "SORT":{
+    "x":{
+     "exp":"StartLineX - CenterToBumper",
+     "val":3.55854
+    },
+    "y":{
+     "exp":"CenterToBumper",
+     "val":0.4445
+    },
+    "heading":{
+     "exp":"0 rad",
+     "val":0.0
+    }
+   },
+   "SRB":{
+    "x":{
+     "exp":"StartLineX - CenterToBumper",
+     "val":3.55854
+    },
+    "y":{
+     "exp":"TrenchWidth + BumpWidth / 2",
+     "val":2.1932899999999997
+    },
+    "heading":{
+     "exp":"-180 deg",
+     "val":-3.141592653589793
     }
    },
    "StartingOverRampL":{

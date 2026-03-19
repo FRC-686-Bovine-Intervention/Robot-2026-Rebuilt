@@ -17,7 +17,7 @@
  },
  "params":{
   "waypoints":[
-    {"x":{"exp":"InsideTrenchR.x", "val":4.447539999999999}, "y":{"exp":"InsideTrenchR.y", "val":0.633095}, "heading":{"exp":"InsideTrenchR.heading", "val":3.141592653589793}, "intervals":32, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":{"exp":"SIRT.x", "val":4.447539999999999}, "y":{"exp":"SIRT.y", "val":0.4445}, "heading":{"exp":"SIRT.heading", "val":3.141592653589793}, "intervals":32, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"IncomingNeutralR.x", "val":6.697170971899999}, "y":{"exp":"IncomingNeutralR.y", "val":1.26619}, "heading":{"exp":"IncomingNeutralR.heading", "val":0.7853981633974483}, "intervals":25, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"QuarterR.x", "val":7.825740000000001}, "y":{"exp":"QuarterR.y", "val":2.908935}, "heading":{"exp":"QuarterR.heading", "val":1.5707963267948966}, "intervals":24, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"HalfR.x", "val":7.825740000000001}, "y":{"exp":"HalfR.y", "val":4.03479}, "heading":{"exp":"HalfR.heading", "val":1.5707963267948966}, "intervals":14, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},

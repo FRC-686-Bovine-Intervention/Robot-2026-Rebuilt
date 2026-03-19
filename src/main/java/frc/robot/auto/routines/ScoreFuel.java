@@ -89,14 +89,12 @@ public class ScoreFuel extends AutoRoutine {
 		private static final Map.Entry<String, ScoringLocation> left = Settings.option("L", ScoringLocation.LEFT);
 		private static final Map.Entry<String, ScoringLocation> right = Settings.option("R", ScoringLocation.RIGHT);
 		private static final Map.Entry<String, ScoringLocation> center = Settings.option("C", ScoringLocation.CENTER);
-		private static final Map.Entry<String, ScoringLocation> insideLeftTrench = Settings.option("ILT", ScoringLocation.INSIDE_LEFT_TRENCH);
-		private static final Map.Entry<String, ScoringLocation> insideRightTrench = Settings.option("IRT", ScoringLocation.INSIDE_RIGHT_TRENCH);
 		private static final Map.Entry<String, ScoringLocation> outsideLeftTrench = Settings.option("OLT", ScoringLocation.OUTSIDE_LEFT_TRENCH);
 		private static final Map.Entry<String, ScoringLocation> outsideRightTrench = Settings.option("ORT", ScoringLocation.OUTSIDE_RIGHT_TRENCH);
 
 		@Override
 		protected Settings<ScoringLocation> generateSettings() {
-			return Settings.from(outsideRightTrench, insideLeftTrench, outsideLeftTrench, left, center, right, outsideRightTrench, insideRightTrench);
+			return Settings.from(outsideRightTrench, outsideLeftTrench, left, center, right, outsideRightTrench);
 		}
     };
 
@@ -214,7 +212,7 @@ public class ScoreFuel extends AutoRoutine {
 
 		if (scorePreloadFirst.booleanValue()) {
 			String startToScorePath;
-        	startToScorePath = startPosition.alias + " Score " + firstScoringLocation.alias;
+        	startToScorePath = startPosition.alias + "Score" + firstScoringLocation.alias;
 			var startToScorePreloadTraj = AutoCommons.loadBlueChoreoTrajectory(startToScorePath).getOurs();
         	var startToScorePreload = AutoCommons.followPathCommand(startToScorePreloadTraj, drive);
         	commands.add(

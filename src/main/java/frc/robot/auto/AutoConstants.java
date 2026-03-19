@@ -103,12 +103,10 @@ public final class AutoConstants {
 
 	public enum ScoringLocation {
 		OUTSIDE_LEFT_TRENCH("OLT"),
-		INSIDE_LEFT_TRENCH("ILT"),
 		OUTSIDE_RIGHT_TRENCH("ORT"),
-		INSIDE_RIGHT_TRENCH("ILT"),
-		CENTER("C"),
-		LEFT("L"),
-		RIGHT("R"),
+		CENTER("Center"),
+		LEFT("Left"),
+		RIGHT("Right"),
 		OUTPOST("O");
 
 		public final String alias;
