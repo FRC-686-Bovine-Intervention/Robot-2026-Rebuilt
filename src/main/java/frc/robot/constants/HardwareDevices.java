@@ -24,7 +24,7 @@ public class HardwareDevices {
 	public static final CANBus canivore = CANBus.newBus("canivore");
 
 	// Drive
-	public static final CANDevice pigeonID = canivore.id(0);
+	public static final CANDevice pigeonID = rio.id(0);
 	// | Front Left
 	public static final CANDevice frontLeftDriveMotorID = rio.id(1);
 	public static final CANDevice frontLeftAzimuthMotorID = rio.id(1);
