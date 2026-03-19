@@ -15,7 +15,7 @@
  },
  "params":{
   "waypoints":[
-    {"x":{"exp":"Outpost.x", "val":0.6444996}, "y":{"exp":"Outpost.y", "val":0.6642226999999999}, "heading":{"exp":"Outpost.heading", "val":-3.141592653589793}, "intervals":38, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":{"exp":"Outpost.x", "val":0.6444996}, "y":{"exp":"Outpost.y", "val":0.6642226999999999}, "heading":{"exp":"Outpost.heading", "val":0.0}, "intervals":38, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"2.4175336360931396 m", "val":2.4175336360931396}, "y":{"exp":"3.6229233741760254 m", "val":3.6229233741760254}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":27, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
     {"x":{"exp":"LeftShooter.x", "val":2.3444199999999995}, "y":{"exp":"LeftShooter.y", "val":5.9589955496}, "heading":{"exp":"LeftShooter.heading", "val":-0.8156920210794066}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false}],
   "constraints":[

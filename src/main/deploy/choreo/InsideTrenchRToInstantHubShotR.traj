@@ -15,7 +15,7 @@
  "params":{
   "waypoints":[
     {"x":{"exp":"InsideTrenchR.x", "val":4.447539999999999}, "y":{"exp":"InsideTrenchR.y", "val":0.4445}, "heading":{"exp":"InsideTrenchR.heading", "val":3.141592653589793}, "intervals":27, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
-    {"x":{"exp":"PreInstantHubShotR.x", "val":3.1057708263397217}, "y":{"exp":"PreInstantHubShotR.y", "val":0.8260244727134705}, "heading":{"exp":"PreInstantHubShotR.heading", "val":0.0}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false}],
+    {"x":{"exp":"PreInstantHubShotR.x", "val":5.872030258178711}, "y":{"exp":"PreInstantHubShotR.y", "val":0.49670782685279846}, "heading":{"exp":"PreInstantHubShotR.heading", "val":0.0}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false}],
   "constraints":[
     {"from":"first", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":false},
     {"from":"last", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
