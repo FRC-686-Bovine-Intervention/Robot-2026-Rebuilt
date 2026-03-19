@@ -16,6 +16,12 @@ public interface GyroIO {
 		public double yawVelocityRadsPerSec = 0.0;
 		public double pitchVelocityRadsPerSec = 0.0;
 		public double rollVelocityRadsPerSec = 0.0;
+
+		public GyroIOInputs() {
+			for (int i = 0; i < OdometryThread.MAX_BUFFER_SIZE; i++) {
+				this.odometryGyroRotation[i] = Rotation3d.kZero;
+			}
+		}
 	}
 
 	public default void updateInputs(GyroIOInputs inputs) {}

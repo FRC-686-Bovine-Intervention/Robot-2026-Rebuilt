@@ -156,6 +156,15 @@ public final class FieldConstants {
 		),
 		Rotation2d.kZero
 	));
+	public static final AllianceFlipped<Pose2d> leftTrenchPresetShotPose = AllianceFlipped.fromBlue(new Pose2d(
+
+	));
+	public static final AllianceFlipped<Pose2d> rightTrenchPresetShotPose = AllianceFlipped.fromBlue(new Pose2d(
+
+	));
+	public static final AllianceFlipped<Pose2d> towerPresetShotPose = AllianceFlipped.fromBlue(new Pose2d(
+
+	));
 
 	public static final AllianceFlipped<Translation3d> hubAimPoint = AllianceFlipped.fromBlue(new Translation3d(
 		hubCenter.getBlue().getMeasureX(),
