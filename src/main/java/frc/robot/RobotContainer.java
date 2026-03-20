@@ -40,6 +40,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.auto.AutoCommons;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.auto.routines.DoubleSwipe;
@@ -53,6 +54,7 @@ import frc.robot.subsystems.ExtensionSystem;
 import frc.robot.subsystems.commonDevices.CommonCANdi;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.subsystems.drive.commands.FollowTrajectoryCommand;
 import frc.robot.subsystems.drive.commands.WheelRadiusCalibration;
 import frc.robot.subsystems.drive.gyro.GyroIO;
 import frc.robot.subsystems.drive.gyro.GyroIOPigeon2;
@@ -783,6 +785,8 @@ public class RobotContainer {
 
 		this.driveController.x().whileTrue(this.rollers.feed().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("Force Feed"));
 
-		this.driveController.povUp().whileTrue(this.intake.slam.pushdown(this.extensionSystem));
+		var traj = AutoCommons.loadBlueChoreoTrajectory("TestPath");
+
+		this.driveController.povUp().whileTrue(Commands.defer(() -> new FollowTrajectoryCommand(this.drive, traj.getOurs(), false), Set.of(this.drive.translationSubsystem, this.drive.rotationalSubsystem)));
 	}
 }

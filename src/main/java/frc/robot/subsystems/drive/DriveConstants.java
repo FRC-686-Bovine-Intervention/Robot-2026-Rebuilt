@@ -131,6 +131,6 @@ public final class DriveConstants {
 
 	public static final LinearVelocity maxModuleSpeed = wheel.angularVelocityToLinearVelocity(driveMotorToWheelRatio.applyUnsigned(RadiansPerSecond.of(DCMotor.getFalcon500(1).freeSpeedRadPerSec)));
 
-	public static final LinearVelocity maxDriveSpeed = MetersPerSecond.of(6);
+	public static final LinearVelocity maxDriveSpeed = maxModuleSpeed;
 	public static final AngularVelocity maxTurnRate = RadiansPerSecond.of(maxDriveSpeed.in(MetersPerSecond) / driveBaseRadius.in(Meters));
 }
