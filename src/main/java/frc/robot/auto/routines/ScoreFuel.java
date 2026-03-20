@@ -1,9 +1,5 @@
 package frc.robot.auto.routines;
 
-import static frc.robot.auto.AutoCommons.getStartingPositionAsString;
-import static frc.robot.auto.AutoCommons.pipeOptionalOptions;
-import static frc.robot.auto.AutoCommons.pipeOptions;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -12,31 +8,29 @@ import java.util.function.IntFunction;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import choreo.trajectory.SwerveSample;
+import choreo.trajectory.Trajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotContainer;
 import frc.robot.auto.AutoCommons;
-import frc.robot.auto.AutoCommons.AutoPaths;
 import frc.robot.auto.AutoConstants.IntakeLocation;
 import frc.robot.auto.AutoConstants.ScoringLocation;
 import frc.robot.auto.AutoConstants.StartingPosition;
 import frc.robot.auto.AutoConstants;
 import frc.robot.auto.AutoRoutine;
 import frc.robot.constants.FieldConstants;
-import frc.robot.constants.FieldConstants.Reef.BranchLevel;
-import frc.robot.constants.FieldConstants.Reef.PipeConcept;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.rollers.Rollers;
 import frc.robot.subsystems.rollers.feeder.Feeder;
 import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.superstructure.Superstructure;
-import frc.robot.subsystems.superstructure.Superstructure.Direction;
+import frc.util.flipping.AllianceFlipUtil;
 import frc.util.flipping.AllianceFlipped;
+import frc.util.flipping.AllianceFlipUtil.FieldFlipType;
 import frc.util.misc.FunctionalUtil;
-import frc.util.misc.MathExtraUtil;
 
 public class ScoreFuel extends AutoRoutine {
     // scoring preload (reef pipes)
@@ -44,16 +38,6 @@ public class ScoreFuel extends AutoRoutine {
     // scoring coral 1 (1/2 reef pipes - 1)
     // scoring coral 2 (1/2 reef pipes - 2)
     // which part of the coral station (close, mid, far)
-
-	private static final AutoQuestion<Boolean> scorePreloadFirst = new AutoQuestion<Boolean>("Score Preload") {
-		private static final Map.Entry<String, Boolean> yes = Settings.option("Y", true);
-		private static final Map.Entry<String, Boolean> no = Settings.option("N", false);
-
-		@Override
-		protected Settings<Boolean> generateSettings() {
-			return Settings.from(no, yes, no);
-		}
-	};
 
     private static final AutoQuestion<StartingPosition> startPosition = new AutoQuestion<StartingPosition>("Starting Position") {
         private static final Map.Entry<String, StartingPosition> startOutsideLeftTrench =  Settings.option("OLT", StartingPosition.OUTSIDE_LEFT_TRENCH);
@@ -78,10 +62,11 @@ public class ScoreFuel extends AutoRoutine {
         private static final Map.Entry<String, IntakeLocation> opponentSwipe = Settings.option("OS", IntakeLocation.OPPONENT_SWIPE);
         private static final Map.Entry<String, IntakeLocation> depot = Settings.option("D", IntakeLocation.DEPOT);
         private static final Map.Entry<String, IntakeLocation> outpost = Settings.option("O", IntakeLocation.OUTPOST);
+		private static final Map.Entry<String, IntakeLocation> noIntake = Settings.option("F", IntakeLocation.FALSE);
         
         @Override
         protected Settings<IntakeLocation> generateSettings() {
-            return Settings.from(halfOuterSwipe, halfOuterSwipe, fullOuterSwipe, opponentSwipe, outpost, depot, halfInnerSwipe, fullInnerSwipe);
+            return Settings.from(halfOuterSwipe, halfOuterSwipe, fullOuterSwipe, opponentSwipe, outpost, depot, halfInnerSwipe, fullInnerSwipe, noIntake);
         }
     };
 
@@ -117,14 +102,12 @@ public class ScoreFuel extends AutoRoutine {
 		private static final Map.Entry<String, ScoringLocation> left = Settings.option("L", ScoringLocation.LEFT);
 		private static final Map.Entry<String, ScoringLocation> right = Settings.option("R", ScoringLocation.RIGHT);
 		private static final Map.Entry<String, ScoringLocation> center = Settings.option("C", ScoringLocation.CENTER);
-		private static final Map.Entry<String, ScoringLocation> insideLeftTrench = Settings.option("ILT", ScoringLocation.INSIDE_LEFT_TRENCH);
-		private static final Map.Entry<String, ScoringLocation> insideRightTrench = Settings.option("IRT", ScoringLocation.INSIDE_RIGHT_TRENCH);
 		private static final Map.Entry<String, ScoringLocation> outsideLeftTrench = Settings.option("OLT", ScoringLocation.OUTSIDE_LEFT_TRENCH);
 		private static final Map.Entry<String, ScoringLocation> outsideRightTrench = Settings.option("ORT", ScoringLocation.OUTSIDE_RIGHT_TRENCH);
 
 		@Override
 		protected Settings<ScoringLocation> generateSettings() {
-			return Settings.from(outsideRightTrench, insideLeftTrench, outsideLeftTrench, left, center, right, outsideRightTrench, insideRightTrench);
+			return Settings.from(outsideRightTrench, outsideLeftTrench, left, center, right, outsideRightTrench);
 		}
     };
 
@@ -147,7 +130,7 @@ public class ScoreFuel extends AutoRoutine {
 		private static final Map.Entry<String, ScoringLocation> left = Settings.option("L", ScoringLocation.LEFT);
 		private static final Map.Entry<String, ScoringLocation> right = Settings.option("R", ScoringLocation.RIGHT);
 		private static final Map.Entry<String, ScoringLocation> center = Settings.option("C", ScoringLocation.CENTER);
-		private static final Map.Entry<String, ScoringLocation> insideLeftTrench = Settings.option("ILT", ScoringLocation.INSIDE_LEFT_TRENCH);
+		private static final Map.Entry<String, ScoringLocation> insideLeftTrench = Settings.option("ILT", ScoringLocation.OUTSIDE_LEFT_TRENCH);
 		private static final Map.Entry<String, ScoringLocation> insideRightTrench = Settings.option("IRT", ScoringLocation.INSIDE_RIGHT_TRENCH);
 		private static final Map.Entry<String, ScoringLocation> outsideLeftTrench = Settings.option("OLT", ScoringLocation.OUTSIDE_LEFT_TRENCH);
 		private static final Map.Entry<String, ScoringLocation> outsideRightTrench = Settings.option("ORT", ScoringLocation.OUTSIDE_RIGHT_TRENCH);
@@ -158,21 +141,7 @@ public class ScoreFuel extends AutoRoutine {
 		}
     };
 
-	private static final AutoQuestion<ScoringLocation> fourthScoringLocation = new AutoQuestion<ScoringLocation>("Optional Fourth Score Location") {
-		private static final Map.Entry<String, ScoringLocation> left = Settings.option("L", ScoringLocation.LEFT);
-		private static final Map.Entry<String, ScoringLocation> right = Settings.option("R", ScoringLocation.RIGHT);
-		private static final Map.Entry<String, ScoringLocation> center = Settings.option("C", ScoringLocation.CENTER);
-		private static final Map.Entry<String, ScoringLocation> insideLeftTrench = Settings.option("ILT", ScoringLocation.INSIDE_LEFT_TRENCH);
-		private static final Map.Entry<String, ScoringLocation> insideRightTrench = Settings.option("IRT", ScoringLocation.INSIDE_RIGHT_TRENCH);
-		private static final Map.Entry<String, ScoringLocation> outsideLeftTrench = Settings.option("OLT", ScoringLocation.OUTSIDE_LEFT_TRENCH);
-		private static final Map.Entry<String, ScoringLocation> outsideRightTrench = Settings.option("ORT", ScoringLocation.OUTSIDE_RIGHT_TRENCH);
-
-		@Override
-		protected Settings<ScoringLocation> generateSettings() {
-			return Settings.from(outsideRightTrench, insideLeftTrench, outsideLeftTrench, left, center, right, outsideRightTrench, insideRightTrench);
-		}
-    };
-
+	private final RobotContainer robot;
     private final Drive drive;
     private final Shooter shooter;
 	private final Rollers rollers;
@@ -180,16 +149,15 @@ public class ScoreFuel extends AutoRoutine {
 
     public ScoreFuel(RobotContainer robot) {
         super("Score Fuel", List.of(
-            scorePreloadFirst,
 			startPosition,
 			firstIntakeLocation,
 			firstScoringLocation,
 			secondIntakeLocation,
 			secondScoringLocation,
 			thirdIntakeLocation,
-			thirdScoringLocation,
-			fourthScoringLocation
+			thirdScoringLocation
         ));
+		this.robot = robot;
         this.drive = robot.drive;
 		this.shooter = robot.shooter;
 		this.rollers = robot.rollers;
@@ -199,120 +167,67 @@ public class ScoreFuel extends AutoRoutine {
     @Override
     public Command generateCommand() {
         var startPosition = ScoreFuel.startPosition.getResponse();
-        var scorePreloadFirst = ScoreFuel.scorePreloadFirst.getResponse();
         var firstIntakeLocation = ScoreFuel.firstIntakeLocation.getResponse();
         var firstScoringLocation = ScoreFuel.firstScoringLocation.getResponse();
         var secondIntakeLocation = ScoreFuel.secondIntakeLocation.getResponse();
         var secondScoringLocation = ScoreFuel.secondScoringLocation.getResponse();
         var thirdIntakeLocation = ScoreFuel.thirdIntakeLocation.getResponse();
         var thirdScoringLocation = ScoreFuel.thirdScoringLocation.getResponse();
-        var fourthScoringLocation = ScoreFuel.fourthScoringLocation.getResponse();
         
 		var commands = new ArrayList<Command>();
-
-		if (scorePreloadFirst.booleanValue()) {
-			String startToScorePath;
-        	startToScorePath = startPosition.alias + "Score" + firstScoringLocation.alias;
-			var startToScorePreloadTraj = AutoCommons.loadBlueChoreoTrajectory(startToScorePath).getOurs();
-        	var startToScorePreload = AutoCommons.followPathCommand(startToScorePreloadTraj, drive);
-        	commands.add(
+		var startToIntakeTraj = AutoCommons.loadBlueChoreoTrajectory(startPosition.alias + "To" + firstIntakeLocation.alias).getOurs();
+        var startToIntake = AutoCommons.followPathCommand(startToIntakeTraj, drive);
+		var command = Commands.deadline(
+			Commands.sequence(
 				Commands.deadline(
-					Commands.sequence(
-						startToScorePreload,
-						Commands.deadline(
-							Commands.waitSeconds(4.0),
-							this.shooter.aimHoodAtHub().asProxy(),
-							this.shooter.aimDriveAtHub(this.drive.rotationalSubsystem).asProxy(),
-							this.rollers.feed().onlyWhile(() -> this.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy()
-						)
-					),
-					this.shooter.aimingSystem.aimAtHub(
-						FunctionalUtil.evalNow(startToScorePreloadTraj.getFinalPose(false).get()),
-						FunctionalUtil.evalNow(new ChassisSpeeds()),
-						FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs())
-					).asProxy(),
-					this.shooter.aimLeftFlywheelAtHub().asProxy(),
-					this.shooter.aimRightFlywheelAtHub().asProxy()
+					startToScorePreload,
+					this.robot.intake.rollers.intake().asProxy()
+				),
+				Commands.deadline(
+					Commands.waitSeconds(4.0),
+					this.robot.shooter.aimHoodAtHub().asProxy(),
+					this.robot.shooter.aimDriveAtHub(this.robot.drive.rotationalSubsystem).asProxy(),
+					this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy()
 				)
-			);
-		}
-
-
-        if (secondCoralPipe.isPresent()) {
-            var firstPipeToStation = AutoPaths.loadChoreoTrajectory(
-                firstCoralPipe.getLetter() +
-                " To Station " +
-                getStationPositionAsString(stationPosition) +
-                (shouldUseForwardCoralStation ? " Forward" : "")
-            );
-            commands.add(AutoCommons.pickupCoralFromStation(firstPipeToStation, Direction.Backward, drive, superstructure, intake));
-    
-            var pipe2 = secondCoralPipe.get();
-
-            var stationToSecondPipe = AutoPaths.loadChoreoTrajectory(
-                "Station "
-                + getStationPositionAsString(stationPosition)
-                + (shouldUseForwardCoralStation ? " Forward" : "")
-                + " To "
-                + pipe2.getLetter()
-            );
-            commands.add(AutoCommons.scoreOnReef(stationToSecondPipe, pipe2.getBranch(BranchLevel.Level4), Direction.Forward, drive, superstructure, intake));
-
-            if (thirdCoralPipe.isPresent()) {
-                var secondPipeToStation = AutoPaths.loadChoreoTrajectory(
-                    pipe2.getLetter() +
-                    " To Station "+
-                    getStationPositionAsString(stationPosition)
-                    + (shouldUseForwardCoralStation ? " Forward" : "")
-                );
-                commands.add(AutoCommons.pickupCoralFromStation(secondPipeToStation, Direction.Backward, drive, superstructure, intake));
-                
-                var pipe3 = thirdCoralPipe.get();
-        
-                var stationToThirdPipe = AutoPaths.loadChoreoTrajectory(
-                    "Station "
-                    + getStationPositionAsString(stationPosition)
-                    + (shouldUseForwardCoralStation ? " Forward" : "")
-                    + " To "
-                    + pipe3.getLetter()
-                );
-                commands.add(AutoCommons.scoreOnReef(stationToThirdPipe, pipe3.getBranch(BranchLevel.Level4), Direction.Forward, drive, superstructure, intake));
-
-                if (fourthCoralPipe.isPresent()) {
-                    var thirdPipeToStation = AutoPaths.loadChoreoTrajectory(
-                        pipe3.getLetter() +
-                        " To Station "+
-                        getStationPositionAsString(stationPosition)
-                        + (shouldUseForwardCoralStation ? " Forward" : "")
-                    );
-                    commands.add(AutoCommons.pickupCoralFromStation(thirdPipeToStation, Direction.Backward, drive, superstructure, intake));
-                    
-                    var pipe4 = fourthCoralPipe.get();
-            
-                    var stationToFourthPipe = AutoPaths.loadChoreoTrajectory(
-                        "Station "
-                        + getStationPositionAsString(stationPosition)
-                        + (shouldUseForwardCoralStation ? " Forward" : "")
-                        + " To "
-                        + pipe4.getLetter()
-                    );
-                    commands.add(AutoCommons.scoreOnReef(stationToFourthPipe, pipe4.getBranch(BranchLevel.Level4), Direction.Forward, drive, superstructure, intake));
-                }
-            }
-        }
+			),
+			this.robot.shooter.aimingSystem.aimAtHub(
+				FunctionalUtil.evalNow(firstTrajBallGrab.getFinalPose(false).get()),
+				FunctionalUtil.evalNow(new ChassisSpeeds()),
+				FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs())
+			).asProxy(),
+			this.robot.shooter.aimLeftFlywheelAtHub().asProxy(),
+			this.robot.shooter.aimRightFlywheelAtHub().asProxy()
+		);
 
         return Commands.parallel(
-            AutoCommons.setOdometryFlipped(startPosition, drive),
-            Commands.sequence(commands.toArray(Command[]::new))
+            AutoCommons.setOdometryFlipped(startPosition.pose),
+            Commands.parallel(
+				this.intake.slam.pushdown(this.robot.extensionSystem),
+				Commands.sequence(commands.toArray(Command[]::new))
+			)
         );
-    }
+	}
 
-    private String getStationPositionAsString(CoralStationPosition _stationPosition){
-        return switch (_stationPosition) {
-            case CLOSE -> "Close";
-            case MID -> "Mid";
-            case FAR -> "Far";
-            default -> null;
-        };
-    }
+
+	private static AllianceFlipped<Trajectory<SwerveSample>> generatePath(StartingPosition startingPosition, ScoringLocation scoringLocation, IntakeLocation intakeLocation) {
+		if ((startingPosition == StartingPosition.LEFT_BUMP || startingPosition == StartingPosition.INSIDE_LEFT_TRENCH) && scoringLocation.canFlip * intakeLocation.canFlip > 0) {
+			//Needs to flip across Xenterline
+			var blueTraj = AutoCommons.loadBlueChoreoTrajectory(startingPosition.rightAlias + "To" + scoringLocation.rightAlias + "Intake" + intakeLocation.alias);
+			var newBlueTraj = AllianceFlipUtil.flip(blueTraj.getBlue(), FieldFlipType.XenterLineMirror);
+			return AllianceFlipped.fromBlue(newBlueTraj);
+		} else {
+			return AutoCommons.loadBlueChoreoTrajectory(startingPosition.alias + "To" + scoringLocation.alias + "Intake" + intakeLocation.alias);
+		}
+	}
+
+	private static AllianceFlipped<Trajectory<SwerveSample>> generatePath(ScoringLocation startingPosition, ScoringLocation scoringLocation, IntakeLocation intakeLocation) {
+		if ((startingPosition == ScoringLocation.LEFT || startingPosition == ScoringLocation.OUTSIDE_LEFT_TRENCH) && scoringLocation.canFlip * startingPosition.canFlip * intakeLocation.canFlip > 0) {
+			//Needs to flip across Xenterline
+			var blueTraj = AutoCommons.loadBlueChoreoTrajectory(startingPosition.rightAlias + "To" + scoringLocation.rightAlias + "Intake" + intakeLocation.alias);
+			var newBlueTraj = AllianceFlipUtil.flip(blueTraj.getBlue(), FieldFlipType.XenterLineMirror);
+			return AllianceFlipped.fromBlue(newBlueTraj);
+		} else {
+			return AutoCommons.loadBlueChoreoTrajectory(startingPosition.alias + "To" + scoringLocation.alias + "Intake" + intakeLocation.alias);
+		}
+	}
 }

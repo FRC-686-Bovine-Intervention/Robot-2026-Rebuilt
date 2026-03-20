@@ -65,54 +65,70 @@ public final class AutoConstants {
 
 
 	public enum StartingPosition {
-		INSIDE_LEFT_TRENCH(startInsideLeftTrench, "SILT"),
-		OUTSIDE_LEFT_TRENCH(startOutsideLeftTrench, "SOLT"),
-		LEFT_BUMP(startLeftBump, "SLB"),
+		INSIDE_LEFT_TRENCH(startInsideLeftTrench, "SILT", "SIRT"),
+		LEFT_BUMP(startLeftBump, "SLB", "SRB"),
 		CENTER(startCenter, "SC"),
-		RIGHT_BUMP(startRightBump, "SRB"),
-		OUTSIDE_RIGHT_TRENCH(startOutsideRightTrench, "SORT"),
-		INSIDE_RIGHT_TRENCH(startInsideRightTrench, "SIRT");
+		RIGHT_BUMP(startRightBump, "SRB", "SLB"),
+		INSIDE_RIGHT_TRENCH(startInsideRightTrench, "SIRT", "SILT");
 
 		public final AllianceFlipped<Pose2d> pose;
 		public final String alias;
+		public final String rightAlias;
 
 		StartingPosition(AllianceFlipped<Pose2d> pose, String alias) {
 			this.pose = pose;
 			this.alias = alias;
+			this.rightAlias = alias;
+		}
+
+		StartingPosition(AllianceFlipped<Pose2d> pose, String alias, String rightAlias) {
+			this.pose = pose;
+			this.alias = alias;
+			this.rightAlias = rightAlias;
 		}
 	}
 	public enum IntakeLocation {
-		FULL_OUTER_SWIPE,
-		FULL_INNER_SWIPE,
-		HALF_OUTER_SWIPE,
-		HALF_INNER_SWIPE,
-		OPPONENT_SWIPE,
-		DEPOT,
-		OUTPOST(true);
+		FULL_OUTER_SWIPE("FOS",1),
+		FULL_INNER_SWIPE("FIS", 1),
+		HALF_OUTER_SWIPE("HOS", 1),
+		HALF_INNER_SWIPE("HIS", 1),
+		OPPONENT_SWIPE("OS", 1),
+		DEPOT("D", 0),
+		OUTPOST("IO", 0),
+		FALSE("False", 1);
 
-		public final boolean requiresReturnPath;
+		public final String alias;
+		public final int canFlip;
 
-		IntakeLocation(boolean requiresReturnPath) {
-			this.requiresReturnPath = requiresReturnPath;
-		}
-
-		IntakeLocation() {
-			this.requiresReturnPath = false;
+		IntakeLocation(String alias, int canFlip) {
+			this.alias = alias;
+			this.canFlip = canFlip;
 		}
 	}
 
 	public enum ScoringLocation {
-		OUTSIDE_LEFT_TRENCH("OLT"),
-		OUTSIDE_RIGHT_TRENCH("ORT"),
-		CENTER("Center"),
-		LEFT("Left"),
-		RIGHT("Right"),
-		OUTPOST("O");
+		OUTSIDE_LEFT_TRENCH("OLT", "ORT", 1),
+		OUTSIDE_RIGHT_TRENCH("ORT", "OLT", 1),
+		CENTER("Center", 1),
+		LEFT("Left", "Right", 1),
+		RIGHT("Right", "Left", 1),
+		OUTPOST("O", 0);
 
 		public final String alias;
+		public final String rightAlias;
+		public final int canFlip;
 
-		ScoringLocation(String alias) {
+		ScoringLocation(String alias, int canFlip) {
 			this.alias = alias;
+			this.rightAlias = alias;
+			this.canFlip = canFlip;
+		}
+
+		ScoringLocation(String alias, String rightAlias, int canFlip) {
+			this.alias = alias;
+			this.rightAlias = rightAlias;
+			this.canFlip = canFlip;
 		}
 	}
+
 }
