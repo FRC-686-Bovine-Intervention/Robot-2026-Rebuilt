@@ -16,10 +16,14 @@
  },
  "params":{
   "waypoints":[
-    {"x":{"exp":"Outpost.x", "val":0.6444996}, "y":{"exp":"Outpost.y", "val":0.6642226999999999}, "heading":{"exp":"Outpost.heading", "val":3.141592653589793}, "intervals":9, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":{"exp":"Outpost.x", "val":0.6444996}, "y":{"exp":"Outpost.y", "val":0.6642226999999999}, "heading":{"exp":"Outpost.heading", "val":0.0}, "intervals":9, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"1.064509630203247 m", "val":1.064509630203247}, "y":{"exp":"0.7431489825248718 m", "val":0.7431489825248718}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":16, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
     {"x":{"exp":"2.6870853900909424 m", "val":2.6870853900909424}, "y":{"exp":"0.6299460530281067 m", "val":0.6299460530281067}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":17, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
+<<<<<<< HEAD
     {"x":{"exp":"SIRT.x", "val":4.447539999999999}, "y":{"exp":"SIRT.y", "val":0.4445}, "heading":{"exp":"SIRT.heading", "val":3.141592653589793}, "intervals":19, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
+=======
+    {"x":{"exp":"InsideTrenchR.x", "val":4.447539999999999}, "y":{"exp":"InsideTrenchR.y", "val":0.4445}, "heading":{"exp":"InsideTrenchR.heading", "val":3.141592653589793}, "intervals":19, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
+>>>>>>> origin/choreo-2026
   "constraints":[
     {"from":"first", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
     {"from":"last", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},

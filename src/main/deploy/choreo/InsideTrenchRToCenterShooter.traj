@@ -16,7 +16,11 @@
  },
  "params":{
   "waypoints":[
+<<<<<<< HEAD
     {"x":{"exp":"SIRT.x", "val":4.447539999999999}, "y":{"exp":"SIRT.y", "val":0.4445}, "heading":{"exp":"SIRT.heading", "val":3.141592653589793}, "intervals":25, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+=======
+    {"x":{"exp":"InsideTrenchR.x", "val":4.447539999999999}, "y":{"exp":"InsideTrenchR.y", "val":0.4445}, "heading":{"exp":"InsideTrenchR.heading", "val":3.141592653589793}, "intervals":25, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+>>>>>>> origin/choreo-2026
     {"x":{"exp":"3.3745462894439697 m", "val":3.3745462894439697}, "y":{"exp":"1.0936449766159058 m", "val":1.0936449766159058}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":25, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
     {"x":{"exp":"3.1238880157470703 m", "val":3.1238880157470703}, "y":{"exp":"3.1953184604644775 m", "val":3.1953184604644775}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":19, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
     {"x":{"exp":"Center.x", "val":2.57381375}, "y":{"exp":"Center.y", "val":4.03479}, "heading":{"exp":"Center.heading", "val":0.0}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],

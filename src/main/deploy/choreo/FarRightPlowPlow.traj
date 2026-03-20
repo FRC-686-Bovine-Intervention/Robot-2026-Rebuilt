@@ -26,11 +26,18 @@
   "waypoints":[
     {"x":{"exp":"SORT.x", "val":3.55854}, "y":{"exp":"SORT.y", "val":0.4445}, "heading":{"exp":"SORT.heading", "val":0.0}, "intervals":44, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"9.439055442810059 m", "val":9.43905544281006}, "y":{"exp":"0.8020692467689514 m", "val":0.8020692467689514}, "heading":{"exp":"1.7894649984287383 rad", "val":1.7894649984287383}, "intervals":30, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+<<<<<<< HEAD
     {"x":{"exp":"8.696820259094238 m", "val":8.696820259094238}, "y":{"exp":"2.8246612548828125 m", "val":2.8246612548828125}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":30, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
     {"x":{"exp":"7.397907733917236 m", "val":7.397907733917236}, "y":{"exp":"6.331724643707275 m", "val":6.331724643707275}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":23, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
     {"x":{"exp":"5.727877616882324 m", "val":5.727877616882324}, "y":{"exp":"7.426522254943848 m", "val":7.426522254943848}, "heading":{"exp":"3.141592653589793 rad", "val":3.141592653589793}, "intervals":30, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"2.8650081157684326 m", "val":2.8650081157684326}, "y":{"exp":"7.417507171630859 m", "val":7.417507171630859}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":25, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
     {"x":{"exp":"Left.x", "val":2.3444199999999995}, "y":{"exp":"Left.y", "val":5.9589955496}, "heading":{"exp":"Left.heading", "val":-0.8156920210794066}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
+=======
+    {"x":{"exp":"8.696820259094238 m", "val":8.696820259094238}, "y":{"exp":"2.8246612548828125 m", "val":2.8246612548828125}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":31, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
+    {"x":{"exp":"7.397907733917236 m", "val":7.397907733917236}, "y":{"exp":"6.331724643707275 m", "val":6.331724643707275}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":24, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
+    {"x":{"exp":"PreInsideTrenchL.x", "val":5.872030258178711}, "y":{"exp":"PreInsideTrenchL.y", "val":7.609946250915527}, "heading":{"exp":"PreInsideTrenchL.heading", "val":3.141524863122604}, "intervals":14, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":{"exp":"InsideTrenchL.x", "val":4.447539999999999}, "y":{"exp":"InsideTrenchL.y", "val":7.62508}, "heading":{"exp":"InsideTrenchL.heading", "val":3.141592653589793}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
+>>>>>>> origin/choreo-2026
   "constraints":[
     {"from":"first", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
     {"from":"last", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
@@ -39,8 +46,7 @@
     {"from":2, "to":3, "data":{"type":"MaxVelocity", "props":{"max":{"exp":"5 m / s", "val":5.0}}}, "enabled":true},
     {"from":1, "to":2, "data":{"type":"MaxAcceleration", "props":{"max":{"exp":"6 m / s ^ 2", "val":6.0}}}, "enabled":true},
     {"from":2, "to":3, "data":{"type":"KeepInLane", "props":{"tolerance":{"exp":"0.01 m", "val":0.01}}}, "enabled":true},
-    {"from":0, "to":0, "data":{"type":"KeepOutCircle", "props":{"x":{"exp":"4.779027683660388 m", "val":4.779027683660388}, "y":{"exp":"5.960359936114401 m", "val":5.960359936114401}, "r":{"exp":"1 m", "val":1.0}}}, "enabled":true},
-    {"from":4, "to":5, "data":{"type":"KeepInLane", "props":{"tolerance":{"exp":"0.01 m", "val":0.01}}}, "enabled":true}],
+    {"from":0, "to":0, "data":{"type":"KeepOutCircle", "props":{"x":{"exp":"4.779027683660388 m", "val":4.779027683660388}, "y":{"exp":"5.960359936114401 m", "val":5.960359936114401}, "r":{"exp":"1 m", "val":1.0}}}, "enabled":true}],
   "targetDt":{
    "exp":"0.05 s",
    "val":0.05

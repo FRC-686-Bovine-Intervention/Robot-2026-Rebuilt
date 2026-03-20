@@ -14,7 +14,11 @@
  },
  "params":{
   "waypoints":[
+<<<<<<< HEAD
     {"x":{"exp":"Left.x", "val":2.3444199999999995}, "y":{"exp":"Left.y", "val":5.9589955496}, "heading":{"exp":"Left.heading", "val":-0.8156920210794066}, "intervals":14, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+=======
+    {"x":{"exp":"LeftShooter.x", "val":2.908181667327881}, "y":{"exp":"LeftShooter.y", "val":5.9589955496}, "heading":{"exp":"LeftShooter.heading", "val":-0.8156920210794066}, "intervals":14, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+>>>>>>> origin/choreo-2026
     {"x":{"exp":"2.184846878051758 m", "val":2.184846878051758}, "y":{"exp":"5.949790954589844 m", "val":5.949790954589844}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":22, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
     {"x":{"exp":"Depo.x", "val":1.1303}, "y":{"exp":"Depo.y", "val":5.9589955496}, "heading":{"exp":"Depo.heading", "val":3.141592653589793}, "intervals":25, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
   "constraints":[

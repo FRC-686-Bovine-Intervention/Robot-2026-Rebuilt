@@ -17,7 +17,11 @@
   "waypoints":[
     {"x":{"exp":"LeftTower.x", "val":1.0822818279266355}, "y":{"exp":"LeftTower.y", "val":4.613605499267578}, "heading":{"exp":"LeftTower.heading", "val":0.0}, "intervals":20, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"2.345937728881836 m", "val":2.345937728881836}, "y":{"exp":"5.054841995239258 m", "val":5.054841995239258}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":17, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
+<<<<<<< HEAD
     {"x":{"exp":"Left.x", "val":2.3444199999999995}, "y":{"exp":"Left.y", "val":5.9589955496}, "heading":{"exp":"Left.heading", "val":-0.8156920210794066}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false}],
+=======
+    {"x":{"exp":"LeftShooter.x", "val":2.908181667327881}, "y":{"exp":"LeftShooter.y", "val":5.9589955496}, "heading":{"exp":"LeftShooter.heading", "val":-0.8156920210794066}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false}],
+>>>>>>> origin/choreo-2026
   "constraints":[
     {"from":"first", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
     {"from":"last", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
