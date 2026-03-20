@@ -18,7 +18,7 @@
   "waypoints":[
     {"x":{"exp":"QuarterR.x", "val":7.825740000000001}, "y":{"exp":"QuarterR.y", "val":2.908935}, "heading":{"exp":"QuarterR.heading", "val":1.5707963267948966}, "intervals":33, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"PreInstantHubShotR.x", "val":5.872030258178711}, "y":{"exp":"PreInstantHubShotR.y", "val":0.49670782685279846}, "heading":{"exp":"PreInstantHubShotR.heading", "val":0.0}, "intervals":15, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
-    {"x":{"exp":"AfterInstantHubShotR.x", "val":4.447539999999999}, "y":{"exp":"AfterInstantHubShotR.y", "val":0.4445}, "heading":{"exp":"AfterInstantHubShotR.heading", "val":0.0023791607137518176}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
+    {"x":{"exp":"AfterInstantHubShotR.x", "val":4.447539999999999}, "y":{"exp":"AfterInstantHubShotR.y", "val":0.4445}, "heading":{"exp":"AfterInstantHubShotR.heading", "val":-1.5707963267948966}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
   "constraints":[
     {"from":"first", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
     {"from":"last", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
