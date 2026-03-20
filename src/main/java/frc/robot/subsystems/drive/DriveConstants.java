@@ -113,7 +113,7 @@ public final class DriveConstants {
 
 	public static final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(moduleTranslations);
 
-	public static final LinearRelation wheel = LinearRelation.wheelRadius(Inches.of(1.647383));
+	public static final LinearRelation wheel = LinearRelation.wheelRadius(Inches.of(1.4835686288396965));
 
 	public static final GearRatio driveMotorToWheelRatio = new GearRatio()
 		.gear(14).gear(22).axle()

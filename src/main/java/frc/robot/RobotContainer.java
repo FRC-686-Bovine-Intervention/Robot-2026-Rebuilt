@@ -89,7 +89,6 @@ import frc.robot.subsystems.shooter.aiming.passing.InterpolationPassingCalc;
 import frc.robot.subsystems.shooter.aiming.shooting.InterpolationShootingCalc;
 import frc.robot.subsystems.shooter.aiming.shooting.PhysicsShootingCalc;
 import frc.robot.subsystems.shooter.flywheel.Flywheel;
-import frc.robot.subsystems.shooter.flywheel.FlywheelConstants;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIOTalonFX;
 import frc.robot.subsystems.shooter.hood.Hood;
@@ -160,8 +159,7 @@ public class RobotContainer {
 						.toArray(ModuleIO[]::new)
 				);
 				this.shooter = new Shooter(
-					new Flywheel(FlywheelConstants.leftFlywheelConfig, new FlywheelIOTalonFX(FlywheelConstants.leftFlywheelConfig)),
-					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIOTalonFX(FlywheelConstants.rightFlywheelConfig)),
+					new Flywheel(new FlywheelIOTalonFX()),
 					new Hood(new HoodIOTalonFXS(commonCANdi)),
 					new AimingSystem(
 						new InterpolationShootingCalc(),
@@ -226,8 +224,7 @@ public class RobotContainer {
 						.toArray(ModuleIO[]::new)
 				);
 				this.shooter = new Shooter(
-					new Flywheel(FlywheelConstants.leftFlywheelConfig, new FlywheelIO() {}),
-					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIO() {}),
+					new Flywheel(new FlywheelIO() {}),
 					new Hood(new HoodIOSim(commonCANdi)),
 					new AimingSystem(
 						new PhysicsShootingCalc(),
@@ -291,8 +288,7 @@ public class RobotContainer {
 					new ModuleIO(){}
 				);
 				this.shooter = new Shooter(
-					new Flywheel(FlywheelConstants.leftFlywheelConfig, new FlywheelIO() {}),
-					new Flywheel(FlywheelConstants.rightFlywheelConfig, new FlywheelIO() {}),
+					new Flywheel(new FlywheelIO() {}),
 					new Hood(new HoodIO() {}),
 					new AimingSystem(
 						new PhysicsShootingCalc(),
@@ -639,8 +635,7 @@ public class RobotContainer {
 			.withName("Feed")
 		;
 
-		final var leftFlywheelIdleCommand = this.shooter.leftFlywheel.idle();
-		final var rightFlywheelIdleCommand = this.shooter.rightFlywheel.idle();
+		final var flywheelIdleCommand = this.shooter.flywheel.idle();
 		final var hoodStowCommand = this.shooter.hood.stow();
 
 		LoggedTunable<Distance> manualAimDist = LoggedTunable.from("Controls/Manual Aim/Distance", Inches::of, 121.92625);
@@ -674,8 +669,7 @@ public class RobotContainer {
 						);
 					}
 				).repeatedly(),
-				this.shooter.aimLeftFlywheelAtHub(),
-				this.shooter.aimRightFlywheelAtHub(),
+				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
 				this.shooter.aimDriveAtHubWithXLock(this.drive, desiredTranslationalRobotVelo)
 			)
@@ -694,8 +688,7 @@ public class RobotContainer {
 						}
 					}
 				).repeatedly(),
-				this.shooter.aimLeftFlywheelToPass(),
-				this.shooter.aimRightFlywheelToPass(),
+				this.shooter.aimFlywheelToPass(),
 				this.shooter.aimHoodToPass(),
 				this.shooter.aimDriveToPass(this.drive.rotationalSubsystem)
 			)
@@ -716,8 +709,7 @@ public class RobotContainer {
 		this.rollers.agitator.setDefaultCommand(rollersAgitatorIdleCommand);
 
 		this.shooter.hood.setDefaultCommand(hoodStowCommand);
-		this.shooter.leftFlywheel.setDefaultCommand(leftFlywheelIdleCommand);
-		this.shooter.rightFlywheel.setDefaultCommand(rightFlywheelIdleCommand);
+		this.shooter.flywheel.setDefaultCommand(flywheelIdleCommand);
 
 		// this.climber.hook.setDefaultCommand(climberHookStowCommand);
 

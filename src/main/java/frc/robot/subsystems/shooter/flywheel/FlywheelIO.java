@@ -12,12 +12,16 @@ import frc.util.loggerUtil.inputs.LoggedEncodedMotor;
 public interface FlywheelIO {
 	@AutoLog
 	public static class FlywheelIOInputs {
-		boolean masterMotorConnected = false;
-		boolean slaveMotorConnected = false;
-		LoggedEncodedMotor masterMotor = new LoggedEncodedMotor();
-		LoggedEncodedMotor slaveMotor = new LoggedEncodedMotor();
-		double motorProfilePositionRads = 0.0;
-		double motorProfileVelocityRadsPerSec = 0.0;
+		boolean leftBottomMotorConnected = false;
+		boolean leftTopMotorConnected = false;
+		boolean rightBottomMotorConnected = false;
+		boolean rightTopMotorConnected = false;
+		LoggedEncodedMotor leftBottomMotor = new LoggedEncodedMotor();
+		LoggedEncodedMotor leftTopMotor = new LoggedEncodedMotor();
+		LoggedEncodedMotor rightBottomMotor = new LoggedEncodedMotor();
+		LoggedEncodedMotor rightTopMotor = new LoggedEncodedMotor();
+		double profilePositionRads = 0.0;
+		double profileVelocityRadsPerSec = 0.0;
 	}
 
 	public default void updateInputs(FlywheelIOInputs inputs) {}
