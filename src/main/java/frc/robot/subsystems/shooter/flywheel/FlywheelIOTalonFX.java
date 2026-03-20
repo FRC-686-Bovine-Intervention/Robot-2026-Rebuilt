@@ -196,6 +196,12 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 		inputs.leftTopMotorConnected = BaseStatusSignal.isAllGood(this.leftTopMotorConnectedSignals);
 		inputs.rightBottomMotorConnected = BaseStatusSignal.isAllGood(this.rightBottomMotorConnectedSignals);
 		inputs.rightTopMotorConnected = BaseStatusSignal.isAllGood(this.rightTopMotorConnectedSignals);
+
+		inputs.leftBottomMotor.updateFrom(this.leftBottomMotorStatusSignalCache);
+		inputs.leftTopMotor.updateFrom(this.leftTopMotorStatusSignalCache);
+		inputs.rightBottomMotor.updateFrom(this.rightBottomMotorStatusSignalCache);
+		inputs.rightTopMotor.updateFrom(this.rightTopMotorStatusSignalCache);
+
 		inputs.profilePositionRads = Units.rotationsToRadians(this.profilePositionStatusSignal.getValueAsDouble());
 		inputs.profileVelocityRadsPerSec = Units.rotationsToRadians(this.profileVelocityStatusSignal.getValueAsDouble());
 	}
