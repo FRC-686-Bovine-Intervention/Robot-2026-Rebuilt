@@ -12,6 +12,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Time;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.util.loggerUtil.tunables.LoggedTunable;
+import frc.util.loggerUtil.tunables.LoggedTunableNumber;
 
 public class InterpolationShootingCalc implements ShootingCalc {
 
@@ -33,6 +34,8 @@ public class InterpolationShootingCalc implements ShootingCalc {
 		ShooterConstants.hubTargetFlyWheelVeloMPS.get(0.0);
 	}
 
+	private static final LoggedTunableNumber flywheelMul = LoggedTunable.from("FLYWHEEL MUL", 0.25);
+
 	@Override
 	public void calculate(Pose2d robotPose, ChassisSpeeds fieldSpeeds, Translation3d aimPoint) {
 		var robotPos = robotPose.getTranslation();
@@ -49,7 +52,7 @@ public class InterpolationShootingCalc implements ShootingCalc {
 		Logger.recordOutput("Subsystems/Shooter/Aiming/Effective Distance", this.effectiveDistanceMeters);
 
 		this.targetHoodAngleRads = ShooterConstants.hubTargetHoodAngleRads.get(this.effectiveDistanceMeters);
-		this.targetFlywheelVeloMPS = ShooterConstants.hubTargetFlyWheelVeloMPS.get(this.effectiveDistanceMeters);
+		this.targetFlywheelVeloMPS = ShooterConstants.hubTargetFlyWheelVeloMPS.get(this.effectiveDistanceMeters) * flywheelMul.getAsDouble();
 		this.tofSecs = ShooterConstants.hubTargetTimeOfFlightSecs.get(this.effectiveDistanceMeters);
 
 		Logger.recordOutput("Subsystems/Shooter/Aiming/Aim Point", this.aimPoint);
