@@ -761,7 +761,7 @@ public class RobotContainer {
 
 		// Bind buttons
 		this.driveController.leftBumper().whileTrue(driveTankCommand);
-		new Trigger(() -> 
+		new Trigger(() ->
 			translationJoystick.magnitude() > 0.0
 			&& !driveTankCommand.isScheduled()
 			&& !aimAtHubCommand.isScheduled()
@@ -770,7 +770,7 @@ public class RobotContainer {
 			&& !aimAtHubFromRightTrenchCommand.isScheduled()
 			&& !aimAtHubFromTowerCommand.isScheduled()
 		).whileTrue(driveTranslationCommand);
-		new Trigger(() -> 
+		new Trigger(() ->
 			Math.abs(rotateAxis.getAsDouble()) > 0.0
 			&& !driveTankCommand.isScheduled()
 			&& !aimAtHubCommand.isScheduled()

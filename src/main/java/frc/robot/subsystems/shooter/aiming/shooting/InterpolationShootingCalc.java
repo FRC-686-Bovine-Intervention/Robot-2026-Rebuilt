@@ -59,10 +59,7 @@ public class InterpolationShootingCalc implements ShootingCalc {
 
 		Logger.recordOutput("Subsystems/Shooter/Aiming/Aim Point", this.aimPoint);
 		Logger.recordOutput("Subsystems/Shooter/Aiming/Shot Pose", new Pose2d(
-			new Translation2d(
-				predictedX,
-				predictedY
-			),
+			this.shotPose,
 			Rotation2d.fromRadians(
 				this.targetDriveHeadingRads
 			)
