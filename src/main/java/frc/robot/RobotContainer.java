@@ -107,6 +107,7 @@ import frc.util.Perspective;
 import frc.util.controllers.XboxController;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.loggerUtil.tunables.LoggedTunableNumber;
+import frc.util.misc.FunctionalUtil;
 import frc.util.robotStructure.Mechanism3d;
 
 public class RobotContainer {
@@ -655,7 +656,7 @@ public class RobotContainer {
 			Commands.parallel(
 				this.shooter.aimingSystem.aimAtHub(
 					FieldConstants.hubIntakeFrontRobotPose::getOurs,
-					this.drive::getFieldMeasuredSpeeds,
+					FunctionalUtil.evalNow(new ChassisSpeeds()),
 					FieldConstants.hubAimPoint::getOurs
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
@@ -668,7 +669,7 @@ public class RobotContainer {
 			Commands.parallel(
 				this.shooter.aimingSystem.aimAtHub(
 					FieldConstants.leftTrenchPresetShotPose::getOurs,
-					this.drive::getFieldMeasuredSpeeds,
+					FunctionalUtil.evalNow(new ChassisSpeeds()),
 					FieldConstants.hubAimPoint::getOurs
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
@@ -681,7 +682,7 @@ public class RobotContainer {
 			Commands.parallel(
 				this.shooter.aimingSystem.aimAtHub(
 					FieldConstants.rightTrenchPresetShotPose::getOurs,
-					this.drive::getFieldMeasuredSpeeds,
+					FunctionalUtil.evalNow(new ChassisSpeeds()),
 					FieldConstants.hubAimPoint::getOurs
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
@@ -694,7 +695,7 @@ public class RobotContainer {
 			Commands.parallel(
 				this.shooter.aimingSystem.aimAtHub(
 					FieldConstants.towerPresetShotPose::getOurs,
-					this.drive::getFieldMeasuredSpeeds,
+					FunctionalUtil.evalNow(new ChassisSpeeds()),
 					FieldConstants.hubAimPoint::getOurs
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
