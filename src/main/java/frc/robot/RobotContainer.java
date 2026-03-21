@@ -5,7 +5,6 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
@@ -21,11 +20,9 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
@@ -104,6 +101,7 @@ import frc.robot.subsystems.vision.cameras.Camera;
 import frc.robot.subsystems.vision.cameras.CameraIO;
 import frc.robot.subsystems.vision.cameras.CameraIOPhoton;
 import frc.robot.subsystems.vision.object.ObjectVision;
+import frc.util.EdgeDetector;
 import frc.util.PIDGains;
 import frc.util.Perspective;
 import frc.util.controllers.XboxController;
@@ -640,42 +638,74 @@ public class RobotContainer {
 		final var flywheelIdleCommand = this.shooter.flywheel.idle();
 		final var hoodStowCommand = this.shooter.hood.stow();
 
-		LoggedTunable<Distance> manualAimDist = LoggedTunable.from("Controls/Manual Aim/Distance", Inches::of, 121.92625);
-
 		final var aimAtHubCommand =
 			Commands.parallel(
 				this.shooter.aimingSystem.aimAtHub(
 					RobotState.getInstance()::getEstimatedGlobalPose,
 					this.drive::getFieldMeasuredSpeeds,
-					() -> {
-						var joyX = +this.driveController.rightStick.y().getAsDouble();
-						var joyY = -this.driveController.rightStick.x().getAsDouble();
-
-						if (Math.hypot(joyX, joyY) < 0.75) {
-							return FieldConstants.hubAimPoint.getOurs();
-						}
-
-						var perspectiveForward = Perspective.getCurrent().getForwardDirection();
-						var fieldX = joyX * perspectiveForward.getCos() - joyY * perspectiveForward.getSin();
-						var fieldY = joyX * perspectiveForward.getSin() + joyY * perspectiveForward.getCos();
-
-						var fieldNormX = fieldX / Math.hypot(fieldX, fieldY);
-						var fieldNormY = fieldY / Math.hypot(fieldX, fieldY);
-
-						var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
-
-						return new Translation3d(
-							robotPose.getTranslation().getX() + fieldNormX * manualAimDist.get().in(Meters),
-							robotPose.getTranslation().getY() + fieldNormY * manualAimDist.get().in(Meters),
-							FieldConstants.hubHeight.in(Meters)
-						);
-					}
+					FieldConstants.hubAimPoint::getOurs
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
 				this.shooter.aimDriveAtHubWithXLock(this.drive, desiredTranslationalRobotVelo)
 			)
 			.withName("Aim at Hub")
+		;
+		final var aimAtHubFromHubFrontCommand =
+			Commands.parallel(
+				this.shooter.aimingSystem.aimAtHub(
+					FieldConstants.hubIntakeFrontRobotPose::getOurs,
+					this.drive::getFieldMeasuredSpeeds,
+					FieldConstants.hubAimPoint::getOurs
+				).repeatedly(),
+				this.shooter.aimLeftFlywheelAtHub(),
+				this.shooter.aimRightFlywheelAtHub(),
+				this.shooter.aimHoodAtHub(),
+				this.shooter.aimDriveAtHubWithXLock(this.drive, desiredTranslationalRobotVelo)
+			)
+			.withName("Aim at Hub from Hub Front")
+		;
+		final var aimAtHubFromLeftTrenchCommand =
+			Commands.parallel(
+				this.shooter.aimingSystem.aimAtHub(
+					FieldConstants.leftTrenchPresetShotPose::getOurs,
+					this.drive::getFieldMeasuredSpeeds,
+					FieldConstants.hubAimPoint::getOurs
+				).repeatedly(),
+				this.shooter.aimLeftFlywheelAtHub(),
+				this.shooter.aimRightFlywheelAtHub(),
+				this.shooter.aimHoodAtHub(),
+				this.shooter.aimDriveAtHubWithXLock(this.drive, desiredTranslationalRobotVelo)
+			)
+			.withName("Aim at Hub from Left Trench")
+		;
+		final var aimAtHubFromRightTrenchCommand =
+			Commands.parallel(
+				this.shooter.aimingSystem.aimAtHub(
+					FieldConstants.rightTrenchPresetShotPose::getOurs,
+					this.drive::getFieldMeasuredSpeeds,
+					FieldConstants.hubAimPoint::getOurs
+				).repeatedly(),
+				this.shooter.aimLeftFlywheelAtHub(),
+				this.shooter.aimRightFlywheelAtHub(),
+				this.shooter.aimHoodAtHub(),
+				this.shooter.aimDriveAtHubWithXLock(this.drive, desiredTranslationalRobotVelo)
+			)
+			.withName("Aim at Hub from Right Trench")
+		;
+		final var aimAtHubFromTowerCommand =
+			Commands.parallel(
+				this.shooter.aimingSystem.aimAtHub(
+					FieldConstants.towerPresetShotPose::getOurs,
+					this.drive::getFieldMeasuredSpeeds,
+					FieldConstants.hubAimPoint::getOurs
+				).repeatedly(),
+				this.shooter.aimLeftFlywheelAtHub(),
+				this.shooter.aimRightFlywheelAtHub(),
+				this.shooter.aimHoodAtHub(),
+				this.shooter.aimDriveAtHubWithXLock(this.drive, desiredTranslationalRobotVelo)
+			)
+			.withName("Aim at Hub from Tower")
 		;
 		final var aimToPassCommand =
 			Commands.parallel(
@@ -769,16 +799,48 @@ public class RobotContainer {
 			}
 		});
 
+		final var aimAutoTrigger = new EdgeDetector(false);
+		final var aimHubTrigger = new EdgeDetector(false);
+		final var aimLeftTrenchTrigger = new EdgeDetector(false);
+		final var aimRightTrenchTrigger = new EdgeDetector(false);
+		final var aimTowerTrigger = new EdgeDetector(false);
+
 		CommandScheduler.getInstance().getDefaultButtonLoop().bind(() -> {
-			if (this.driveController.hid.getRightBumperButtonPressed()) {
+			var rightBumper = this.driveController.hid.getRightBumperButton();
+			var rightStickRads = this.driveController.rightStick.radsFromPosYCCW();
+			var rightStickMag = this.driveController.rightStick.magnitude() > 0.75;
+
+			aimAutoTrigger.update(rightBumper);
+			aimHubTrigger.update(rightBumper && rightStickMag && rightStickRads < Math.PI / 4.0 && rightStickRads > -Math.PI / 4.0);
+			aimLeftTrenchTrigger.update(rightBumper && rightStickMag && rightStickRads < -Math.PI / 4.0 && rightStickRads > 3.0 * -Math.PI / 4.0);
+			aimRightTrenchTrigger.update(rightBumper && rightStickMag && rightStickRads < 3.0 * Math.PI / 4.0 && rightStickRads > Math.PI / 4.0);
+			aimTowerTrigger.update(rightBumper && rightStickMag && rightStickRads > 3.0 * Math.PI / 4.0 && rightStickRads < 3.0 * -Math.PI / 4.0);
+
+			if (aimAutoTrigger.risingEdge()) {
 				if (FieldConstants.allianceZone.getOurs().withinBounds(RobotState.getInstance().getEstimatedGlobalPose().getTranslation())) {
 					CommandScheduler.getInstance().schedule(aimAtHubCommand);
 				} else {
 					CommandScheduler.getInstance().schedule(aimToPassCommand);
 				}
 			}
-			if (this.driveController.hid.getRightBumperButtonReleased()) {
+			if (aimHubTrigger.risingEdge()) {
+				CommandScheduler.getInstance().schedule(aimAtHubFromHubFrontCommand);
+			}
+			if (aimLeftTrenchTrigger.risingEdge()) {
+				CommandScheduler.getInstance().schedule(aimAtHubFromLeftTrenchCommand);
+			}
+			if (aimRightTrenchTrigger.risingEdge()) {
+				CommandScheduler.getInstance().schedule(aimAtHubFromRightTrenchCommand);
+			}
+			if (aimTowerTrigger.risingEdge()) {
+				CommandScheduler.getInstance().schedule(aimAtHubFromTowerCommand);
+			}
+			if (aimAutoTrigger.fallingEdge()) {
 				CommandScheduler.getInstance().cancel(aimAtHubCommand);
+				CommandScheduler.getInstance().cancel(aimAtHubFromHubFrontCommand);
+				CommandScheduler.getInstance().cancel(aimAtHubFromLeftTrenchCommand);
+				CommandScheduler.getInstance().cancel(aimAtHubFromRightTrenchCommand);
+				CommandScheduler.getInstance().cancel(aimAtHubFromTowerCommand);
 				CommandScheduler.getInstance().cancel(aimToPassCommand);
 			}
 		});
