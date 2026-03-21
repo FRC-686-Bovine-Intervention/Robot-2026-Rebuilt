@@ -622,6 +622,20 @@
      "val":2.214297613191292
     }
    },
+   "NewRightStart":{
+    "x":{
+     "exp":"3.558394432067871 m",
+     "val":3.558394432067871
+    },
+    "y":{
+     "exp":"2.4820046424865723 m",
+     "val":2.4820046424865723
+    },
+    "heading":{
+     "exp":"RightStart.heading",
+     "val":-3.141592653589793
+    }
+   },
    "Outpost":{
     "x":{
      "exp":"DeployIntakeToBumper + CenterToBumper",
