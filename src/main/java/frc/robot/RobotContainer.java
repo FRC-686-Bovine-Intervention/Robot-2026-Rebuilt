@@ -658,8 +658,7 @@ public class RobotContainer {
 					this.drive::getFieldMeasuredSpeeds,
 					FieldConstants.hubAimPoint::getOurs
 				).repeatedly(),
-				this.shooter.aimLeftFlywheelAtHub(),
-				this.shooter.aimRightFlywheelAtHub(),
+				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
 				this.shooter.aimDriveAtHubWithXLock(this.drive, desiredTranslationalRobotVelo)
 			)
@@ -672,8 +671,7 @@ public class RobotContainer {
 					this.drive::getFieldMeasuredSpeeds,
 					FieldConstants.hubAimPoint::getOurs
 				).repeatedly(),
-				this.shooter.aimLeftFlywheelAtHub(),
-				this.shooter.aimRightFlywheelAtHub(),
+				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
 				this.shooter.aimDriveAtHubWithXLock(this.drive, desiredTranslationalRobotVelo)
 			)
@@ -686,8 +684,7 @@ public class RobotContainer {
 					this.drive::getFieldMeasuredSpeeds,
 					FieldConstants.hubAimPoint::getOurs
 				).repeatedly(),
-				this.shooter.aimLeftFlywheelAtHub(),
-				this.shooter.aimRightFlywheelAtHub(),
+				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
 				this.shooter.aimDriveAtHubWithXLock(this.drive, desiredTranslationalRobotVelo)
 			)
@@ -700,8 +697,7 @@ public class RobotContainer {
 					this.drive::getFieldMeasuredSpeeds,
 					FieldConstants.hubAimPoint::getOurs
 				).repeatedly(),
-				this.shooter.aimLeftFlywheelAtHub(),
-				this.shooter.aimRightFlywheelAtHub(),
+				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
 				this.shooter.aimDriveAtHubWithXLock(this.drive, desiredTranslationalRobotVelo)
 			)
