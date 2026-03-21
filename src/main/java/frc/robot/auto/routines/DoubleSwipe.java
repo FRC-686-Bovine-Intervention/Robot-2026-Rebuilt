@@ -109,9 +109,10 @@ public class DoubleSwipe extends AutoRoutine {
 						),
 						Commands.deadline(
 							Commands.waitSeconds(3.0),
+							this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy(),
 							this.robot.shooter.aimHoodAtHub().asProxy(),
 							this.robot.shooter.aimDriveAtHub(this.robot.drive.rotationalSubsystem).asProxy(),
-							this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy()
+							this.robot.drive.translationSubsystem.simplePIDTo(FunctionalUtil.evalNow(firstTrajBallGrab.getFinalPose(false).get().getTranslation())).asProxy()
 						)
 					),
 					this.robot.shooter.aimingSystem.aimAtHub(
@@ -129,9 +130,10 @@ public class DoubleSwipe extends AutoRoutine {
 						),
 						Commands.parallel(
 							// Commands.waitSeconds(5.0),
+							this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy(),
 							this.robot.shooter.aimHoodAtHub().asProxy(),
 							this.robot.shooter.aimDriveAtHub(this.robot.drive.rotationalSubsystem).asProxy(),
-							this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy()
+							this.robot.drive.translationSubsystem.simplePIDTo(FunctionalUtil.evalNow(firstTrajBallGrab.getFinalPose(false).get().getTranslation())).asProxy()
 						)
 					),
 					this.robot.shooter.aimingSystem.aimAtHub(
