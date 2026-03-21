@@ -387,7 +387,7 @@ public class Drive extends VirtualSubsystem {
 	}
 
 	private static final LoggedTunable<LinearAcceleration> forwardAccelLimitTunable = LoggedTunable.from("Subsystems/Drive/Accel Limits/Forward Accel Limit", MetersPerSecondPerSecond::of, 5000);
-	private static final LoggedTunable<LinearAcceleration> skidAccelLimitTunable = LoggedTunable.from("Subsystems/Drive/Accel Limits/Skid Accel Limit", MetersPerSecondPerSecond::of, 60);
+	private static final LoggedTunable<LinearAcceleration> skidAccelLimitTunable = LoggedTunable.from("Subsystems/Drive/Accel Limits/Skid Accel Limit", MetersPerSecondPerSecond::of, 8.0);
 
 	public static final LoggedTunable<TiltAccelerationLimits> normalTiltLimitTunable = LoggedTunable.from(
 		"Subsystems/Drive/Accel Limits/Tilt Limits/Normal",

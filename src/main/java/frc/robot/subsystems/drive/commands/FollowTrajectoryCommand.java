@@ -3,6 +3,8 @@ package frc.robot.subsystems.drive.commands;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 
+import org.littletonrobotics.junction.Logger;
+
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
 import edu.wpi.first.math.MathUtil;
@@ -114,7 +116,7 @@ public class FollowTrajectoryCommand extends Command {
 		// var robotAY = aX * -robotPose.getRotation().getSin() + aY * +robotPose.getRotation().getCos();
 		// var robotAlpha = alpha;
 
-		// Logger.recordOutput("Trajectory/Setpoint Pose", sample.getPose());
+		Logger.recordOutput("Trajectory/Setpoint Pose", sample.getPose());
 		// Logger.recordOutput("Trajectory/Setpoint Speeds", DriveConstants.kinematics.toSwerveModuleStates(ChassisSpeeds.fromFieldRelativeSpeeds(sample.getChassisSpeeds(), sample.getPose().getRotation())));
 		// Logger.recordOutput("Trajectory/Raw sample", sample);
 
