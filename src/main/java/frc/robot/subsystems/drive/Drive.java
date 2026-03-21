@@ -576,6 +576,9 @@ public class Drive extends VirtualSubsystem {
 	 * requested.
 	 */
 	public void stopWithX() {
+		this.desiredRobotSpeeds.vxMetersPerSecond = 0.0;
+		this.desiredRobotSpeeds.vyMetersPerSecond = 0.0;
+		this.desiredRobotSpeeds.omegaRadiansPerSecond = 0.0;
 		for (int i = 0; i < this.modules.length; i++) {
 			this.modules[i].runSetpoint(new SwerveModuleState(0.0, this.modules[i].config.moduleTransform.getTranslation().getAngle()));
 		}

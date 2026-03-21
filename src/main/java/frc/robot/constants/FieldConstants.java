@@ -159,8 +159,8 @@ public final class FieldConstants {
 	));
 	public static final AllianceFlipped<Pose2d> leftTrenchPresetShotPose = AllianceFlipped.fromBlue(new Pose2d(
 		new Translation2d(
-			fieldWidth.minus(Meter.of(3.576365)),
-			Meter.of(1.565505)
+			Meter.of(3.576365),
+			fieldWidth.minus(Meter.of(1.565505))
 		),
 		Rotation2d.fromRadians(1.1823833).unaryMinus()
 	));
