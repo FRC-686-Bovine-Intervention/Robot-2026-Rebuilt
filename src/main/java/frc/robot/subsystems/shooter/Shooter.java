@@ -18,6 +18,7 @@ import frc.robot.subsystems.shooter.flywheel.Flywheel;
 import frc.robot.subsystems.shooter.flywheel.FlywheelConstants;
 import frc.robot.subsystems.shooter.hood.Hood;
 import frc.util.PIDGains;
+import frc.util.geometry.GeomUtil;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.math.MathExtraUtil;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ public class Shooter {
 	private static final LoggedTunable<LinearVelocity> flywheelTolerance = LoggedTunable.from("Shooting/Aiming/Tolerances/Flywheel", MetersPerSecond::of, 1.5);
 	private static final LoggedTunable<Distance>        azimuthTolerance = LoggedTunable.from("Shooting/Aiming/Tolerances/Azimuth", Inches::of, 10.0);
 	private static final LoggedTunable<Distance>          pitchTolerance = LoggedTunable.from("Shooting/Aiming/Tolerances/Pitch", Inches::of, 10.0);
+	private static final LoggedTunable<Distance>          translationTolerance = LoggedTunable.from("Shooting/Aiming/Tolerances/Translation", Inches::of, 4.0);
 
 	public Command aimFlywheelAtHub() {
 		return this.flywheel.genSurfaceVeloCommand("Aim at Hub", this.aimingSystem.shootingCalc::getTargetFlywheelSurfaceVeloMPS);
@@ -121,10 +123,10 @@ public class Shooter {
 		double targetSurfaceVelo = this.aimingSystem.shootingCalc.getTargetFlywheelSurfaceVeloMPS();
 		double targetHoodAngle = this.aimingSystem.shootingCalc.getTargetHoodAngleRads();
 		double targetAzimuth = this.aimingSystem.shootingCalc.getTargetAzimuthHeadingRads();
+		var shotPose = this.aimingSystem.shootingCalc.getShotPose();
 
 		double avgSurfaceVelo = getAverageMeasuredFlywheelSurfaceVeloMPS();
 		boolean withinFlywheelTolerance = avgSurfaceVelo < targetSurfaceVelo + flywheelTolerance.get().in(MetersPerSecond) && avgSurfaceVelo > targetSurfaceVelo - flywheelTolerance.get().in(MetersPerSecond);
-
 
 		var targetVector = getLaunchVector(targetSurfaceVelo, targetHoodAngle, targetAzimuth);
 
@@ -141,7 +143,9 @@ public class Shooter {
 		double pitchDistance = Math.sqrt(Math.pow(measuredPitchVector[0] - targetVectorSideView[0], 2) + Math.pow(measuredPitchVector[1] - targetVectorSideView[1], 2));
 		boolean withinPitchTolerance = pitchDistance < pitchTolerance.get().in(Meters);
 
-		return withinFlywheelTolerance && withinAzimuthTolerance && withinPitchTolerance;
+		var withinTranslationTolerance = GeomUtil.isNear(shotPose, RobotState.getInstance().getEstimatedGlobalPose().getTranslation(), translationTolerance.get());
+
+		return withinFlywheelTolerance && withinAzimuthTolerance && withinPitchTolerance && withinTranslationTolerance;
 	}
 
 

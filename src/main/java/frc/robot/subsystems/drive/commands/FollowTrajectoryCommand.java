@@ -25,12 +25,12 @@ public class FollowTrajectoryCommand extends Command {
 
 	private static final LoggedTunable<Distance> MAX_ERROR = LoggedTunable.from("Drive/Trajectory Following/Max Error", Inches::of, 24.0);
 	private static final LoggedTunable<PIDGains> TRANS_PID_GAINS = LoggedTunable.from("Drive/Trajectory Following/Trans PID", new PIDGains(
-		5.0,
+		3.0,
 		0.0,
 		0.0
 	));
 	private static final LoggedTunable<PIDGains> ROT_PID_GAINS = LoggedTunable.from("Drive/Trajectory Following/Rot PID", new PIDGains(
-		3.5,
+		3.0,
 		0.0,
 		0.0
 	));

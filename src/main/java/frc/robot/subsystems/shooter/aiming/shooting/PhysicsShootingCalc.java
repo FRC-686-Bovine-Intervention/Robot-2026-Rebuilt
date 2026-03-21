@@ -17,6 +17,7 @@ public class PhysicsShootingCalc implements ShootingCalc {
 	private double flywheelSpeedMS;
 	private double robotRotationRads;
 	private Translation3d aimPoint;
+	private Translation2d shotPose;
 	private double tofSeconds;
 
 	public PhysicsShootingCalc() {
@@ -27,6 +28,7 @@ public class PhysicsShootingCalc implements ShootingCalc {
 
 	@Override
 	public void calculate(Pose2d robotPose, ChassisSpeeds fieldSpeeds, Translation3d aimPoint) {
+		this.shotPose = robotPose.getTranslation();
 		var shooterHubSpaceCartesian = new Pose3d(robotPose).transformBy(HoodConstants.hoodBase).getTranslation().toTranslation2d().minus(aimPoint.toTranslation2d());
 		double radius = shooterHubSpaceCartesian.getNorm();
 
@@ -87,6 +89,11 @@ public class PhysicsShootingCalc implements ShootingCalc {
 	@Override
 	public Translation3d getAimPoint() {
 		return this.aimPoint;
+	}
+
+	@Override
+	public Translation2d getShotPose() {
+		return this.shotPose;
 	}
 
 	@Override

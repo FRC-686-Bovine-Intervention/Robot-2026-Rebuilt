@@ -22,7 +22,7 @@ public class InterpolationShootingCalc implements ShootingCalc {
 	// private static final LoggedTunable<Angle> customAzimuthOffset = LoggedTunable.from("Subsystems/Shooter/Aiming/Custom Azimuth Offset", Radians::of, 0.0);
 
 	private Translation3d aimPoint;
-	// private Pose2d shotPose;
+	private Translation2d shotPose;
 	// private ChassisSpeeds shotSpeeds;
 	private double effectiveDistanceMeters;
 	private double targetHoodAngleRads;
@@ -34,10 +34,12 @@ public class InterpolationShootingCalc implements ShootingCalc {
 		ShooterConstants.hubTargetFlyWheelVeloMPS.get(0.0);
 	}
 
-	private static final LoggedTunableNumber flywheelMul = LoggedTunable.from("FLYWHEEL MUL", 0.25);
+	private static final LoggedTunableNumber flywheelMul = LoggedTunable.from("FLYWHEEL MUL", 0.5);
 
 	@Override
 	public void calculate(Pose2d robotPose, ChassisSpeeds fieldSpeeds, Translation3d aimPoint) {
+		this.shotPose = robotPose.getTranslation();
+
 		var robotPos = robotPose.getTranslation();
 		this.aimPoint = aimPoint;
 
@@ -85,6 +87,11 @@ public class InterpolationShootingCalc implements ShootingCalc {
 	@Override
 	public Translation3d getAimPoint() {
 		return this.aimPoint;
+	}
+
+	@Override
+	public Translation2d getShotPose() {
+		return this.shotPose;
 	}
 
 	@Override
