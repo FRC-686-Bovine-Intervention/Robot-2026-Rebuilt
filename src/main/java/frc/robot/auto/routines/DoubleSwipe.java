@@ -18,8 +18,8 @@ import frc.util.misc.FunctionalUtil;
 
 public class DoubleSwipe extends AutoRoutine {
 	private static final AutoQuestion<AllianceFlipped<Pose2d>> startPosition = new AutoQuestion<>("Start Position") {
-		private final Map.Entry<String, AllianceFlipped<Pose2d>> startInLeftTrench = AutoQuestion.Settings.option("In L Trench", AutoConstants.startInLeftTrench);
-		private final Map.Entry<String, AllianceFlipped<Pose2d>> startInRightTrench = AutoQuestion.Settings.option("In R Trench", AutoConstants.startInRightTrench);
+		private final Map.Entry<String, AllianceFlipped<Pose2d>> startInLeftTrench = AutoQuestion.Settings.option("In L Trench", AutoConstants.startInsideLeftTrench);
+		private final Map.Entry<String, AllianceFlipped<Pose2d>> startInRightTrench = AutoQuestion.Settings.option("In R Trench", AutoConstants.startInsideRightTrench);
 
 		@Override
 		protected AutoQuestion.Settings<AllianceFlipped<Pose2d>> generateSettings() {
@@ -66,7 +66,7 @@ public class DoubleSwipe extends AutoRoutine {
 
 		switch (bump) {
 			case Trench -> {
-				if (startPosition == AutoConstants.startInLeftTrench) {
+				if (startPosition == AutoConstants.startInsideLeftTrench) {
 					firstTrajBallGrabName = "LeftTrenchGrab1";
 					secondTrajBallGrabName = "LeftTrenchGrab2";
 				} else {
@@ -75,7 +75,7 @@ public class DoubleSwipe extends AutoRoutine {
 				}
 			}
 			case Bump -> {
-				if (startPosition == AutoConstants.startInLeftTrench) {
+				if (startPosition == AutoConstants.startInsideLeftTrench) {
 					firstTrajBallGrabName = "LeftTrenchGrab1Bump";
 					secondTrajBallGrabName = "LeftTrenchGrab2Bump";
 				} else {
@@ -84,7 +84,7 @@ public class DoubleSwipe extends AutoRoutine {
 				}
 			}
 			default -> {
-				if (startPosition == AutoConstants.startInLeftTrench) {
+				if (startPosition == AutoConstants.startInsideLeftTrench) {
 					firstTrajBallGrabName = "LeftTrenchGrab1";
 					secondTrajBallGrabName = "LeftTrenchGrab2TrenchBump";
 				} else {

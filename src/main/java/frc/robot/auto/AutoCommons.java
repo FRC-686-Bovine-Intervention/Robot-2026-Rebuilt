@@ -9,6 +9,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotState;
+import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.commands.FollowTrajectoryCommand;
 import frc.util.flipping.AllianceFlipped;
 
 public class AutoCommons {
@@ -22,5 +24,15 @@ public class AutoCommons {
 			throw new NullPointerException("No such Choreo trajectory: " + name);
 		}
 		return AllianceFlipped.fromBlue(traj.get());
+	}
+
+	public static Command followPathCommand(String name, Drive drive) {
+		var traj = loadBlueChoreoTrajectory(name).getOurs();
+
+		return new FollowTrajectoryCommand(drive, traj, true).asProxy();
+	}
+
+	public static Command followPathCommand(Trajectory<SwerveSample> traj, Drive drive) {
+		return new FollowTrajectoryCommand(drive, traj, true).asProxy();
 	}
 }

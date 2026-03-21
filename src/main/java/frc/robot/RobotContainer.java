@@ -40,8 +40,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoCommons;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
-import frc.robot.auto.routines.DoubleSwipe;
-import frc.robot.auto.routines.Preloads;
+import frc.robot.auto.routines.ScoreFuel;
 import frc.robot.automations.AutoFeed;
 import frc.robot.automations.HubShiftNotifications;
 import frc.robot.automations.IntakeDeployHysteresis;
@@ -388,8 +387,7 @@ public class RobotContainer {
 
 		final var autoSelector = new AutoSelector("Auto Selector");
 		// Add autonomous routines to autonomous selector
-		autoSelector.addDefaultRoutine(new DoubleSwipe(this));
-		autoSelector.addRoutine(new Preloads(this));
+		autoSelector.addDefaultRoutine(new ScoreFuel(this));
 
 		this.autoManager = new AutoManager(autoSelector);
 
