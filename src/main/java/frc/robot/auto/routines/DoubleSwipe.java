@@ -108,7 +108,7 @@ public class DoubleSwipe extends AutoRoutine {
 							this.robot.intake.rollers.intake().asProxy()
 						),
 						Commands.deadline(
-							Commands.waitSeconds(4.0),
+							Commands.waitSeconds(3.0),
 							this.robot.shooter.aimHoodAtHub().asProxy(),
 							this.robot.shooter.aimDriveAtHub(this.robot.drive.rotationalSubsystem).asProxy(),
 							this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy()
