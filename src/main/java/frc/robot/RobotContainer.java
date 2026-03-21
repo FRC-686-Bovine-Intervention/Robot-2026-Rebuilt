@@ -810,7 +810,7 @@ public class RobotContainer {
 			aimHubTrigger.update(rightBumper && rightStickMag && rightStickRads < Math.PI / 4.0 && rightStickRads > -Math.PI / 4.0);
 			aimLeftTrenchTrigger.update(rightBumper && rightStickMag && rightStickRads < -Math.PI / 4.0 && rightStickRads > 3.0 * -Math.PI / 4.0);
 			aimRightTrenchTrigger.update(rightBumper && rightStickMag && rightStickRads < 3.0 * Math.PI / 4.0 && rightStickRads > Math.PI / 4.0);
-			aimTowerTrigger.update(rightBumper && rightStickMag && rightStickRads > 3.0 * Math.PI / 4.0 && rightStickRads < 3.0 * -Math.PI / 4.0);
+			aimTowerTrigger.update(rightBumper && rightStickMag && (rightStickRads > 3.0 * Math.PI / 4.0 || rightStickRads < 3.0 * -Math.PI / 4.0));
 
 			if (aimAutoTrigger.risingEdge()) {
 				if (FieldConstants.allianceZone.getOurs().withinBounds(RobotState.getInstance().getEstimatedGlobalPose().getTranslation())) {
