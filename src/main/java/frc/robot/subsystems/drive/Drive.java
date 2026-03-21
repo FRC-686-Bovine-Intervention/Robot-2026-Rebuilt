@@ -560,6 +560,9 @@ public class Drive extends VirtualSubsystem {
 
 	/** Stops the drive. */
 	public void stop() {
+		this.desiredRobotSpeeds.vxMetersPerSecond = 0.0;
+		this.desiredRobotSpeeds.vyMetersPerSecond = 0.0;
+		this.desiredRobotSpeeds.omegaRadiansPerSecond = 0.0;
 		for (var module : this.modules) {
 			module.stopDrive(NeutralMode.DEFAULT);
 			module.stopTurn(NeutralMode.DEFAULT);
