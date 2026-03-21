@@ -623,32 +623,18 @@
      "val":2.214297613191292
     }
    },
-   "OLT":{
+   "NewRightStart":{
     "x":{
-     "exp":"StartLineX - CenterToBumper - 12 in",
-     "val":3.2537399999999996
+     "exp":"3.558394432067871 m",
+     "val":3.558394432067871
     },
     "y":{
-     "exp":"FieldWidth - ORT.y",
-     "val":7.436485
+     "exp":"2.4820046424865723 m",
+     "val":2.4820046424865723
     },
     "heading":{
-     "exp":"0 rad",
-     "val":0.0
-    }
-   },
-   "ORT":{
-    "x":{
-     "exp":"StartLineX - CenterToBumper - 12 in",
-     "val":3.2537399999999996
-    },
-    "y":{
-     "exp":"TrenchWidth / 2",
-     "val":0.633095
-    },
-    "heading":{
-     "exp":"0 rad",
-     "val":0.0
+     "exp":"RightStart.heading",
+     "val":-3.141592653589793
     }
    },
    "Outpost":{
