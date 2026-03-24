@@ -19,7 +19,6 @@ import java.util.function.Supplier;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -98,6 +97,7 @@ import frc.robot.subsystems.vision.apriltag.ApriltagPipeline;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.robot.subsystems.vision.cameras.Camera;
 import frc.robot.subsystems.vision.cameras.CameraIO;
+import frc.robot.subsystems.vision.cameras.CameraIOLimelight;
 import frc.robot.subsystems.vision.cameras.CameraIOPhoton;
 import frc.robot.subsystems.vision.object.ObjectVision;
 import frc.util.EdgeDetector;
@@ -122,6 +122,7 @@ public class RobotContainer {
 	public final ApriltagVision apriltagVision;
 	public final ObjectVision objectVision;
 
+	public final Camera hopperCamera;
 	public final Camera hubZoomCamera;
 	public final Camera leftBroadCamera;
 	public final Camera rightBroadCamera;
@@ -180,6 +181,12 @@ public class RobotContainer {
 				// 	new Hook(new HookIO() {})
 				// );
 
+				this.hopperCamera = new Camera(
+					new CameraIOLimelight("limelight"),
+					"Hopper",
+					VisionConstants.hopperMount,
+					(connected) -> {Leds.getInstance().hopperCamConnection.setStatus(connected);}
+				);
 				this.hubZoomCamera = new Camera(
 					new CameraIOPhoton("Left Top"),
 					"Hub Zoom",
@@ -245,28 +252,34 @@ public class RobotContainer {
 				// 	new Hook(new HookIOSim())
 				// );
 
+				this.hopperCamera = new Camera(
+					new CameraIO() {},
+					"Hopper",
+					VisionConstants.hopperMount,
+					(connected) -> {Leds.getInstance().hopperCamConnection.setStatus(connected);}
+				);
 				this.hubZoomCamera = new Camera(
 					new CameraIO() {},
 					"Hub Zoom",
-					Transform3d.kZero,
+					VisionConstants.topLeftMount,
 					(connected) -> {Leds.getInstance().hubZoomCamConnection.setStatus(connected);}
 				);
 				this.leftBroadCamera = new Camera(
 					new CameraIO() {},
 					"Left Broad",
-					Transform3d.kZero,
+					VisionConstants.bottomLeftMount,
 					(connected) -> {Leds.getInstance().leftBroadCamConnection.setStatus(connected);}
 				);
 				this.rightBroadCamera = new Camera(
 					new CameraIO() {},
 					"Right Broad",
-					Transform3d.kZero,
+					VisionConstants.topRightMount,
 					(connected) -> {Leds.getInstance().rightBroadCamConnection.setStatus(connected);}
 				);
 				this.backBroadCamera = new Camera(
 					new CameraIO() {},
 					"Back Broad",
-					Transform3d.kZero,
+					VisionConstants.bottomRightMount,
 					(connected) -> {Leds.getInstance().backBroadCamConnection.setStatus(connected);}
 				);
 				this.intakeCamera = new Camera(
@@ -309,28 +322,34 @@ public class RobotContainer {
 				// 	new Hook(new HookIO() {})
 				// );
 
+				this.hopperCamera = new Camera(
+					new CameraIO() {},
+					"Hopper",
+					VisionConstants.hopperMount,
+					(connected) -> {Leds.getInstance().hopperCamConnection.setStatus(connected);}
+				);
 				this.hubZoomCamera = new Camera(
 					new CameraIO() {},
 					"Hub Zoom",
-					Transform3d.kZero,
+					VisionConstants.topLeftMount,
 					(connected) -> {Leds.getInstance().hubZoomCamConnection.setStatus(connected);}
 				);
 				this.leftBroadCamera = new Camera(
 					new CameraIO() {},
 					"Left Broad",
-					Transform3d.kZero,
+					VisionConstants.bottomLeftMount,
 					(connected) -> {Leds.getInstance().leftBroadCamConnection.setStatus(connected);}
 				);
 				this.rightBroadCamera = new Camera(
 					new CameraIO() {},
 					"Right Broad",
-					Transform3d.kZero,
+					VisionConstants.topRightMount,
 					(connected) -> {Leds.getInstance().rightBroadCamConnection.setStatus(connected);}
 				);
 				this.backBroadCamera = new Camera(
 					new CameraIO() {},
 					"Back Broad",
-					Transform3d.kZero,
+					VisionConstants.bottomRightMount,
 					(connected) -> {Leds.getInstance().backBroadCamConnection.setStatus(connected);}
 				);
 				this.intakeCamera = new Camera(
@@ -346,6 +365,7 @@ public class RobotContainer {
 
 		// Initialize vision systems with camera pipelines
 		this.apriltagVision = new ApriltagVision(
+			new ApriltagPipeline(this.hopperCamera, 0, 1.0),
 			new ApriltagPipeline(this.hubZoomCamera, 0, 1.0)
 			// new ApriltagPipeline(this.leftBroadCamera, 0, 2.0),
 			// new ApriltagPipeline(this.rightBroadCamera, 0, 2.0),
@@ -363,6 +383,7 @@ public class RobotContainer {
 			.addChild(this.intake.slam.followerMech)
 			.addChild(this.shooter.hood.mech)
 			// .addChild(this.climber.hook.mech)
+			.addChild(this.hopperCamera.mount)
 			.addChild(this.hubZoomCamera.mount)
 			.addChild(this.leftBroadCamera.mount)
 			.addChild(this.rightBroadCamera.mount)
