@@ -12,7 +12,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Time;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.util.loggerUtil.tunables.LoggedTunable;
-import frc.util.loggerUtil.tunables.LoggedTunableNumber;
 
 public class InterpolationShootingCalc implements ShootingCalc {
 
