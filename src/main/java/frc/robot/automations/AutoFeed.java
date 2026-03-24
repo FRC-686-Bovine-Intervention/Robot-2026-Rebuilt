@@ -55,11 +55,13 @@ public class AutoFeed implements Runnable {
 
 		this.edgeDetector.update(
 			FieldConstants.allianceZone.getOurs().withinBounds(robotPose.getTranslation())
-		&& this.shooter.withinTolerance()
+			&& this.shooter.withinTolerance()
 			&& isHubShift
 			&& !disableTrigger.getAsBoolean()
 		);
 		Logger.recordOutput("DEBUG/Auto Score/Overriden", disableTrigger.getAsBoolean());
+
+		Logger.recordOutput("DEBUG/Auto Score/is hub shift", isHubShift);
 
 		if (this.edgeDetector.risingEdge() && !this.command.isScheduled()) {
 			CommandScheduler.getInstance().schedule(this.command);

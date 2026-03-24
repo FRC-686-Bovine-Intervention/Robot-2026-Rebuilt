@@ -1,14 +1,16 @@
 package frc.robot.subsystems.shooter;
 
-import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Radians;
 
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotState;
@@ -19,7 +21,6 @@ import frc.robot.subsystems.shooter.flywheel.FlywheelConstants;
 import frc.robot.subsystems.shooter.hood.Hood;
 import frc.util.PIDGains;
 import frc.util.loggerUtil.tunables.LoggedTunable;
-import frc.util.math.MathExtraUtil;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -29,9 +30,9 @@ public class Shooter {
 	public final Hood hood;
 	public final AimingSystem aimingSystem;
 
-	private static final LoggedTunable<LinearVelocity> flywheelTolerance = LoggedTunable.from("Shooter/Tolerances/Flywheel", MetersPerSecond::of, 1.5);
-	private static final LoggedTunable<Distance>        azimuthTolerance = LoggedTunable.from("Shooter/Tolerances/Azimuth", Inches::of, 10.0);
-	private static final LoggedTunable<Distance>          pitchTolerance = LoggedTunable.from("Shooter/Tolerances/Pitch", Inches::of, 10.0);
+	private static final LoggedTunable<LinearVelocity> flywheelTolerance = LoggedTunable.from("Shooter/Tolerances/Flywheel", MetersPerSecond::of, 3);
+	private static final LoggedTunable<Angle>        azimuthTolerance = LoggedTunable.from("Shooter/Tolerances/Azimuth", Degrees::of, 10.0);
+	private static final LoggedTunable<Angle>          pitchTolerance = LoggedTunable.from("Shooter/Tolerances/Pitch", Degrees::of, 10.0);
 
 	public Command aimLeftFlywheelAtHub() {
 		return this.leftFlywheel.genSurfaceVeloCommand("Aim at Hub", this.aimingSystem.shootingCalc::getTargetFlywheelSurfaceVeloMPS);
@@ -126,21 +127,17 @@ public class Shooter {
 		boolean withinFlywheelTolerance = avgSurfaceVelo < targetSurfaceVelo + flywheelTolerance.get().in(MetersPerSecond) && avgSurfaceVelo > targetSurfaceVelo - flywheelTolerance.get().in(MetersPerSecond);
 
 
-		var targetVector = getLaunchVector(targetSurfaceVelo, targetHoodAngle, targetAzimuth);
-
 		double measuredAzimuth = RobotState.getInstance().getEstimatedGlobalPose().getRotation().getRadians();
-		var measuredAzimuthVector = new double[] {Math.cos(measuredAzimuth), Math.sin(measuredAzimuth)};
-		measuredAzimuthVector = MathExtraUtil.matchVectorLength2d(measuredAzimuthVector, targetVector);
-		double azimuthDistance = Math.sqrt(Math.pow(measuredAzimuthVector[0] - targetVector[0], 2) + Math.pow(measuredAzimuthVector[1] - targetVector[1], 2));
-		boolean withinAzimuthTolerance = azimuthDistance < azimuthTolerance.get().in(Meters);
+		boolean withinAzimuthTolerance = measuredAzimuth < targetAzimuth + azimuthTolerance.get().in(Radians) && measuredAzimuth > targetAzimuth - azimuthTolerance.get().in(Radians);
 
-		double measuredPitch = Math.PI / 2.0 - this.hood.getMeasuredAngleRads();
-		var measuredPitchVector = new double[] {Math.cos(measuredPitch), Math.sin(measuredPitch)};
-		var targetVectorSideView = new double[] {Math.sqrt(Math.pow(targetVector[0], 2) + Math.pow(targetVector[1], 2)), targetVector[2]};
-		measuredPitchVector = MathExtraUtil.matchVectorLength2d(measuredPitchVector, targetVectorSideView);
-		double pitchDistance = Math.sqrt(Math.pow(measuredPitchVector[0] - targetVectorSideView[0], 2) + Math.pow(measuredPitchVector[1] - targetVectorSideView[1], 2));
-		boolean withinPitchTolerance = pitchDistance < pitchTolerance.get().in(Meters);
+		double measuredPitch = this.hood.getMeasuredAngleRads();
+		Logger.recordOutput("DEBUG/Shooter/Measured Pitch", measuredPitch);
+		Logger.recordOutput("DEBUG/Shooter/TargetPitch", targetHoodAngle);
+		boolean withinPitchTolerance = measuredPitch < targetHoodAngle + pitchTolerance.get().in(Radians) && measuredPitch > targetHoodAngle - pitchTolerance.get().in(Radians);
 
+		Logger.recordOutput("DEBUG/Shooter/Flywheel Within Tolerance", withinFlywheelTolerance);
+		Logger.recordOutput("DEBUG/Shooter/Azimuth Within Tolerance", withinAzimuthTolerance);
+		Logger.recordOutput("DEBUG/Shooter/Pitch Within Tolerance", withinPitchTolerance);
 		return withinFlywheelTolerance && withinAzimuthTolerance && withinPitchTolerance;
 	}
 
