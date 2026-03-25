@@ -37,8 +37,7 @@ public class AutoSpinUp implements Runnable {
 				this.drive::getFieldMeasuredSpeeds,
 				FieldConstants.hubAimPoint::getOurs
 			).repeatedly(),
-			this.shooter.aimLeftFlywheelAtHub(),
-			this.shooter.aimRightFlywheelAtHub(),
+			this.shooter.aimFlywheelAtHub(),
 			this.shooter.aimHoodAtHub()
 		).withName("Auto Spin Up");
 	}

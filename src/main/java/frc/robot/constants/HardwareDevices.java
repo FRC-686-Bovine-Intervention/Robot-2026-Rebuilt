@@ -59,11 +59,11 @@ public class HardwareDevices {
 	public static final CANDevice hoodMotorID = canivore.id(11);
 	// | Flywheels
 	// | | Left Flywheel System
-	public static final CANDevice leftFlywheelMotorMasterID = canivore.id(12);
-	public static final CANDevice leftFlywheelMotorSlaveID = canivore.id(13);
+	public static final CANDevice leftBottomFlywheelMotorID = canivore.id(12);
+	public static final CANDevice leftTopFlywheelMotorID = canivore.id(13);
 	// | | Right Flywheel System
-	public static final CANDevice rightFlywheelMotorMasterID = canivore.id(14);
-	public static final CANDevice rightFlywheelMotorSlaveID = canivore.id(15);
+	public static final CANDevice rightBottomFlywheelMotorID = canivore.id(14);
+	public static final CANDevice rightTopFlywheelMotorID = canivore.id(15);
 
 	// Climber
 	// | Hook

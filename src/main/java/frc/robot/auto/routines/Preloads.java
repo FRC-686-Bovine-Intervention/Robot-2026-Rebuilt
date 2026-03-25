@@ -26,16 +26,14 @@ public class Preloads extends AutoRoutine {
 	@Override
 	public Command generateCommand() {
 		return Commands.parallel(
-			AutoCommons.setOdometryFlipped(AutoConstants.startHubFront),
+			AutoCommons.setOdometryFlipped(AutoConstants.startCenter),
 			this.robot.shooter.aimingSystem.aimAtHub(
-				FunctionalUtil.evalNow(AutoConstants.startHubFront.getOurs()),
+				FunctionalUtil.evalNow(AutoConstants.startCenter.getOurs()),
 				FunctionalUtil.evalNow(new ChassisSpeeds()),
 				FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs())
 			).asProxy(),
 			this.robot.shooter.aimHoodAtHub().asProxy(),
-			this.robot.shooter.aimLeftFlywheelAtHub().asProxy(),
-			this.robot.shooter.aimRightFlywheelAtHub().asProxy(),
-			this.robot.shooter.aimRightFlywheelAtHub().asProxy(),
+			this.robot.shooter.aimFlywheelAtHub().asProxy(),
 			this.robot.shooter.aimDriveAtHub(this.robot.drive.rotationalSubsystem).asProxy(),
 			this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy()
 		);

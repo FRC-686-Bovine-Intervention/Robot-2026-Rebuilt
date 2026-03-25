@@ -2,6 +2,7 @@ package frc.robot.constants;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meter;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
 
@@ -151,10 +152,31 @@ public final class FieldConstants {
 	));
 	public static final AllianceFlipped<Pose2d> hubIntakeFrontRobotPose = AllianceFlipped.fromBlue(new Pose2d(
 		new Translation2d(
-			allianceZoneBoundaryX.getBlue().minus(Inches.of(12.0)),
+			allianceZoneBoundaryX.getBlue().minus(RobotConstants.centerToFrontFrame).minus(Inches.of(12.0)),
 			hubCenter.getBlue().getMeasureY()
 		),
 		Rotation2d.kZero
+	));
+	public static final AllianceFlipped<Pose2d> leftTrenchPresetShotPose = AllianceFlipped.fromBlue(new Pose2d(
+		new Translation2d(
+			Meter.of(3.576365),
+			fieldWidth.minus(Meter.of(1.565505))
+		),
+		Rotation2d.fromRadians(1.1823833).unaryMinus()
+	));
+	public static final AllianceFlipped<Pose2d> rightTrenchPresetShotPose = AllianceFlipped.fromBlue(new Pose2d(
+		new Translation2d(
+			Meter.of(3.576365),
+			Meter.of(1.565505)
+		),
+		Rotation2d.fromRadians(1.1823833)
+	));
+	public static final AllianceFlipped<Pose2d> towerPresetShotPose = AllianceFlipped.fromBlue(new Pose2d(
+		new Translation2d(
+			Meter.of(0.93573111),
+			Meter.of(4.625235)
+		),
+		Rotation2d.fromRadians(-0.177596)
 	));
 
 	public static final AllianceFlipped<Translation3d> hubAimPoint = AllianceFlipped.fromBlue(new Translation3d(

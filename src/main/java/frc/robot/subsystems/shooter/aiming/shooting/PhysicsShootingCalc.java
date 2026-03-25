@@ -17,6 +17,7 @@ public class PhysicsShootingCalc implements ShootingCalc {
 	private double flywheelSpeedMS;
 	private double robotRotationRads;
 	private Translation3d aimPoint;
+	private Translation2d shotPose;
 	private double tofSeconds;
 
 	public PhysicsShootingCalc() {
@@ -27,6 +28,7 @@ public class PhysicsShootingCalc implements ShootingCalc {
 
 	@Override
 	public void calculate(Pose2d robotPose, ChassisSpeeds fieldSpeeds, Translation3d aimPoint) {
+		this.shotPose = robotPose.getTranslation();
 		var shooterHubSpaceCartesian = new Pose3d(robotPose).transformBy(HoodConstants.hoodBase).getTranslation().toTranslation2d().minus(aimPoint.toTranslation2d());
 		double radius = shooterHubSpaceCartesian.getNorm();
 
@@ -38,9 +40,9 @@ public class PhysicsShootingCalc implements ShootingCalc {
 		double tangentialVelocity = MathExtraUtil.dotProduct(tangentialUnitVectorCartesian, robotSpeedsArray);
 
 		var hoodAngleRads = ShooterConstants.hoodPolynomial.evaluate(radius, radialVelocity);
-		Logger.recordOutput("DEBUG/PhysicsShooting/Before Hood Angle", hoodAngleRads);
+		// Logger.recordOutput("DEBUG/PhysicsShooting/Before Hood Angle", hoodAngleRads);
 		var flywheelSpeedMPS = ShooterConstants.flywheelPolynomial.evaluate(radius, radialVelocity);
-		Logger.recordOutput("DEBUG/PhysicsShooting/Before Flywheel Speed", flywheelSpeedMPS);
+		// Logger.recordOutput("DEBUG/PhysicsShooting/Before Flywheel Speed", flywheelSpeedMPS);
 		var tofSeconds = ShooterConstants.tofPolynomial.evaluate(radius, radialVelocity);
 
 		var hubRobotSpaceCartesian = aimPoint.toTranslation2d().minus(robotPose.getTranslation());
@@ -50,18 +52,18 @@ public class PhysicsShootingCalc implements ShootingCalc {
 		var radialVector = MathExtraUtil.scalarMultiply(radialUnitVectorCartesian, radialVelocity);
 		var offsetVector = MathExtraUtil.scalarMultiply(tangentialUnitVectorCartesian, -tangentialVelocity);
 		var newVector = MathExtraUtil.addVectors(staticAimVector, offsetVector);
-		Logger.recordOutput("DEBUG/PhysicsShooting/NewVector", new Translation3d(newVector[0], newVector[1], newVector[2]));
-		Logger.recordOutput("DEBUG/PhysicsShooting/staticVector", new Translation3d(staticAimVector[0], staticAimVector[1], staticAimVector[2]));
-		Logger.recordOutput("DEBUG/PhysicsShooting/radialVector", new Translation2d(radialVector[0], radialVector[1]));
-		Logger.recordOutput("DEBUG/PhysicsShooting/offsetVector", new Translation2d(offsetVector[0], offsetVector[1]));
-		Logger.recordOutput("DEBUG/PhysicsShooting/tangentialVeloUnitVec", new Translation2d(tangentialUnitVectorCartesian[0], tangentialUnitVectorCartesian[1]));
+		// Logger.recordOutput("DEBUG/PhysicsShooting/NewVector", new Translation3d(newVector[0], newVector[1], newVector[2]));
+		// Logger.recordOutput("DEBUG/PhysicsShooting/staticVector", new Translation3d(staticAimVector[0], staticAimVector[1], staticAimVector[2]));
+		// Logger.recordOutput("DEBUG/PhysicsShooting/radialVector", new Translation2d(radialVector[0], radialVector[1]));
+		// Logger.recordOutput("DEBUG/PhysicsShooting/offsetVector", new Translation2d(offsetVector[0], offsetVector[1]));
+		// Logger.recordOutput("DEBUG/PhysicsShooting/tangentialVeloUnitVec", new Translation2d(tangentialUnitVectorCartesian[0], tangentialUnitVectorCartesian[1]));
 		var launchValues = getLaunchValues(newVector, radialVector);
 
 		this.robotRotationRads = launchValues[2];
 		this.hoodAngleRads = launchValues[1];
-		Logger.recordOutput("DEBUG/PhysicsShooting/HoodAngle", this.hoodAngleRads);
+		// Logger.recordOutput("DEBUG/PhysicsShooting/HoodAngle", this.hoodAngleRads);
 		this.flywheelSpeedMS = launchValues[0];
-		Logger.recordOutput("DEBUG/PhysicsShooting/FlywheelSpeed", this.flywheelSpeedMS);
+		// Logger.recordOutput("DEBUG/PhysicsShooting/FlywheelSpeed", this.flywheelSpeedMS);
 		// this.robotRotationRads = robotAngleRads;
 		// this.hoodAngleRads = hoodAngleRads;
 		// this.flywheelSpeedMS = flywheelSpeedMPS;
@@ -87,6 +89,11 @@ public class PhysicsShootingCalc implements ShootingCalc {
 	@Override
 	public Translation3d getAimPoint() {
 		return this.aimPoint;
+	}
+
+	@Override
+	public Translation2d getShotPose() {
+		return this.shotPose;
 	}
 
 	@Override
