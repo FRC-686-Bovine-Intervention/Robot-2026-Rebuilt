@@ -178,8 +178,10 @@ public class Flywheel extends SubsystemBase {
 				var goalErrorMPS = goalSurfaceVeloMPS - flywheel.getMeasuredSurfaceVeloMPS();
 				if (MathUtil.isNear(goalSurfaceVeloMPS, flywheel.getMeasuredSurfaceVeloMPS(), goalSurfaceVeloMPS * bangBangThreshold.getAsDouble())) {
 					flywheel.io.setVelocityRadsPerSec(goalAngularVeloRadsPerSec);
+					Logger.recordOutput("Subsystems/Shooter/Flywheel/Bang Bang Enabled", false);
 				} else {
 					flywheel.io.setCurrent(bangBangCurrent.get().in(Amps) * Math.signum(goalErrorMPS));
+					Logger.recordOutput("Subsystems/Shooter/Flywheel/Bang Bang Enabled", true);
 				}
 			}
 
