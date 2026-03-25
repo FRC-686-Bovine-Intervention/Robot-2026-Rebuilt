@@ -80,7 +80,7 @@ public class Shooter {
 
 				var translationalVelo = desiredVeloSupplier.get();
 
-				if (Math.hypot(translationalVelo.vxMetersPerSecond, translationalVelo.vyMetersPerSecond) >= 0.1 || pidOut >= 0.01) {
+				if (Math.hypot(translationalVelo.vxMetersPerSecond, translationalVelo.vyMetersPerSecond) >= 0.1 || Math.abs(pidOut) >= 0.01) {
 					drive.runRobotSpeeds(
 						translationalVelo.vxMetersPerSecond,
 						translationalVelo.vyMetersPerSecond,
