@@ -1,4 +1,5 @@
 package frc.robot.subsystems.shooter.flywheel;
+import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Second;
@@ -9,7 +10,9 @@ import java.util.function.DoubleSupplier;
 
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.LinearAccelerationUnit;
+import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.LinearAcceleration;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Velocity;
@@ -22,6 +25,7 @@ import frc.util.FFGains;
 import frc.util.NeutralMode;
 import frc.util.PIDGains;
 import frc.util.loggerUtil.tunables.LoggedTunable;
+import frc.util.loggerUtil.tunables.LoggedTunableNumber;
 import lombok.Getter;
 
 public class Flywheel extends SubsystemBase {
@@ -29,6 +33,9 @@ public class Flywheel extends SubsystemBase {
 	private final FlywheelIOInputsAutoLogged inputs = new FlywheelIOInputsAutoLogged();
 
 	private static final LoggedTunable<LinearVelocity> spinupSurfaceVelo = LoggedTunable.from("Subsystems/Shooter/Flywheel/Commands/Spinup/Velocity", MetersPerSecond::of, +20.0);
+
+	private static final LoggedTunable<Current> bangBangCurrent = LoggedTunable.from("Subsystems/Shooter/Flywheel/Commands/Bang Bang/Current", Amps::of, 30.0);
+	private static final LoggedTunableNumber bangBangThreshold = LoggedTunable.from("Subsystems/Shooter/Flywheel/Commands/Bang Bang/Threshold", 0.05);
 
 	private static final LoggedTunable<LinearAcceleration> profileMaxAcceleration = LoggedTunable.from("Subsystems/Shooter/Flywheel/Mechanism/Profile/Max Acceleration", MetersPerSecondPerSecond::of, 7.0);
 	private static final LoggedTunable<Velocity<LinearAccelerationUnit>> profileMaxJerk = LoggedTunable.from("Subsystems/Shooter/Flywheel/Mechanism/Profile/Max Jerk", MetersPerSecondPerSecond.per(Second)::of, 0.0);
@@ -168,7 +175,12 @@ public class Flywheel extends SubsystemBase {
 			public void execute() {
 				var goalSurfaceVeloMPS = surfaceVeloSupplierMPS.getAsDouble();
 				var goalAngularVeloRadsPerSec = FlywheelConstants.wheel.metersToRadians(goalSurfaceVeloMPS);
-				flywheel.io.setVelocityRadsPerSec(goalAngularVeloRadsPerSec);
+				var goalErrorMPS = goalSurfaceVeloMPS - flywheel.getMeasuredSurfaceVeloMPS();
+				if (MathUtil.isNear(goalSurfaceVeloMPS, flywheel.getMeasuredSurfaceVeloMPS(), goalSurfaceVeloMPS * bangBangThreshold.getAsDouble())) {
+					flywheel.io.setVelocityRadsPerSec(goalAngularVeloRadsPerSec);
+				} else {
+					flywheel.io.setCurrent(bangBangCurrent.get().in(Amps) * Math.signum(goalErrorMPS));
+				}
 			}
 
 			@Override

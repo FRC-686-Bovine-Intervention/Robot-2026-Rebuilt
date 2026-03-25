@@ -10,6 +10,7 @@ import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.StaticBrake;
 import com.ctre.phoenix6.controls.StrictFollower;
+import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -56,6 +57,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 	private final CoastOut coastRequest = new CoastOut();
 	private final StaticBrake brakeRequest = new StaticBrake();
 	private final VoltageOut voltageRequest = new VoltageOut(0.0);
+	private final TorqueCurrentFOC currentRequest = new TorqueCurrentFOC(0.0);
 	private final MotionMagicVelocityVoltage velocityRequest = new MotionMagicVelocityVoltage(0.0);
 	private final StrictFollower followerRequest = new StrictFollower(0);
 
@@ -222,6 +224,17 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 	public void setVolts(double volts) {
 		this.leftBottomMotor.setControl(this.voltageRequest
 			.withOutput(volts)
+		);
+		this.followerRequest.withLeaderID(this.leftBottomMotor.getDeviceID());
+		this.leftTopMotor.setControl(this.followerRequest);
+		this.rightBottomMotor.setControl(this.followerRequest);
+		this.rightTopMotor.setControl(this.followerRequest);
+	}
+
+	@Override
+	public void setCurrent(double amps) {
+		this.leftBottomMotor.setControl(this.currentRequest
+			.withOutput(amps)
 		);
 		this.followerRequest.withLeaderID(this.leftBottomMotor.getDeviceID());
 		this.leftTopMotor.setControl(this.followerRequest);
