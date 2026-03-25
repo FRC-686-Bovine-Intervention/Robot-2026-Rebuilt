@@ -64,7 +64,7 @@ public class ShooterConstants {
 
 	public static final InterpolatingDoubleTreeMap passFlyWheelVeloMPS = new InterpolatingDoubleTreeMap();
 	static {
-		passFlyWheelVeloMPS.put(Inches.of(40.125).in(Meters), MetersPerSecond.of(9.0).in(MetersPerSecond));
+		passFlyWheelVeloMPS.put(Inches.of(40.125).in(Meters), MetersPerSecond.of(11.0).in(MetersPerSecond));
 	}
 
 	public static final InterpolatingDoubleTreeMap passHoodAngleRads = new InterpolatingDoubleTreeMap();
@@ -76,8 +76,8 @@ public class ShooterConstants {
 	public static final Transform3d flywheelBase = new Transform3d(
 		new Translation3d(
 			Meters.of(-0.103427),
-			Meters.of(0),
-			Meters.of(0.492469)
+			Meters.of(+0.0),
+			Meters.of(+0.492469)
 		),
 		GeomUtil.rotation3dBuilder()
 
