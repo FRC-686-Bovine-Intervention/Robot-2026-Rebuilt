@@ -68,6 +68,9 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 		this.leftBottomConfig.Feedback
 			.withSensorToMechanismRatio(FlywheelConstants.motorToMechanism.reductionUnsigned())
 		;
+		this.leftBottomConfig.Voltage
+			.withPeakReverseVoltage(0.0)
+		;
 
 		this.leftTopConfig.MotorOutput
 			.withNeutralMode(NeutralModeValue.Coast)
@@ -75,6 +78,9 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 		;
 		this.leftTopConfig.Feedback
 			.withSensorToMechanismRatio(FlywheelConstants.motorToMechanism.reductionUnsigned())
+		;
+		this.leftTopConfig.Voltage
+			.withPeakReverseVoltage(0.0)
 		;
 
 		this.rightBottomConfig.MotorOutput
@@ -84,6 +90,9 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 		this.rightBottomConfig.Feedback
 			.withSensorToMechanismRatio(FlywheelConstants.motorToMechanism.reductionUnsigned())
 		;
+		this.rightBottomConfig.Voltage
+			.withPeakReverseVoltage(0.0)
+		;
 
 		this.rightTopConfig.MotorOutput
 			.withNeutralMode(NeutralModeValue.Coast)
@@ -91,6 +100,9 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 		;
 		this.rightTopConfig.Feedback
 			.withSensorToMechanismRatio(FlywheelConstants.motorToMechanism.reductionUnsigned())
+		;
+		this.rightTopConfig.Voltage
+			.withPeakReverseVoltage(0.0)
 		;
 
 		// Cache Status Signals
