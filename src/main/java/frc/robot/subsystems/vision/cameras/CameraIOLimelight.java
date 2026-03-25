@@ -69,7 +69,7 @@ public class CameraIOLimelight implements CameraIO {
 				multiTagResult = null;
 			}
 
-			final int targetCount = Math.min(tagCount, rawFiducials.length);
+			final int targetCount = Math.min(tagCount, rawFiducials.length / 7);
 			final CameraTarget[] cameraTargets = new CameraTarget[targetCount];
 
 			for (int j = 0; j < targetCount; j++) {
