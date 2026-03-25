@@ -16,6 +16,8 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -39,7 +41,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.auto.routines.ScoreFuel;
-import frc.robot.automations.AutoFeed;
 import frc.robot.automations.HubShiftNotifications;
 import frc.robot.automations.IntakeDeployHysteresis;
 import frc.robot.constants.FieldConstants;
@@ -902,6 +903,10 @@ public class RobotContainer {
 			this.driveController.povUp(),
 			this.driveController.povDown()
 		);
+
+		this.automationsLoop.bind(() -> {
+			Logger.recordOutput("EFFECTIVE DISTANCE", RobotState.getInstance().getEstimatedGlobalPose().getTranslation().getDistance(FieldConstants.hubAimPoint.getOurs().toTranslation2d()), Meters);
+		});
 
 		this.driveController.start().toggleOnTrue(
 			Commands.parallel(
