@@ -36,7 +36,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.auto.AutoCommons;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.auto.routines.ScoreFuel;
@@ -49,7 +48,6 @@ import frc.robot.subsystems.ExtensionSystem;
 import frc.robot.subsystems.commonDevices.CommonCANdi;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
-import frc.robot.subsystems.drive.commands.FollowTrajectoryCommand;
 import frc.robot.subsystems.drive.commands.WheelRadiusCalibration;
 import frc.robot.subsystems.drive.gyro.GyroIO;
 import frc.robot.subsystems.drive.gyro.GyroIOPigeon2;
@@ -897,9 +895,9 @@ public class RobotContainer {
 		final var hoodStepper = Cooldown.incrementingStepper(
 			"HOOD STEPPER",
 			"HOOD STEPPER",
-			Seconds.of(0.125),
+			Seconds.of(0.0625),
 			Degrees.of(12.0),
-			Degrees.of(0.1),
+			Degrees.of(0.2),
 			Radians,
 			this.driveController.povUp(),
 			this.driveController.povDown()
