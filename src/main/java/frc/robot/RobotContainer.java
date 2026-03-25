@@ -100,6 +100,7 @@ import frc.robot.subsystems.vision.cameras.CameraIO;
 import frc.robot.subsystems.vision.cameras.CameraIOLimelight;
 import frc.robot.subsystems.vision.cameras.CameraIOPhoton;
 import frc.robot.subsystems.vision.object.ObjectVision;
+import frc.util.Cooldown;
 import frc.util.EdgeDetector;
 import frc.util.PIDGains;
 import frc.util.Perspective;
@@ -879,8 +880,36 @@ public class RobotContainer {
 
 		this.driveController.x().whileTrue(this.rollers.feed().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("Force Feed"));
 
-		var traj = AutoCommons.loadBlueChoreoTrajectory("TestPath");
+		// var traj = AutoCommons.loadBlueChoreoTrajectory("TestPath");
 
-		this.driveController.povUp().whileTrue(Commands.defer(() -> new FollowTrajectoryCommand(this.drive, traj.getOurs(), false), Set.of(this.drive.translationSubsystem, this.drive.rotationalSubsystem)));
+		// this.driveController.povUp().whileTrue(Commands.defer(() -> new FollowTrajectoryCommand(this.drive, traj.getOurs(), false), Set.of(this.drive.translationSubsystem, this.drive.rotationalSubsystem)));
+
+		final var flywheelStepper = Cooldown.incrementingStepper(
+			"FLYWHEEL STEPPER",
+			"FLYWHEEL STEPPER",
+			Seconds.of(0.125),
+			MetersPerSecond.of(7.0),
+			MetersPerSecond.of(0.1),
+			MetersPerSecond,
+			this.driveController.povRight(),
+			this.driveController.povLeft()
+		);
+		final var hoodStepper = Cooldown.incrementingStepper(
+			"HOOD STEPPER",
+			"HOOD STEPPER",
+			Seconds.of(0.125),
+			Degrees.of(12.0),
+			Degrees.of(0.1),
+			Radians,
+			this.driveController.povUp(),
+			this.driveController.povDown()
+		);
+
+		this.driveController.start().toggleOnTrue(
+			Commands.parallel(
+				this.shooter.flywheel.genSurfaceVeloCommand("STEPPER", flywheelStepper::getAsDouble),
+				this.shooter.hood.genAngleCommand("STEPPER", hoodStepper::getAsDouble)
+			)
+		);
 	}
 }
