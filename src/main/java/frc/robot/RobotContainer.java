@@ -16,8 +16,6 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import org.littletonrobotics.junction.Logger;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -41,6 +39,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
 import frc.robot.auto.routines.ScoreFuel;
+import frc.robot.automations.AutoFeed;
 import frc.robot.automations.HubShiftNotifications;
 import frc.robot.automations.IntakeDeployHysteresis;
 import frc.robot.constants.FieldConstants;
@@ -82,6 +81,7 @@ import frc.robot.subsystems.rollers.indexer.IndexerIOTalonFX;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.aiming.AimingSystem;
 import frc.robot.subsystems.shooter.aiming.passing.InterpolationPassingCalc;
+import frc.robot.subsystems.shooter.aiming.shooting.InterpolationShootingCalc;
 import frc.robot.subsystems.shooter.aiming.shooting.PhysicsShootingCalc;
 import frc.robot.subsystems.shooter.flywheel.Flywheel;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
@@ -98,7 +98,6 @@ import frc.robot.subsystems.vision.cameras.CameraIO;
 import frc.robot.subsystems.vision.cameras.CameraIOLimelight;
 import frc.robot.subsystems.vision.cameras.CameraIOPhoton;
 import frc.robot.subsystems.vision.object.ObjectVision;
-import frc.util.Cooldown;
 import frc.util.EdgeDetector;
 import frc.util.PIDGains;
 import frc.util.Perspective;
@@ -162,7 +161,7 @@ public class RobotContainer {
 					new Flywheel(new FlywheelIOTalonFX()),
 					new Hood(new HoodIOTalonFXS(commonCANdi)),
 					new AimingSystem(
-						new PhysicsShootingCalc(),
+						new InterpolationShootingCalc(),
 						new InterpolationPassingCalc()
 					)
 				);
@@ -773,7 +772,7 @@ public class RobotContainer {
 		// this.automationsLoop.bind(new HookAutoDeployHysteresis(this.climber.hook, climberHookAutoDeployCommand));
 		// this.automationsLoop.bind(new AutoSpinUp(this.drive, this.shooter, intakeRollersIntakeCommand));
 		// this.automationsLoop.bind(new AutoDriveAim(this.drive, this.shooter, intakeRollersIntakeCommand));
-		// this.automationsLoop.bind(new AutoFeed(this.drive, this.shooter, this.rollers, this.intake.slam, this.extensionSystem, this.driveController.y().or(secondDriverOverride)));
+		this.automationsLoop.bind(new AutoFeed(this.drive, this.shooter, this.rollers, this.intake.slam, this.extensionSystem, this.driveController.y().or(secondDriverOverride)));
 		this.automationsLoop.bind(new HubShiftNotifications(this.driveController));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		// new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
@@ -877,41 +876,5 @@ public class RobotContainer {
 		});
 
 		this.driveController.x().whileTrue(this.rollers.feed().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("Force Feed"));
-
-		// var traj = AutoCommons.loadBlueChoreoTrajectory("TestPath");
-
-		// this.driveController.povUp().whileTrue(Commands.defer(() -> new FollowTrajectoryCommand(this.drive, traj.getOurs(), false), Set.of(this.drive.translationSubsystem, this.drive.rotationalSubsystem)));
-
-		final var flywheelStepper = Cooldown.incrementingStepper(
-			"FLYWHEEL STEPPER",
-			"FLYWHEEL STEPPER",
-			Seconds.of(0.125),
-			MetersPerSecond.of(7.0),
-			MetersPerSecond.of(0.1),
-			MetersPerSecond,
-			this.driveController.povRight(),
-			this.driveController.povLeft()
-		);
-		final var hoodStepper = Cooldown.incrementingStepper(
-			"HOOD STEPPER",
-			"HOOD STEPPER",
-			Seconds.of(0.0625),
-			Degrees.of(12.0),
-			Degrees.of(0.2),
-			Radians,
-			this.driveController.povUp(),
-			this.driveController.povDown()
-		);
-
-		this.automationsLoop.bind(() -> {
-			Logger.recordOutput("EFFECTIVE DISTANCE", RobotState.getInstance().getEstimatedGlobalPose().getTranslation().getDistance(FieldConstants.hubAimPoint.getOurs().toTranslation2d()), Meters);
-		});
-
-		this.driveController.start().toggleOnTrue(
-			Commands.parallel(
-				this.shooter.flywheel.genSurfaceVeloCommand("STEPPER", flywheelStepper::getAsDouble),
-				this.shooter.hood.genAngleCommand("STEPPER", hoodStepper::getAsDouble)
-			)
-		);
 	}
 }

@@ -438,7 +438,6 @@ public class ScoreFuel extends AutoRoutine {
 
 		var commands = new ArrayList<Command>();
 		var firstTraj = generatePath(startPosition, firstScoringLocation, firstIntakeLocation).getOurs();
-		Logger.recordOutput("DEBUG/FirstTraj", startPosition.alias + "To" + firstScoringLocation.alias + "Intake" + firstIntakeLocation.alias);
 		var firstPathCommand = new FollowTrajectoryCommand(this.drive, firstTraj, true);
 		var firstCommand = Commands.deadline(
 			Commands.sequence(
