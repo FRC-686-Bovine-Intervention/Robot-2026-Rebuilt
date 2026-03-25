@@ -387,7 +387,7 @@ public class Drive extends VirtualSubsystem {
 	}
 
 	private static final LoggedTunable<LinearAcceleration> forwardAccelLimitTunable = LoggedTunable.from("Subsystems/Drive/Accel Limits/Forward Accel Limit", MetersPerSecondPerSecond::of, 5000);
-	private static final LoggedTunable<LinearAcceleration> skidAccelLimitTunable = LoggedTunable.from("Subsystems/Drive/Accel Limits/Skid Accel Limit", MetersPerSecondPerSecond::of, 60);
+	private static final LoggedTunable<LinearAcceleration> skidAccelLimitTunable = LoggedTunable.from("Subsystems/Drive/Accel Limits/Skid Accel Limit", MetersPerSecondPerSecond::of, 60.0);
 
 	public static final LoggedTunable<TiltAccelerationLimits> normalTiltLimitTunable = LoggedTunable.from(
 		"Subsystems/Drive/Accel Limits/Tilt Limits/Normal",
@@ -560,6 +560,9 @@ public class Drive extends VirtualSubsystem {
 
 	/** Stops the drive. */
 	public void stop() {
+		this.desiredRobotSpeeds.vxMetersPerSecond = 0.0;
+		this.desiredRobotSpeeds.vyMetersPerSecond = 0.0;
+		this.desiredRobotSpeeds.omegaRadiansPerSecond = 0.0;
 		for (var module : this.modules) {
 			module.stopDrive(NeutralMode.DEFAULT);
 			module.stopTurn(NeutralMode.DEFAULT);
@@ -573,6 +576,9 @@ public class Drive extends VirtualSubsystem {
 	 * requested.
 	 */
 	public void stopWithX() {
+		this.desiredRobotSpeeds.vxMetersPerSecond = 0.0;
+		this.desiredRobotSpeeds.vyMetersPerSecond = 0.0;
+		this.desiredRobotSpeeds.omegaRadiansPerSecond = 0.0;
 		for (int i = 0; i < this.modules.length; i++) {
 			this.modules[i].runSetpoint(new SwerveModuleState(0.0, this.modules[i].config.moduleTransform.getTranslation().getAngle()));
 		}

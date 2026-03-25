@@ -2,6 +2,8 @@ package frc.robot.subsystems.rollers;
 
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.rollers.agitator.Agitator;
@@ -39,5 +41,26 @@ public class Rollers extends VirtualSubsystem {
 			)
 			.withName("Feed")
 		;
+	}
+
+	public Command untilNoBalls(double debounceSeconds) {
+		final var rollers = this;
+		return new Command() {
+			private final Debouncer debouncer = new Debouncer(debounceSeconds, DebounceType.kFalling);
+
+			{
+				this.setName("Until no balls");
+			}
+
+			@Override
+			public void initialize() {
+				this.debouncer.calculate(true);
+			}
+
+			@Override
+			public boolean isFinished() {
+				return !this.debouncer.calculate(rollers.isFeederSensorTripped());
+			}
+		};
 	}
 }

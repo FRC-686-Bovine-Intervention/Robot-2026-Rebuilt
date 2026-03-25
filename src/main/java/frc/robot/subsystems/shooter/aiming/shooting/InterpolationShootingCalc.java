@@ -12,6 +12,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Time;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.util.loggerUtil.tunables.LoggedTunable;
+import frc.util.loggerUtil.tunables.LoggedTunableNumber;
 
 public class InterpolationShootingCalc implements ShootingCalc {
 
@@ -21,7 +22,7 @@ public class InterpolationShootingCalc implements ShootingCalc {
 	// private static final LoggedTunable<Angle> customAzimuthOffset = LoggedTunable.from("Subsystems/Shooter/Aiming/Custom Azimuth Offset", Radians::of, 0.0);
 
 	private Translation3d aimPoint;
-	// private Pose2d shotPose;
+	private Translation2d shotPose;
 	// private ChassisSpeeds shotSpeeds;
 	private double effectiveDistanceMeters;
 	private double targetHoodAngleRads;
@@ -33,8 +34,12 @@ public class InterpolationShootingCalc implements ShootingCalc {
 		ShooterConstants.hubTargetFlyWheelVeloMPS.get(0.0);
 	}
 
+	private static final LoggedTunableNumber flywheelMul = LoggedTunable.from("FLYWHEEL MUL", 0.5);
+
 	@Override
 	public void calculate(Pose2d robotPose, ChassisSpeeds fieldSpeeds, Translation3d aimPoint) {
+		this.shotPose = robotPose.getTranslation();
+
 		var robotPos = robotPose.getTranslation();
 		this.aimPoint = aimPoint;
 
@@ -49,15 +54,12 @@ public class InterpolationShootingCalc implements ShootingCalc {
 		Logger.recordOutput("Subsystems/Shooter/Aiming/Effective Distance", this.effectiveDistanceMeters);
 
 		this.targetHoodAngleRads = ShooterConstants.hubTargetHoodAngleRads.get(this.effectiveDistanceMeters);
-		this.targetFlywheelVeloMPS = ShooterConstants.hubTargetFlyWheelVeloMPS.get(this.effectiveDistanceMeters);
+		this.targetFlywheelVeloMPS = ShooterConstants.hubTargetFlyWheelVeloMPS.get(this.effectiveDistanceMeters) * flywheelMul.getAsDouble();
 		this.tofSecs = ShooterConstants.hubTargetTimeOfFlightSecs.get(this.effectiveDistanceMeters);
 
 		Logger.recordOutput("Subsystems/Shooter/Aiming/Aim Point", this.aimPoint);
 		Logger.recordOutput("Subsystems/Shooter/Aiming/Shot Pose", new Pose2d(
-			new Translation2d(
-				predictedX,
-				predictedY
-			),
+			this.shotPose,
 			Rotation2d.fromRadians(
 				this.targetDriveHeadingRads
 			)
@@ -82,6 +84,11 @@ public class InterpolationShootingCalc implements ShootingCalc {
 	@Override
 	public Translation3d getAimPoint() {
 		return this.aimPoint;
+	}
+
+	@Override
+	public Translation2d getShotPose() {
+		return this.shotPose;
 	}
 
 	@Override
