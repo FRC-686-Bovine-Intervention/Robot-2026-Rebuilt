@@ -69,36 +69,32 @@ public class CameraIOLimelight implements CameraIO {
 				multiTagResult = null;
 			}
 
-			final CameraTarget[] cameraTargets;
+			final int targetCount = Math.min(tagCount, rawFiducials.length);
+			final CameraTarget[] cameraTargets = new CameraTarget[targetCount];
 
-			if (rawFiducials.length > 0) {
-				cameraTargets = new CameraTarget[tagCount];
-				for (int j = 0; j < tagCount; j++) {
-					final var targets = rawFiducials[i];
-					final var baseIndex = j * 7;
-					final var fiducialID = (int) targets[baseIndex + 0];
-					final var ambiguity = targets[baseIndex + 6];
+			for (int j = 0; j < targetCount; j++) {
+				final var targets = rawFiducials[i];
+				final var baseIndex = j * 7;
+				final var fiducialID = (int) targets[baseIndex + 0];
+				final var ambiguity = targets[baseIndex + 6];
 
-					final var fieldToTag = FieldConstants.apriltagLayout.getTagPose(fiducialID).get();
-					final var fieldToCamera = cameraTransform;
+				final var fieldToTag = FieldConstants.apriltagLayout.getTagPose(fiducialID).get();
+				final var fieldToCamera = cameraTransform;
 
-					final var cameraToTag = fieldToCamera.inverse().plus(fieldToTag.minus(Pose3d.kZero));
+				final var cameraToTag = fieldToCamera.inverse().plus(fieldToTag.minus(Pose3d.kZero));
 
-					cameraTargets[j] = new CameraTarget(
-						fiducialID,
-						-1,
-						-7.0,
-						-7.0,
-						-7.0,
-						-7.0,
-						cameraToTag,
-						cameraToTag,
-						ambiguity,
-						new Translation2d[0]
-					);
-				}
-			} else {
-				cameraTargets = new CameraTarget[0];
+				cameraTargets[j] = new CameraTarget(
+					fiducialID,
+					-1,
+					-7.0,
+					-7.0,
+					-7.0,
+					-7.0,
+					cameraToTag,
+					cameraToTag,
+					ambiguity,
+					new Translation2d[0]
+				);
 			}
 
 			final var ntPublishNS = botPose.timestamp;

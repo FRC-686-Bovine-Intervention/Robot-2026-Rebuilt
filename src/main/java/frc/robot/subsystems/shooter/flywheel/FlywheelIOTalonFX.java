@@ -6,10 +6,11 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
-import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.StaticBrake;
 import com.ctre.phoenix6.controls.StrictFollower;
+import com.ctre.phoenix6.controls.TorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -56,7 +57,8 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 	private final CoastOut coastRequest = new CoastOut();
 	private final StaticBrake brakeRequest = new StaticBrake();
 	private final VoltageOut voltageRequest = new VoltageOut(0.0);
-	private final MotionMagicVelocityVoltage velocityRequest = new MotionMagicVelocityVoltage(0.0);
+	private final TorqueCurrentFOC currentRequest = new TorqueCurrentFOC(0.0);
+	private final VelocityVoltage velocityRequest = new VelocityVoltage(0.0);
 	private final StrictFollower followerRequest = new StrictFollower(0);
 
 	public FlywheelIOTalonFX() {
@@ -68,6 +70,9 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 		this.leftBottomConfig.Feedback
 			.withSensorToMechanismRatio(FlywheelConstants.motorToMechanism.reductionUnsigned())
 		;
+		this.leftBottomConfig.Voltage
+			.withPeakReverseVoltage(0.0)
+		;
 
 		this.leftTopConfig.MotorOutput
 			.withNeutralMode(NeutralModeValue.Coast)
@@ -75,6 +80,9 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 		;
 		this.leftTopConfig.Feedback
 			.withSensorToMechanismRatio(FlywheelConstants.motorToMechanism.reductionUnsigned())
+		;
+		this.leftTopConfig.Voltage
+			.withPeakReverseVoltage(0.0)
 		;
 
 		this.rightBottomConfig.MotorOutput
@@ -84,6 +92,9 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 		this.rightBottomConfig.Feedback
 			.withSensorToMechanismRatio(FlywheelConstants.motorToMechanism.reductionUnsigned())
 		;
+		this.rightBottomConfig.Voltage
+			.withPeakReverseVoltage(0.0)
+		;
 
 		this.rightTopConfig.MotorOutput
 			.withNeutralMode(NeutralModeValue.Coast)
@@ -91,6 +102,9 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 		;
 		this.rightTopConfig.Feedback
 			.withSensorToMechanismRatio(FlywheelConstants.motorToMechanism.reductionUnsigned())
+		;
+		this.rightTopConfig.Voltage
+			.withPeakReverseVoltage(0.0)
 		;
 
 		// Cache Status Signals
@@ -210,6 +224,17 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 	public void setVolts(double volts) {
 		this.leftBottomMotor.setControl(this.voltageRequest
 			.withOutput(volts)
+		);
+		this.followerRequest.withLeaderID(this.leftBottomMotor.getDeviceID());
+		this.leftTopMotor.setControl(this.followerRequest);
+		this.rightBottomMotor.setControl(this.followerRequest);
+		this.rightTopMotor.setControl(this.followerRequest);
+	}
+
+	@Override
+	public void setCurrent(double amps) {
+		this.leftBottomMotor.setControl(this.currentRequest
+			.withOutput(amps)
 		);
 		this.followerRequest.withLeaderID(this.leftBottomMotor.getDeviceID());
 		this.leftTopMotor.setControl(this.followerRequest);
