@@ -38,11 +38,11 @@ public class ShooterConstants {
 
 	public static final InterpolatingDoubleTreeMap hubTargetHoodAngleRads = new InterpolatingDoubleTreeMap();
 	static {
-		hubTargetFlyWheelVeloMPS.put(Inches.of(49.5).in(Meters), Degrees.of(15.2).in(Radians)); // 48.25 actual
-		hubTargetFlyWheelVeloMPS.put(Inches.of(106.8).in(Meters), Degrees.of(24.2).in(Radians)); // 107.5 actual
-		hubTargetFlyWheelVeloMPS.put(Inches.of(121.5).in(Meters), Degrees.of(26.2).in(Radians)); // 122.0 actual
-		hubTargetFlyWheelVeloMPS.put(Inches.of(138.0).in(Meters), Degrees.of(30.0).in(Radians)); // 140.0 actual
-		hubTargetFlyWheelVeloMPS.put(Inches.of(178.1).in(Meters), Degrees.of(32.0).in(Radians)); // 183.0 actual
+		hubTargetHoodAngleRads.put(Inches.of(49.5).in(Meters), Degrees.of(15.2).in(Radians)); // 48.25 actual
+		hubTargetHoodAngleRads.put(Inches.of(106.8).in(Meters), Degrees.of(24.2).in(Radians)); // 107.5 actual
+		hubTargetHoodAngleRads.put(Inches.of(121.5).in(Meters), Degrees.of(26.2).in(Radians)); // 122.0 actual
+		hubTargetHoodAngleRads.put(Inches.of(138.0).in(Meters), Degrees.of(30.0).in(Radians)); // 140.0 actual
+		hubTargetHoodAngleRads.put(Inches.of(178.1).in(Meters), Degrees.of(32.0).in(Radians)); // 183.0 actual
 
 		// hubTargetHoodAngleRads.put(Inches.of(40.125).in(Meters),        Degrees.of(12.0).in(Radians)); // Hub Shot
 		// hubTargetHoodAngleRads.put(Inches.of(90.0).in(Meters),         Degrees.of(19.918093).in(Radians));
