@@ -152,9 +152,9 @@ public class ApriltagVision {
 				}
 				Logger.recordOutput(loggingKey + "/Robot pose null", false);
 				Logger.recordOutput(loggingKey + "/Camera pose null", false);
-				
+
 				final var robotPose2d = robotPose3d.toPose2d();
-				akitPose3d = new Pose3d[]{robotPose3d};
+				akitPose3d = new Pose3d[] {robotPose3d};
 				Logger.recordOutput(loggingKey + "/Poses/Robot2d", robotPose2d);
 				// Logger.recordOutput(loggingKey + "/Poses/Robot3d", robotPose3d);
 				Logger.recordOutput(loggingKey + "/Poses/Camera3d", cameraPose3d);
