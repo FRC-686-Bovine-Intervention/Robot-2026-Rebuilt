@@ -39,7 +39,11 @@ public class AutoFeed implements Runnable {
 			this.rollers.agitator.index(),
 			this.rollers.feeder.feed(),
 			this.rollers.indexer.index(),
-			Commands.deadline(Commands.waitSeconds(2), intakeSlam.stow()).andThen(Commands.waitSeconds(2), intakeSlam.deploy(extensionSystem)).repeatedly()
+			Commands.deadline(Commands.waitSeconds(2),
+				intakeSlam.stow()
+			).andThen(Commands.waitSeconds(2),
+				intakeSlam.deploy(extensionSystem)
+			).repeatedly()
 		)
 		.withName("Auto Feed");
 	}
