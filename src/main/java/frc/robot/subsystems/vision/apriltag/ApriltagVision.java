@@ -1,6 +1,7 @@
 package frc.robot.subsystems.vision.apriltag;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
 
@@ -10,16 +11,17 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.apriltag.AprilTag;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.RobotState;
 import frc.robot.RobotState.TxTyObservation;
@@ -32,7 +34,8 @@ import frc.util.loggerUtil.tunables.LoggedTunableNumber;
 public class ApriltagVision {
 	private final ApriltagPipeline pipelines[];
 
-	private static final LoggedTunable<Angle> gyroTolerance = LoggedTunable.from("Subsystems/Vision/Apriltags/Filtering/Gyro Tolerance", Degrees::of, 10);
+	private static final LoggedTunable<Distance> zTolerance = LoggedTunable.from("Subsystems/Vision/Apriltags/Filtering/Z Tolerance", Inches::of, 18.0);
+	private static final LoggedTunable<Angle> gyroTolerance = LoggedTunable.from("Subsystems/Vision/Apriltags/Filtering/Gyro Tolerance", Degrees::of, 10.0);
 	private static final LoggedTunableNumber xyStdDevCoef = LoggedTunable.from("Subsystems/Vision/Apriltags/Std Devs/XY Coef", 0.01);
 	private static final LoggedTunableNumber thetaStdDevCoef = LoggedTunable.from("Subsystems/Vision/Apriltags/Std Devs/Theta Coef", Double.POSITIVE_INFINITY);
 
@@ -43,46 +46,39 @@ public class ApriltagVision {
 
 	public void periodic() {
 		LoggedTracer.logEpoch("CommandScheduler Periodic/ApriltagVision/Before");
-		List<VisionObservation> allVisionObservations = new ArrayList<>(this.pipelines.length * 3);
-		Map<Integer, TxTyObservation> allTxTyObservations = new HashMap<>(this.pipelines.length * 3);
+		final List<VisionObservation> allVisionObservations = new ArrayList<>(this.pipelines.length * 3);
+		final Map<Integer, TxTyObservation> allTxTyObservations = new HashMap<>(this.pipelines.length * 3);
 
-		for (var pipeline : this.pipelines) {
-			var frames = pipeline.getFrames();
-			var loggingKey = "Subsystems/Vision/Apriltags/Results/" + pipeline.name;
-			var tracingKey = "CommandScheduler Periodic/ApriltagVision/Process Results/" + pipeline.name;
+		for (final var pipeline : this.pipelines) {
+			final var frames = pipeline.getFrames();
+			final var loggingKey = "Subsystems/Vision/Apriltags/Results/" + pipeline.name;
+			final var tracingKey = "CommandScheduler Periodic/ApriltagVision/Process Results/" + pipeline.name;
+
 			var akitPose3d = new Pose3d[0];
 			var akitTargetCorners = new Translation2d[0];
-			for (var frame : frames) {
-				var usableTags = Arrays
-					.stream(frame.targets)
-					.map((target) -> {
-						var optTagPose = FieldConstants.apriltagLayout.getTagPose(target.tagID);
-						if (optTagPose.isEmpty()) return Optional.empty();
-						return Optional.of(new AprilTag(target.tagID, optTagPose.get()));
-					})
-					.filter(Optional::isPresent)
-					.map(Optional::get)
-					.toArray(AprilTag[]::new)
-				;
-				Logger.recordOutput(loggingKey + "/Targets/Tag IDs", Arrays.stream(usableTags).mapToInt((tag) -> tag.ID).toArray());
-				Logger.recordOutput(loggingKey + "/Targets/Tag Poses", Arrays.stream(usableTags).map((tag) -> tag.pose).toArray(Pose3d[]::new));
-				akitTargetCorners = Arrays.stream(frame.targets).flatMap((target) -> Arrays.stream(target.corners)).toArray(Translation2d[]::new);
 
-				if (frame.targets.length == 0) {continue;}
+			for (final var frame : frames) {
+				final var usableTags = new ArrayList<AprilTag>(frame.targets.length);
 
-				for (var target : frame.targets) {
-					var tagID = target.tagID;
-					if (tagID == -1) {continue;}
-					var previousObservation = allTxTyObservations.get(tagID);
+				for (final var target : frame.targets) {
+					final var tagID = target.tagID;
+					final var optTagPose = FieldConstants.apriltagLayout.getTagPose(tagID);
+					if (optTagPose.isEmpty()) {
+						continue;
+					}
+					final var tagPose = optTagPose.get();
+
+					usableTags.add(new AprilTag(tagID, tagPose));
+
+					final var previousObservation = allTxTyObservations.get(tagID);
 					if (previousObservation == null || frame.timestamp > previousObservation.timestamp()) {
-						var tagPose = FieldConstants.apriltagLayout.getTagPose(target.tagID).get();
-						var translationToTarget = target.bestCameraToTag.getTranslation();
-						var cameraRotation = pipeline.camera.mount.getFieldRelative().getRotation();
-						var tagRotationRelativeToCamera = tagPose.getRotation().minus(cameraRotation);
-						var cameraToTag = new Transform3d(translationToTarget, tagRotationRelativeToCamera);
-						var cameraPose = tagPose.transformBy(cameraToTag.inverse());
-						var robotPose = cameraPose.transformBy(pipeline.camera.mount.getRobotRelative().inverse());
-						var correctedObservationTimestamp = Math.min(frame.timestamp, Timer.getTimestamp());
+						final var translationToTarget = target.bestCameraToTag.getTranslation();
+						final var cameraRotation = pipeline.camera.mount.getFieldRelative().getRotation();
+						final var tagRotationRelativeToCamera = tagPose.getRotation().minus(cameraRotation);
+						final var cameraToTag = new Transform3d(translationToTarget, tagRotationRelativeToCamera);
+						final var cameraPose = tagPose.transformBy(cameraToTag.inverse());
+						final var robotPose = cameraPose.transformBy(pipeline.camera.mount.getRobotRelative().inverse());
+						final var correctedObservationTimestamp = Math.min(frame.timestamp, Timer.getTimestamp());
 
 						allTxTyObservations.put(
 							tagID,
@@ -95,28 +91,36 @@ public class ApriltagVision {
 					}
 				}
 
+				Logger.recordOutput(loggingKey + "/Targets/Tag IDs", usableTags.stream().mapToInt((tag) -> tag.ID).toArray());
+				Logger.recordOutput(loggingKey + "/Targets/Tag Poses", usableTags.stream().map((tag) -> tag.pose).toArray(Pose3d[]::new));
+				akitTargetCorners = Arrays.stream(frame.targets).flatMap((target) -> Arrays.stream(target.corners)).toArray(Translation2d[]::new);
+
+				if (usableTags.isEmpty()) {
+					continue;
+				}
+
 				// final because averageTagDist mapToDouble needs it
 				final Pose3d cameraPose3d;
 				final Pose3d robotPose3d;
 				var useVisionRotation = false;
 
 				if (frame.multiTagResult.isPresent()) {
-					var multiTagResult = frame.multiTagResult.get();
+					final var multiTagResult = frame.multiTagResult.get();
 					cameraPose3d = new Pose3d(
 						multiTagResult.bestTransform.getTranslation(),
 						multiTagResult.bestTransform.getRotation()
 					);
 					robotPose3d = cameraPose3d.transformBy(pipeline.camera.mount.getRobotRelative().inverse());
 					useVisionRotation = true;
-				} else if (frame.targets.length == 1) {
-					var target = frame.targets[0];
-					var tagPose = FieldConstants.apriltagLayout.getTagPose(target.tagID).get();
-					var translationToTarget = target.bestCameraToTag.getTranslation();
-					var cameraRotation = pipeline.camera.mount.getFieldRelative().getRotation();
-					var tagRotationRelativeToCamera = tagPose.getRotation().minus(cameraRotation);
-					var cameraToTag = new Transform3d(translationToTarget, tagRotationRelativeToCamera);
-					var cameraPose = tagPose.transformBy(cameraToTag.inverse());
-					var robotPose = cameraPose.transformBy(pipeline.camera.mount.getRobotRelative().inverse());
+				} else if (usableTags.size() == 1) {
+					final var target = frame.targets[0];
+					final var tagPose = FieldConstants.apriltagLayout.getTagPose(target.tagID).get();
+					final var translationToTarget = target.bestCameraToTag.getTranslation();
+					final var cameraRotation = pipeline.camera.mount.getFieldRelative().getRotation();
+					final var tagRotationRelativeToCamera = tagPose.getRotation().minus(cameraRotation);
+					final var cameraToTag = new Transform3d(translationToTarget, tagRotationRelativeToCamera);
+					final var cameraPose = tagPose.transformBy(cameraToTag.inverse());
+					final var robotPose = cameraPose.transformBy(pipeline.camera.mount.getRobotRelative().inverse());
 
 					cameraPose3d = cameraPose;
 					robotPose3d = robotPose;
@@ -142,27 +146,24 @@ public class ApriltagVision {
 					// }
 
 				} else {
-					cameraPose3d = null;
-					robotPose3d = null;
-				}
-				if (robotPose3d == null || cameraPose3d == null) {
-					Logger.recordOutput(loggingKey + "/Robot pose null", robotPose3d == null);
-					Logger.recordOutput(loggingKey + "/Camera pose null", cameraPose3d == null);
+					Logger.recordOutput(loggingKey + "/Robot pose null", true);
+					Logger.recordOutput(loggingKey + "/Camera pose null", true);
 					continue;
 				}
 				Logger.recordOutput(loggingKey + "/Robot pose null", false);
 				Logger.recordOutput(loggingKey + "/Camera pose null", false);
-				var robotPose2d = robotPose3d.toPose2d();
-				akitPose3d = new Pose3d[]{robotPose3d};
+
+				final var robotPose2d = robotPose3d.toPose2d();
+				akitPose3d = new Pose3d[] {robotPose3d};
 				Logger.recordOutput(loggingKey + "/Poses/Robot2d", robotPose2d);
 				// Logger.recordOutput(loggingKey + "/Poses/Robot3d", robotPose3d);
 				Logger.recordOutput(loggingKey + "/Poses/Camera3d", cameraPose3d);
 
 				// Filtering
-				var inField = ApriltagVisionConstants.acceptableFieldBox.withinBounds(robotPose2d.getTranslation());
-				var closeToFloor = robotPose3d.getTranslation().getMeasureZ().isNear(Meters.zero(), ApriltagVisionConstants.zMargin);
-				var closeToGyro = robotPose2d.getRotation().minus(RobotState.getInstance().getEstimatedGlobalPose().getRotation()).getCos() > Math.cos(gyroTolerance.get().in(Radians));
-				var gyroFilter = closeToGyro || usableTags.length >= 2;
+				final var inField = ApriltagVisionConstants.acceptableFieldBox.withinBounds(robotPose2d.getTranslation());
+				final var closeToFloor = MathUtil.isNear(0.0, robotPose3d.getZ(), ApriltagVision.zTolerance.get().in(Meters));
+				final var closeToGyro = robotPose2d.getRotation().minus(RobotState.getInstance().getEstimatedGlobalPose().getRotation()).getCos() > Math.cos(gyroTolerance.get().in(Radians));
+				final var gyroFilter = closeToGyro || usableTags.size() >= 2;
 
 				Logger.recordOutput(loggingKey + "/Filtering/In Field", inField);
 				Logger.recordOutput(loggingKey + "/Filtering/Close to Floor", closeToFloor);
@@ -177,26 +178,24 @@ public class ApriltagVision {
 				}
 
 				// Std Devs
-				var optAverageTagDistance = Arrays
-					.stream(usableTags)
-					.mapToDouble((tag) -> tag.pose.getTranslation().getDistance(cameraPose3d.getTranslation()))
-					.average()
-				;
-				if (optAverageTagDistance.isEmpty()) continue;
-				var averageTagDistance = optAverageTagDistance.getAsDouble();
+				var totalTagDistance = 0.0;
+				for (final var tag : usableTags) {
+					totalTagDistance += tag.pose.getTranslation().getDistance(cameraPose3d.getTranslation());
+				}
+				final var averageTagDistance = totalTagDistance / usableTags.size();
 				Logger.recordOutput(loggingKey + "/Std Devs/Average Distance", averageTagDistance);
 
-				double xyStdDev =
+				final var xyStdDev =
 					xyStdDevCoef.get()
 					* Math.pow(averageTagDistance, 1.2)
-					/ Math.pow(usableTags.length, 2.0)
+					/ Math.pow(usableTags.size(), 2.0)
 					* pipeline.pipelineStdScale
 				;
-				double thetaStdDev =
+				final var thetaStdDev =
 					(useVisionRotation) ? (
 						thetaStdDevCoef.get()
 						* Math.pow(averageTagDistance, 1.2)
-						/ Math.pow(usableTags.length, 2.0)
+						/ Math.pow(usableTags.size(), 2.0)
 						* pipeline.pipelineStdScale
 					) : (
 						Double.POSITIVE_INFINITY
