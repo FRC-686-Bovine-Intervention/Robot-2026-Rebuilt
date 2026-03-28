@@ -49,8 +49,8 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 
 	// Control Requests
 	private final VoltageOut voltageRequest = new VoltageOut(0);
-	private final DynamicMotionMagicExpoVoltage fastPositionRequest = new DynamicMotionMagicExpoVoltage(0.0, 0.0, 0.0);
-	private final DynamicMotionMagicExpoVoltage slowPositionRequest = new DynamicMotionMagicExpoVoltage(0.0, 0.0, 0.0);
+	private final DynamicMotionMagicExpoVoltage fastPositionRequest = new DynamicMotionMagicExpoVoltage(0.0, 24.0, 24.0);
+	private final DynamicMotionMagicExpoVoltage slowPositionRequest = new DynamicMotionMagicExpoVoltage(0.0, 24.0, 24.0);
 	private final NeutralOut neutralOutRequest = new NeutralOut();
 	private final CoastOut coastOutRequest = new CoastOut();
 	private final StaticBrake staticBrakeRequest = new StaticBrake();
