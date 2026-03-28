@@ -58,7 +58,7 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 		// Motor Configuration
 		this.motorConfig.MotorOutput
 			.withInverted(InvertedValue.CounterClockwise_Positive)
-			.withNeutralMode(NeutralModeValue.Brake)
+			.withNeutralMode(NeutralModeValue.Coast)
 		;
 		this.motorConfig.Feedback
 			.withRemoteCANcoder(this.encoder)
