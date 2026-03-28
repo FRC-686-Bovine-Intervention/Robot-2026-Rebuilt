@@ -813,6 +813,8 @@ public class RobotContainer {
 		 */
 		final var intakeDoublePressThreshold = LoggedTunable.from("Controls/Intake/Double Press Threshold", Seconds::of, 0.25);
 		final var intakeDoublePressTimer = new Timer();
+		final var intakeHopperDumpEdge = new EdgeDetector(false);
+		final var intakeHopperDumpSupplier = this.driveController.povUp();
 		CommandScheduler.getInstance().getDefaultButtonLoop().bind(() -> {
 			if (this.driveController.hid.getAButtonPressed()) {
 				CommandScheduler.getInstance().schedule(intakeRollersIntakeCommand);
@@ -831,6 +833,13 @@ public class RobotContainer {
 			if (intakeDoublePressTimer.hasElapsed(intakeDoublePressThreshold.get().in(Seconds))) {
 				intakeDoublePressTimer.stop();
 				intakeDoublePressTimer.reset();
+			}
+			intakeHopperDumpEdge.update(intakeHopperDumpSupplier.getAsBoolean());
+			if (intakeHopperDumpEdge.risingEdge()) {
+				CommandScheduler.getInstance().schedule(intakeHopperDump);
+			}
+			if (intakeHopperDumpEdge.fallingEdge()) {
+				CommandScheduler.getInstance().schedule(intakeDeployCommand);
 			}
 		});
 
@@ -881,7 +890,5 @@ public class RobotContainer {
 		});
 
 		this.driveController.x().whileTrue(this.rollers.feed().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("Force Feed"));
-
-		this.driveController.start().toggleOnTrue(intakeHopperDump).toggleOnFalse(intakeDeployCommand);
 	}
 }
