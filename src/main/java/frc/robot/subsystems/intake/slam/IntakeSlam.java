@@ -259,7 +259,7 @@ public class IntakeSlam extends SubsystemBase {
 	public Command hopperAgitate(ExtensionSystem extension) {
 		final var slam = this;
 		return new Command() {
-			private static final LoggedTunable<Time> agitatePeriod = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Hopper Agitate", Seconds::of, 1.0);
+			private static final LoggedTunable<Time> agitatePeriod = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Hopper Agitate", Seconds::of, 0.65);
 			private final Timer agitateTimer = new Timer();
 
 			{
