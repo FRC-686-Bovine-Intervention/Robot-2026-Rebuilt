@@ -35,29 +35,29 @@ public class IntakeSlam extends SubsystemBase {
 	private final IntakeSlamIO io;
 	private final IntakeSlamIOInputsAutoLogged inputs = new IntakeSlamIOInputsAutoLogged();
 
-	private static final LoggedTunable<Angle> stowAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Stow/Angle", Degrees::of, IntakeSlamConstants.maxAngle.in(Degrees));
+	private static final LoggedTunable<Angle> stowAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Stow/Angle", Degrees::of, 135.0);
 	private static final LoggedTunable<Angle> deployAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Angle", Degrees::of, IntakeSlamConstants.minAngle.in(Degrees));
-	private static final LoggedTunable<Angle> deployFlopAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Flop Angle", Degrees::of, IntakeSlamConstants.maxAngle.minus(Degrees.of(10.0)).in(Degrees));
+	private static final LoggedTunable<Angle> deployFlopAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Flop Angle", Degrees::of, -10.0);
 	private static final LoggedTunable<Voltage> pushDownVoltage = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Pushdown/Voltage", Volts::of, -2.0);
 
-	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kV", 12.0);
-	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kA", 12.0);
+	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kV", 4.0);
+	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kA", 0.0);
 	private static final LoggedTunable<AngularVelocity> profileMaxVel = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/Max Velocity", DegreesPerSecond::of, 0.0);
 
 	private static final LoggedTunable<FFGains> ffConsts = LoggedTunable.from(
 		"Subsystems/Intake/Slam/Mechanism/FF",
 		new FFGains(
-			0.0,
-			0.0,
-			0.0,
-			0.0
+			0.2,
+			0.5,
+			10.0,
+			3.0
 		)
 	);
 
 	private static final LoggedTunable<PIDGains> pidConsts = LoggedTunable.from(
 		"Subsystems/Intake/Slam/Mechanism/PID",
 		new PIDGains(
-			0.0,
+			100.0,
 			0.0,
 			0.0
 		)
