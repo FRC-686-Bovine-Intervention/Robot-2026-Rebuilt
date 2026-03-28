@@ -18,10 +18,7 @@ import frc.robot.constants.FieldConstants;
 
 public class CameraIOLimelight implements CameraIO {
 	private final IntegerSubscriber heartbeatSubsciber;
-	// private final DoubleSubscriber latencyPipelineSubscriber;
-	// private final DoubleSubscriber latencyCaptureSubscriber;
 	private final DoubleArraySubscriber botPoseSubscriber;
-	private final DoubleArraySubscriber rawFiducialsSubscriber;
 
 	private long prevHeartbeat = 0;
 	private final Debouncer connectionDebouncer = new Debouncer(0.5, DebounceType.kFalling);
@@ -30,7 +27,6 @@ public class CameraIOLimelight implements CameraIO {
 		final var table = NetworkTableInstance.getDefault().getTable(name);
 		this.heartbeatSubsciber = table.getIntegerTopic("hb").subscribe(0);
 		this.botPoseSubscriber = table.getDoubleArrayTopic("botpose_wpiblue").subscribe(null, PubSubOption.keepDuplicates(true));
-		this.rawFiducialsSubscriber = table.getDoubleArrayTopic("rawfiducials").subscribe(null, PubSubOption.keepDuplicates(true));
 	}
 
 	@Override
@@ -39,7 +35,6 @@ public class CameraIOLimelight implements CameraIO {
 		inputs.isConnected = this.connectionDebouncer.calculate(heartbeat != this.prevHeartbeat);
 
 		final var botPoses = this.botPoseSubscriber.readQueue();
-		final var rawFiducials = this.rawFiducialsSubscriber.readQueueValues();
 
 		final var frameCount = botPoses.length;
 
@@ -48,13 +43,13 @@ public class CameraIOLimelight implements CameraIO {
 		for (int i = 0; i < frameCount; i++) {
 			final var botPose = botPoses[i];
 
-			final var botPoseArray = botPose.value;
+			final var dataArray = botPose.value;
 
 			final MultiTagResult multiTagResult;
 
-			final var tagCount = (int) botPoseArray[7];
-			final var latencyMS = botPoseArray[6];
-			final var cameraTransform = getTransformFromArray(botPose.value);
+			final var tagCount = (int) dataArray[7];
+			final var latencyMS = dataArray[6];
+			final var cameraTransform = getTransformFromArray(dataArray);
 
 			if (tagCount > 1) {
 				multiTagResult = new MultiTagResult(
@@ -69,14 +64,12 @@ public class CameraIOLimelight implements CameraIO {
 				multiTagResult = null;
 			}
 
-			final int targetCount = Math.min(tagCount, rawFiducials.length);
-			final CameraTarget[] cameraTargets = new CameraTarget[targetCount];
+			final CameraTarget[] cameraTargets = new CameraTarget[tagCount];
 
-			for (int j = 0; j < targetCount; j++) {
-				final var targets = rawFiducials[i];
-				final var baseIndex = j * 7;
-				final var fiducialID = (int) targets[baseIndex + 0];
-				final var ambiguity = targets[baseIndex + 6];
+			for (int j = 0; j < tagCount; j++) {
+				final var baseIndex = 11 + (j * 7);
+				final var fiducialID = (int) dataArray[baseIndex + 0];
+				final var ambiguity = dataArray[baseIndex + 6];
 
 				final var fieldToTag = FieldConstants.apriltagLayout.getTagPose(fiducialID).get();
 				final var fieldToCamera = cameraTransform;

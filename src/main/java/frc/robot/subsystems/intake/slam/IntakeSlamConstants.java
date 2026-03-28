@@ -14,20 +14,21 @@ import frc.util.mechanismUtil.GearRatio;
 
 public class IntakeSlamConstants {
 	// Physical Limits
-	public static final Angle minAngle = Degrees.of(12.914241222135480415615526174275);
-	public static final Angle maxAngle = Degrees.of(77.606461691456901932073109190622);
+	public static final Angle minAngle = Degrees.of(0.0);
+	public static final Angle maxAngle = Degrees.of(150.0);
 
 	// Sensor Offsets
-	public static final Angle encoderZeroOffset = Degrees.of(77.606461691456901932073109190622);
+	public static final Angle encoderZeroOffset = Degrees.of(0.0);
 
 	// Gear Ratios
 	public static final GearRatio motorToMechanism = new GearRatio()
-		.planetary(9.0)
 		.planetary(5.0)
-		.gear(40).gear(44).gear(44).gear(40).axle()
+		.planetary(5.0)
+		.gear(44).gear(72).axle()
+		.sprocket(16).sprocket(36)
 	;
 	public static final GearRatio sensorToMechanism = new GearRatio()
-		.gear(44).gear(40).axle()
+		.sprocket(16).sprocket(36)
 	;
 
 

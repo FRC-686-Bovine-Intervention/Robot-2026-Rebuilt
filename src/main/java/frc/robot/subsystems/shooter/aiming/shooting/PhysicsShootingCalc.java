@@ -1,6 +1,5 @@
 package frc.robot.subsystems.shooter.aiming.shooting;
 
-import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;

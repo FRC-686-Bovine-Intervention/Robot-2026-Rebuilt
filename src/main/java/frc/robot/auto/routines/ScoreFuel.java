@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.littletonrobotics.junction.Logger;
 
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
@@ -512,7 +511,7 @@ public class ScoreFuel extends AutoRoutine {
 		return Commands.parallel(
 			AutoCommons.setOdometryFlipped(startPosition.pose),
 			Commands.parallel(
-				this.intake.slam.pushdown(this.robot.extensionSystem),
+				this.intake.slam.deploy(this.robot.extensionSystem),
 				Commands.sequence(commands.toArray(Command[]::new))
 			)
 		);

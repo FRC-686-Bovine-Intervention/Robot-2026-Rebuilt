@@ -60,7 +60,7 @@ import frc.robot.subsystems.drive.odometry.OdometryTimestampIOSim;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.rollers.IntakeRollers;
 import frc.robot.subsystems.intake.rollers.IntakeRollersIO;
-import frc.robot.subsystems.intake.rollers.IntakeRollersIOSparkMax;
+import frc.robot.subsystems.intake.rollers.IntakeRollersIOTalonFX;
 import frc.robot.subsystems.intake.slam.IntakeSlam;
 import frc.robot.subsystems.intake.slam.IntakeSlamIO;
 import frc.robot.subsystems.intake.slam.IntakeSlamIOSim;
@@ -166,7 +166,7 @@ public class RobotContainer {
 					)
 				);
 				this.intake = new Intake(
-					new IntakeRollers(new IntakeRollersIOSparkMax()),
+					new IntakeRollers(new IntakeRollersIOTalonFX()),
 					new IntakeSlam(new IntakeSlamIOTalonFX())
 				);
 				this.rollers = new Rollers(
@@ -639,6 +639,7 @@ public class RobotContainer {
 		final var intakeRollersIdleCommand = this.intake.rollers.idle();
 		final var intakeRollersIntakeCommand = this.intake.rollers.intake();
 		final var intakeStowCommand = this.intake.slam.stow();
+		final var intakeHopperDump = this.intake.slam.hopperDump(this.extensionSystem);
 		final var intakeDeployCommand = this.intake.slam.deploy(this.extensionSystem);
 
 		final var rollersIndexerIdleCommand = this.rollers.indexer.idle();
@@ -876,5 +877,7 @@ public class RobotContainer {
 		});
 
 		this.driveController.x().whileTrue(this.rollers.feed().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("Force Feed"));
+
+		this.driveController.start().toggleOnTrue(intakeHopperDump).toggleOnFalse(intakeDeployCommand);
 	}
 }

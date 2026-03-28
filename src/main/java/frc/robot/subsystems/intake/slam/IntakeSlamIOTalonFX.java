@@ -7,7 +7,7 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
-import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
+import com.ctre.phoenix6.controls.DynamicMotionMagicExpoVoltage;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.StaticBrake;
 import com.ctre.phoenix6.controls.VoltageOut;
@@ -49,7 +49,7 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 
 	// Control Requests
 	private final VoltageOut voltageRequest = new VoltageOut(0);
-	private final MotionMagicExpoVoltage positionRequest = new MotionMagicExpoVoltage(0);
+	private final DynamicMotionMagicExpoVoltage positionRequest = new DynamicMotionMagicExpoVoltage(0.0, 0.0, 0.0);
 	private final NeutralOut neutralOutRequest = new NeutralOut();
 	private final CoastOut coastOutRequest = new CoastOut();
 	private final StaticBrake staticBrakeRequest = new StaticBrake();
@@ -80,7 +80,8 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 		this.encoder.getConfigurator().refresh(this.encoderConfig.MagnetSensor);
 
 		this.encoderConfig.MagnetSensor
-			.withSensorDirection(SensorDirectionValue.Clockwise_Positive)
+			.withSensorDirection(SensorDirectionValue.CounterClockwise_Positive)
+			.withAbsoluteSensorDiscontinuityPoint(0.975)
 		;
 
 		// Cache Status Signals
@@ -161,11 +162,11 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 	}
 
 	@Override
-	public void configProfile(double kVVoltSecsPerRad, double kAVoltSecsSqrPerRad, double maxVelocityRadsPerSec) {
-		this.motorConfig.MotionMagic
-			.withMotionMagicExpo_kV(Units.rotationsToRadians(kVVoltSecsPerRad))
-			.withMotionMagicExpo_kA(Units.rotationsToRadians(kAVoltSecsSqrPerRad))
-			.withMotionMagicCruiseVelocity(Units.radiansToRotations(maxVelocityRadsPerSec))
+	public void setProfile(double kVVoltSecsPerRad, double kAVoltSecsSqrPerRad, double maxVelocityRadsPerSec) {
+		this.positionRequest
+			.withKV(Units.rotationsToRadians(kVVoltSecsPerRad))
+			.withKA(Units.rotationsToRadians(kAVoltSecsSqrPerRad))
+			.withKA(Units.radiansToRotations(maxVelocityRadsPerSec))
 		;
 	}
 
