@@ -890,5 +890,7 @@ public class RobotContainer {
 		});
 
 		this.driveController.x().whileTrue(this.rollers.feed().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("Force Feed"));
+
+		this.driveController.povDown().toggleOnTrue(this.intake.slam.hopperAgitate(this.extensionSystem)).toggleOnFalse(intakeDeployCommand);
 	}
 }

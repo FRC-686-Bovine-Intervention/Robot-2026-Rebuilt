@@ -12,8 +12,10 @@ import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -250,6 +252,39 @@ public class IntakeSlam extends SubsystemBase {
 			@Override
 			public void end(boolean interrupted) {
 				slam.io.stop(NeutralMode.DEFAULT);
+			}
+		};
+	}
+
+	public Command hopperAgitate(ExtensionSystem extension) {
+		final var slam = this;
+		return new Command() {
+			private static final LoggedTunable<Time> agitatePeriod = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Hopper Agitate", Seconds::of, 1.0);
+			private final Timer agitateTimer = new Timer();
+
+			{
+				this.setName("Hopper Agitate");
+				this.addRequirements(slam, extension);
+			}
+
+			@Override
+			public void initialize() {
+				this.agitateTimer.restart();
+			}
+
+			@Override
+			public void execute() {
+				if (this.agitateTimer.get() % (agitatePeriod.get().in(Seconds) * 2) > agitatePeriod.get().in(Seconds)) {
+					slam.setAngleGoalRads(IntakeSlam.hopperDumpAngle.get().in(Radians));
+				} else {
+					slam.setAngleGoalRads(IntakeSlam.deployAngle.get().in(Radians));
+				}
+			}
+
+			@Override
+			public void end(boolean interrupted) {
+				slam.io.stop(NeutralMode.DEFAULT);
+				this.agitateTimer.stop();
 			}
 		};
 	}

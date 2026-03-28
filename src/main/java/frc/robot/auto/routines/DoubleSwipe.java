@@ -100,18 +100,19 @@ public class DoubleSwipe extends AutoRoutine {
 		return Commands.parallel(
 			AutoCommons.setOdometryFlipped(startPosition),
 			Commands.sequence(
-				Commands.waitSeconds(1.0),
-				this.robot.intake.slam.deploy(this.robot.extensionSystem).asProxy()
-			),
-			Commands.sequence(
 				Commands.deadline(
 					Commands.sequence(
 						Commands.deadline(
 							new FollowTrajectoryCommand(this.robot.drive, firstTrajBallGrab, true).withName("First Grab Ball").asProxy(),
+							Commands.sequence(
+								Commands.waitSeconds(1.0),
+								this.robot.intake.slam.deploy(this.robot.extensionSystem).asProxy()
+							),
 							this.robot.intake.rollers.intake().asProxy()
 						),
 						Commands.deadline(
 							this.robot.rollers.untilNoBalls(1.0),
+							this.robot.intake.slam.hopperAgitate(this.robot.extensionSystem).asProxy(),
 							this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy(),
 							this.robot.shooter.aimHoodAtHub().asProxy(),
 							this.robot.shooter.aimDriveAtHub(this.robot.drive.rotationalSubsystem).asProxy(),
@@ -129,11 +130,12 @@ public class DoubleSwipe extends AutoRoutine {
 					Commands.sequence(
 						Commands.deadline(
 							new FollowTrajectoryCommand(this.robot.drive, secondTrajBallGrab, true).withName("Second Grab Ball").asProxy(),
+							this.robot.intake.slam.deploy(this.robot.extensionSystem).asProxy(),
 							this.robot.intake.rollers.intake().asProxy()
 						),
 						Commands.parallel(
-							// Commands.waitSeconds(5.0),
 							this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy(),
+							this.robot.intake.slam.hopperAgitate(this.robot.extensionSystem).asProxy(),
 							this.robot.shooter.aimHoodAtHub().asProxy(),
 							this.robot.shooter.aimDriveAtHub(this.robot.drive.rotationalSubsystem).asProxy(),
 							this.robot.drive.translationSubsystem.simplePIDTo(FunctionalUtil.evalNow(secondTrajBallGrab.getFinalPose(false).get().getTranslation())).asProxy()
