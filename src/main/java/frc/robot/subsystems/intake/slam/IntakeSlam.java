@@ -124,6 +124,9 @@ public class IntakeSlam extends SubsystemBase {
 			this.io.configFF(IntakeSlam.ffConsts.get());
 			this.io.configPID(IntakeSlam.pidConsts.get());
 			this.io.configSend();
+
+			this.io.setFastProfile(IntakeSlam.profilekV.getAsDouble(), IntakeSlam.profilekA.getAsDouble(), IntakeSlam.profileFastMaxVel.get().in(RadiansPerSecond));
+			this.io.setSlowProfile(IntakeSlam.profilekV.getAsDouble(), IntakeSlam.profilekA.getAsDouble(), IntakeSlam.profileSlowMaxVel.get().in(RadiansPerSecond));
 		}
 
 		this.periodic();
@@ -164,6 +167,14 @@ public class IntakeSlam extends SubsystemBase {
 		}
 		if (configChanged) {
 			this.io.configSend();
+		}
+		if (IntakeSlam.profilekV.hasChanged(this.hashCode()) | IntakeSlam.profilekV.hasChanged(this.hashCode())) {
+			if (IntakeSlam.profileFastMaxVel.hasChanged(this.hashCode())) {
+				this.io.setFastProfile(IntakeSlam.profilekV.getAsDouble(), IntakeSlam.profilekA.getAsDouble(), IntakeSlam.profileFastMaxVel.get().in(RadiansPerSecond));
+			}
+			if (IntakeSlam.profileSlowMaxVel.hasChanged(this.hashCode())) {
+				this.io.setSlowProfile(IntakeSlam.profilekV.getAsDouble(), IntakeSlam.profilekA.getAsDouble(), IntakeSlam.profileSlowMaxVel.get().in(RadiansPerSecond));
+			}
 		}
 
 		this.motorDisconnectedAlert.set(!this.inputs.motorConnected);
@@ -213,7 +224,6 @@ public class IntakeSlam extends SubsystemBase {
 
 			@Override
 			public void execute() {
-				slam.io.setProfile(IntakeSlam.profilekV.getAsDouble(), IntakeSlam.profilekA.getAsDouble(), IntakeSlam.profileFastMaxVel.get().in(RadiansPerSecond));
 				slam.setAngleGoalRads(IntakeSlam.stowAngle.get().in(Radians));
 			}
 
@@ -234,7 +244,6 @@ public class IntakeSlam extends SubsystemBase {
 
 			@Override
 			public void execute() {
-				slam.io.setProfile(IntakeSlam.profilekV.getAsDouble(), IntakeSlam.profilekA.getAsDouble(), IntakeSlam.profileSlowMaxVel.get().in(RadiansPerSecond));
 				slam.setAngleGoalRads(IntakeSlam.hopperDumpAngle.get().in(Radians));
 			}
 
@@ -255,7 +264,6 @@ public class IntakeSlam extends SubsystemBase {
 
 			@Override
 			public void execute() {
-				slam.io.setProfile(IntakeSlam.profilekV.getAsDouble(), IntakeSlam.profilekA.getAsDouble(), IntakeSlam.profileFastMaxVel.get().in(RadiansPerSecond));
 				slam.setAngleGoalRads(IntakeSlam.deployAngle.get().in(Radians));
 			}
 

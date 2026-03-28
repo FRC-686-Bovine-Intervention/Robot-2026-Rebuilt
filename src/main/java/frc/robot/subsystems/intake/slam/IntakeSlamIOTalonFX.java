@@ -49,7 +49,8 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 
 	// Control Requests
 	private final VoltageOut voltageRequest = new VoltageOut(0);
-	private final DynamicMotionMagicExpoVoltage positionRequest = new DynamicMotionMagicExpoVoltage(0.0, 0.0, 0.0);
+	private final DynamicMotionMagicExpoVoltage fastPositionRequest = new DynamicMotionMagicExpoVoltage(0.0, 0.0, 0.0);
+	private final DynamicMotionMagicExpoVoltage slowPositionRequest = new DynamicMotionMagicExpoVoltage(0.0, 0.0, 0.0);
 	private final NeutralOut neutralOutRequest = new NeutralOut();
 	private final CoastOut coastOutRequest = new CoastOut();
 	private final StaticBrake staticBrakeRequest = new StaticBrake();
@@ -150,7 +151,7 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 
 	@Override
 	public void setPositionRads(double positionRads) {
-		this.motor.setControl(this.positionRequest
+		this.motor.setControl(this.fastPositionRequest
 			.withPosition(Units.radiansToRotations(positionRads))
 		);
 	}
@@ -162,8 +163,17 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 	}
 
 	@Override
-	public void setProfile(double kVVoltSecsPerRad, double kAVoltSecsSqrPerRad, double maxVelocityRadsPerSec) {
-		this.positionRequest
+	public void setFastProfile(double kVVoltSecsPerRad, double kAVoltSecsSqrPerRad, double maxVelocityRadsPerSec) {
+		this.fastPositionRequest
+			.withKV(Units.rotationsToRadians(kVVoltSecsPerRad))
+			.withKA(Units.rotationsToRadians(kAVoltSecsSqrPerRad))
+			.withKA(Units.radiansToRotations(maxVelocityRadsPerSec))
+		;
+	}
+
+	@Override
+	public void setSlowProfile(double kVVoltSecsPerRad, double kAVoltSecsSqrPerRad, double maxVelocityRadsPerSec) {
+		this.slowPositionRequest
 			.withKV(Units.rotationsToRadians(kVVoltSecsPerRad))
 			.withKA(Units.rotationsToRadians(kAVoltSecsSqrPerRad))
 			.withKA(Units.radiansToRotations(maxVelocityRadsPerSec))
