@@ -37,12 +37,12 @@ public class IntakeSlam extends SubsystemBase {
 
 	private static final LoggedTunable<Angle> stowAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Stow/Angle", Degrees::of, 145.0);
 	private static final LoggedTunable<Angle> deployAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Angle", Degrees::of, IntakeSlamConstants.minAngle.in(Degrees));
-	private static final LoggedTunable<Angle> deployFlopAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Flop Angle", Degrees::of, -10.0);
-	private static final LoggedTunable<Voltage> pushDownVoltage = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Pushdown/Voltage", Volts::of, -2.0);
+	private static final LoggedTunable<Angle> hopperDumpAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Hopper Dump/Angle", Degrees::of, 70.0);
 
 	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kV", 0.5);
 	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kA", 0.25);
-	private static final LoggedTunable<AngularVelocity> profileMaxVel = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/Max Velocity", DegreesPerSecond::of, 0.0);
+	private static final LoggedTunable<AngularVelocity> profileFastMaxVel = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Fast Max Velocity", DegreesPerSecond::of, 0.0);
+	private static final LoggedTunable<AngularVelocity> profileSlowMaxVel = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Slow Max Velocity", DegreesPerSecond::of, 15.0);
 
 	private static final LoggedTunable<FFGains> ffConsts = LoggedTunable.from(
 		"Subsystems/Intake/Slam/Mechanism/FF",
@@ -122,11 +122,6 @@ public class IntakeSlam extends SubsystemBase {
 		SmartDashboard.putData("SysID/Intake/Slam/Dynamic Reverse", sysidRoutine.dynamic(SysIdRoutine.Direction.kReverse).until(() -> this.getMeasuredAngleRads() <= IntakeSlamConstants.minAngle.in(Radians)));
 
 		if (!RobotConstants.tuningMode) {
-			this.io.configProfile(
-				IntakeSlam.profilekV.getAsDouble(),
-				IntakeSlam.profilekA.getAsDouble(),
-				IntakeSlam.profileMaxVel.get().in(RadiansPerSecond)
-			);
 			this.io.configFF(IntakeSlam.ffConsts.get());
 			this.io.configPID(IntakeSlam.pidConsts.get());
 			this.io.configSend();
@@ -160,18 +155,6 @@ public class IntakeSlam extends SubsystemBase {
 		this.couplerMech.setRads(this.mechLinkage.getDriverRelativeCouplerAngleRads());
 
 		var configChanged = false;
-		if (
-			IntakeSlam.profilekV.hasChanged(this.hashCode())
-			| IntakeSlam.profilekA.hasChanged(this.hashCode())
-			| IntakeSlam.profileMaxVel.hasChanged(this.hashCode())
-		) {
-			this.io.configProfile(
-				IntakeSlam.profilekV.getAsDouble(),
-				IntakeSlam.profilekA.getAsDouble(),
-				IntakeSlam.profileMaxVel.get().in(RadiansPerSecond)
-			);
-			configChanged = true;
-		}
 		if (IntakeSlam.ffConsts.hasChanged(this.hashCode())) {
 			this.io.configFF(IntakeSlam.ffConsts.get());
 			configChanged = true;
@@ -220,27 +203,7 @@ public class IntakeSlam extends SubsystemBase {
 			}
 		};
 	}
-
-	public Command pushdown(ExtensionSystem extension) {
-		final var slam = this;
-		return new Command() {
-			{
-				this.setName("Pushdown");
-				this.addRequirements(slam, extension);
-			}
-
-			@Override
-			public void execute() {
-				slam.io.setVolts(IntakeSlam.pushDownVoltage.get().in(Volts));
-			}
-
-			@Override
-			public void end(boolean interrupted) {
-				slam.io.stop(NeutralMode.COAST);
-			}
-		};
-	}
-
+	
 	public Command stow() {
 		final var slam = this;
 		return new Command() {
@@ -251,7 +214,29 @@ public class IntakeSlam extends SubsystemBase {
 
 			@Override
 			public void execute() {
+				slam.io.setProfile(IntakeSlam.profilekV.getAsDouble(), IntakeSlam.profilekA.getAsDouble(), IntakeSlam.profileFastMaxVel.get().in(RadiansPerSecond));
 				slam.setAngleGoalRads(IntakeSlam.stowAngle.get().in(Radians));
+			}
+
+			@Override
+			public void end(boolean interrupted) {
+				slam.io.stop(NeutralMode.DEFAULT);
+			}
+		};
+	}
+
+	public Command hopperDump(ExtensionSystem extension) {
+		final var slam = this;
+		return new Command() {
+			{
+				this.setName("Hopper Dump");
+				this.addRequirements(slam, extension);
+			}
+
+			@Override
+			public void execute() {
+				slam.io.setProfile(IntakeSlam.profilekV.getAsDouble(), IntakeSlam.profilekA.getAsDouble(), IntakeSlam.profileSlowMaxVel.get().in(RadiansPerSecond));
+				slam.setAngleGoalRads(IntakeSlam.hopperDumpAngle.get().in(Radians));
 			}
 
 			@Override
@@ -271,11 +256,8 @@ public class IntakeSlam extends SubsystemBase {
 
 			@Override
 			public void execute() {
-				if (slam.getMeasuredAngleRads() > IntakeSlam.deployFlopAngle.get().in(Radians)) {
-					slam.setAngleGoalRads(IntakeSlam.deployAngle.get().in(Radians));
-				} else {
-					slam.io.stop(NeutralMode.COAST);
-				}
+				slam.io.setProfile(IntakeSlam.profilekV.getAsDouble(), IntakeSlam.profilekA.getAsDouble(), IntakeSlam.profileFastMaxVel.get().in(RadiansPerSecond));
+				slam.setAngleGoalRads(IntakeSlam.deployAngle.get().in(Radians));
 			}
 
 			@Override

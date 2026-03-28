@@ -511,7 +511,7 @@ public class ScoreFuel extends AutoRoutine {
 		return Commands.parallel(
 			AutoCommons.setOdometryFlipped(startPosition.pose),
 			Commands.parallel(
-				this.intake.slam.pushdown(this.robot.extensionSystem),
+				this.intake.slam.deploy(this.robot.extensionSystem),
 				Commands.sequence(commands.toArray(Command[]::new))
 			)
 		);
