@@ -41,15 +41,15 @@ public class IntakeSlam extends SubsystemBase {
 	private static final LoggedTunable<Voltage> pushDownVoltage = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Pushdown/Voltage", Volts::of, -2.0);
 
 	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kV", 12.0);
-	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kA", 0.0);
+	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kA", 12.0);
 	private static final LoggedTunable<AngularVelocity> profileMaxVel = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/Max Velocity", DegreesPerSecond::of, 0.0);
 
 	private static final LoggedTunable<FFGains> ffConsts = LoggedTunable.from(
 		"Subsystems/Intake/Slam/Mechanism/FF",
 		new FFGains(
 			0.0,
-			0.5,
-			29.0,
+			0.0,
+			0.0,
 			0.0
 		)
 	);
@@ -57,7 +57,7 @@ public class IntakeSlam extends SubsystemBase {
 	private static final LoggedTunable<PIDGains> pidConsts = LoggedTunable.from(
 		"Subsystems/Intake/Slam/Mechanism/PID",
 		new PIDGains(
-			500.0,
+			0.0,
 			0.0,
 			0.0
 		)

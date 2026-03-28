@@ -49,7 +49,7 @@ public class IntakeRollersIOTalonFX implements IntakeRollersIO {
 		;
 
 		this.leftMotor.getConfigurator().apply(this.leftConfig);
-		this.leftMotor.getConfigurator().apply(this.leftConfig);
+		this.rightMotor.getConfigurator().apply(this.rightConfig);
 
 		this.leftMotorStatusSignalCache = MotorStatusSignalCache.from(this.leftMotor);
 		this.rightMotorStatusSignalCache = MotorStatusSignalCache.from(this.rightMotor);
