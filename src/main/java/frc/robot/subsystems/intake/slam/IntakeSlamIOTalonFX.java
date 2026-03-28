@@ -80,7 +80,7 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 		this.encoder.getConfigurator().refresh(this.encoderConfig.MagnetSensor);
 
 		this.encoderConfig.MagnetSensor
-			.withSensorDirection(SensorDirectionValue.Clockwise_Positive)
+			.withSensorDirection(SensorDirectionValue.CounterClockwise_Positive)
 		;
 
 		// Cache Status Signals
