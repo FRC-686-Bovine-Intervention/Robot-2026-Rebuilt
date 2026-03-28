@@ -26,11 +26,10 @@ public interface IntakeSlamIO {
 	public default void setVolts(double volts) {}
 
 	public default void setPositionRads(double positionRads) {}
-	public default void setFastProfile(double kVVoltSecsPerRad, double kAVoltSecsSqrPerRad, double maxVelocityRadsPerSec) {}
-	public default void setSlowProfile(double kVVoltSecsPerRad, double kAVoltSecsSqrPerRad, double maxVelocityRadsPerSec) {}
-
+	
 	public default void stop(Optional<NeutralMode> neutralMode) {}
-
+	
+	public default void configProfile(double kVVoltSecsPerRad, double kAVoltSecsSqrPerRad, double maxVelocityRadsPerSec) {}
 	public default void configFF(FFGains ffGains) {}
 	public default void configPID(PIDGains pidGains) {}
 	public default void configSend() {}

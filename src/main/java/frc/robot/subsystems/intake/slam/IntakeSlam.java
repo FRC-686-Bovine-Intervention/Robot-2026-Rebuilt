@@ -41,7 +41,7 @@ public class IntakeSlam extends SubsystemBase {
 	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kV", 5.0);
 	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kA", 5.25);
 	private static final LoggedTunable<AngularVelocity> profileFastMaxVel = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Fast Max Velocity", DegreesPerSecond::of, 0.0);
-	private static final LoggedTunable<AngularVelocity> profileSlowMaxVel = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Slow Max Velocity", DegreesPerSecond::of, 15.0);
+	// private static final LoggedTunable<AngularVelocity> profileSlowMaxVel = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Slow Max Velocity", DegreesPerSecond::of, 15.0);
 
 	private static final LoggedTunable<FFGains> ffConsts = LoggedTunable.from(
 		"Subsystems/Intake/Slam/Mechanism/FF",
@@ -125,8 +125,7 @@ public class IntakeSlam extends SubsystemBase {
 			this.io.configPID(IntakeSlam.pidConsts.get());
 			this.io.configSend();
 
-			this.io.setFastProfile(IntakeSlam.profilekV.getAsDouble(), IntakeSlam.profilekA.getAsDouble(), IntakeSlam.profileFastMaxVel.get().in(RadiansPerSecond));
-			this.io.setSlowProfile(IntakeSlam.profilekV.getAsDouble(), IntakeSlam.profilekA.getAsDouble(), IntakeSlam.profileSlowMaxVel.get().in(RadiansPerSecond));
+			this.io.configProfile(IntakeSlam.profilekV.getAsDouble(), IntakeSlam.profilekA.getAsDouble(), IntakeSlam.profileFastMaxVel.get().in(RadiansPerSecond));
 		}
 
 		this.periodic();
@@ -157,6 +156,12 @@ public class IntakeSlam extends SubsystemBase {
 		this.couplerMech.setRads(this.mechLinkage.getDriverRelativeCouplerAngleRads());
 
 		var configChanged = false;
+		if (IntakeSlam.profilekV.hasChanged(this.hashCode()) | IntakeSlam.profilekV.hasChanged(this.hashCode())) {
+			if (IntakeSlam.profileFastMaxVel.hasChanged(this.hashCode())) {
+				this.io.configProfile(IntakeSlam.profilekV.getAsDouble(), IntakeSlam.profilekA.getAsDouble(), IntakeSlam.profileFastMaxVel.get().in(RadiansPerSecond));
+				configChanged = true;
+			}
+		}
 		if (IntakeSlam.ffConsts.hasChanged(this.hashCode())) {
 			this.io.configFF(IntakeSlam.ffConsts.get());
 			configChanged = true;
@@ -167,14 +172,6 @@ public class IntakeSlam extends SubsystemBase {
 		}
 		if (configChanged) {
 			this.io.configSend();
-		}
-		if (IntakeSlam.profilekV.hasChanged(this.hashCode()) | IntakeSlam.profilekV.hasChanged(this.hashCode())) {
-			if (IntakeSlam.profileFastMaxVel.hasChanged(this.hashCode())) {
-				this.io.setFastProfile(IntakeSlam.profilekV.getAsDouble(), IntakeSlam.profilekA.getAsDouble(), IntakeSlam.profileFastMaxVel.get().in(RadiansPerSecond));
-			}
-			if (IntakeSlam.profileSlowMaxVel.hasChanged(this.hashCode())) {
-				this.io.setSlowProfile(IntakeSlam.profilekV.getAsDouble(), IntakeSlam.profilekA.getAsDouble(), IntakeSlam.profileSlowMaxVel.get().in(RadiansPerSecond));
-			}
 		}
 
 		this.motorDisconnectedAlert.set(!this.inputs.motorConnected);
