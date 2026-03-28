@@ -138,7 +138,7 @@ public class RobotContainer {
 	// Controllers
 	private final XboxController driveController = new XboxController(0, "Drive Controller");
 	private final Joystick secondDriverJoystick = new Joystick(1);
-	private final Trigger secondDriverOverride = new Trigger(() -> secondDriverJoystick.button(3, CommandScheduler.getInstance().getDefaultButtonLoop()).or(secondDriverJoystick.button(4, CommandScheduler.getInstance().getDefaultButtonLoop())).getAsBoolean());
+	private final Trigger secondDriverOverride = new Trigger(() -> secondDriverJoystick.button(0, CommandScheduler.getInstance().getDefaultButtonLoop()).getAsBoolean());
 
 	@SuppressWarnings("unused")
 	private final CommandJoystick simJoystick = new CommandJoystick(5);
