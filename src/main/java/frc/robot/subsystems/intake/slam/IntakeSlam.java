@@ -38,8 +38,8 @@ public class IntakeSlam extends SubsystemBase {
 	private static final LoggedTunable<Angle> deployAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Angle", Degrees::of, IntakeSlamConstants.minAngle.in(Degrees));
 	private static final LoggedTunable<Angle> hopperDumpAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Hopper Dump/Angle", Degrees::of, 70.0);
 
-	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kV", 5.0);
-	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kA", 5.25);
+	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kV", 2.0);
+	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kA", 0.25);
 	private static final LoggedTunable<AngularVelocity> profileFastMaxVel = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Fast Max Velocity", DegreesPerSecond::of, 0.0);
 	// private static final LoggedTunable<AngularVelocity> profileSlowMaxVel = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Slow Max Velocity", DegreesPerSecond::of, 15.0);
 
