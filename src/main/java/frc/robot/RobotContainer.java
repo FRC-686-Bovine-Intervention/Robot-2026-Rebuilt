@@ -639,6 +639,7 @@ public class RobotContainer {
 		final var intakeRollersIdleCommand = this.intake.rollers.idle();
 		final var intakeRollersIntakeCommand = this.intake.rollers.intake();
 		final var intakeStowCommand = this.intake.slam.stow();
+		final var intakeHopperDump = this.intake.slam.hopperDump(this.extensionSystem);
 		final var intakeDeployCommand = this.intake.slam.deploy(this.extensionSystem);
 
 		final var rollersIndexerIdleCommand = this.rollers.indexer.idle();
@@ -876,5 +877,7 @@ public class RobotContainer {
 		});
 
 		this.driveController.x().whileTrue(this.rollers.feed().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("Force Feed"));
+
+		this.driveController.start().toggleOnTrue(intakeHopperDump).toggleOnFalse(intakeDeployCommand);
 	}
 }

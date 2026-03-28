@@ -12,7 +12,6 @@ import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -203,7 +202,7 @@ public class IntakeSlam extends SubsystemBase {
 			}
 		};
 	}
-	
+
 	public Command stow() {
 		final var slam = this;
 		return new Command() {

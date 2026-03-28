@@ -24,7 +24,7 @@ public interface IntakeSlamIO {
 	public default void updateInputs(IntakeSlamIOInputs inputs) {}
 
 	public default void setVolts(double volts) {}
-	
+
 	public default void setPositionRads(double positionRads) {}
 	public default void setProfile(double kVVoltSecsPerRad, double kAVoltSecsSqrPerRad, double maxVelocityRadsPerSec) {}
 
