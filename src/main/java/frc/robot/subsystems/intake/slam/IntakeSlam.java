@@ -123,9 +123,9 @@ public class IntakeSlam extends SubsystemBase {
 		if (!RobotConstants.tuningMode) {
 			this.io.configFF(IntakeSlam.ffConsts.get());
 			this.io.configPID(IntakeSlam.pidConsts.get());
-			this.io.configSend();
-
 			this.io.configProfile(IntakeSlam.profilekV.getAsDouble(), IntakeSlam.profilekA.getAsDouble(), IntakeSlam.profileFastMaxVel.get().in(RadiansPerSecond));
+			
+			this.io.configSend();
 		}
 
 		this.periodic();
