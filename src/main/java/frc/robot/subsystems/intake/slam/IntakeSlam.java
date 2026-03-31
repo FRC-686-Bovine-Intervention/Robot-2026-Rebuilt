@@ -12,7 +12,10 @@ import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -36,12 +39,14 @@ public class IntakeSlam extends SubsystemBase {
 
 	private static final LoggedTunable<Angle> stowAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Stow/Angle", Degrees::of, 145.0);
 	private static final LoggedTunable<Angle> deployAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Angle", Degrees::of, IntakeSlamConstants.minAngle.in(Degrees));
-	private static final LoggedTunable<Angle> hopperDumpAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Hopper Dump/Angle", Degrees::of, 70.0);
+	private static final LoggedTunable<Voltage> deployPushdownVolts = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Pushdown Volts", Volts::of, -1.0);
+	private static final LoggedTunable<Angle> deployPushdownThreshold = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Pushdown Threshold", Degrees::of, 2.0);
+	private static final LoggedTunable<Angle> hopperDumpAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Hopper Dump/Angle", Degrees::of, 90.0);
 
-	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kV", 0.5);
-	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kA", 0.25);
+	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kV", 1.5);
+	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kA", 0.5);
 	private static final LoggedTunable<AngularVelocity> profileFastMaxVel = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Fast Max Velocity", DegreesPerSecond::of, 0.0);
-	private static final LoggedTunable<AngularVelocity> profileSlowMaxVel = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Slow Max Velocity", DegreesPerSecond::of, 15.0);
+	// private static final LoggedTunable<AngularVelocity> profileSlowMaxVel = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Slow Max Velocity", DegreesPerSecond::of, 15.0);
 
 	private static final LoggedTunable<FFGains> ffConsts = LoggedTunable.from(
 		"Subsystems/Intake/Slam/Mechanism/FF",
@@ -123,6 +128,8 @@ public class IntakeSlam extends SubsystemBase {
 		if (!RobotConstants.tuningMode) {
 			this.io.configFF(IntakeSlam.ffConsts.get());
 			this.io.configPID(IntakeSlam.pidConsts.get());
+			this.io.configProfile(IntakeSlam.profilekV.getAsDouble(), IntakeSlam.profilekA.getAsDouble(), IntakeSlam.profileFastMaxVel.get().in(RadiansPerSecond));
+
 			this.io.configSend();
 		}
 
@@ -154,6 +161,12 @@ public class IntakeSlam extends SubsystemBase {
 		this.couplerMech.setRads(this.mechLinkage.getDriverRelativeCouplerAngleRads());
 
 		var configChanged = false;
+		if (IntakeSlam.profilekV.hasChanged(this.hashCode()) | IntakeSlam.profilekV.hasChanged(this.hashCode())) {
+			if (IntakeSlam.profileFastMaxVel.hasChanged(this.hashCode())) {
+				this.io.configProfile(IntakeSlam.profilekV.getAsDouble(), IntakeSlam.profilekA.getAsDouble(), IntakeSlam.profileFastMaxVel.get().in(RadiansPerSecond));
+				configChanged = true;
+			}
+		}
 		if (IntakeSlam.ffConsts.hasChanged(this.hashCode())) {
 			this.io.configFF(IntakeSlam.ffConsts.get());
 			configChanged = true;
@@ -213,7 +226,6 @@ public class IntakeSlam extends SubsystemBase {
 
 			@Override
 			public void execute() {
-				slam.io.setProfile(IntakeSlam.profilekV.getAsDouble(), IntakeSlam.profilekA.getAsDouble(), IntakeSlam.profileFastMaxVel.get().in(RadiansPerSecond));
 				slam.setAngleGoalRads(IntakeSlam.stowAngle.get().in(Radians));
 			}
 
@@ -234,13 +246,45 @@ public class IntakeSlam extends SubsystemBase {
 
 			@Override
 			public void execute() {
-				slam.io.setProfile(IntakeSlam.profilekV.getAsDouble(), IntakeSlam.profilekA.getAsDouble(), IntakeSlam.profileSlowMaxVel.get().in(RadiansPerSecond));
 				slam.setAngleGoalRads(IntakeSlam.hopperDumpAngle.get().in(Radians));
 			}
 
 			@Override
 			public void end(boolean interrupted) {
 				slam.io.stop(NeutralMode.DEFAULT);
+			}
+		};
+	}
+
+	public Command hopperAgitate(ExtensionSystem extension) {
+		final var slam = this;
+		return new Command() {
+			private static final LoggedTunable<Time> agitatePeriod = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Hopper Agitate", Seconds::of, 0.65);
+			private final Timer agitateTimer = new Timer();
+
+			{
+				this.setName("Hopper Agitate");
+				this.addRequirements(slam, extension);
+			}
+
+			@Override
+			public void initialize() {
+				this.agitateTimer.restart();
+			}
+
+			@Override
+			public void execute() {
+				if (this.agitateTimer.get() % (agitatePeriod.get().in(Seconds) * 2) < agitatePeriod.get().in(Seconds)) {
+					slam.setAngleGoalRads(IntakeSlam.hopperDumpAngle.get().in(Radians));
+				} else {
+					slam.setAngleGoalRads(IntakeSlam.deployAngle.get().in(Radians));
+				}
+			}
+
+			@Override
+			public void end(boolean interrupted) {
+				slam.io.stop(NeutralMode.DEFAULT);
+				this.agitateTimer.stop();
 			}
 		};
 	}
@@ -255,8 +299,11 @@ public class IntakeSlam extends SubsystemBase {
 
 			@Override
 			public void execute() {
-				slam.io.setProfile(IntakeSlam.profilekV.getAsDouble(), IntakeSlam.profilekA.getAsDouble(), IntakeSlam.profileFastMaxVel.get().in(RadiansPerSecond));
-				slam.setAngleGoalRads(IntakeSlam.deployAngle.get().in(Radians));
+				if (slam.getMeasuredAngleRads() < IntakeSlam.deployPushdownThreshold.get().in(Radians)) {
+					slam.io.setVolts(IntakeSlam.deployPushdownVolts.get().in(Volts));
+				} else {
+					slam.setAngleGoalRads(IntakeSlam.deployAngle.get().in(Radians));
+				}
 			}
 
 			@Override

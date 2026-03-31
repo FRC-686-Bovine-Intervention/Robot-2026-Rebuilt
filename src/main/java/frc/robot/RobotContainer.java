@@ -38,6 +38,9 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
+import frc.robot.auto.routines.DoubleSwipe;
+import frc.robot.auto.routines.Preloads;
+import frc.robot.auto.routines.ResetPosition;
 import frc.robot.auto.routines.ScoreFuel;
 import frc.robot.automations.AutoFeed;
 import frc.robot.automations.HubShiftNotifications;
@@ -136,7 +139,7 @@ public class RobotContainer {
 	// Controllers
 	private final XboxController driveController = new XboxController(0, "Drive Controller");
 	private final Joystick secondDriverJoystick = new Joystick(1);
-	private final Trigger secondDriverOverride = new Trigger(() -> secondDriverJoystick.button(3, CommandScheduler.getInstance().getDefaultButtonLoop()).or(secondDriverJoystick.button(4, CommandScheduler.getInstance().getDefaultButtonLoop())).getAsBoolean());
+	private final Trigger secondDriverOverride = new Trigger(() -> secondDriverJoystick.button(0, CommandScheduler.getInstance().getDefaultButtonLoop()).getAsBoolean());
 
 	@SuppressWarnings("unused")
 	private final CommandJoystick simJoystick = new CommandJoystick(5);
@@ -363,8 +366,8 @@ public class RobotContainer {
 
 		// Initialize vision systems with camera pipelines
 		this.apriltagVision = new ApriltagVision(
-			new ApriltagPipeline(this.hopperCamera, 0, 1.0),
-			new ApriltagPipeline(this.hubZoomCamera, 0, 1.0)
+			new ApriltagPipeline(this.hopperCamera, 0, 1.0)
+			// new ApriltagPipeline(this.hubZoomCamera, 0, 1.0)
 			// new ApriltagPipeline(this.leftBroadCamera, 0, 2.0),
 			// new ApriltagPipeline(this.rightBroadCamera, 0, 2.0),
 			// new ApriltagPipeline(this.backBroadCamera, 0, 2.0)
@@ -406,7 +409,10 @@ public class RobotContainer {
 
 		final var autoSelector = new AutoSelector("Auto Selector");
 		// Add autonomous routines to autonomous selector
-		autoSelector.addDefaultRoutine(new ScoreFuel(this));
+		autoSelector.addDefaultRoutine(new DoubleSwipe(this));
+		autoSelector.addRoutine(new ResetPosition());
+		autoSelector.addRoutine(new Preloads(this));
+		autoSelector.addRoutine(new ScoreFuel(this));
 
 		this.autoManager = new AutoManager(autoSelector);
 
@@ -557,7 +563,7 @@ public class RobotContainer {
 			private static final LoggedTunable<Angle> offsetAngle = LoggedTunable.from("Controls/Tank Drive/Offset/Angle", Degrees::of, 20.0);
 
 			private static final LoggedTunable<LinearVelocity> linearThreshold = LoggedTunable.from("Controls/Tank Drive/Velo Threshold", MetersPerSecond::of, 0.5);
-			private static final LoggedTunable<AngularVelocity> maxOmega = LoggedTunable.from("Controls/Tank Drive/Max Omega", RotationsPerSecond::of, 0.5);
+			private static final LoggedTunable<AngularVelocity> maxOmega = LoggedTunable.from("Controls/Tank Drive/Max Omega", RotationsPerSecond::of, 1.5);
 
 			private static final LoggedTunable<PIDGains> pidGains = LoggedTunable.from(
 				"Controls/Tank Drive/Azimuth PID",
@@ -809,6 +815,8 @@ public class RobotContainer {
 		 */
 		final var intakeDoublePressThreshold = LoggedTunable.from("Controls/Intake/Double Press Threshold", Seconds::of, 0.25);
 		final var intakeDoublePressTimer = new Timer();
+		final var intakeHopperDumpEdge = new EdgeDetector(false);
+		final var intakeHopperDumpSupplier = this.driveController.povUp();
 		CommandScheduler.getInstance().getDefaultButtonLoop().bind(() -> {
 			if (this.driveController.hid.getAButtonPressed()) {
 				CommandScheduler.getInstance().schedule(intakeRollersIntakeCommand);
@@ -827,6 +835,13 @@ public class RobotContainer {
 			if (intakeDoublePressTimer.hasElapsed(intakeDoublePressThreshold.get().in(Seconds))) {
 				intakeDoublePressTimer.stop();
 				intakeDoublePressTimer.reset();
+			}
+			intakeHopperDumpEdge.update(intakeHopperDumpSupplier.getAsBoolean());
+			if (intakeHopperDumpEdge.risingEdge()) {
+				CommandScheduler.getInstance().schedule(intakeHopperDump);
+			}
+			if (intakeHopperDumpEdge.fallingEdge()) {
+				CommandScheduler.getInstance().schedule(intakeDeployCommand);
 			}
 		});
 
@@ -877,7 +892,5 @@ public class RobotContainer {
 		});
 
 		this.driveController.x().whileTrue(this.rollers.feed().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("Force Feed"));
-
-		this.driveController.start().toggleOnTrue(intakeHopperDump).toggleOnFalse(intakeDeployCommand);
 	}
 }
