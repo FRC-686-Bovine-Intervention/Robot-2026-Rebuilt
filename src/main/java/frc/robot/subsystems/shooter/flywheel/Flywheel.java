@@ -10,7 +10,6 @@ import java.util.function.DoubleSupplier;
 
 import org.littletonrobotics.junction.Logger;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.LinearAccelerationUnit;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.LinearAcceleration;
@@ -35,7 +34,7 @@ public class Flywheel extends SubsystemBase {
 	private static final LoggedTunable<LinearVelocity> spinupSurfaceVelo = LoggedTunable.from("Subsystems/Shooter/Flywheel/Commands/Spinup/Velocity", MetersPerSecond::of, +20.0);
 
 	private static final LoggedTunable<Current> bangBangCurrent = LoggedTunable.from("Subsystems/Shooter/Flywheel/Commands/Bang Bang/Current", Amps::of, 55.0);
-	private static final LoggedTunableNumber bangBangThreshold = LoggedTunable.from("Subsystems/Shooter/Flywheel/Commands/Bang Bang/Threshold", 0.975);
+	private static final LoggedTunableNumber bangBangThreshold = LoggedTunable.from("Subsystems/Shooter/Flywheel/Commands/Bang Bang/Threshold", 0.95);
 
 	private static final LoggedTunable<LinearAcceleration> profileMaxAcceleration = LoggedTunable.from("Subsystems/Shooter/Flywheel/Mechanism/Profile/Max Acceleration", MetersPerSecondPerSecond::of, 7.0);
 	private static final LoggedTunable<Velocity<LinearAccelerationUnit>> profileMaxJerk = LoggedTunable.from("Subsystems/Shooter/Flywheel/Mechanism/Profile/Max Jerk", MetersPerSecondPerSecond.per(Second)::of, 0.0);
