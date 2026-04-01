@@ -12,8 +12,10 @@ import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -35,29 +37,31 @@ public class IntakeSlam extends SubsystemBase {
 	private final IntakeSlamIO io;
 	private final IntakeSlamIOInputsAutoLogged inputs = new IntakeSlamIOInputsAutoLogged();
 
-	private static final LoggedTunable<Angle> stowAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Stow/Angle", Degrees::of, IntakeSlamConstants.maxAngle.in(Degrees));
+	private static final LoggedTunable<Angle> stowAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Stow/Angle", Degrees::of, 145.0);
 	private static final LoggedTunable<Angle> deployAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Angle", Degrees::of, IntakeSlamConstants.minAngle.in(Degrees));
-	private static final LoggedTunable<Angle> deployFlopAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Flop Angle", Degrees::of, IntakeSlamConstants.maxAngle.minus(Degrees.of(10.0)).in(Degrees));
-	private static final LoggedTunable<Voltage> pushDownVoltage = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Pushdown/Voltage", Volts::of, -2.0);
+	private static final LoggedTunable<Voltage> deployPushdownVolts = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Pushdown Volts", Volts::of, -1.0);
+	private static final LoggedTunable<Angle> deployPushdownThreshold = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Pushdown Threshold", Degrees::of, 2.0);
+	private static final LoggedTunable<Angle> hopperDumpAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Hopper Dump/Angle", Degrees::of, 90.0);
 
-	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kV", 12.0);
-	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kA", 0.0);
-	private static final LoggedTunable<AngularVelocity> profileMaxVel = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/Max Velocity", DegreesPerSecond::of, 0.0);
+	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kV", 1.5);
+	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kA", 0.5);
+	private static final LoggedTunable<AngularVelocity> profileFastMaxVel = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Fast Max Velocity", DegreesPerSecond::of, 0.0);
+	// private static final LoggedTunable<AngularVelocity> profileSlowMaxVel = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Slow Max Velocity", DegreesPerSecond::of, 15.0);
 
 	private static final LoggedTunable<FFGains> ffConsts = LoggedTunable.from(
 		"Subsystems/Intake/Slam/Mechanism/FF",
 		new FFGains(
-			0.0,
+			0.2,
 			0.5,
-			29.0,
-			0.0
+			10.0,
+			0.25
 		)
 	);
 
 	private static final LoggedTunable<PIDGains> pidConsts = LoggedTunable.from(
 		"Subsystems/Intake/Slam/Mechanism/PID",
 		new PIDGains(
-			500.0,
+			100.0,
 			0.0,
 			0.0
 		)
@@ -122,13 +126,10 @@ public class IntakeSlam extends SubsystemBase {
 		SmartDashboard.putData("SysID/Intake/Slam/Dynamic Reverse", sysidRoutine.dynamic(SysIdRoutine.Direction.kReverse).until(() -> this.getMeasuredAngleRads() <= IntakeSlamConstants.minAngle.in(Radians)));
 
 		if (!RobotConstants.tuningMode) {
-			this.io.configProfile(
-				IntakeSlam.profilekV.getAsDouble(),
-				IntakeSlam.profilekA.getAsDouble(),
-				IntakeSlam.profileMaxVel.get().in(RadiansPerSecond)
-			);
 			this.io.configFF(IntakeSlam.ffConsts.get());
 			this.io.configPID(IntakeSlam.pidConsts.get());
+			this.io.configProfile(IntakeSlam.profilekV.getAsDouble(), IntakeSlam.profilekA.getAsDouble(), IntakeSlam.profileFastMaxVel.get().in(RadiansPerSecond));
+
 			this.io.configSend();
 		}
 
@@ -160,17 +161,11 @@ public class IntakeSlam extends SubsystemBase {
 		this.couplerMech.setRads(this.mechLinkage.getDriverRelativeCouplerAngleRads());
 
 		var configChanged = false;
-		if (
-			IntakeSlam.profilekV.hasChanged(this.hashCode())
-			| IntakeSlam.profilekA.hasChanged(this.hashCode())
-			| IntakeSlam.profileMaxVel.hasChanged(this.hashCode())
-		) {
-			this.io.configProfile(
-				IntakeSlam.profilekV.getAsDouble(),
-				IntakeSlam.profilekA.getAsDouble(),
-				IntakeSlam.profileMaxVel.get().in(RadiansPerSecond)
-			);
-			configChanged = true;
+		if (IntakeSlam.profilekV.hasChanged(this.hashCode()) | IntakeSlam.profilekV.hasChanged(this.hashCode())) {
+			if (IntakeSlam.profileFastMaxVel.hasChanged(this.hashCode())) {
+				this.io.configProfile(IntakeSlam.profilekV.getAsDouble(), IntakeSlam.profilekA.getAsDouble(), IntakeSlam.profileFastMaxVel.get().in(RadiansPerSecond));
+				configChanged = true;
+			}
 		}
 		if (IntakeSlam.ffConsts.hasChanged(this.hashCode())) {
 			this.io.configFF(IntakeSlam.ffConsts.get());
@@ -221,26 +216,6 @@ public class IntakeSlam extends SubsystemBase {
 		};
 	}
 
-	public Command pushdown(ExtensionSystem extension) {
-		final var slam = this;
-		return new Command() {
-			{
-				this.setName("Pushdown");
-				this.addRequirements(slam, extension);
-			}
-
-			@Override
-			public void execute() {
-				slam.io.setVolts(IntakeSlam.pushDownVoltage.get().in(Volts));
-			}
-
-			@Override
-			public void end(boolean interrupted) {
-				slam.io.stop(NeutralMode.COAST);
-			}
-		};
-	}
-
 	public Command stow() {
 		final var slam = this;
 		return new Command() {
@@ -261,6 +236,59 @@ public class IntakeSlam extends SubsystemBase {
 		};
 	}
 
+	public Command hopperDump(ExtensionSystem extension) {
+		final var slam = this;
+		return new Command() {
+			{
+				this.setName("Hopper Dump");
+				this.addRequirements(slam, extension);
+			}
+
+			@Override
+			public void execute() {
+				slam.setAngleGoalRads(IntakeSlam.hopperDumpAngle.get().in(Radians));
+			}
+
+			@Override
+			public void end(boolean interrupted) {
+				slam.io.stop(NeutralMode.DEFAULT);
+			}
+		};
+	}
+
+	public Command hopperAgitate(ExtensionSystem extension) {
+		final var slam = this;
+		return new Command() {
+			private static final LoggedTunable<Time> agitatePeriod = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Hopper Agitate", Seconds::of, 0.65);
+			private final Timer agitateTimer = new Timer();
+
+			{
+				this.setName("Hopper Agitate");
+				this.addRequirements(slam, extension);
+			}
+
+			@Override
+			public void initialize() {
+				this.agitateTimer.restart();
+			}
+
+			@Override
+			public void execute() {
+				if (this.agitateTimer.get() % (agitatePeriod.get().in(Seconds) * 2) < agitatePeriod.get().in(Seconds)) {
+					slam.setAngleGoalRads(IntakeSlam.hopperDumpAngle.get().in(Radians));
+				} else {
+					slam.setAngleGoalRads(IntakeSlam.deployAngle.get().in(Radians));
+				}
+			}
+
+			@Override
+			public void end(boolean interrupted) {
+				slam.io.stop(NeutralMode.DEFAULT);
+				this.agitateTimer.stop();
+			}
+		};
+	}
+
 	public Command deploy(ExtensionSystem extension) {
 		final var slam = this;
 		return new Command() {
@@ -271,10 +299,10 @@ public class IntakeSlam extends SubsystemBase {
 
 			@Override
 			public void execute() {
-				if (slam.getMeasuredAngleRads() > IntakeSlam.deployFlopAngle.get().in(Radians)) {
-					slam.setAngleGoalRads(IntakeSlam.deployAngle.get().in(Radians));
+				if (slam.getMeasuredAngleRads() < IntakeSlam.deployPushdownThreshold.get().in(Radians)) {
+					slam.io.setVolts(IntakeSlam.deployPushdownVolts.get().in(Volts));
 				} else {
-					slam.io.stop(NeutralMode.COAST);
+					slam.setAngleGoalRads(IntakeSlam.deployAngle.get().in(Radians));
 				}
 			}
 

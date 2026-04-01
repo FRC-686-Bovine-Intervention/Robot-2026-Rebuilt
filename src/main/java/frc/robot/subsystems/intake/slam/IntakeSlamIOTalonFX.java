@@ -49,7 +49,7 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 
 	// Control Requests
 	private final VoltageOut voltageRequest = new VoltageOut(0);
-	private final MotionMagicExpoVoltage positionRequest = new MotionMagicExpoVoltage(0);
+	private final MotionMagicExpoVoltage positionRequest = new MotionMagicExpoVoltage(0.0);
 	private final NeutralOut neutralOutRequest = new NeutralOut();
 	private final CoastOut coastOutRequest = new CoastOut();
 	private final StaticBrake staticBrakeRequest = new StaticBrake();
@@ -58,7 +58,7 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 		// Motor Configuration
 		this.motorConfig.MotorOutput
 			.withInverted(InvertedValue.CounterClockwise_Positive)
-			.withNeutralMode(NeutralModeValue.Brake)
+			.withNeutralMode(NeutralModeValue.Coast)
 		;
 		this.motorConfig.Feedback
 			.withRemoteCANcoder(this.encoder)
@@ -80,7 +80,8 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 		this.encoder.getConfigurator().refresh(this.encoderConfig.MagnetSensor);
 
 		this.encoderConfig.MagnetSensor
-			.withSensorDirection(SensorDirectionValue.Clockwise_Positive)
+			.withSensorDirection(SensorDirectionValue.CounterClockwise_Positive)
+			.withAbsoluteSensorDiscontinuityPoint(0.975)
 		;
 
 		// Cache Status Signals
@@ -168,6 +169,15 @@ public class IntakeSlamIOTalonFX implements IntakeSlamIO {
 			.withMotionMagicCruiseVelocity(Units.radiansToRotations(maxVelocityRadsPerSec))
 		;
 	}
+
+	// @Override
+	// public void setSlowProfile(double kVVoltSecsPerRad, double kAVoltSecsSqrPerRad, double maxVelocityRadsPerSec) {
+	// 	this.slowPositionRequest
+	// 		.withKV(Units.rotationsToRadians(kVVoltSecsPerRad))
+	// 		.withKA(Units.rotationsToRadians(kAVoltSecsSqrPerRad))
+	// 		.withKA(Units.radiansToRotations(maxVelocityRadsPerSec))
+	// 	;
+	// }
 
 	@Override
 	public void configFF(FFGains ffGains) {

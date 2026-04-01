@@ -48,11 +48,12 @@ public class Leds extends VirtualSubsystem {
 		this.allianceColorAnimation = new AllianceColorAnimation(sideStrips, Color.kFirstBlue, Color.kRed);
 		this.driverStationConnection = new StatusLightAnimation(sideStrips.substrip(0, 2), Color.kOrange, Color.kGreen);
 		this.fmsConnection = new FillAnimation(sideStrips.substrip(0, 2), Color.kBlue);
-		this.hubZoomCamConnection = new StatusLightAnimation(sideStrips.substrip(2, 3), Color.kOrange, Color.kGreen);
-		this.leftBroadCamConnection = new StatusLightAnimation(sideStrips.substrip(3, 4), Color.kOrange, Color.kGreen);
-		this.rightBroadCamConnection = new StatusLightAnimation(sideStrips.substrip(4, 5), Color.kOrange, Color.kGreen);
-		this.backBroadCamConnection = new StatusLightAnimation(sideStrips.substrip(5, 6), Color.kOrange, Color.kGreen);
-		this.intakeCamConnection = new StatusLightAnimation(sideStrips.substrip(6, 7), Color.kOrange, Color.kGreen);
+		this.hopperCamConnection = new StatusLightAnimation(sideStrips.substrip(2, 3), Color.kOrange, Color.kGreen);
+		this.hubZoomCamConnection = new StatusLightAnimation(sideStrips.substrip(3, 4), Color.kOrange, Color.kGreen);
+		this.leftBroadCamConnection = new StatusLightAnimation(sideStrips.substrip(4, 5), Color.kOrange, Color.kGreen);
+		this.rightBroadCamConnection = new StatusLightAnimation(sideStrips.substrip(5, 6), Color.kOrange, Color.kGreen);
+		this.backBroadCamConnection = new StatusLightAnimation(sideStrips.substrip(6, 7), Color.kOrange, Color.kGreen);
+		this.intakeCamConnection = new StatusLightAnimation(sideStrips.substrip(7, 8), Color.kOrange, Color.kGreen);
 
 		this.hoodNotCalibratedAnimation = new FlashingAnimation(sideStrips.substrip(13, 16), WaveFunction.Sawtooth.frequency(2.0), InterpolationFunction.step.gradient(Color.kBlack, Color.kRed));
 		this.hoodCalibratedAnimation = new FillAnimation(sideStrips.substrip(13, 16), Color.kGreen);
@@ -72,6 +73,7 @@ public class Leds extends VirtualSubsystem {
 	public final FlashingAnimation bootingAnimation;
 	public final StatusLightAnimation driverStationConnection;
 	public final FillAnimation fmsConnection;
+	public final StatusLightAnimation hopperCamConnection;
 	public final StatusLightAnimation hubZoomCamConnection;
 	public final StatusLightAnimation leftBroadCamConnection;
 	public final StatusLightAnimation rightBroadCamConnection;
@@ -118,6 +120,7 @@ public class Leds extends VirtualSubsystem {
 		if (DriverStation.isDisabled()) {
 			this.driverStationConnection.apply();
 			this.fmsConnection.applyIfFlagged();
+			this.hopperCamConnection.apply();
 			this.hubZoomCamConnection.apply();
 			this.leftBroadCamConnection.apply();
 			this.rightBroadCamConnection.apply();

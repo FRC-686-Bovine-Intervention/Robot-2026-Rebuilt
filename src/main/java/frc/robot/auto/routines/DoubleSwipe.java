@@ -1,0 +1,154 @@
+package frc.robot.auto.routines;
+
+import java.util.List;
+import java.util.Map;
+
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.RobotContainer;
+import frc.robot.auto.AutoCommons;
+import frc.robot.auto.AutoConstants;
+import frc.robot.auto.AutoRoutine;
+import frc.robot.constants.FieldConstants;
+import frc.robot.subsystems.drive.commands.FollowTrajectoryCommand;
+import frc.util.flipping.AllianceFlipped;
+import frc.util.misc.FunctionalUtil;
+
+public class DoubleSwipe extends AutoRoutine {
+	private static final AutoQuestion<AllianceFlipped<Pose2d>> startPosition = new AutoQuestion<>("Start Position") {
+		private final Map.Entry<String, AllianceFlipped<Pose2d>> startInLeftTrench = AutoQuestion.Settings.option("In L Trench", AutoConstants.startInsideLeftTrench);
+		private final Map.Entry<String, AllianceFlipped<Pose2d>> startInRightTrench = AutoQuestion.Settings.option("In R Trench", AutoConstants.startInsideRightTrench);
+
+		@Override
+		protected AutoQuestion.Settings<AllianceFlipped<Pose2d>> generateSettings() {
+			return AutoQuestion.Settings.from(this.startInLeftTrench, this.startInLeftTrench, this.startInRightTrench);
+		}
+	};
+	private static enum BumpSelection {
+		Trench,
+		Bump,
+		TrenchBump,
+	}
+	private static final AutoQuestion<BumpSelection> bump = new AutoQuestion<>("Bump") {
+		private final Map.Entry<String, BumpSelection> trench = AutoQuestion.Settings.option("Trench", BumpSelection.Trench);
+		private final Map.Entry<String, BumpSelection> bump = AutoQuestion.Settings.option("Bump", BumpSelection.Bump);
+		private final Map.Entry<String, BumpSelection> trenchBump = AutoQuestion.Settings.option("Trench Bump", BumpSelection.TrenchBump);
+
+		@Override
+		protected AutoQuestion.Settings<BumpSelection> generateSettings() {
+			return AutoQuestion.Settings.from(this.trenchBump, this.trench, this.bump, this.trenchBump);
+		}
+	};
+
+	private final RobotContainer robot;
+
+	public DoubleSwipe(RobotContainer robot) {
+		super(
+			"Double Swipe",
+			List.of(
+				DoubleSwipe.startPosition,
+				DoubleSwipe.bump
+			)
+		);
+
+		this.robot = robot;
+	}
+
+	@Override
+	public Command generateCommand() {
+		final var startPosition = DoubleSwipe.startPosition.getResponse();
+		final var bump = DoubleSwipe.bump.getResponse();
+
+		final String firstTrajBallGrabName;
+		final String secondTrajBallGrabName;
+
+		switch (bump) {
+			case Trench -> {
+				if (startPosition == AutoConstants.startInsideLeftTrench) {
+					firstTrajBallGrabName = "LeftTrenchGrab1";
+					secondTrajBallGrabName = "LeftTrenchGrab2";
+				} else {
+					firstTrajBallGrabName = "RightTrenchGrab1";
+					secondTrajBallGrabName = "RightTrenchGrab2";
+				}
+			}
+			case Bump -> {
+				if (startPosition == AutoConstants.startInsideLeftTrench) {
+					firstTrajBallGrabName = "LeftTrenchGrab1Bump";
+					secondTrajBallGrabName = "LeftTrenchGrab2Bump";
+				} else {
+					firstTrajBallGrabName = "RightTrenchGrab1Bump";
+					secondTrajBallGrabName = "RightTrenchGrab2Bump";
+				}
+			}
+			default -> {
+				if (startPosition == AutoConstants.startInsideLeftTrench) {
+					firstTrajBallGrabName = "LeftTrenchGrab1";
+					secondTrajBallGrabName = "LeftTrenchGrab2TrenchBump";
+				} else {
+					firstTrajBallGrabName = "RightTrenchGrab1";
+					secondTrajBallGrabName = "RightTrenchGrab2TrenchBump";
+				}
+			}
+		}
+
+		final var firstTrajBallGrab = AutoCommons.loadBlueChoreoTrajectory(firstTrajBallGrabName).getOurs();
+		final var secondTrajBallGrab = AutoCommons.loadBlueChoreoTrajectory(secondTrajBallGrabName).getOurs();
+
+		return Commands.parallel(
+			AutoCommons.setOdometryFlipped(startPosition),
+			Commands.sequence(
+				Commands.deadline(
+					Commands.sequence(
+						Commands.deadline(
+							new FollowTrajectoryCommand(this.robot.drive, firstTrajBallGrab, true).withName("First Grab Ball").asProxy(),
+							Commands.sequence(
+								Commands.waitSeconds(1.0),
+								this.robot.intake.slam.deploy(this.robot.extensionSystem).asProxy()
+							),
+							this.robot.intake.rollers.intake().asProxy()
+						),
+						Commands.deadline(
+							this.robot.rollers.untilNoBalls(1.0),
+							this.robot.intake.slam.hopperAgitate(this.robot.extensionSystem).asProxy(),
+							this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy(),
+							this.robot.shooter.aimHoodAtHub().asProxy(),
+							this.robot.shooter.aimDriveAtHub(this.robot.drive.rotationalSubsystem).asProxy(),
+							this.robot.drive.translationSubsystem.simplePIDTo(FunctionalUtil.evalNow(firstTrajBallGrab.getFinalPose(false).get().getTranslation())).asProxy()
+						)
+					),
+					this.robot.shooter.aimingSystem.aimAtHub(
+						FunctionalUtil.evalNow(firstTrajBallGrab.getFinalPose(false).get()),
+						FunctionalUtil.evalNow(new ChassisSpeeds()),
+						FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs())
+					).asProxy(),
+					this.robot.shooter.aimFlywheelAtHub().asProxy()
+				),
+				Commands.deadline(
+					Commands.sequence(
+						Commands.deadline(
+							new FollowTrajectoryCommand(this.robot.drive, secondTrajBallGrab, true).withName("Second Grab Ball").asProxy(),
+							this.robot.intake.slam.deploy(this.robot.extensionSystem).asProxy(),
+							this.robot.intake.rollers.intake().asProxy()
+						),
+						Commands.parallel(
+							this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy(),
+							this.robot.intake.slam.hopperAgitate(this.robot.extensionSystem).asProxy(),
+							this.robot.shooter.aimHoodAtHub().asProxy(),
+							this.robot.shooter.aimDriveAtHub(this.robot.drive.rotationalSubsystem).asProxy(),
+							this.robot.drive.translationSubsystem.simplePIDTo(FunctionalUtil.evalNow(secondTrajBallGrab.getFinalPose(false).get().getTranslation())).asProxy()
+						)
+					),
+					this.robot.shooter.aimingSystem.aimAtHub(
+						FunctionalUtil.evalNow(secondTrajBallGrab.getFinalPose(false).get()),
+						FunctionalUtil.evalNow(new ChassisSpeeds()),
+						FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs())
+					).asProxy(),
+					this.robot.shooter.aimFlywheelAtHub().asProxy()
+				)
+			)
+		);
+	}
+}

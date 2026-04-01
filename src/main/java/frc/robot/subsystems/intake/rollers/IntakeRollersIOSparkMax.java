@@ -35,7 +35,8 @@ public class IntakeRollersIOSparkMax implements IntakeRollersIO {
 
 	@Override
 	public void updateInputs(IntakeRollersIOInputs inputs) {
-		inputs.motor.updateFrom(this.leftMotor);
+		inputs.leftMotor.updateFrom(this.leftMotor);
+		inputs.rightMotor.updateFrom(this.rightMotor);
 	}
 
 	@Override

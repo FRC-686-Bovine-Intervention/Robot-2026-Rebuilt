@@ -2,12 +2,23 @@ package frc.robot.subsystems.vision;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Millimeters;
 
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import frc.util.geometry.GeomUtil;
 
 public final class VisionConstants {
+	public static final Transform3d hopperMount = new Transform3d(
+		new Translation3d(
+			Millimeters.of(-31.135),
+			Inches.of(+0.0),
+			Millimeters.of(+530.729)
+		),
+		GeomUtil.rotation3dBuilder()
+			.pitch(Degrees.of(-15))
+		.build()
+	);
 	public static final Transform3d bottomLeftMount = new Transform3d(
 		new Translation3d(
 			Inches.of(-10.100164),

@@ -3,6 +3,8 @@ package frc.robot.subsystems.drive.commands;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 
+import org.littletonrobotics.junction.Logger;
+
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
 import edu.wpi.first.math.MathUtil;
@@ -23,12 +25,12 @@ public class FollowTrajectoryCommand extends Command {
 
 	private static final LoggedTunable<Distance> MAX_ERROR = LoggedTunable.from("Drive/Trajectory Following/Max Error", Inches::of, 24.0);
 	private static final LoggedTunable<PIDGains> TRANS_PID_GAINS = LoggedTunable.from("Drive/Trajectory Following/Trans PID", new PIDGains(
-		2.0,
+		3.0,
 		0.0,
 		0.0
 	));
 	private static final LoggedTunable<PIDGains> ROT_PID_GAINS = LoggedTunable.from("Drive/Trajectory Following/Rot PID", new PIDGains(
-		3.5,
+		3.0,
 		0.0,
 		0.0
 	));
@@ -114,7 +116,7 @@ public class FollowTrajectoryCommand extends Command {
 		// var robotAY = aX * -robotPose.getRotation().getSin() + aY * +robotPose.getRotation().getCos();
 		// var robotAlpha = alpha;
 
-		// Logger.recordOutput("Trajectory/Setpoint Pose", sample.getPose());
+		Logger.recordOutput("Trajectory/Setpoint Pose", sample.getPose());
 		// Logger.recordOutput("Trajectory/Setpoint Speeds", DriveConstants.kinematics.toSwerveModuleStates(ChassisSpeeds.fromFieldRelativeSpeeds(sample.getChassisSpeeds(), sample.getPose().getRotation())));
 		// Logger.recordOutput("Trajectory/Raw sample", sample);
 

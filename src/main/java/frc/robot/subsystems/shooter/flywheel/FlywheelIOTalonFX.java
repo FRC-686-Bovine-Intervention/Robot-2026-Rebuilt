@@ -6,167 +6,265 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
-import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.StaticBrake;
 import com.ctre.phoenix6.controls.StrictFollower;
+import com.ctre.phoenix6.controls.TorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.util.Units;
+import frc.robot.constants.HardwareDevices;
 import frc.robot.constants.RobotConstants;
-import frc.robot.subsystems.shooter.flywheel.FlywheelConstants.FlywheelConfig;
 import frc.util.FFGains;
 import frc.util.NeutralMode;
 import frc.util.PIDGains;
 import frc.util.loggerUtil.inputs.LoggedEncodedMotor.EncodedMotorStatusSignalCache;
 
 public class FlywheelIOTalonFX implements FlywheelIO {
-	private final FlywheelConfig config;
 	// Hardware devices
-	protected final TalonFX masterMotor;
-	protected final TalonFX slaveMotor;
+	protected final TalonFX leftBottomMotor = HardwareDevices.leftBottomFlywheelMotorID.talonFX();
+	protected final TalonFX leftTopMotor = HardwareDevices.leftTopFlywheelMotorID.talonFX();
+	protected final TalonFX rightBottomMotor = HardwareDevices.rightBottomFlywheelMotorID.talonFX();
+	protected final TalonFX rightTopMotor = HardwareDevices.rightTopFlywheelMotorID.talonFX();
 
 	// Device configuration
-	private final TalonFXConfiguration masterConfig = new TalonFXConfiguration();
-	private final TalonFXConfiguration slaveConfig = new TalonFXConfiguration();
+	private final TalonFXConfiguration leftBottomConfig = new TalonFXConfiguration();
+	private final TalonFXConfiguration leftTopConfig = new TalonFXConfiguration();
+	private final TalonFXConfiguration rightBottomConfig = new TalonFXConfiguration();
+	private final TalonFXConfiguration rightTopConfig = new TalonFXConfiguration();
 
 	// Status Signal caches
-	private final EncodedMotorStatusSignalCache masterMotorStatusSignalCache;
-	private final EncodedMotorStatusSignalCache slaveMotorStatusSignalCache;
-	private final StatusSignal<Double> motorProfilePositionStatusSignal;
-	private final StatusSignal<Double> motorProfileVelocityStatusSignal;
+	private final EncodedMotorStatusSignalCache leftBottomMotorStatusSignalCache;
+	private final EncodedMotorStatusSignalCache leftTopMotorStatusSignalCache;
+	private final EncodedMotorStatusSignalCache rightBottomMotorStatusSignalCache;
+	private final EncodedMotorStatusSignalCache rightTopMotorStatusSignalCache;
+	private final StatusSignal<Double> profilePositionStatusSignal;
+	private final StatusSignal<Double> profileVelocityStatusSignal;
 
 	// Quick reference arrays
 	private final BaseStatusSignal[] refreshSignals;
-	private final BaseStatusSignal[] masterMotorConnectedSignals;
-	private final BaseStatusSignal[] slaveMotorConnectedSignals;
+	private final BaseStatusSignal[] leftBottomMotorConnectedSignals;
+	private final BaseStatusSignal[] leftTopMotorConnectedSignals;
+	private final BaseStatusSignal[] rightBottomMotorConnectedSignals;
+	private final BaseStatusSignal[] rightTopMotorConnectedSignals;
 
 	// Control Requests
 	private final NeutralOut neutralRequest = new NeutralOut();
 	private final CoastOut coastRequest = new CoastOut();
 	private final StaticBrake brakeRequest = new StaticBrake();
 	private final VoltageOut voltageRequest = new VoltageOut(0.0);
-	private final MotionMagicVelocityVoltage velocityRequest = new MotionMagicVelocityVoltage(0.0);
+	private final TorqueCurrentFOC currentRequest = new TorqueCurrentFOC(0.0);
+	private final VelocityVoltage velocityRequest = new VelocityVoltage(0.0);
 	private final StrictFollower followerRequest = new StrictFollower(0);
 
-	public FlywheelIOTalonFX(FlywheelConfig config) {
-		this.config = config;
-		// Construct hardware devices
-		this.masterMotor = this.config.masterMotorID.talonFX();
-		this.slaveMotor = this.config.slaveMotorID.talonFX();
-
+	public FlywheelIOTalonFX() {
 		// Motor Configuration
-		this.masterConfig.MotorOutput
+		this.leftBottomConfig.MotorOutput
 			.withNeutralMode(NeutralModeValue.Coast)
-			.withInverted(config.masterInvertedValue)
+			.withInverted(InvertedValue.CounterClockwise_Positive)
 		;
-		this.masterConfig.Feedback
+		this.leftBottomConfig.Feedback
 			.withSensorToMechanismRatio(FlywheelConstants.motorToMechanism.reductionUnsigned())
+		;
+		this.leftBottomConfig.Voltage
+			.withPeakReverseVoltage(0.0)
 		;
 
-		this.slaveConfig.MotorOutput
+		this.leftTopConfig.MotorOutput
 			.withNeutralMode(NeutralModeValue.Coast)
-			.withInverted(config.slaveInvertedValue)
+			.withInverted(InvertedValue.CounterClockwise_Positive)
 		;
-		this.slaveConfig.Feedback
+		this.leftTopConfig.Feedback
 			.withSensorToMechanismRatio(FlywheelConstants.motorToMechanism.reductionUnsigned())
+		;
+		this.leftTopConfig.Voltage
+			.withPeakReverseVoltage(0.0)
+		;
+
+		this.rightBottomConfig.MotorOutput
+			.withNeutralMode(NeutralModeValue.Coast)
+			.withInverted(InvertedValue.Clockwise_Positive)
+		;
+		this.rightBottomConfig.Feedback
+			.withSensorToMechanismRatio(FlywheelConstants.motorToMechanism.reductionUnsigned())
+		;
+		this.rightBottomConfig.Voltage
+			.withPeakReverseVoltage(0.0)
+		;
+
+		this.rightTopConfig.MotorOutput
+			.withNeutralMode(NeutralModeValue.Coast)
+			.withInverted(InvertedValue.Clockwise_Positive)
+		;
+		this.rightTopConfig.Feedback
+			.withSensorToMechanismRatio(FlywheelConstants.motorToMechanism.reductionUnsigned())
+		;
+		this.rightTopConfig.Voltage
+			.withPeakReverseVoltage(0.0)
 		;
 
 		// Cache Status Signals
-		this.masterMotorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.masterMotor);
-		this.slaveMotorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.slaveMotor);
-		this.motorProfilePositionStatusSignal = this.masterMotor.getClosedLoopReference();
-		this.motorProfileVelocityStatusSignal = this.masterMotor.getClosedLoopReferenceSlope();
+		this.leftBottomMotorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.leftBottomMotor);
+		this.leftTopMotorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.leftTopMotor);
+		this.rightBottomMotorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.rightBottomMotor);
+		this.rightTopMotorStatusSignalCache = EncodedMotorStatusSignalCache.from(this.rightTopMotor);
+		this.profilePositionStatusSignal = this.leftBottomMotor.getClosedLoopReference();
+		this.profileVelocityStatusSignal = this.leftBottomMotor.getClosedLoopReferenceSlope();
 
 		// Make quick reference arrays
 		this.refreshSignals = new BaseStatusSignal[] {
-			this.masterMotorStatusSignalCache.encoder().position(),
-			this.masterMotorStatusSignalCache.encoder().velocity(),
-			this.masterMotorStatusSignalCache.motor().appliedVoltage(),
-			this.masterMotorStatusSignalCache.motor().statorCurrent(),
-			this.masterMotorStatusSignalCache.motor().supplyCurrent(),
-			this.masterMotorStatusSignalCache.motor().torqueCurrent(),
-			this.masterMotorStatusSignalCache.motor().deviceTemperature(),
-			this.slaveMotorStatusSignalCache.encoder().position(),
-			this.slaveMotorStatusSignalCache.encoder().velocity(),
-			this.slaveMotorStatusSignalCache.motor().appliedVoltage(),
-			this.slaveMotorStatusSignalCache.motor().statorCurrent(),
-			this.slaveMotorStatusSignalCache.motor().supplyCurrent(),
-			this.slaveMotorStatusSignalCache.motor().torqueCurrent(),
-			this.slaveMotorStatusSignalCache.motor().deviceTemperature(),
-			this.motorProfilePositionStatusSignal,
-			this.motorProfileVelocityStatusSignal,
+			this.leftBottomMotorStatusSignalCache.encoder().position(),
+			this.leftBottomMotorStatusSignalCache.encoder().velocity(),
+			this.leftBottomMotorStatusSignalCache.motor().appliedVoltage(),
+			this.leftBottomMotorStatusSignalCache.motor().statorCurrent(),
+			this.leftBottomMotorStatusSignalCache.motor().supplyCurrent(),
+			this.leftBottomMotorStatusSignalCache.motor().torqueCurrent(),
+			this.leftBottomMotorStatusSignalCache.motor().deviceTemperature(),
+			this.profilePositionStatusSignal,
+			this.profileVelocityStatusSignal,
+			this.leftTopMotorStatusSignalCache.encoder().position(),
+			this.leftTopMotorStatusSignalCache.encoder().velocity(),
+			this.leftTopMotorStatusSignalCache.motor().appliedVoltage(),
+			this.leftTopMotorStatusSignalCache.motor().statorCurrent(),
+			this.leftTopMotorStatusSignalCache.motor().supplyCurrent(),
+			this.leftTopMotorStatusSignalCache.motor().torqueCurrent(),
+			this.leftTopMotorStatusSignalCache.motor().deviceTemperature(),
+			this.rightBottomMotorStatusSignalCache.encoder().position(),
+			this.rightBottomMotorStatusSignalCache.encoder().velocity(),
+			this.rightBottomMotorStatusSignalCache.motor().appliedVoltage(),
+			this.rightBottomMotorStatusSignalCache.motor().statorCurrent(),
+			this.rightBottomMotorStatusSignalCache.motor().supplyCurrent(),
+			this.rightBottomMotorStatusSignalCache.motor().torqueCurrent(),
+			this.rightBottomMotorStatusSignalCache.motor().deviceTemperature(),
+			this.rightTopMotorStatusSignalCache.encoder().position(),
+			this.rightTopMotorStatusSignalCache.encoder().velocity(),
+			this.rightTopMotorStatusSignalCache.motor().appliedVoltage(),
+			this.rightTopMotorStatusSignalCache.motor().statorCurrent(),
+			this.rightTopMotorStatusSignalCache.motor().supplyCurrent(),
+			this.rightTopMotorStatusSignalCache.motor().torqueCurrent(),
+			this.rightTopMotorStatusSignalCache.motor().deviceTemperature(),
 		};
-		this.masterMotorConnectedSignals = new BaseStatusSignal[] {
-			this.masterMotorStatusSignalCache.encoder().position(),
-			this.masterMotorStatusSignalCache.encoder().velocity(),
-			this.masterMotorStatusSignalCache.motor().appliedVoltage(),
-			this.masterMotorStatusSignalCache.motor().statorCurrent(),
-			this.masterMotorStatusSignalCache.motor().supplyCurrent(),
-			this.masterMotorStatusSignalCache.motor().torqueCurrent(),
-			this.masterMotorStatusSignalCache.motor().deviceTemperature(),
-			this.motorProfilePositionStatusSignal,
-			this.motorProfileVelocityStatusSignal,
+
+		this.leftBottomMotorConnectedSignals = new BaseStatusSignal[] {
+			this.leftBottomMotorStatusSignalCache.encoder().position(),
+			this.leftBottomMotorStatusSignalCache.encoder().velocity(),
+			this.leftBottomMotorStatusSignalCache.motor().appliedVoltage(),
+			this.leftBottomMotorStatusSignalCache.motor().statorCurrent(),
+			this.leftBottomMotorStatusSignalCache.motor().supplyCurrent(),
+			this.leftBottomMotorStatusSignalCache.motor().torqueCurrent(),
+			this.leftBottomMotorStatusSignalCache.motor().deviceTemperature(),
+			this.profilePositionStatusSignal,
+			this.profileVelocityStatusSignal,
 		};
-		this.slaveMotorConnectedSignals = new BaseStatusSignal[] {
-			this.slaveMotorStatusSignalCache.encoder().position(),
-			this.slaveMotorStatusSignalCache.encoder().velocity(),
-			this.slaveMotorStatusSignalCache.motor().appliedVoltage(),
-			this.slaveMotorStatusSignalCache.motor().statorCurrent(),
-			this.slaveMotorStatusSignalCache.motor().supplyCurrent(),
-			this.slaveMotorStatusSignalCache.motor().torqueCurrent(),
-			this.slaveMotorStatusSignalCache.motor().deviceTemperature(),
+
+		this.leftTopMotorConnectedSignals = new BaseStatusSignal[] {
+			this.leftTopMotorStatusSignalCache.encoder().position(),
+			this.leftTopMotorStatusSignalCache.encoder().velocity(),
+			this.leftTopMotorStatusSignalCache.motor().appliedVoltage(),
+			this.leftTopMotorStatusSignalCache.motor().statorCurrent(),
+			this.leftTopMotorStatusSignalCache.motor().supplyCurrent(),
+			this.leftTopMotorStatusSignalCache.motor().torqueCurrent(),
+			this.leftTopMotorStatusSignalCache.motor().deviceTemperature(),
+		};
+
+		this.rightBottomMotorConnectedSignals = new BaseStatusSignal[] {
+			this.rightBottomMotorStatusSignalCache.encoder().position(),
+			this.rightBottomMotorStatusSignalCache.encoder().velocity(),
+			this.rightBottomMotorStatusSignalCache.motor().appliedVoltage(),
+			this.rightBottomMotorStatusSignalCache.motor().statorCurrent(),
+			this.rightBottomMotorStatusSignalCache.motor().supplyCurrent(),
+			this.rightBottomMotorStatusSignalCache.motor().torqueCurrent(),
+			this.rightBottomMotorStatusSignalCache.motor().deviceTemperature(),
+		};
+
+		this.rightTopMotorConnectedSignals = new BaseStatusSignal[] {
+			this.rightTopMotorStatusSignalCache.encoder().position(),
+			this.rightTopMotorStatusSignalCache.encoder().velocity(),
+			this.rightTopMotorStatusSignalCache.motor().appliedVoltage(),
+			this.rightTopMotorStatusSignalCache.motor().statorCurrent(),
+			this.rightTopMotorStatusSignalCache.motor().supplyCurrent(),
+			this.rightTopMotorStatusSignalCache.motor().torqueCurrent(),
+			this.rightTopMotorStatusSignalCache.motor().deviceTemperature(),
 		};
 
 		// Set Status Signal update frequency
-		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.masterMotorStatusSignalCache.encoder().getStatusSignals());
-		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.masterMotorStatusSignalCache.motor().getStatusSignals());
-		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.motorProfilePositionStatusSignal, this.motorProfileVelocityStatusSignal);
-		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency.div(10.0), this.slaveMotorStatusSignalCache.encoder().getStatusSignals());
-		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency.div(10.0), this.slaveMotorStatusSignalCache.motor().getStatusSignals());
-		this.masterMotor.optimizeBusUtilization();
-		this.slaveMotor.optimizeBusUtilization();
+		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.leftBottomMotorStatusSignalCache.encoder().getStatusSignals());
+		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.leftBottomMotorStatusSignalCache.motor().getStatusSignals());
+		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency, this.profilePositionStatusSignal, this.profileVelocityStatusSignal);
+		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency.div(10.0), this.leftTopMotorStatusSignalCache.encoder().getStatusSignals());
+		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency.div(10.0), this.leftTopMotorStatusSignalCache.motor().getStatusSignals());
+		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency.div(10.0), this.rightBottomMotorStatusSignalCache.encoder().getStatusSignals());
+		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency.div(10.0), this.rightBottomMotorStatusSignalCache.motor().getStatusSignals());
+		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency.div(10.0), this.rightTopMotorStatusSignalCache.encoder().getStatusSignals());
+		BaseStatusSignal.setUpdateFrequencyForAll(RobotConstants.rioUpdateFrequency.div(10.0), this.rightTopMotorStatusSignalCache.motor().getStatusSignals());
 	}
 
 	@Override
 	public void updateInputs(FlywheelIOInputs inputs) {
 		BaseStatusSignal.refreshAll(this.refreshSignals);
-		inputs.masterMotorConnected = BaseStatusSignal.isAllGood(this.masterMotorConnectedSignals);
-		inputs.slaveMotorConnected = BaseStatusSignal.isAllGood(this.slaveMotorConnectedSignals);
-		inputs.masterMotor.updateFrom(this.masterMotorStatusSignalCache);
-		inputs.slaveMotor.updateFrom(this.slaveMotorStatusSignalCache);
-		inputs.motorProfilePositionRads = Units.rotationsToRadians(this.motorProfilePositionStatusSignal.getValueAsDouble());
-		inputs.motorProfileVelocityRadsPerSec = Units.rotationsToRadians(this.motorProfileVelocityStatusSignal.getValueAsDouble());
+		inputs.leftBottomMotorConnected = BaseStatusSignal.isAllGood(this.leftBottomMotorConnectedSignals);
+		inputs.leftTopMotorConnected = BaseStatusSignal.isAllGood(this.leftTopMotorConnectedSignals);
+		inputs.rightBottomMotorConnected = BaseStatusSignal.isAllGood(this.rightBottomMotorConnectedSignals);
+		inputs.rightTopMotorConnected = BaseStatusSignal.isAllGood(this.rightTopMotorConnectedSignals);
+
+		inputs.leftBottomMotor.updateFrom(this.leftBottomMotorStatusSignalCache);
+		inputs.leftTopMotor.updateFrom(this.leftTopMotorStatusSignalCache);
+		inputs.rightBottomMotor.updateFrom(this.rightBottomMotorStatusSignalCache);
+		inputs.rightTopMotor.updateFrom(this.rightTopMotorStatusSignalCache);
+
+		inputs.profilePositionRads = Units.rotationsToRadians(this.profilePositionStatusSignal.getValueAsDouble());
+		inputs.profileVelocityRadsPerSec = Units.rotationsToRadians(this.profileVelocityStatusSignal.getValueAsDouble());
 	}
 
 	@Override
 	public void setVolts(double volts) {
-		this.masterMotor.setControl(this.voltageRequest
+		this.leftBottomMotor.setControl(this.voltageRequest
 			.withOutput(volts)
 		);
-		this.slaveMotor.setControl(this.followerRequest.withLeaderID(this.masterMotor.getDeviceID()));
+		this.followerRequest.withLeaderID(this.leftBottomMotor.getDeviceID());
+		this.leftTopMotor.setControl(this.followerRequest);
+		this.rightBottomMotor.setControl(this.followerRequest);
+		this.rightTopMotor.setControl(this.followerRequest);
+	}
+
+	@Override
+	public void setCurrent(double amps) {
+		this.leftBottomMotor.setControl(this.currentRequest
+			.withOutput(amps)
+		);
+		this.followerRequest.withLeaderID(this.leftBottomMotor.getDeviceID());
+		this.leftTopMotor.setControl(this.followerRequest);
+		this.rightBottomMotor.setControl(this.followerRequest);
+		this.rightTopMotor.setControl(this.followerRequest);
 	}
 
 	@Override
 	public void setVelocityRadsPerSec(double velocityRadsPerSec) {
-		this.masterMotor.setControl(this.velocityRequest
+		this.leftBottomMotor.setControl(this.velocityRequest
 			.withVelocity(Units.radiansToRotations(velocityRadsPerSec))
 		);
-		this.slaveMotor.setControl(this.followerRequest.withLeaderID(this.masterMotor.getDeviceID()));
+		this.followerRequest.withLeaderID(this.leftBottomMotor.getDeviceID());
+		this.leftTopMotor.setControl(this.followerRequest);
+		this.rightBottomMotor.setControl(this.followerRequest);
+		this.rightTopMotor.setControl(this.followerRequest);
 	}
 
 	@Override
 	public void stop(Optional<NeutralMode> neutralMode) {
 		var controlRequest = NeutralMode.selectControlRequest(neutralMode, this.neutralRequest, this.coastRequest, this.brakeRequest);
-		this.masterMotor.setControl(controlRequest);
-		this.slaveMotor.setControl(controlRequest);
+		this.leftBottomMotor.setControl(controlRequest);
+		this.leftTopMotor.setControl(controlRequest);
+		this.rightBottomMotor.setControl(controlRequest);
+		this.rightTopMotor.setControl(controlRequest);
 	}
 
 	@Override
 	public void configProfile(double maxAccelRadsPerSecSec, double maxJerkRadsPerSecSecSec) {
-		this.masterConfig.MotionMagic
+		this.leftBottomConfig.MotionMagic
 			.withMotionMagicAcceleration(Units.radiansToRotations(maxAccelRadsPerSecSec))
 			.withMotionMagicJerk(Units.radiansToRotations(maxJerkRadsPerSecSecSec))
 		;
@@ -174,17 +272,19 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
 	@Override
 	public void configFF(FFGains ffGains) {
-		ffGains.update(this.masterConfig.Slot0);
+		ffGains.update(this.leftBottomConfig.Slot0);
 	}
 
 	@Override
 	public void configPID(PIDGains pidGains) {
-		pidGains.update(this.masterConfig.Slot0);
+		pidGains.update(this.leftBottomConfig.Slot0);
 	}
 
 	@Override
 	public void configSend() {
-		this.masterMotor.getConfigurator().apply(this.masterConfig);
-		this.slaveMotor.getConfigurator().apply(this.slaveConfig);
+		this.leftBottomMotor.getConfigurator().apply(this.leftBottomConfig);
+		this.leftTopMotor.getConfigurator().apply(this.leftTopConfig);
+		this.rightBottomMotor.getConfigurator().apply(this.rightBottomConfig);
+		this.rightTopMotor.getConfigurator().apply(this.rightTopConfig);
 	}
 }

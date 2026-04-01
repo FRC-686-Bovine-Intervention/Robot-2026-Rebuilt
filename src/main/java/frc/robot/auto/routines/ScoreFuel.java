@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.littletonrobotics.junction.Logger;
 
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
@@ -19,12 +18,13 @@ import frc.robot.auto.AutoConstants.StartingPosition;
 import frc.robot.auto.AutoRoutine;
 import frc.robot.constants.FieldConstants;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.commands.FollowTrajectoryCommand;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.rollers.Rollers;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.util.flipping.AllianceFlipUtil;
-import frc.util.flipping.AllianceFlipped;
 import frc.util.flipping.AllianceFlipUtil.FieldFlipType;
+import frc.util.flipping.AllianceFlipped;
 import frc.util.misc.FunctionalUtil;
 
 public class ScoreFuel extends AutoRoutine {
@@ -437,8 +437,7 @@ public class ScoreFuel extends AutoRoutine {
 
 		var commands = new ArrayList<Command>();
 		var firstTraj = generatePath(startPosition, firstScoringLocation, firstIntakeLocation).getOurs();
-		Logger.recordOutput("DEBUG/FirstTraj", startPosition.alias + "To" + firstScoringLocation.alias + "Intake" + firstIntakeLocation.alias);
-		var firstPathCommand = AutoCommons.followPathCommand(firstTraj, drive);
+		var firstPathCommand = new FollowTrajectoryCommand(this.drive, firstTraj, true);
 		var firstCommand = Commands.deadline(
 			Commands.sequence(
 				Commands.deadline(
@@ -457,13 +456,12 @@ public class ScoreFuel extends AutoRoutine {
 				FunctionalUtil.evalNow(new ChassisSpeeds()),
 				FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs())
 			).asProxy(),
-			this.robot.shooter.aimLeftFlywheelAtHub().asProxy(),
-			this.robot.shooter.aimRightFlywheelAtHub().asProxy()
+			this.robot.shooter.aimFlywheelAtHub().asProxy()
 		);
 		commands.add(firstCommand);
 
 		var secondTraj = generatePath(firstScoringLocation, secondScoringLocation, secondIntakeLocation).getOurs();
-		var secondPathCommand = AutoCommons.followPathCommand(secondTraj, drive);
+		var secondPathCommand = new FollowTrajectoryCommand(this.drive, firstTraj, true);
 		var secondCommand = Commands.deadline(
 			Commands.sequence(
 				Commands.deadline(
@@ -482,13 +480,12 @@ public class ScoreFuel extends AutoRoutine {
 				FunctionalUtil.evalNow(new ChassisSpeeds()),
 				FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs())
 			).asProxy(),
-			this.robot.shooter.aimLeftFlywheelAtHub().asProxy(),
-			this.robot.shooter.aimRightFlywheelAtHub().asProxy()
+			this.robot.shooter.aimFlywheelAtHub().asProxy()
 		);
 		commands.add(secondCommand);
 
 		var thirdTraj = generatePath(secondScoringLocation, thirdScoringLocation, thirdIntakeLocation).getOurs();
-		var thirdPathCommand = AutoCommons.followPathCommand(thirdTraj, drive);
+		var thirdPathCommand = new FollowTrajectoryCommand(this.drive, firstTraj, true);
 		var thirdCommand = Commands.deadline(
 			Commands.sequence(
 				Commands.deadline(
@@ -507,15 +504,14 @@ public class ScoreFuel extends AutoRoutine {
 				FunctionalUtil.evalNow(new ChassisSpeeds()),
 				FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs())
 			).asProxy(),
-			this.robot.shooter.aimLeftFlywheelAtHub().asProxy(),
-			this.robot.shooter.aimRightFlywheelAtHub().asProxy()
+			this.robot.shooter.aimFlywheelAtHub().asProxy()
 		);
 		commands.add(thirdCommand);
 
 		return Commands.parallel(
 			AutoCommons.setOdometryFlipped(startPosition.pose),
 			Commands.parallel(
-				this.intake.slam.pushdown(this.robot.extensionSystem),
+				this.intake.slam.deploy(this.robot.extensionSystem),
 				Commands.sequence(commands.toArray(Command[]::new))
 			)
 		);

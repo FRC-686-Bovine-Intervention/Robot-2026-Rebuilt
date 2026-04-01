@@ -24,18 +24,18 @@ public class HardwareDevices {
 	public static final CANBus canivore = CANBus.newBus("canivore");
 
 	// Drive
-	public static final CANDevice pigeonID = canivore.id(0);
+	public static final CANDevice pigeonID = rio.id(0);
 	// | Front Left
-	public static final CANDevice frontLeftDriveMotorID = canivore.id(1);
+	public static final CANDevice frontLeftDriveMotorID = rio.id(1);
 	public static final CANDevice frontLeftAzimuthMotorID = rio.id(1);
 	// | Front Right
-	public static final CANDevice frontRightDriveMotorID = canivore.id(2);
+	public static final CANDevice frontRightDriveMotorID = rio.id(2);
 	public static final CANDevice frontRightAzimuthMotorID = rio.id(2);
 	// | Back Left
-	public static final CANDevice backLeftDriveMotorID = canivore.id(3);
+	public static final CANDevice backLeftDriveMotorID = rio.id(3);
 	public static final CANDevice backLeftAzimuthMotorID = rio.id(3);
 	// | Back Right
-	public static final CANDevice backRightDriveMotorID = canivore.id(4);
+	public static final CANDevice backRightDriveMotorID = rio.id(4);
 	public static final CANDevice backRightAzimuthMotorID = rio.id(4);
 
 	// Intake
@@ -50,27 +50,27 @@ public class HardwareDevices {
 	// | Indexer
 	public static final CANDevice indexerMotorID = rio.id(8);
 	// | Agitator
-	public static final CANDevice agitatorMotorID = canivore.id(9);
+	public static final CANDevice agitatorMotorID = rio.id(9);
 	// | Feeder
-	public static final CANDevice feederMotorID = canivore.id(10);
+	public static final CANDevice feederMotorID = rio.id(10);
 
 	// Shooter
 	// | Hood
-	public static final CANDevice hoodMotorID = canivore.id(11);
+	public static final CANDevice hoodMotorID = rio.id(11);
 	// | Flywheels
 	// | | Left Flywheel System
-	public static final CANDevice leftFlywheelMotorMasterID = canivore.id(12);
-	public static final CANDevice leftFlywheelMotorSlaveID = canivore.id(13);
+	public static final CANDevice leftBottomFlywheelMotorID = rio.id(12);
+	public static final CANDevice leftTopFlywheelMotorID = rio.id(13);
 	// | | Right Flywheel System
-	public static final CANDevice rightFlywheelMotorMasterID = canivore.id(14);
-	public static final CANDevice rightFlywheelMotorSlaveID = canivore.id(15);
+	public static final CANDevice rightBottomFlywheelMotorID = rio.id(14);
+	public static final CANDevice rightTopFlywheelMotorID = rio.id(15);
 
 	// Climber
 	// | Hook
-	public static final CANDevice climberHookMotorID = canivore.id(16);
+	public static final CANDevice climberHookMotorID = rio.id(16);
 
 	// CANdi
-	public static final CANDevice candiID = canivore.id(0);
+	public static final CANDevice candiID = rio.id(0);
 
 	// RIO
 	public static final PWMPort ledPort = PWMPort.port(0);
