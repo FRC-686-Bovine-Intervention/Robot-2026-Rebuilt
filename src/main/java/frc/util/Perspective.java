@@ -73,7 +73,7 @@ public class Perspective {
 		}
 	};
 
-	private static final String key = "Perspective/Chooser";
+	private static final String key = "SmartDashboard/Perspective/Chooser";
 	private static final StringPublisher namePublisher;
 	private static final StringPublisher typePublisher;
 	private static final StringArrayPublisher optionsPublisher;
@@ -117,9 +117,9 @@ public class Perspective {
 		map.put(negYName, negY);
 		map.put(customName, custom);
 
-		selectedName = posYName;
+		selectedName = negXName;
 
-		var table = NetworkTableInstance.getDefault().getTable("SmartDashboard").getSubTable(key);
+		var table = NetworkTableInstance.getDefault().getTable(key);
 		namePublisher = table.getStringTopic(".name").publish();
 		typePublisher = table.getStringTopic(".type").publish();
 		optionsPublisher = table.getStringArrayTopic("options").publish();
@@ -152,7 +152,7 @@ public class Perspective {
 			selectedName = selected;
 			selectionPriority = 2;
 		}
-		if (Environment.isCompetition() && selectionPriority <= 1 && !alliancePerspectiveName.getOurs().equals(selectedName)) {
+		if (selectionPriority <= 1 && Environment.isCompetition() && !selectedName.equals(alliancePerspectiveName.getOurs())) {
 			selectedName = alliancePerspectiveName.getOurs();
 			selectedEntry.set(selectedName);
 			selectionPriority = 1;

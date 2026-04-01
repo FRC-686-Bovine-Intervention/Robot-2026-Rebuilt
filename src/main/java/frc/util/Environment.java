@@ -22,7 +22,7 @@ public enum Environment {
 	Competition,
 	Demo,
 	;
-	private static final String key = "Environment Chooser";
+	private static final String key = "SmartDashboard/Environment Chooser";
 	private static final StringPublisher namePublisher;
 	private static final StringPublisher typePublisher;
 	private static final StringArrayPublisher optionsPublisher;
@@ -63,7 +63,7 @@ public enum Environment {
 
 		selectedName = practiceName;
 
-		var table = NetworkTableInstance.getDefault().getTable("SmartDashboard").getSubTable(key);
+		var table = NetworkTableInstance.getDefault().getTable(key);
 		namePublisher = table.getStringTopic(".name").publish();
 		typePublisher = table.getStringTopic(".type").publish();
 		optionsPublisher = table.getStringArrayTopic("options").publish();
@@ -94,7 +94,7 @@ public enum Environment {
 			selectedName = selected;
 			selectionPriority = 2;
 		}
-		if (selectionPriority <= 1 && DriverStation.isFMSAttached()) {
+		if (selectionPriority <= 1 && DriverStation.isFMSAttached() && !selectedName.equals("Competition")) {
 			selectedName = "Competition";
 			selectedEntry.set(selectedName);
 			selectionPriority = 1;

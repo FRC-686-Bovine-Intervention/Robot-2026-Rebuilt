@@ -1,0 +1,131 @@
+package frc.robot.automations;
+
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.Seconds;
+
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.RobotState;
+import frc.robot.constants.FieldConstants;
+import frc.robot.subsystems.ExtensionSystem;
+import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.intake.slam.IntakeSlam;
+import frc.robot.subsystems.shooter.hood.Hood;
+import frc.util.EdgeDetector;
+import frc.util.loggerUtil.tunables.LoggedTunable;
+
+public class TrenchMitigation implements Runnable {
+	private final Drive drive;
+	private final Command intakeDeployCommand;
+	private final Command safetyCommand;
+
+	private final double[] staticBoxTopBlue = new double[] {
+		FieldConstants.trenchInnerX.getBlue().in(Meters),
+		FieldConstants.trenchOuterX.getBlue().in(Meters),
+		FieldConstants.topTrenchBottomY.in(Meters),
+		FieldConstants.topTrenchTopY.in(Meters)
+	};
+
+	private final double[] staticBoxBottomBlue = new double[] {
+		FieldConstants.trenchInnerX.getBlue().in(Meters),
+		FieldConstants.trenchOuterX.getBlue().in(Meters),
+		FieldConstants.bottomTrenchTopY.in(Meters),
+		FieldConstants.bottomTrenchBottomY.in(Meters)
+	};
+
+	private final double[] staticBoxTopRed = new double[] {
+		FieldConstants.trenchOuterX.getRed().in(Meters),
+		FieldConstants.trenchInnerX.getRed().in(Meters),
+		FieldConstants.topTrenchBottomY.in(Meters),
+		FieldConstants.topTrenchTopY.in(Meters)
+	};
+
+	private final double[] staticBoxBottomRed = new double[] {
+		FieldConstants.trenchOuterX.getRed().in(Meters),
+		FieldConstants.trenchInnerX.getRed().in(Meters),
+		FieldConstants.bottomTrenchTopY.in(Meters),
+		FieldConstants.bottomTrenchBottomY.in(Meters)
+	};
+
+	private double[] dynamicBoxTopBlue = java.util.Arrays.copyOf(this.staticBoxTopBlue, this.staticBoxTopBlue.length);
+	private double[] dynamicBoxBottomBlue = java.util.Arrays.copyOf(this.staticBoxBottomBlue, this.staticBoxBottomBlue.length);
+	private double[] dynamicBoxTopRed = java.util.Arrays.copyOf(this.staticBoxTopRed, this.staticBoxTopRed.length);
+	private double[] dynamicBoxBottomRed = java.util.Arrays.copyOf(this.staticBoxBottomRed, this.staticBoxBottomRed.length);
+
+	private static final LoggedTunable<Time> velocityLookaheadTime = LoggedTunable.from("Automations/Trench Mitigation/Box Scaling Factor", Seconds::of, 0.5);
+
+	private final EdgeDetector edgeDetector = new EdgeDetector(false);
+
+	public TrenchMitigation(Drive drive, IntakeSlam slam, ExtensionSystem extensionSystem, Hood hood, Command intakeDeployCommand) {
+		this.drive = drive;
+		this.safetyCommand =
+			Commands.parallel(
+				slam.deploy(extensionSystem),
+				hood.stow()
+			)
+			.withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
+			.withName("Trench Mitigation")
+		;
+		this.intakeDeployCommand = intakeDeployCommand;
+	}
+
+	@Override
+	public void run() {
+		var robotPose = RobotState.getInstance().getEstimatedGlobalPose();
+		var fieldSpeeds = this.drive.getFieldMeasuredSpeeds();
+
+		this.updateBoundingBox(this.dynamicBoxTopBlue,    this.staticBoxTopBlue,    fieldSpeeds);
+		this.updateBoundingBox(this.dynamicBoxBottomBlue, this.staticBoxBottomBlue, fieldSpeeds);
+		this.updateBoundingBox(this.dynamicBoxTopRed,     this.staticBoxTopRed,     fieldSpeeds);
+		this.updateBoundingBox(this.dynamicBoxBottomRed,  this.staticBoxBottomRed,  fieldSpeeds);
+
+		this.edgeDetector.update(
+			(
+				this.withinBounds(this.dynamicBoxTopBlue,       robotPose.getTranslation())
+				|| this.withinBounds(this.dynamicBoxBottomBlue, robotPose.getTranslation())
+				|| this.withinBounds(this.dynamicBoxTopRed,     robotPose.getTranslation())
+				|| this.withinBounds(this.dynamicBoxBottomRed,  robotPose.getTranslation())
+			)
+			&& DriverStation.isTeleopEnabled()
+		);
+
+		if (this.edgeDetector.risingEdge() && !this.safetyCommand.isScheduled()) {
+			CommandScheduler.getInstance().schedule(this.safetyCommand);
+		} else if (this.edgeDetector.fallingEdge() && this.safetyCommand.isScheduled()) {
+			CommandScheduler.getInstance().cancel(this.safetyCommand);
+			CommandScheduler.getInstance().schedule(this.intakeDeployCommand);
+		}
+	}
+
+	private void updateBoundingBox(double[] box, double[] original, ChassisSpeeds fieldSpeeds) {
+		//Left
+		//Right
+		//Top
+		//Bottom
+		if (fieldSpeeds.vxMetersPerSecond < 0) {
+			box[1] = original[1] - fieldSpeeds.vxMetersPerSecond * TrenchMitigation.velocityLookaheadTime.get().in(Seconds);
+		} else if (fieldSpeeds.vxMetersPerSecond > 0) {
+			box[0] = original[0] - fieldSpeeds.vxMetersPerSecond * TrenchMitigation.velocityLookaheadTime.get().in(Seconds);
+		} else {
+			box[0] = original[0];
+			box[1] = original[1];
+			box[2] = original[2];
+			box[3] = original[3];
+		}
+	}
+
+	private boolean withinBounds(double[] box, Translation2d position) {
+		return
+			(box[0] < position.getX())
+			&& (position.getX() < box[1])
+			&& (box[2] > position.getY())
+			&& (position.getY() > box[3])
+		;
+	}
+}

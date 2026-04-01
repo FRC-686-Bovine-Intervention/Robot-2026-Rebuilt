@@ -6,14 +6,16 @@ import edu.wpi.first.units.Unit;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
+import frc.util.FFGains;
+import frc.util.PIDGains;
 
 public class GearRatio {
 	public static double planetaryReduction(int sunCount, int ringCount) {
 		return (double)(sunCount + ringCount) / sunCount;
 	}
-	public static final double ULTRAPLANETARY_3_1 = planetaryReduction(29, 55);
-	public static final double ULTRAPLANETARY_4_1 = planetaryReduction(21, 55);
-	public static final double ULTRAPLANETARY_5_1 = planetaryReduction(13, 55);
+	public static final double ULTRAPLANETARY_3_1 = GearRatio.planetaryReduction(29, 55); // 84:29 reduction
+	public static final double ULTRAPLANETARY_4_1 = GearRatio.planetaryReduction(21, 55); // 76:21 reduction
+	public static final double ULTRAPLANETARY_5_1 = GearRatio.planetaryReduction(13, 55); // 68:13 reduction
 
 	private final double reduction;
 	private final GearRatio inverse;
@@ -71,6 +73,21 @@ public class GearRatio {
 	public AngularAcceleration applySigned(AngularAcceleration angle) {
 		return angle.times(this.inverse().reductionSigned());
 	}
+	public FFGains applySigned(FFGains ff) {
+		return new FFGains(
+			ff.kS(),
+			ff.kG() * this.inverse().reductionSigned(),
+			ff.kV() * this.inverse().reductionSigned(),
+			ff.kA() * this.inverse().reductionSigned()
+		);
+	}
+	public PIDGains applySigned(PIDGains pid) {
+		return new PIDGains(
+			pid.kP() * this.inverse().reductionSigned(),
+			pid.kI() * this.inverse().reductionSigned(),
+			pid.kD() * this.inverse().reductionSigned()
+		);
+	}
 
 	public double applyUnsigned(double a) {
 		return a * this.inverse().reductionUnsigned();
@@ -86,6 +103,21 @@ public class GearRatio {
 	}
 	public AngularAcceleration applyUnsigned(AngularAcceleration angle) {
 		return angle.times(this.inverse().reductionUnsigned());
+	}
+	public FFGains applyUnsigned(FFGains ff) {
+		return new FFGains(
+			ff.kS(),
+			ff.kG() * this.inverse().reductionUnsigned(),
+			ff.kV() * this.inverse().reductionUnsigned(),
+			ff.kA() * this.inverse().reductionUnsigned()
+		);
+	}
+	public PIDGains applyUnsigned(PIDGains pid) {
+		return new PIDGains(
+			pid.kP() * this.inverse().reductionUnsigned(),
+			pid.kI() * this.inverse().reductionUnsigned(),
+			pid.kD() * this.inverse().reductionUnsigned()
+		);
 	}
 
 	public static class Gear {

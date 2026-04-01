@@ -6,21 +6,19 @@ import frc.util.hardwareID.rioPorts.PWMPort;
 
 public class HardwareDevices {
 	/*
-	 * PDH Ports
-	 * 10:                      9:
-	 * 11:                      8:
-	 * 12:                      7:
-	 * 13:                      6:
-	 * 14:                      5:
-	 * 15:                      4:
-	 * 16:                      3:
-	 * 17:                      2:
-	 * 18:                      1:
-	 * 19:                      0:
-	 * 20:
-	 * 21:
-	 * 22:
-	 * 23:
+	 * PDP Ports
+	 * 12: FL Drive          11: FR Drive
+	 * 13: FL Azimuth        10: FR Azimuth
+	 * 14: L Intake Roller    9: R Intake Roller
+	 * 15: Intake Slam        8: MPM
+	 * 16: Radio              7: Rio
+	 * 17: Radio              6: Climber
+	 * 18: Indexer            5: Hood
+	 * 19: Agitator           4: Feeder
+	 * 20: LS Flywheel        3: RS Flywheel
+	 * 21: LM Flywheel        2: RM Flywheel
+	 * 22: BL Azimuth         1: BR Azimuth
+	 * 23: BL Drive           0: BR Drive
 	 */
 	public static final CANBus rio = CANBus.rio();
 	public static final CANBus canivore = CANBus.newBus("canivore");
@@ -29,16 +27,50 @@ public class HardwareDevices {
 	public static final CANDevice pigeonID = canivore.id(0);
 	// | Front Left
 	public static final CANDevice frontLeftDriveMotorID = canivore.id(1);
-	public static final CANDevice frontLeftTurnMotorID = rio.id(1);
+	public static final CANDevice frontLeftAzimuthMotorID = rio.id(1);
 	// | Front Right
 	public static final CANDevice frontRightDriveMotorID = canivore.id(2);
-	public static final CANDevice frontRightTurnMotorID = rio.id(2);
+	public static final CANDevice frontRightAzimuthMotorID = rio.id(2);
 	// | Back Left
 	public static final CANDevice backLeftDriveMotorID = canivore.id(3);
-	public static final CANDevice backLeftTurnMotorID = rio.id(3);
+	public static final CANDevice backLeftAzimuthMotorID = rio.id(3);
 	// | Back Right
 	public static final CANDevice backRightDriveMotorID = canivore.id(4);
-	public static final CANDevice backRightTurnMotorID = rio.id(4);
+	public static final CANDevice backRightAzimuthMotorID = rio.id(4);
+
+	// Intake
+	// | Slam
+	public static final CANDevice intakeSlamMotorID = rio.id(5);
+	public static final CANDevice intakeSlamEncoderID = rio.id(5);
+	// | Rollers
+	public static final CANDevice intakeLeftRollerMotorID = rio.id(6);
+	public static final CANDevice intakeRightRollerMotorID = rio.id(7);
+
+	// Rollers
+	// | Indexer
+	public static final CANDevice indexerMotorID = rio.id(8);
+	// | Agitator
+	public static final CANDevice agitatorMotorID = canivore.id(9);
+	// | Feeder
+	public static final CANDevice feederMotorID = canivore.id(10);
+
+	// Shooter
+	// | Hood
+	public static final CANDevice hoodMotorID = canivore.id(11);
+	// | Flywheels
+	// | | Left Flywheel System
+	public static final CANDevice leftFlywheelMotorMasterID = canivore.id(12);
+	public static final CANDevice leftFlywheelMotorSlaveID = canivore.id(13);
+	// | | Right Flywheel System
+	public static final CANDevice rightFlywheelMotorMasterID = canivore.id(14);
+	public static final CANDevice rightFlywheelMotorSlaveID = canivore.id(15);
+
+	// Climber
+	// | Hook
+	public static final CANDevice climberHookMotorID = canivore.id(16);
+
+	// CANdi
+	public static final CANDevice candiID = canivore.id(0);
 
 	// RIO
 	public static final PWMPort ledPort = PWMPort.port(0);
