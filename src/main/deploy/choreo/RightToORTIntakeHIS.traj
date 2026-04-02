@@ -24,7 +24,7 @@
  },
  "params":{
   "waypoints":[
-    {"x":{"exp":"RightShooter.x", "val":3.0399081707000732}, "y":{"exp":"RightShooter.y", "val":2.5384702682495117}, "heading":{"exp":"RightShooter.heading", "val":0.7757910845571518}, "intervals":21, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":{"exp":"RightShooter.x", "val":2.8584582805633545}, "y":{"exp":"RightShooter.y", "val":2.6051342487335205}, "heading":{"exp":"RightShooter.heading", "val":0.7757910845571518}, "intervals":21, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"PreRampR.x", "val":5.764642715454102}, "y":{"exp":"PreRampR.y", "val":2.477388620376587}, "heading":{"exp":"PreRampR.heading", "val":0.7853981633974483}, "intervals":25, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
     {"x":{"exp":"HalfLIS.x", "val":6.047739999999999}, "y":{"exp":"HalfLIS.y", "val":3.28549}, "heading":{"exp":"HalfLIS.heading", "val":-1.5707963267948966}, "intervals":18, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"6.051026344299316 m", "val":6.051026344299316}, "y":{"exp":"1.3318541049957275 m", "val":1.3318541049957275}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":22, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},

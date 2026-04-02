@@ -534,7 +534,21 @@
      "val":7.62508
     },
     "heading":{
-     "exp":"180 deg",
+     "exp":"-90 deg",
+     "val":-1.5707963267948966
+    }
+   },
+   "InsideTrenchLUpdated":{
+    "x":{
+     "exp":"4.475915908813477 m",
+     "val":4.475915908813477
+    },
+    "y":{
+     "exp":"7.453305244445801 m",
+     "val":7.453305244445801
+    },
+    "heading":{
+     "exp":"StartInLeftTrench.heading",
      "val":3.141592653589793
     }
    },
@@ -624,12 +638,12 @@
    },
    "LeftShooterUpdated":{
     "x":{
-     "exp":"2.900806427001953 m",
-     "val":2.900806427001953
+     "exp":"2.7186644077301025 m",
+     "val":2.7186644077301025
     },
     "y":{
-     "exp":"5.609710216522217 m",
-     "val":5.609710216522217
+     "exp":"5.417459011077881 m",
+     "val":5.417459011077881
     },
     "heading":{
      "exp":"LeftShooter.heading",
@@ -676,6 +690,48 @@
     "heading":{
      "exp":"15.743012649996016 mrad",
      "val":0.015743012649996016
+    }
+   },
+   "LeftTrenchCenterEscape":{
+    "x":{
+     "exp":"LeftTrenchCenterEscape.x",
+     "val":5.961531639099121
+    },
+    "y":{
+     "exp":"LeftTrenchCenterEscape.y",
+     "val":7.363810062408447
+    },
+    "heading":{
+     "exp":"LeftTrenchCenterEscape.heading",
+     "val":0.0
+    }
+   },
+   "MichealLeftHubShot":{
+    "x":{
+     "exp":"2.8650081157684326 m",
+     "val":2.8650081157684326
+    },
+    "y":{
+     "exp":"7.310112953186035 m",
+     "val":7.310112953186035
+    },
+    "heading":{
+     "exp":"-0.6715233168388404 rad",
+     "val":-0.6715233168388404
+    }
+   },
+   "MichealLeftHubShotUpdated":{
+    "x":{
+     "exp":"3.1874120235443115 m",
+     "val":3.1874120235443115
+    },
+    "y":{
+     "exp":"7.497324466705322 m",
+     "val":7.497324466705322
+    },
+    "heading":{
+     "exp":"ShootFromLeftTrenchX.heading",
+     "val":-1.5707963267948966
     }
    },
    "MiddleScatter":{
@@ -1014,18 +1070,46 @@
      "val":2.356194490192345
     }
    },
-   "RightShooter":{
+   "RampAngleChange":{
     "x":{
-     "exp":"3.0399081707000732 m",
-     "val":3.0399081707000732
+     "exp":"NewRightStart.x",
+     "val":3.558394432067871
     },
     "y":{
-     "exp":"2.5384702682495117 m",
-     "val":2.5384702682495117
+     "exp":"NewRightStart.y",
+     "val":2.4820046424865723
+    },
+    "heading":{
+     "exp":"45 deg",
+     "val":0.7853981633974483
+    }
+   },
+   "RightShooter":{
+    "x":{
+     "exp":"2.8584582805633545 m",
+     "val":2.8584582805633545
+    },
+    "y":{
+     "exp":"2.6051342487335205 m",
+     "val":2.6051342487335205
     },
     "heading":{
      "exp":"0.7757910845571518 rad",
      "val":0.7757910845571518
+    }
+   },
+   "RightShooterUpdated":{
+    "x":{
+     "exp":"2.8428211212158203 m",
+     "val":2.8428211212158203
+    },
+    "y":{
+     "exp":"2.642817258834839 m",
+     "val":2.642817258834839
+    },
+    "heading":{
+     "exp":"0 deg",
+     "val":0.0
     }
    },
    "RightStart":{

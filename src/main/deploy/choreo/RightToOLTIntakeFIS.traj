@@ -24,13 +24,13 @@
  },
  "params":{
   "waypoints":[
-    {"x":{"exp":"RightShooter.x", "val":3.0399081707000732}, "y":{"exp":"RightShooter.y", "val":2.5384702682495117}, "heading":{"exp":"RightShooter.heading", "val":0.7757910845571518}, "intervals":21, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":{"exp":"RightShooter.x", "val":2.8584582805633545}, "y":{"exp":"RightShooter.y", "val":2.6051342487335205}, "heading":{"exp":"RightShooter.heading", "val":0.7757910845571518}, "intervals":21, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"PreRampR.x", "val":5.764642715454102}, "y":{"exp":"PreRampR.y", "val":2.477388620376587}, "heading":{"exp":"PreRampR.heading", "val":0.7853981633974483}, "intervals":20, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
     {"x":{"exp":"5.889935493469238 m", "val":5.889935493469238}, "y":{"exp":"3.3902366161346436 m", "val":3.3902366161346436}, "heading":{"exp":"1.5451608395070662 rad", "val":1.5451608395070662}, "intervals":22, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"FISF.x", "val":6.391107082366943}, "y":{"exp":"FISF.y", "val":6.379366397857666}, "heading":{"exp":"FISF.heading", "val":0.0}, "intervals":25, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
     {"x":{"exp":"PreInsideTrenchL.x", "val":5.872030258178711}, "y":{"exp":"PreInsideTrenchL.y", "val":7.609946250915527}, "heading":{"exp":"PreInsideTrenchL.heading", "val":3.141524863122604}, "intervals":15, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
-    {"x":{"exp":"InsideTrenchL.x", "val":4.447539999999999}, "y":{"exp":"InsideTrenchL.y", "val":7.62508}, "heading":{"exp":"InsideTrenchL.heading", "val":3.141592653589793}, "intervals":28, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
-    {"x":{"exp":"OutsideTrenchLUpdated.x", "val":2.990302562713623}, "y":{"exp":"OutsideTrenchLUpdated.y", "val":7.220618724822998}, "heading":{"exp":"OutsideTrenchLUpdated.heading", "val":-1.1094634742298886}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
+    {"x":{"exp":"InsideTrenchL.x", "val":4.447539999999999}, "y":{"exp":"InsideTrenchL.y", "val":7.62508}, "heading":{"exp":"InsideTrenchL.heading", "val":-1.5707963267948966}, "intervals":26, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
+    {"x":{"exp":"MichealLeftHubShotUpdated.x", "val":3.1874120235443115}, "y":{"exp":"MichealLeftHubShotUpdated.y", "val":7.497324466705322}, "heading":{"exp":"MichealLeftHubShotUpdated.heading", "val":-1.1094634742298886}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false}],
   "constraints":[
     {"from":"first", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
     {"from":"last", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
@@ -40,7 +40,9 @@
     {"from":4, "to":5, "data":{"type":"KeepInLane", "props":{"tolerance":{"exp":"0.01 m", "val":0.01}}}, "enabled":true},
     {"from":4, "to":5, "data":{"type":"MaxAngularVelocity", "props":{"max":{"exp":"0 rad / s", "val":0.0}}}, "enabled":true},
     {"from":2, "to":3, "data":{"type":"MaxAngularVelocity", "props":{"max":{"exp":"0 rad / s", "val":0.0}}}, "enabled":true},
-    {"from":2, "to":3, "data":{"type":"KeepInLane", "props":{"tolerance":{"exp":"0.01 m", "val":0.01}}}, "enabled":true}],
+    {"from":2, "to":3, "data":{"type":"KeepInLane", "props":{"tolerance":{"exp":"0.01 m", "val":0.01}}}, "enabled":true},
+    {"from":6, "to":6, "data":{"type":"PointAt", "props":{"x":{"exp":"4.62534 m", "val":4.62534}, "y":{"exp":"4.03479 m", "val":4.03479}, "tolerance":{"exp":"1 deg", "val":0.017453292519943295}, "flip":false}}, "enabled":true},
+    {"from":4, "to":5, "data":{"type":"MaxAngularVelocity", "props":{"max":{"exp":"0 rad / s", "val":0.0}}}, "enabled":true}],
   "targetDt":{
    "exp":"0.05 s",
    "val":0.05
