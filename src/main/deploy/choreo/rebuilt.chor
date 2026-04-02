@@ -272,10 +272,10 @@
      "val":1.5707963267948966
     }
    },
-   "Depo":{
+   "Depot":{
     "x":{
-     "exp":"DepoLength + CenterToBumper",
-     "val":1.1303
+     "exp":"DepoLength + CenterToBumper / 2",
+     "val":0.90805
     },
     "y":{
      "exp":"DepoCenterY",
@@ -718,6 +718,20 @@
     "heading":{
      "exp":"LeftTrenchCenterEscape.heading",
      "val":0.0
+    }
+   },
+   "MichaelRightHubShot":{
+    "x":{
+     "exp":"MichealLeftHubShotUpdated.x",
+     "val":3.1874120235443115
+    },
+    "y":{
+     "exp":"FieldWidth - MichealLeftHubShotUpdated.y",
+     "val":0.5722555332946779
+    },
+    "heading":{
+     "exp":"MichealLeftHubShotUpdated.heading",
+     "val":-0.6715233168388404
     }
    },
    "MichealLeftHubShot":{
