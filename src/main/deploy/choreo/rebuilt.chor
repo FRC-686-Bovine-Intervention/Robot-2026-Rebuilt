@@ -566,6 +566,20 @@
      "val":1.5707963267948966
     }
    },
+   "InsideTrenchRReturn":{
+    "x":{
+     "exp":"InsideTrenchR.x",
+     "val":4.447539999999999
+    },
+    "y":{
+     "exp":"InsideTrenchR.y",
+     "val":0.4445
+    },
+    "heading":{
+     "exp":"0 deg",
+     "val":0.0
+    }
+   },
    "InstantHubShotL":{
     "x":{
      "exp":"2.6227736473083496 m",
@@ -899,6 +913,20 @@
     },
     "heading":{
      "exp":"90 deg",
+     "val":1.5707963267948966
+    }
+   },
+   "PITRReturn":{
+    "x":{
+     "exp":"PITR.x",
+     "val":6.684345245361328
+    },
+    "y":{
+     "exp":"PITR.y",
+     "val":0.5625707507133484
+    },
+    "heading":{
+     "exp":"PITR.heading",
      "val":1.5707963267948966
     }
    },
