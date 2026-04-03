@@ -11,6 +11,13 @@
      "val":1.1210619438
     }
    },
+   "BumpMaxVelo":{
+    "dimension":"LinVel",
+    "var":{
+     "exp":"5 m / s",
+     "val":5.0
+    }
+   },
    "BumpWidth":{
     "dimension":"Length",
     "var":{
@@ -72,6 +79,34 @@
     "var":{
      "exp":"317.7 in",
      "val":8.06958
+    }
+   },
+   "GlobalMaxAngVelo":{
+    "dimension":"AngVel",
+    "var":{
+     "exp":"360 * 6 deg / s",
+     "val":37.69911184307752
+    }
+   },
+   "GlobalMaxLinAccel":{
+    "dimension":"LinAcc",
+    "var":{
+     "exp":"8 m / s / s",
+     "val":8.0
+    }
+   },
+   "GlobalMaxLinVelo":{
+    "dimension":"LinVel",
+    "var":{
+     "exp":"4 m / s",
+     "val":4.0
+    }
+   },
+   "IntakeMaxVelo":{
+    "dimension":"LinVel",
+    "var":{
+     "exp":"3 m / s",
+     "val":3.0
     }
    },
    "NeutralZoneClusterWidth":{
