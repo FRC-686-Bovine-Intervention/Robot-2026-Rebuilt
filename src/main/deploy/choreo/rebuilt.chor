@@ -91,15 +91,15 @@
    "GlobalMaxLinAccel":{
     "dimension":"LinAcc",
     "var":{
-     "exp":"8 m / s / s",
-     "val":8.0
+     "exp":"10 m / s / s",
+     "val":10.0
     }
    },
    "GlobalMaxLinVelo":{
     "dimension":"LinVel",
     "var":{
-     "exp":"4 m / s",
-     "val":4.0
+     "exp":"5 m / s",
+     "val":5.0
     }
    },
    "IntakeMaxVelo":{
