@@ -96,7 +96,7 @@ public class FollowTrajectoryCommand extends Command {
 
 		double transPidOut;
 		double rotPidOut;
-		
+
 		double vX;
 		double vY;
 		double omega;
@@ -126,7 +126,7 @@ public class FollowTrajectoryCommand extends Command {
 		var pidX = transPidOut * errXNorm;
 		var pidY = transPidOut * errYNorm;
 		var pidOmega = rotPidOut;
-		
+
 		var fieldVX = vX + pidX;
 		var fieldVY = vY + pidY;
 		var fieldOmega = omega + pidOmega;
