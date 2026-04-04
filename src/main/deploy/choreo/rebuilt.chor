@@ -1345,8 +1345,8 @@
    },
    "TrenchEntryR":{
     "x":{
-     "exp":"InsideTrenchR.x - 27 in",
-     "val":3.761739999999999
+     "exp":"InsideTrenchR.x - 31 in",
+     "val":3.660139999999999
     },
     "y":{
      "exp":"InsideTrenchR.y",
