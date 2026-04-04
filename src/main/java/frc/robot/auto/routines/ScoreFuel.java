@@ -79,9 +79,9 @@ public class ScoreFuel extends AutoRoutine {
 		private static final Map.Entry<String, IntakeLocation> fullInnerSwipe = Settings.option("Full Inner Swipe", IntakeLocation.FULL_INNER_SWIPE);
 		private static final Map.Entry<String, IntakeLocation> halfOuterSwipe = Settings.option("Half Outer Swipe", IntakeLocation.HALF_OUTER_SWIPE);
 		// private static final Map.Entry<String, IntakeLocation> halfInnerSwipe = Settings.option("HIS", IntakeLocation.HALF_INNER_SWIPE);
-		private static final Map.Entry<String, IntakeLocation> opponentSwipe = Settings.option("Opponent Swipe", IntakeLocation.OPPONENT_SWIPE);
-		private static final Map.Entry<String, IntakeLocation> halfOpponentSwipe = Settings.option("Half Opponent Swipe", IntakeLocation.HALF_OPPONENT_SWIPE);
-		private static final Map.Entry<String, IntakeLocation> halfSweep = Settings.option("Half Sweep", IntakeLocation.HALF_SWEEP);
+		private static final Map.Entry<String, IntakeLocation> opponentSwipe = Settings.option("Bumper Obliterator 10000", IntakeLocation.OPPONENT_SWIPE);
+		private static final Map.Entry<String, IntakeLocation> halfOpponentSwipe = Settings.option("Intake Obliterator 5000", IntakeLocation.HALF_OPPONENT_SWIPE);
+		private static final Map.Entry<String, IntakeLocation> halfSweep = Settings.option("Bumper Obliterator 5000", IntakeLocation.HALF_SWEEP);
 		private static final Map.Entry<String, IntakeLocation> depot = Settings.option("Depot", IntakeLocation.DEPOT);
 		// private static final Map.Entry<String, IntakeLocation> outpost = Settings.option("O", IntakeLocation.OUTPOST);
 		private static final Map.Entry<String, IntakeLocation> noIntake = Settings.option("No Intake", IntakeLocation.FALSE);
@@ -184,7 +184,7 @@ public class ScoreFuel extends AutoRoutine {
 				(startPosition == ScoringLocation.OUTSIDE_RIGHT_TRENCH && scoreLocation == ScoringLocation.OUTSIDE_RIGHT_TRENCH)
 			) {
 				return Settings.from(
-					halfOuterSwipe,
+					halfInnerSwipe,
 					halfOuterSwipe,
 					halfInnerSwipe
 				);
