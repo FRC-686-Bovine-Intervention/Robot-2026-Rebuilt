@@ -143,7 +143,7 @@ public class ScoreFuel extends AutoRoutine {
 				startPosition == ScoringLocation.OUTSIDE_LEFT_TRENCH
 			) {
 				return Settings.from(
-					outsideLeftTrench,
+					left,
 					outsideLeftTrench,
 					outsideRightTrench,
 					left
@@ -152,7 +152,7 @@ public class ScoreFuel extends AutoRoutine {
 				startPosition == ScoringLocation.OUTSIDE_RIGHT_TRENCH
 			) {
 				return Settings.from(
-					outsideRightTrench,
+					right,
 					outsideLeftTrench,
 					outsideRightTrench,
 					right
