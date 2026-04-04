@@ -20,7 +20,6 @@ import frc.robot.subsystems.shooter.hood.Hood;
 import frc.util.PIDGains;
 import frc.util.geometry.GeomUtil;
 import frc.util.loggerUtil.tunables.LoggedTunable;
-import frc.util.loggerUtil.tunables.LoggedTunableNumber;
 import frc.util.math.MathExtraUtil;
 import lombok.RequiredArgsConstructor;
 

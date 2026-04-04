@@ -249,59 +249,16 @@ public class ScoreFuel extends AutoRoutine {
 
 		var commands = new ArrayList<Command>();
 		var firstTraj = generatePath(startPosition, firstScoringLocation, firstIntakeLocation).getOurs();
-		var firstPathCommand = new FollowTrajectoryCommand(this.drive, firstTraj, true);
-		var firstCommand = Commands.deadline(
-			Commands.sequence(
-				Commands.deadline(
-					firstPathCommand,
-					this.robot.intake.rollers.intake().asProxy()
-				),
-				Commands.deadline(
-					Commands.waitSeconds(4.0),
-					this.robot.shooter.aimHoodAtHub().asProxy(),
-					this.robot.shooter.aimDriveAtHub(this.robot.drive.rotationalSubsystem).asProxy(),
-					this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy()
-				)
-			),
-			this.robot.shooter.aimingSystem.aimAtHub(
-				FunctionalUtil.evalNow(firstTraj.getFinalPose(false).get()),
-				FunctionalUtil.evalNow(new ChassisSpeeds()),
-				FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs())
-			).asProxy(),
-			this.robot.shooter.aimFlywheelAtHub().asProxy()
-		);
+		var firstCommand = AutoCommons.swipe(this.robot, firstTraj, 1.0);
 		commands.add(firstCommand);
 
 		var secondTraj = generatePath(firstScoringLocation, secondScoringLocation, secondIntakeLocation).getOurs();
-		var secondPathCommand = new FollowTrajectoryCommand(this.drive, firstTraj, true);
-		var secondCommand = Commands.deadline(
-			Commands.sequence(
-				Commands.deadline(
-					secondPathCommand,
-					this.robot.intake.rollers.intake().asProxy()
-				),
-				Commands.deadline(
-					Commands.waitSeconds(4.0),
-					this.robot.shooter.aimHoodAtHub().asProxy(),
-					this.robot.shooter.aimDriveAtHub(this.robot.drive.rotationalSubsystem).asProxy(),
-					this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy()
-				)
-			),
-			this.robot.shooter.aimingSystem.aimAtHub(
-				FunctionalUtil.evalNow(secondTraj.getFinalPose(false).get()),
-				FunctionalUtil.evalNow(new ChassisSpeeds()),
-				FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs())
-			).asProxy(),
-			this.robot.shooter.aimFlywheelAtHub().asProxy()
-		);
+		var secondCommand = AutoCommons.swipe(this.robot, secondTraj, 0.0);
 		commands.add(secondCommand);
 
 		return Commands.parallel(
 			AutoCommons.setOdometryFlipped(startPosition.pose),
-			Commands.parallel(
-				this.intake.slam.deploy(this.robot.extensionSystem),
-				Commands.sequence(commands.toArray(Command[]::new))
-			)
+			Commands.sequence(commands.toArray(Command[]::new))
 		);
 	}
 
