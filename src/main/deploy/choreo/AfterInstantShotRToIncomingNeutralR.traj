@@ -15,7 +15,7 @@
  "params":{
   "waypoints":[
     {"x":{"exp":"AfterInstantHubShotR.x", "val":4.447539999999999}, "y":{"exp":"AfterInstantHubShotR.y", "val":0.4445}, "heading":{"exp":"180 deg", "val":3.141592653589793}, "intervals":25, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
-    {"x":{"exp":"PreInsideTrenchR.x", "val":5.9029741287231445}, "y":{"exp":"PreInsideTrenchR.y", "val":0.6353143453598022}, "heading":{"exp":"PreInsideTrenchR.heading", "val":3.141592653589793}, "intervals":22, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
+    {"x":{"exp":"PreInsideTrenchR.x", "val":0.005907834529876709}, "y":{"exp":"PreInsideTrenchR.y", "val":0.4906020164489746}, "heading":{"exp":"PreInsideTrenchR.heading", "val":1.5707963267948966}, "intervals":22, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
     {"x":{"exp":"IncomingNeutralR.x", "val":6.697170971899999}, "y":{"exp":"IncomingNeutralR.y", "val":1.26619}, "heading":{"exp":"IncomingNeutralR.heading", "val":0.7853981633974483}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
   "constraints":[
     {"from":"first", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":false},
