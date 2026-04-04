@@ -1343,6 +1343,20 @@
      "val":3.141592653589793
     }
    },
+   "TrenchEntryR":{
+    "x":{
+     "exp":"InsideTrenchR.x - 27 in",
+     "val":3.761739999999999
+    },
+    "y":{
+     "exp":"InsideTrenchR.y",
+     "val":0.4445
+    },
+    "heading":{
+     "exp":"0 deg",
+     "val":0.0
+    }
+   },
    "TrenchRShooter":{
     "x":{
      "exp":"FieldLength / 4",
