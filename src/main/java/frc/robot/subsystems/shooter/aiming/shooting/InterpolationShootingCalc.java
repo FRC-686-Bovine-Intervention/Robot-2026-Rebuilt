@@ -53,7 +53,7 @@ public class InterpolationShootingCalc implements ShootingCalc {
 		this.effectiveDistanceMeters = Math.hypot(predictedToTargetX, predictedToTargetY);
 		Logger.recordOutput("Subsystems/Shooter/Aiming/Effective Distance", this.effectiveDistanceMeters);
 
-		this.targetHoodAngleRads = ShooterConstants.hubTargetHoodAngleRads.get(this.effectiveDistanceMeters);%
+		this.targetHoodAngleRads = ShooterConstants.hubTargetHoodAngleRads.get(this.effectiveDistanceMeters);
 		this.targetFlywheelVeloMPS = ShooterConstants.hubTargetFlyWheelVeloMPS.get(this.effectiveDistanceMeters) * tigerbotsFlywheelRatio.getAsDouble();
 		this.tofSecs = ShooterConstants.hubTargetTimeOfFlightSecs.get(this.effectiveDistanceMeters);
 
