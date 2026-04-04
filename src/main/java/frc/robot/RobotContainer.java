@@ -614,7 +614,7 @@ public class RobotContainer {
 					var flickRads = flickJoystick.radsFromPosYCCW();
 					var flickX = Math.cos(flickRads);
 					var flickY = Math.sin(flickRads);
-					
+
 					var perspectiveForward = Perspective.getCurrent().getForwardDirection();
 					var fieldX = flickX * perspectiveForward.getCos() - flickY * perspectiveForward.getSin();
 					var fieldY = flickX * perspectiveForward.getSin() + flickY * perspectiveForward.getCos();
@@ -630,6 +630,7 @@ public class RobotContainer {
 							var snapPoint = ourSnapPoints[i];
 							var dot = fieldX * snapPoint.getCos() + fieldY * snapPoint.getSin();
 							if (dot >= closestDot) {
+								closestDot = dot;
 								closestSnapPoint = snapPoint;
 							}
 						}
