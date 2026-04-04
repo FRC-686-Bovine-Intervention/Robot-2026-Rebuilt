@@ -105,8 +105,8 @@
    "IntakeMaxVelo":{
     "dimension":"LinVel",
     "var":{
-     "exp":"3 m / s",
-     "val":3.0
+     "exp":"4 m / s",
+     "val":4.0
     }
    },
    "NeutralZoneClusterWidth":{
@@ -1345,8 +1345,8 @@
    },
    "TrenchEntryR":{
     "x":{
-     "exp":"InsideTrenchR.x - 31 in",
-     "val":3.660139999999999
+     "exp":"InsideTrenchR.x - 40 in",
+     "val":3.431539999999999
     },
     "y":{
      "exp":"InsideTrenchR.y",
