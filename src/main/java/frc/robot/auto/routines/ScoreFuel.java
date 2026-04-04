@@ -245,11 +245,11 @@ public class ScoreFuel extends AutoRoutine {
 
 		var commands = new ArrayList<Command>();
 		var firstTraj = generatePath(startPosition, firstScoringLocation, firstIntakeLocation).getOurs();
-		var firstCommand = AutoCommons.swipe(this.robot, firstTraj, 1.0, 1.0);
+		var firstCommand = AutoCommons.swipe(this.robot, firstTraj, 0.75, 1.0);
 		commands.add(firstCommand);
 
 		var secondTraj = generatePath(firstScoringLocation, secondScoringLocation, secondIntakeLocation).getOurs();
-		var secondCommand = AutoCommons.swipe(this.robot, secondTraj, 0.0, 20.0);
+		var secondCommand = AutoCommons.swipe(this.robot, secondTraj, 0.0, 220.0);
 		commands.add(secondCommand);
 
 		return Commands.parallel(
