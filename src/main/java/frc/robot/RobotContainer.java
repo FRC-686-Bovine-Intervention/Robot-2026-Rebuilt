@@ -995,6 +995,23 @@ public class RobotContainer {
 			}
 		});
 
+		final var flickStickTrigger = new EdgeDetector(false);
+
+		CommandScheduler.getInstance().getDefaultButtonLoop().bind(() -> {
+			flickStickTrigger.update(flickJoystick.magnitude() > 0.0);
+			if (
+				flickStickTrigger.risingEdge()
+				&& !driveFlickStick.isScheduled()
+				&& !aimAtHubCommand.isScheduled()
+				&& !aimAtHubFromHubFrontCommand.isScheduled()
+				&& !aimAtHubFromLeftTrenchCommand.isScheduled()
+				&& !aimAtHubFromRightTrenchCommand.isScheduled()
+				&& !aimAtHubFromTowerCommand.isScheduled()
+			) {
+				CommandScheduler.getInstance().schedule(driveFlickStick);
+			}
+		});
+
 		this.driveController.x().whileTrue(this.rollers.feed().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("Force Feed"));
 	}
 }
