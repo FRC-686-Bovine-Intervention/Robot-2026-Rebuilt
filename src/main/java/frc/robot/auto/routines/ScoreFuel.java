@@ -220,9 +220,26 @@ public class ScoreFuel extends AutoRoutine {
 		}
 	};
 
+	private static final AutoQuestion<Boolean> comeBackThroughTrenchSideways = new AutoQuestion<Boolean>("Come Back Through Trench Sideways") {
+		private static final Map.Entry<String, Boolean> yes = Settings.option("Yes", true);
+		private static final Map.Entry<String, Boolean> no = Settings.option("No", false);
+
+		@Override
+		protected Settings<Boolean> generateSettings() {
+			var firstIntakeLocation = ScoreFuel.firstIntakeLocation.getResponse();
+			var secondScoringLocation = ScoreFuel.secondScoringLocation.getResponse();
+			if (
+				firstIntakeLocation != IntakeLocation.FALSE && firstIntakeLocation != IntakeLocation.DEPOT &&
+				secondScoringLocation != ScoringLocation.CENTER
+			) {
+				return Settings.from(no, yes, no);
+			} else {
+				return Settings.from(no, no);
+			}
+		}
+	};
+
 	private final RobotContainer robot;
-	private final Drive drive;
-	private final Intake intake;
 
 	public ScoreFuel(RobotContainer robot) {
 		super("Score Fuel", List.of(
@@ -233,8 +250,6 @@ public class ScoreFuel extends AutoRoutine {
 			secondIntakeLocation
 		));
 		this.robot = robot;
-		this.drive = robot.drive;
-		this.intake = robot.intake;
 	}
 
 	@Override
@@ -244,9 +259,10 @@ public class ScoreFuel extends AutoRoutine {
 		var firstScoringLocation = ScoreFuel.firstScoringLocation.getResponse();
 		var secondIntakeLocation = ScoreFuel.secondIntakeLocation.getResponse();
 		var secondScoringLocation = ScoreFuel.secondScoringLocation.getResponse();
+		var comeBackThroughTrenchSideways = ScoreFuel.comeBackThroughTrenchSideways.getResponse();
 
 		var commands = new ArrayList<Command>();
-		var firstTraj = generatePath(startPosition, firstScoringLocation, firstIntakeLocation).getOurs();
+		var firstTraj = generatePath(startPosition, firstScoringLocation, firstIntakeLocation, comeBackThroughTrenchSideways).getOurs();
 		var firstCommand = AutoCommons.swipe(this.robot, firstTraj, 0.75, 1.0);
 		commands.add(firstCommand);
 
@@ -261,14 +277,14 @@ public class ScoreFuel extends AutoRoutine {
 	}
 
 
-	private static AllianceFlipped<Trajectory<SwerveSample>> generatePath(StartingPosition startingPosition, ScoringLocation scoringLocation, IntakeLocation intakeLocation) {
+	private static AllianceFlipped<Trajectory<SwerveSample>> generatePath(StartingPosition startingPosition, ScoringLocation scoringLocation, IntakeLocation intakeLocation, boolean comeBackThroughTrenchSideways) {
 		if (startingPosition == StartingPosition.INSIDE_LEFT_TRENCH && scoringLocation.canFlip * intakeLocation.canFlip > 0) {
 			//Needs to flip across Xenterline
-			var blueTraj = AutoCommons.loadBlueChoreoTrajectory(startingPosition.rightAlias + "To" + scoringLocation.rightAlias + "Intake" + intakeLocation.alias);
+			var blueTraj = AutoCommons.loadBlueChoreoTrajectory(startingPosition.rightAlias + "To" + scoringLocation.rightAlias + "Intake" + intakeLocation.alias + (comeBackThroughTrenchSideways ? "_Sideswipe" : ""));
 			var newBlueTraj = AllianceFlipUtil.flip(blueTraj.getBlue(), FieldFlipType.XenterLineMirror);
 			return AllianceFlipped.fromBlue(newBlueTraj);
 		} else {
-			return AutoCommons.loadBlueChoreoTrajectory(startingPosition.alias + "To" + scoringLocation.alias + "Intake" + intakeLocation.alias);
+			return AutoCommons.loadBlueChoreoTrajectory(startingPosition.alias + "To" + scoringLocation.alias + "Intake" + intakeLocation.alias + (comeBackThroughTrenchSideways ? "_Sideswipe" : ""));
 		}
 	}
 
