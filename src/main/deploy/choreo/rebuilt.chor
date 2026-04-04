@@ -643,6 +643,20 @@
      "val":1.200625545208898
     }
    },
+   "LaedonRightHubShot":{
+    "x":{
+     "exp":"2.7009365558624268 m",
+     "val":2.7009365558624268
+    },
+    "y":{
+     "exp":"0.9785797595977783 m",
+     "val":0.9785797595977784
+    },
+    "heading":{
+     "exp":"MichaelRightHubShot.heading",
+     "val":0.0
+    }
+   },
    "LeftRampPointDown":{
     "x":{
      "exp":"2.886532783508301 m",
