@@ -29,7 +29,7 @@ public class AutoCommons {
 		return AllianceFlipped.fromBlue(traj.get());
 	}
 
-	public static Command swipe(RobotContainer robot, Trajectory<SwerveSample> traj, double intakeDeployDelay) {
+	public static Command swipe(RobotContainer robot, Trajectory<SwerveSample> traj, double intakeDeployDelay, double noBallTimeout) {
 		final Command intakeDeployCommand;
 		if (intakeDeployDelay == 0.0) {
 			intakeDeployCommand = robot.intake.slam.deploy(robot.extensionSystem).asProxy();
@@ -46,7 +46,8 @@ public class AutoCommons {
 					intakeDeployCommand,
 					robot.intake.rollers.intake().asProxy()
 				),
-				Commands.parallel(
+				Commands.deadline(
+					robot.rollers.untilNoBalls(noBallTimeout),
 					robot.rollers.feed().onlyWhile(() -> robot.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy(),
 					robot.intake.slam.hopperAgitate(robot.extensionSystem).asProxy(),
 					robot.shooter.aimHoodAtHub().asProxy(),

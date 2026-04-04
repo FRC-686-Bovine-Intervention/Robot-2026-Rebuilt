@@ -6,7 +6,6 @@ import java.util.Map;
 
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotContainer;
@@ -15,14 +14,11 @@ import frc.robot.auto.AutoConstants.IntakeLocation;
 import frc.robot.auto.AutoConstants.ScoringLocation;
 import frc.robot.auto.AutoConstants.StartingPosition;
 import frc.robot.auto.AutoRoutine;
-import frc.robot.constants.FieldConstants;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.commands.FollowTrajectoryCommand;
 import frc.robot.subsystems.intake.Intake;
 import frc.util.flipping.AllianceFlipUtil;
 import frc.util.flipping.AllianceFlipUtil.FieldFlipType;
 import frc.util.flipping.AllianceFlipped;
-import frc.util.misc.FunctionalUtil;
 
 public class ScoreFuel extends AutoRoutine {
 
@@ -249,11 +245,11 @@ public class ScoreFuel extends AutoRoutine {
 
 		var commands = new ArrayList<Command>();
 		var firstTraj = generatePath(startPosition, firstScoringLocation, firstIntakeLocation).getOurs();
-		var firstCommand = AutoCommons.swipe(this.robot, firstTraj, 1.0);
+		var firstCommand = AutoCommons.swipe(this.robot, firstTraj, 1.0, 1.0);
 		commands.add(firstCommand);
 
 		var secondTraj = generatePath(firstScoringLocation, secondScoringLocation, secondIntakeLocation).getOurs();
-		var secondCommand = AutoCommons.swipe(this.robot, secondTraj, 0.0);
+		var secondCommand = AutoCommons.swipe(this.robot, secondTraj, 0.0, 20.0);
 		commands.add(secondCommand);
 
 		return Commands.parallel(
