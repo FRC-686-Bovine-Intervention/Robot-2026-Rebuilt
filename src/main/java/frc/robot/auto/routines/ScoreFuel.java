@@ -14,8 +14,6 @@ import frc.robot.auto.AutoConstants.IntakeLocation;
 import frc.robot.auto.AutoConstants.ScoringLocation;
 import frc.robot.auto.AutoConstants.StartingPosition;
 import frc.robot.auto.AutoRoutine;
-import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.intake.Intake;
 import frc.util.flipping.AllianceFlipUtil;
 import frc.util.flipping.AllianceFlipUtil.FieldFlipType;
 import frc.util.flipping.AllianceFlipped;
@@ -220,22 +218,13 @@ public class ScoreFuel extends AutoRoutine {
 		}
 	};
 
-	private static final AutoQuestion<Boolean> comeBackThroughTrenchSideways = new AutoQuestion<Boolean>("Come Back Through Trench Sideways") {
+	private static final AutoQuestion<Boolean> comeBackThroughTrenchSideways = new AutoQuestion<Boolean>("Trench Sideways") {
 		private static final Map.Entry<String, Boolean> yes = Settings.option("Yes", true);
 		private static final Map.Entry<String, Boolean> no = Settings.option("No", false);
 
 		@Override
 		protected Settings<Boolean> generateSettings() {
-			var firstIntakeLocation = ScoreFuel.firstIntakeLocation.getResponse();
-			var secondScoringLocation = ScoreFuel.secondScoringLocation.getResponse();
-			if (
-				firstIntakeLocation != IntakeLocation.FALSE && firstIntakeLocation != IntakeLocation.DEPOT &&
-				secondScoringLocation != ScoringLocation.CENTER
-			) {
-				return Settings.from(no, yes, no);
-			} else {
-				return Settings.from(no, no);
-			}
+			return Settings.from(no, yes, no);
 		}
 	};
 
@@ -247,7 +236,8 @@ public class ScoreFuel extends AutoRoutine {
 			firstScoringLocation,
 			firstIntakeLocation,
 			secondScoringLocation,
-			secondIntakeLocation
+			secondIntakeLocation,
+			comeBackThroughTrenchSideways
 		));
 		this.robot = robot;
 	}
