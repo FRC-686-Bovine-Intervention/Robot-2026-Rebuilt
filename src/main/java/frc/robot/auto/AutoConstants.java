@@ -65,6 +65,19 @@ public final class AutoConstants {
 			Rotation2d.kCCW_90deg
 	));
 
+	public static final AllianceFlipped<Pose2d> startInsideLeftTrenchDS =
+		AllianceFlipped.fromBlue(new Pose2d(
+			startXInTrench,
+			FieldConstants.fieldWidth.minus(RobotConstants.centerToFrontBumper),
+			Rotation2d.k180deg
+	));
+	public static final AllianceFlipped<Pose2d> startInsideRightTrenchDS =
+		AllianceFlipped.fromBlue(new Pose2d(
+			startXInTrench,
+			RobotConstants.centerToFrontBumper,
+			Rotation2d.k180deg
+	));
+
 	public static final AllianceFlipped<Pose2d> startInRightTrench = AllianceFlipped.fromBlue(
 		new Pose2d(
 			new Translation2d(
