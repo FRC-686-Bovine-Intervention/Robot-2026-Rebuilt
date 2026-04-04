@@ -35,7 +35,7 @@ public class ScoreFuel extends AutoRoutine {
 
 		@Override
 		protected Settings<StartingPosition> generateSettings() {
-			return Settings.from(startInsideRightTrench, startInsideLeftTrench, startCenter, startInsideRightTrench);
+			return Settings.from(startInsideRightTrench, startInsideLeftTrench, startInsideRightTrench);
 		}
 	};
 
