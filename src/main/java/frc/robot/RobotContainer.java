@@ -568,7 +568,7 @@ public class RobotContainer {
 			private static final LoggedTunable<PIDGains> pidGains = LoggedTunable.from(
 				"Controls/Flick Stick/PID",
 				new PIDGains(
-					3.5,
+					5.0,
 					0.0,
 					0.0
 				)
