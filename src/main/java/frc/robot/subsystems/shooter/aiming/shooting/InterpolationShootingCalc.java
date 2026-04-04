@@ -34,7 +34,7 @@ public class InterpolationShootingCalc implements ShootingCalc {
 		ShooterConstants.hubTargetFlyWheelVeloMPS.get(0.0);
 	}
 
-	private static final LoggedTunableNumber tigerbotsFlywheelRatio = LoggedTunable.from("FLYWHEEL RATIO", 0.4);
+	public static final LoggedTunableNumber tigerbotsFlywheelRatio = LoggedTunable.from("FLYWHEEL RATIO", 0.7);
 
 	@Override
 	public void calculate(Pose2d robotPose, ChassisSpeeds fieldSpeeds, Translation3d aimPoint) {

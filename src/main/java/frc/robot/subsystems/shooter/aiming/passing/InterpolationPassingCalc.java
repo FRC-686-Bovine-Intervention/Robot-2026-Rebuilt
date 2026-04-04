@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Time;
 import frc.robot.subsystems.shooter.ShooterConstants;
+import frc.robot.subsystems.shooter.aiming.shooting.InterpolationShootingCalc;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 
 public class InterpolationPassingCalc implements PassingCalc {
@@ -47,7 +48,7 @@ public class InterpolationPassingCalc implements PassingCalc {
 		Logger.recordOutput("Subsystems/Shooter/Aiming/Effective Distance", this.effectiveDistanceMeters);
 
 		this.targetHoodAngleRads = ShooterConstants.passHoodAngleRads.get(this.effectiveDistanceMeters);
-		this.targetFlywheelVeloMPS = ShooterConstants.passFlyWheelVeloMPS.get(this.effectiveDistanceMeters);
+		this.targetFlywheelVeloMPS = ShooterConstants.passFlyWheelVeloMPS.get(this.effectiveDistanceMeters) * InterpolationShootingCalc.tigerbotsFlywheelRatio.getAsDouble();
 
 		Logger.recordOutput("Subsystems/Shooter/Aiming/Aim Point", this.aimPoint);
 		Logger.recordOutput("Subsystems/Shooter/Aiming/Shot Pose", new Pose2d(
