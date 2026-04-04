@@ -116,6 +116,7 @@ public final class AutoConstants {
 		FULL_INNER_SWIPE("FIS", 1),
 		HALF_OUTER_SWIPE("HOS", 1),
 		HALF_INNER_SWIPE("HIS", 1),
+		HALF_INNER_LOOP_SWIPE("HILS", 1),
 		OPPONENT_SWIPE("OpS", 1),
 		HALF_OPPONENT_SWIPE("HOpS", 1),
 		HALF_SWEEP("HSw", 1),

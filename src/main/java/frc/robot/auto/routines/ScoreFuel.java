@@ -168,6 +168,7 @@ public class ScoreFuel extends AutoRoutine {
 		private static final Map.Entry<String, IntakeLocation> fullInnerSwipe = Settings.option("Full Inner Swipe", IntakeLocation.FULL_INNER_SWIPE);
 		private static final Map.Entry<String, IntakeLocation> halfOuterSwipe = Settings.option("Half Outer Swipe", IntakeLocation.HALF_OUTER_SWIPE);
 		private static final Map.Entry<String, IntakeLocation> halfInnerSwipe = Settings.option("Half Inner Swipe", IntakeLocation.HALF_INNER_SWIPE);
+		private static final Map.Entry<String, IntakeLocation> halfInnerLoopSwipe = Settings.option("Half Inner Loop Swipe", IntakeLocation.HALF_INNER_LOOP_SWIPE);
 		// private static final Map.Entry<String, IntakeLocation> opponentSwipe = Settings.option("OpS", IntakeLocation.OPPONENT_SWIPE);
 		// private static final Map.Entry<String, IntakeLocation> halfOpponentSwipe = Settings.option("HOpS", IntakeLocation.HALF_OPPONENT_SWIPE);
 		// private static final Map.Entry<String, IntakeLocation> halfSweep = Settings.option("HSw", IntakeLocation.HALF_SWEEP);
@@ -201,7 +202,8 @@ public class ScoreFuel extends AutoRoutine {
 				(startPosition == ScoringLocation.OUTSIDE_RIGHT_TRENCH && scoreLocation == ScoringLocation.RIGHT)
 			) {
 				return Settings.from(
-					halfInnerSwipe,
+					halfInnerLoopSwipe,
+					halfInnerLoopSwipe,
 					halfInnerSwipe,
 					halfOuterSwipe
 				);
