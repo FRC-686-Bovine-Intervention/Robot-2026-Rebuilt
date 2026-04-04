@@ -19,10 +19,12 @@ import java.util.function.Supplier;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -105,6 +107,8 @@ import frc.util.EdgeDetector;
 import frc.util.PIDGains;
 import frc.util.Perspective;
 import frc.util.controllers.XboxController;
+import frc.util.flipping.AllianceFlipUtil;
+import frc.util.flipping.AllianceFlipped;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.loggerUtil.tunables.LoggedTunableNumber;
 import frc.util.misc.FunctionalUtil;
@@ -509,6 +513,9 @@ public class RobotContainer {
 			.smoothDeadband(0.01)
 			.sensitivity(0.75)
 		;
+		final var flickJoystick = this.driveController.rightStick
+			.roughRadialDeadband(0.75)
+		;
 		final var driveTranslationCommand = new Command() {
 			{
 				this.setName("Driver Controlled");
@@ -555,6 +562,103 @@ public class RobotContainer {
 			@Override
 			public void end(boolean interrupted) {
 				drive.rotationalSubsystem.stop();
+			}
+		};
+		final var driveFlickStick = new Command() {
+			private static final LoggedTunable<PIDGains> pidGains = LoggedTunable.from(
+				"Controls/Flick Stick/PID",
+				new PIDGains(
+					3.5,
+					0.0,
+					0.0
+				)
+			);
+			private static final LoggedTunable<Angle> angularThreshold = LoggedTunable.from("Controls/Flick Stick/Threshold", Degrees::of, 0.0);
+			private static final LoggedTunable<Time> preciseTimeThreshold = LoggedTunable.from("Controls/Flick Stick/Precise Time", Seconds::of, 0.5);
+
+			private static final AllianceFlipped<Rotation2d[]> snapPoints;
+			static {
+				final var blueArray = new Rotation2d[] {
+					Rotation2d.kZero,
+					Rotation2d.kCCW_90deg,
+					Rotation2d.k180deg,
+					Rotation2d.kCW_90deg,
+				};
+				final var redArray = new Rotation2d[blueArray.length];
+				for (int i = 0; i < blueArray.length; i++) {
+					redArray[i] = AllianceFlipUtil.flip(blueArray[i]);
+				}
+				snapPoints = new AllianceFlipped<>(blueArray, redArray);
+			}
+
+			private final PIDController pid = pidGains.get().update(new PIDController(0.0, 0.0, 0.0));
+			private final Timer preciseTimer = new Timer();
+
+			private double targetHeadingRads = 0.0;
+
+			{
+				this.setName("Flick Stick");
+				this.addRequirements(drive.rotationalSubsystem);
+
+				this.pid.enableContinuousInput(-Math.PI, Math.PI);
+			}
+
+			@Override
+			public void initialize() {
+				this.execute();
+			}
+
+			@Override
+			public void execute() {
+				if (flickJoystick.magnitude() > 0.0) {
+					var flickRads = flickJoystick.radsFromPosYCCW();
+					var flickX = Math.cos(flickRads);
+					var flickY = Math.sin(flickRads);
+					
+					var perspectiveForward = Perspective.getCurrent().getForwardDirection();
+					var fieldX = flickX * perspectiveForward.getCos() - flickY * perspectiveForward.getSin();
+					var fieldY = flickX * perspectiveForward.getSin() + flickY * perspectiveForward.getCos();
+
+					this.preciseTimer.start();
+					if (this.preciseTimer.hasElapsed(preciseTimeThreshold.get().in(Seconds))) {
+						this.targetHeadingRads = Math.atan2(fieldY, fieldX);
+					} else {
+						var ourSnapPoints = snapPoints.getOurs();
+						Rotation2d closestSnapPoint = null;
+						var closestDot = Double.NEGATIVE_INFINITY;
+						for (int i = 0; i < ourSnapPoints.length; i++) {
+							var snapPoint = ourSnapPoints[i];
+							var dot = fieldX * snapPoint.getCos() + fieldY * snapPoint.getSin();
+							if (dot >= closestDot) {
+								closestSnapPoint = snapPoint;
+							}
+						}
+						this.targetHeadingRads = closestSnapPoint.getRadians();
+					}
+				} else {
+					this.preciseTimer.stop();
+					this.preciseTimer.reset();
+				}
+
+				var pidOut = this.pid.calculate(RobotState.getInstance().getEstimatedGlobalPose().getRotation().getRadians(), this.targetHeadingRads);
+				drive.rotationalSubsystem.driveVelocity(pidOut);
+			}
+
+			@Override
+			public void end(boolean interrupted) {
+				drive.rotationalSubsystem.stop();
+				this.preciseTimer.stop();
+				this.preciseTimer.reset();
+			}
+
+			@Override
+			public boolean isFinished() {
+				var robotRot = RobotState.getInstance().getEstimatedGlobalPose().getRotation();
+				var targetHeadingX = Math.cos(this.targetHeadingRads);
+				var targetHeadingY = Math.sin(this.targetHeadingRads);
+				var dot = robotRot.getCos() * targetHeadingX + robotRot.getSin() * targetHeadingY;
+				var thresholdDot = Math.cos(angularThreshold.get().in(Radians));
+				return flickJoystick.magnitude() <= 0.0 && dot >= thresholdDot;
 			}
 		};
 
