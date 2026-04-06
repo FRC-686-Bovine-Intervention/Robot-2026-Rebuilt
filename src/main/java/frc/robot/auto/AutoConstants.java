@@ -56,9 +56,22 @@ public final class AutoConstants {
 		AllianceFlipped.fromBlue(new Pose2d(
 			startXInTrench,
 			FieldConstants.fieldWidth.minus(RobotConstants.centerToFrontBumper),
-			Rotation2d.k180deg
+			Rotation2d.kCW_90deg
 	));
 	public static final AllianceFlipped<Pose2d> startInsideRightTrench =
+		AllianceFlipped.fromBlue(new Pose2d(
+			startXInTrench,
+			RobotConstants.centerToFrontBumper,
+			Rotation2d.kCCW_90deg
+	));
+
+	public static final AllianceFlipped<Pose2d> startInsideLeftTrenchDS =
+		AllianceFlipped.fromBlue(new Pose2d(
+			startXInTrench,
+			FieldConstants.fieldWidth.minus(RobotConstants.centerToFrontBumper),
+			Rotation2d.k180deg
+	));
+	public static final AllianceFlipped<Pose2d> startInsideRightTrenchDS =
 		AllianceFlipped.fromBlue(new Pose2d(
 			startXInTrench,
 			RobotConstants.centerToFrontBumper,
@@ -77,9 +90,9 @@ public final class AutoConstants {
 
 	public enum StartingPosition {
 		INSIDE_LEFT_TRENCH(startInsideLeftTrench, "SILT", "SIRT"),
-		LEFT_BUMP(startLeftBump, "SLB", "SRB"),
+		// LEFT_BUMP(startLeftBump, "SLB", "SRB"),
 		CENTER(startCenter, "SC"),
-		RIGHT_BUMP(startRightBump, "SRB", "SLB"),
+		// RIGHT_BUMP(startRightBump, "SRB", "SLB"),
 		INSIDE_RIGHT_TRENCH(startInsideRightTrench, "SIRT", "SILT");
 
 		public final AllianceFlipped<Pose2d> pose;
@@ -103,9 +116,11 @@ public final class AutoConstants {
 		FULL_INNER_SWIPE("FIS", 1),
 		HALF_OUTER_SWIPE("HOS", 1),
 		HALF_INNER_SWIPE("HIS", 1),
-		OPPONENT_SWIPE("OS", 1),
-		DEPOT("D", 0),
-		OUTPOST("IO", 0),
+		HALF_INNER_LOOP_SWIPE("HILS", 1),
+		OPPONENT_SWIPE("OpS", 1),
+		HALF_OPPONENT_SWIPE("HOpS", 1),
+		HALF_SWEEP("HSw", 1),
+		DEPOT("Depot", 0),
 		FALSE("False", 1);
 
 		public final String alias;
@@ -122,8 +137,7 @@ public final class AutoConstants {
 		OUTSIDE_RIGHT_TRENCH("ORT", "OLT", 1),
 		CENTER("Center", 1),
 		LEFT("Left", "Right", 1),
-		RIGHT("Right", "Left", 1),
-		OUTPOST("O", 0);
+		RIGHT("Right", "Left", 1);
 
 		public final String alias;
 		public final String rightAlias;

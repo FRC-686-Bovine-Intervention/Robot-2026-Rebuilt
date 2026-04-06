@@ -24,19 +24,32 @@ public class FollowTrajectoryCommand extends Command {
 	private final boolean endWhenFinished;
 
 	private static final LoggedTunable<Distance> MAX_ERROR = LoggedTunable.from("Drive/Trajectory Following/Max Error", Inches::of, 24.0);
-	private static final LoggedTunable<PIDGains> TRANS_PID_GAINS = LoggedTunable.from("Drive/Trajectory Following/Trans PID", new PIDGains(
-		3.0,
+	private static final LoggedTunable<PIDGains> FOLLOWING_TRANS_PID_GAINS = LoggedTunable.from("Drive/Trajectory Following/Following PIDs/Trans PID", new PIDGains(
+		4.0,
 		0.0,
 		0.0
 	));
-	private static final LoggedTunable<PIDGains> ROT_PID_GAINS = LoggedTunable.from("Drive/Trajectory Following/Rot PID", new PIDGains(
-		3.0,
+	private static final LoggedTunable<PIDGains> CATCHUP_TRANS_PID_GAINS = LoggedTunable.from("Drive/Trajectory Following/Catchup PIDs/Trans PID", new PIDGains(
+		6.0,
+		0.0,
+		0.0
+	));
+	private static final LoggedTunable<PIDGains> FOLLOWING_ROT_PID_GAINS = LoggedTunable.from("Drive/Trajectory Following/Following PIDs/Rot PID", new PIDGains(
+		3.5,
+		0.0,
+		0.0
+	));
+	private static final LoggedTunable<PIDGains> CATCHUP_ROT_PID_GAINS = LoggedTunable.from("Drive/Trajectory Following/Catchup PIDs/Rot PID", new PIDGains(
+		3.5,
 		0.0,
 		0.0
 	));
 
-	private final PIDController translationalPID = TRANS_PID_GAINS.get().update(new PIDController(0.0, 0.0, 0.0));
-	private final PIDController rotationalPID = ROT_PID_GAINS.get().update(new PIDController(0.0, 0.0, 0.0));
+	private final PIDController followingTranslationalPID = FollowTrajectoryCommand.FOLLOWING_TRANS_PID_GAINS.get().update(new PIDController(0.0, 0.0, 0.0));
+	private final PIDController followingRotationalPID = FollowTrajectoryCommand.FOLLOWING_ROT_PID_GAINS.get().update(new PIDController(0.0, 0.0, 0.0));
+
+	private final PIDController catchupTranslationalPID = FollowTrajectoryCommand.CATCHUP_TRANS_PID_GAINS.get().update(new PIDController(0.0, 0.0, 0.0));
+	private final PIDController catchupRotationalPID = FollowTrajectoryCommand.CATCHUP_ROT_PID_GAINS.get().update(new PIDController(0.0, 0.0, 0.0));
 
 	public FollowTrajectoryCommand(Drive drive, Trajectory<SwerveSample> trajectory, boolean endWhenFinished) {
 		this.drive = drive;
@@ -49,11 +62,17 @@ public class FollowTrajectoryCommand extends Command {
 	@Override
 	public void initialize() {
 		this.trajectoryTimer.reset();
-		if (TRANS_PID_GAINS.hasChanged(this.hashCode())) {
-			TRANS_PID_GAINS.get().update(this.translationalPID);
+		if (FollowTrajectoryCommand.FOLLOWING_TRANS_PID_GAINS.hasChanged(this.hashCode())) {
+			FollowTrajectoryCommand.FOLLOWING_TRANS_PID_GAINS.get().update(this.followingTranslationalPID);
 		}
-		if (ROT_PID_GAINS.hasChanged(this.hashCode())) {
-			ROT_PID_GAINS.get().update(this.rotationalPID);
+		if (FollowTrajectoryCommand.FOLLOWING_ROT_PID_GAINS.hasChanged(this.hashCode())) {
+			FollowTrajectoryCommand.FOLLOWING_ROT_PID_GAINS.get().update(this.followingRotationalPID);
+		}
+		if (FollowTrajectoryCommand.CATCHUP_TRANS_PID_GAINS.hasChanged(this.hashCode())) {
+			FollowTrajectoryCommand.CATCHUP_TRANS_PID_GAINS.get().update(this.catchupTranslationalPID);
+		}
+		if (FollowTrajectoryCommand.CATCHUP_ROT_PID_GAINS.hasChanged(this.hashCode())) {
+			FollowTrajectoryCommand.CATCHUP_ROT_PID_GAINS.get().update(this.catchupRotationalPID);
 		}
 	}
 
@@ -69,18 +88,14 @@ public class FollowTrajectoryCommand extends Command {
 		var errXNorm = errX / distanceFromSetpointMeters;
 		var errYNorm = errY / distanceFromSetpointMeters;
 
-		if (distanceFromSetpointMeters > MAX_ERROR.get().in(Meters)) {
+		if (distanceFromSetpointMeters > FollowTrajectoryCommand.MAX_ERROR.get().in(Meters)) {
 			this.trajectoryTimer.stop();
 		} else {
 			this.trajectoryTimer.start();
 		}
 
-		var transPidOut = this.translationalPID.calculate(0.0, distanceFromSetpointMeters);
-		var rotPidOut = this.rotationalPID.calculate(0.0, errTheta);
-
-		var pidX = transPidOut * errXNorm;
-		var pidY = transPidOut * errYNorm;
-		var pidOmega = rotPidOut;
+		double transPidOut;
+		double rotPidOut;
 
 		double vX;
 		double vY;
@@ -95,6 +110,8 @@ public class FollowTrajectoryCommand extends Command {
 			// aX = sample.ax;
 			// aY = sample.ay;
 			// alpha = sample.alpha;
+			transPidOut = this.followingTranslationalPID.calculate(0.0, distanceFromSetpointMeters);
+			rotPidOut = this.followingRotationalPID.calculate(0.0, errTheta);
 		} else {
 			vX = 0.0;
 			vY = 0.0;
@@ -102,7 +119,13 @@ public class FollowTrajectoryCommand extends Command {
 			// aX = 0.0;
 			// aY = 0.0;
 			// alpha = 0.0;
+			transPidOut = this.catchupTranslationalPID.calculate(0.0, distanceFromSetpointMeters);
+			rotPidOut = this.catchupRotationalPID.calculate(0.0, errTheta);
 		}
+
+		var pidX = transPidOut * errXNorm;
+		var pidY = transPidOut * errYNorm;
+		var pidOmega = rotPidOut;
 
 		var fieldVX = vX + pidX;
 		var fieldVY = vY + pidY;
@@ -117,6 +140,7 @@ public class FollowTrajectoryCommand extends Command {
 		// var robotAlpha = alpha;
 
 		Logger.recordOutput("Trajectory/Setpoint Pose", sample.getPose());
+		Logger.recordOutput("Trajectory/Is Iterating Path", this.trajectoryTimer.isRunning());
 		// Logger.recordOutput("Trajectory/Setpoint Speeds", DriveConstants.kinematics.toSwerveModuleStates(ChassisSpeeds.fromFieldRelativeSpeeds(sample.getChassisSpeeds(), sample.getPose().getRotation())));
 		// Logger.recordOutput("Trajectory/Raw sample", sample);
 

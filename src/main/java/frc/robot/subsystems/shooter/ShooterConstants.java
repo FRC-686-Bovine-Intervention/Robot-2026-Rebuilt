@@ -64,7 +64,7 @@ public class ShooterConstants {
 
 	public static final InterpolatingDoubleTreeMap passFlyWheelVeloMPS = new InterpolatingDoubleTreeMap();
 	static {
-		passFlyWheelVeloMPS.put(Inches.of(40.125).in(Meters), MetersPerSecond.of(11.0).in(MetersPerSecond));
+		passFlyWheelVeloMPS.put(Inches.of(40.125).in(Meters), MetersPerSecond.of(13.0).in(MetersPerSecond));
 	}
 
 	public static final InterpolatingDoubleTreeMap passHoodAngleRads = new InterpolatingDoubleTreeMap();

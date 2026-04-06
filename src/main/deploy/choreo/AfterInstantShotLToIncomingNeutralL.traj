@@ -15,7 +15,7 @@
  },
  "params":{
   "waypoints":[
-    {"x":{"exp":"InsideTrenchL.x", "val":4.447539999999999}, "y":{"exp":"InsideTrenchL.y", "val":7.62508}, "heading":{"exp":"InsideTrenchL.heading", "val":3.141592653589793}, "intervals":15, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":{"exp":"InsideTrenchL.x", "val":4.447539999999999}, "y":{"exp":"InsideTrenchL.y", "val":7.62508}, "heading":{"exp":"InsideTrenchL.heading", "val":-1.5707963267948966}, "intervals":15, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"PreInsideTrenchL.x", "val":5.872030258178711}, "y":{"exp":"PreInsideTrenchL.y", "val":7.609946250915527}, "heading":{"exp":"PreInsideTrenchL.heading", "val":3.141524863122604}, "intervals":27, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
     {"x":{"exp":"IncomingNeutralL.x", "val":6.697170971899999}, "y":{"exp":"IncomingNeutralL.y", "val":6.736748421052631}, "heading":{"exp":"IncomingNeutralL.heading", "val":-0.7853981633974483}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
   "constraints":[
