@@ -165,7 +165,7 @@ public class RobotContainer {
 					new Flywheel(new FlywheelIOTalonFX()),
 					new Hood(new HoodIOTalonFXS(commonCANdi)),
 					new AimingSystem(
-						new InterpolationShootingCalc(),
+						new PhysicsShootingCalc(),
 						new InterpolationPassingCalc()
 					)
 				);
