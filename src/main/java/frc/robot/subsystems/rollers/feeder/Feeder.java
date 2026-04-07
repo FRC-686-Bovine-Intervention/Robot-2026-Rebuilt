@@ -22,8 +22,10 @@ public class Feeder extends SubsystemBase {
 	private static final LoggedTunable<Voltage> feedVoltage = LoggedTunable.from("Subsystems/Rollers/Feeder/Commands/Feed/Voltage", Volts::of, 8.0);
 	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Subsystems/Rollers/Feeder/Commands/Eject/Voltage", Volts::of, 0.0);
 
-	private final Alert motorDisconnectedAlert = new Alert("Subsystems/Rollers/Feeder/Alerts", "Motor Disconnected", AlertType.kError);
-	private final Alert motorDisconnectedGlobalAlert = new Alert("Feeder Motor Disconnected!", AlertType.kError);
+	private final Alert leftMotorDisconnectedAlert = new Alert("Subsystems/Rollers/Feeder/Alerts", "Left Motor Disconnected", AlertType.kError);
+	private final Alert leftMotorDisconnectedGlobalAlert = new Alert("Feeder Left Motor Disconnected!", AlertType.kError);
+	private final Alert rightMotorDisconnectedAlert = new Alert("Subsystems/Rollers/Feeder/Alerts", "Right Motor Disconnected", AlertType.kError);
+	private final Alert rightMotorDisconnectedGlobalAlert = new Alert("Feeder Right Motor Disconnected!", AlertType.kError);
 
 	public Feeder(FeederIO io) {
 		super("Rollers/Feeder");
@@ -35,8 +37,10 @@ public class Feeder extends SubsystemBase {
 		this.io.updateInputs(this.inputs);
 		Logger.processInputs("Inputs/Rollers/Feeder", this.inputs);
 
-		this.motorDisconnectedAlert.set(!this.inputs.motorConnected);
-		this.motorDisconnectedGlobalAlert.set(!this.inputs.motorConnected);
+		this.leftMotorDisconnectedAlert.set(!this.inputs.leftMotorConnected);
+		this.leftMotorDisconnectedGlobalAlert.set(!this.inputs.leftMotorConnected);
+		this.rightMotorDisconnectedAlert.set(!this.inputs.rightMotorConnected);
+		this.rightMotorDisconnectedGlobalAlert.set(!this.inputs.rightMotorConnected);
 	}
 
 	private Command genVoltageCommand(String name, DoubleSupplier voltsSupplier) {
