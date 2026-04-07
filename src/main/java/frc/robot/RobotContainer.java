@@ -74,9 +74,6 @@ import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.rollers.RollerSensorsIO;
 import frc.robot.subsystems.rollers.RollerSensorsIOCANdi;
 import frc.robot.subsystems.rollers.Rollers;
-import frc.robot.subsystems.rollers.agitator.Agitator;
-import frc.robot.subsystems.rollers.agitator.AgitatorIO;
-import frc.robot.subsystems.rollers.agitator.AgitatorIOTalonFX;
 import frc.robot.subsystems.rollers.feeder.Feeder;
 import frc.robot.subsystems.rollers.feeder.FeederIO;
 import frc.robot.subsystems.rollers.feeder.FeederIOTalonFX;
@@ -178,7 +175,6 @@ public class RobotContainer {
 				);
 				this.rollers = new Rollers(
 					new Indexer(new IndexerIOTalonFX()),
-					new Agitator(new AgitatorIOTalonFX()),
 					new Feeder(new FeederIOTalonFX()),
 					new RollerSensorsIOCANdi(commonCANdi)
 				);
@@ -249,7 +245,6 @@ public class RobotContainer {
 				);
 				this.rollers = new Rollers(
 					new Indexer(new IndexerIO() {}),
-					new Agitator(new AgitatorIO() {}),
 					new Feeder(new FeederIO() {}),
 					new RollerSensorsIOCANdi(commonCANdi)
 				);
@@ -319,7 +314,6 @@ public class RobotContainer {
 				);
 				this.rollers = new Rollers(
 					new Indexer(new IndexerIO() {}),
-					new Agitator(new AgitatorIO() {}),
 					new Feeder(new FeederIO() {}),
 					new RollerSensorsIO() {}
 				);
@@ -755,12 +749,10 @@ public class RobotContainer {
 
 		final var rollersIndexerIdleCommand = this.rollers.indexer.idle();
 		final var rollersFeederIdleCommand = this.rollers.feeder.idle();
-		final var rollersAgitatorIdleCommand = this.rollers.agitator.idle();
 		final var rollersFeedCommand =
 			Commands.parallel(
 				this.rollers.indexer.index(),
-				this.rollers.feeder.feed(),
-				this.rollers.agitator.index()
+				this.rollers.feeder.feed()
 			)
 			.withName("Feed")
 		;
@@ -864,7 +856,6 @@ public class RobotContainer {
 
 		this.rollers.indexer.setDefaultCommand(rollersIndexerIdleCommand);
 		this.rollers.feeder.setDefaultCommand(rollersFeederIdleCommand);
-		this.rollers.agitator.setDefaultCommand(rollersAgitatorIdleCommand);
 
 		this.shooter.hood.setDefaultCommand(hoodStowCommand);
 		this.shooter.flywheel.setDefaultCommand(flywheelIdleCommand);
