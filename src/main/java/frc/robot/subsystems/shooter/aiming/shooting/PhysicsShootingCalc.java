@@ -4,6 +4,8 @@ package frc.robot.subsystems.shooter.aiming.shooting;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 
+import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -24,7 +26,7 @@ public class PhysicsShootingCalc implements ShootingCalc {
 	private Translation2d shotPose;
 	private double tofSeconds;
 
-	private static final LoggedTunable<Distance> distanceOffset = LoggedTunable.from("Shooting/Aiming/Distance Offset", Inches::of, -12.0);
+	private static final LoggedTunable<Distance> distanceOffset = LoggedTunable.from("Shooting/Aiming/Distance Offset", Inches::of, 0.0);
 
 	public PhysicsShootingCalc() {
 		// Preload polynomials
@@ -75,6 +77,8 @@ public class PhysicsShootingCalc implements ShootingCalc {
 		// this.flywheelSpeedMS = flywheelSpeedMPS;
 		this.aimPoint = aimPoint;
 		this.tofSeconds = tofSeconds;
+
+		Logger.recordOutput("Subsystems/Shooter/Aiming/Effective Distance", radius, Meters);
 	}
 
 	@Override

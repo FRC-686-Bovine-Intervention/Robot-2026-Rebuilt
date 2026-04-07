@@ -19,8 +19,9 @@ public class Indexer extends SubsystemBase {
 	private final IndexerIOInputsAutoLogged inputs = new IndexerIOInputsAutoLogged();
 
 	private static final LoggedTunable<Voltage> idleVoltage = LoggedTunable.from("Subsystems/Rollers/Indexer/Commands/Idle/Voltage", Volts::of, 0.0);
-	private static final LoggedTunable<Voltage> indexVoltage = LoggedTunable.from("Subsystems/Rollers/Indexer/Commands/Index/Voltage", Volts::of, 8);
-	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Subsystems/Rollers/Indexer/Commands/Eject/Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> indexVoltage = LoggedTunable.from("Subsystems/Rollers/Indexer/Commands/Index/Voltage", Volts::of, 8.0);
+	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Subsystems/Rollers/Indexer/Commands/Eject/Voltage", Volts::of, -4.0);
+	private static final LoggedTunable<Voltage> passivePrestageVoltage = LoggedTunable.from("Subsystems/Rollers/Feeder/Commands/Passive Prestage/Voltage", Volts::of, 1.0);
 
 	private final Alert motorDisconnectedAlert = new Alert("Subsystems/Rollers/Indexer/Alerts", "Motor Disconnected", AlertType.kError);
 	private final Alert motorDisconnectedGlobalAlert = new Alert("Indexer Motor Disconnected!", AlertType.kError);
@@ -77,6 +78,13 @@ public class Indexer extends SubsystemBase {
 		return this.genVoltageCommand(
 			"Eject",
 			() -> Indexer.ejectVoltage.get().in(Volts)
+		);
+	}
+
+	public Command passivePrestage() {
+		return this.genVoltageCommand(
+			"Passive Prestage",
+			() -> Indexer.passivePrestageVoltage.get().in(Volts)
 		);
 	}
 }
