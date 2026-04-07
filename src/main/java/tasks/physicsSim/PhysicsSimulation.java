@@ -34,7 +34,7 @@ public class PhysicsSimulation {
 				FlywheelConstants.wheel.effectiveRadius().in(Meters),
 				FlywheelConstants.hoodRoller.effectiveRadius().in(Meters),
 				HoodConstants.hoodRadius.in(Meters),
-				(FlywheelConstants.flywheelToHood.reductionUnsigned() / FlywheelConstants.wheel.effectiveRadius().in(Meters)) * FlywheelConstants.hoodRoller.effectiveRadius().in(Meters),
+				0.870833333,
 				FlywheelConstants.wheel.rotationsToMeters(FlywheelConstants.motorToMechanism.reductionSigned() * 6000) / 60,
 				0.0,
 				30,
