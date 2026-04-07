@@ -24,7 +24,7 @@ public class PhysicsShootingCalc implements ShootingCalc {
 	private Translation2d shotPose;
 	private double tofSeconds;
 
-	private static final LoggedTunable<Distance> distanceOffset = LoggedTunable.from("Shooting/Aiming/Distance Offset", Inches::of, 0.0);
+	private static final LoggedTunable<Distance> distanceOffset = LoggedTunable.from("Shooting/Aiming/Distance Offset", Inches::of, -12.0);
 
 	public PhysicsShootingCalc() {
 		// Preload polynomials
