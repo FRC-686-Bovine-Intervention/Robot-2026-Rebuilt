@@ -1,14 +1,21 @@
 package frc.robot.subsystems.shooter.aiming.shooting;
 
 
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
+
+import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.units.measure.Distance;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.hood.HoodConstants;
+import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.math.MathExtraUtil;
 
 public class PhysicsShootingCalc implements ShootingCalc {
@@ -18,6 +25,8 @@ public class PhysicsShootingCalc implements ShootingCalc {
 	private Translation3d aimPoint;
 	private Translation2d shotPose;
 	private double tofSeconds;
+
+	private static final LoggedTunable<Distance> distanceOffset = LoggedTunable.from("Shooting/Aiming/Distance Offset", Inches::of, 0.0);
 
 	public PhysicsShootingCalc() {
 		// Preload polynomials
@@ -29,7 +38,7 @@ public class PhysicsShootingCalc implements ShootingCalc {
 	public void calculate(Pose2d robotPose, ChassisSpeeds fieldSpeeds, Translation3d aimPoint) {
 		this.shotPose = robotPose.getTranslation();
 		var shooterHubSpaceCartesian = new Pose3d(robotPose).transformBy(HoodConstants.hoodBase).getTranslation().toTranslation2d().minus(aimPoint.toTranslation2d());
-		double radius = shooterHubSpaceCartesian.getNorm();
+		double radius = shooterHubSpaceCartesian.getNorm() + PhysicsShootingCalc.distanceOffset.get().in(Meters);
 
 		var radialUnitVectorCartesian = new double[] {-shooterHubSpaceCartesian.getX() / radius, -shooterHubSpaceCartesian.getY() / radius};
 		var tangentialUnitVectorCartesian = new double[] {-radialUnitVectorCartesian[1], radialUnitVectorCartesian[0]};
@@ -68,6 +77,8 @@ public class PhysicsShootingCalc implements ShootingCalc {
 		// this.flywheelSpeedMS = flywheelSpeedMPS;
 		this.aimPoint = aimPoint;
 		this.tofSeconds = tofSeconds;
+
+		Logger.recordOutput("Subsystems/Shooter/Aiming/Effective Distance", radius, Meters);
 	}
 
 	@Override

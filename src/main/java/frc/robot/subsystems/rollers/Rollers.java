@@ -6,7 +6,6 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.subsystems.rollers.agitator.Agitator;
 import frc.robot.subsystems.rollers.feeder.Feeder;
 import frc.robot.subsystems.rollers.indexer.Indexer;
 import frc.util.VirtualSubsystem;
@@ -16,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class Rollers extends VirtualSubsystem {
 	public final Indexer indexer;
-	public final Agitator agitator;
 	public final Feeder feeder;
 	private final RollerSensorsIO sensorsIO;
 	private final RollerSensorsIOInputsAutoLogged sensorsInputs = new RollerSensorsIOInputsAutoLogged();
@@ -36,10 +34,19 @@ public class Rollers extends VirtualSubsystem {
 		return
 			Commands.parallel(
 				this.indexer.index(),
-				this.agitator.index(),
 				this.feeder.feed()
 			)
 			.withName("Feed")
+		;
+	}
+
+	public Command passivePrestage() {
+		return
+			Commands.parallel(
+				this.indexer.passivePrestage(),
+				this.feeder.passivePrestage()
+			)
+			.withName("Passive Prestage")
 		;
 	}
 

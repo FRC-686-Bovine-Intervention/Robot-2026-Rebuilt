@@ -74,9 +74,6 @@ import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.rollers.RollerSensorsIO;
 import frc.robot.subsystems.rollers.RollerSensorsIOCANdi;
 import frc.robot.subsystems.rollers.Rollers;
-import frc.robot.subsystems.rollers.agitator.Agitator;
-import frc.robot.subsystems.rollers.agitator.AgitatorIO;
-import frc.robot.subsystems.rollers.agitator.AgitatorIOTalonFX;
 import frc.robot.subsystems.rollers.feeder.Feeder;
 import frc.robot.subsystems.rollers.feeder.FeederIO;
 import frc.robot.subsystems.rollers.feeder.FeederIOTalonFX;
@@ -178,7 +175,6 @@ public class RobotContainer {
 				);
 				this.rollers = new Rollers(
 					new Indexer(new IndexerIOTalonFX()),
-					new Agitator(new AgitatorIOTalonFX()),
 					new Feeder(new FeederIOTalonFX()),
 					new RollerSensorsIOCANdi(commonCANdi)
 				);
@@ -249,7 +245,6 @@ public class RobotContainer {
 				);
 				this.rollers = new Rollers(
 					new Indexer(new IndexerIO() {}),
-					new Agitator(new AgitatorIO() {}),
 					new Feeder(new FeederIO() {}),
 					new RollerSensorsIOCANdi(commonCANdi)
 				);
@@ -319,7 +314,6 @@ public class RobotContainer {
 				);
 				this.rollers = new Rollers(
 					new Indexer(new IndexerIO() {}),
-					new Agitator(new AgitatorIO() {}),
 					new Feeder(new FeederIO() {}),
 					new RollerSensorsIO() {}
 				);
@@ -755,15 +749,8 @@ public class RobotContainer {
 
 		final var rollersIndexerIdleCommand = this.rollers.indexer.idle();
 		final var rollersFeederIdleCommand = this.rollers.feeder.idle();
-		final var rollersAgitatorIdleCommand = this.rollers.agitator.idle();
-		final var rollersFeedCommand =
-			Commands.parallel(
-				this.rollers.indexer.index(),
-				this.rollers.feeder.feed(),
-				this.rollers.agitator.index()
-			)
-			.withName("Feed")
-		;
+		final var rollersForceFeedCommand = this.rollers.feed().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("Force Feed");
+		final var rollersPassivePrestageCommand = this.rollers.passivePrestage();
 
 		final var flywheelIdleCommand = this.shooter.flywheel.idle();
 		final var hoodStowCommand = this.shooter.hood.stow();
@@ -864,7 +851,6 @@ public class RobotContainer {
 
 		this.rollers.indexer.setDefaultCommand(rollersIndexerIdleCommand);
 		this.rollers.feeder.setDefaultCommand(rollersFeederIdleCommand);
-		this.rollers.agitator.setDefaultCommand(rollersAgitatorIdleCommand);
 
 		this.shooter.hood.setDefaultCommand(hoodStowCommand);
 		this.shooter.flywheel.setDefaultCommand(flywheelIdleCommand);
@@ -1013,6 +999,34 @@ public class RobotContainer {
 			}
 		});
 
-		this.driveController.x().whileTrue(this.rollers.feed().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("Force Feed"));
+		this.driveController.x().whileTrue(rollersForceFeedCommand);
+
+		// final var flywheelStepper = Cooldown.incrementingStepper(
+		// 	"FLYWHEEL STEPPER",
+		// 	"FLYWHEEL STEPPER",
+		// 	Seconds.of(0.0625),
+		// 	MetersPerSecond.of(9.0),
+		// 	MetersPerSecond.of(0.1),
+		// 	MetersPerSecond,
+		// 	this.driveController.povRight(),
+		// 	this.driveController.povLeft()
+		// );
+		// final var hoodStepper = Cooldown.incrementingStepper(
+		// 	"HOOD STEPPER",
+		// 	"HOOD STEPPER",
+		// 	Seconds.of(0.0625),
+		// 	Degrees.of(12.0),
+		// 	Degrees.of(0.1),
+		// 	Radians,
+		// 	this.driveController.povUp(),
+		// 	this.driveController.povDown()
+		// );
+
+		// this.driveController.start().toggleOnTrue(
+		// 	Commands.parallel(
+		// 		this.shooter.flywheel.genSurfaceVeloCommand("STEPPER", flywheelStepper::getAsDouble),
+		// 		this.shooter.hood.genAngleCommand("STEPPER", hoodStepper::getAsDouble)
+		// 	)
+		// );
 	}
 }
