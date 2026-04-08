@@ -3,11 +3,14 @@ package frc.robot.subsystems.shooter;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.util.function.Supplier;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -42,12 +45,14 @@ public class Shooter {
 		return this.hood.genAngleCommand("Aim at Hub", this.aimingSystem.shootingCalc::getTargetHoodAngleRads);
 	}
 
-	private static final LoggedTunable<PIDGains> rotationalPIDGains = LoggedTunable.from("Shooting/Aiming/Rotational PID", new PIDGains(3.5, 0.0, 0.0));
+	private static final LoggedTunable<PIDGains> rotationalPIDGains = LoggedTunable.from("Shooting/Aiming/Rotational PID", new PIDGains(5.0, 0.0, 0.0));
+	private static final LoggedTunable<AngularVelocity> rotationalPIDMaxOmega = LoggedTunable.from("Shooting/Aiming/Max Omega", RotationsPerSecond::of, 1.5);
 
 	public Command aimDriveAtHub(Drive.Rotational rotational) {
 		return rotational.genHeadingPIDCommand(
 			"Aim at Hub",
 			rotationalPIDGains,
+			() -> rotationalPIDMaxOmega.get().in(RadiansPerSecond),
 			() -> RobotState.getInstance().getEstimatedGlobalPose().getRotation().getRadians(),
 			this.aimingSystem.shootingCalc::getTargetAzimuthHeadingRads
 		);
@@ -80,7 +85,7 @@ public class Shooter {
 
 				var translationalVelo = desiredVeloSupplier.get();
 
-				if (Math.hypot(translationalVelo.vxMetersPerSecond, translationalVelo.vyMetersPerSecond) >= 0.1 || Math.abs(pidOut) >= 0.05) {
+				if (Math.hypot(translationalVelo.vxMetersPerSecond, translationalVelo.vyMetersPerSecond) >= 0.1 || Math.abs(pidOut) >= 0.02) {
 					drive.runRobotSpeeds(
 						translationalVelo.vxMetersPerSecond,
 						translationalVelo.vyMetersPerSecond,
@@ -109,7 +114,8 @@ public class Shooter {
 	public Command aimDriveToPass(Drive.Rotational rotational) {
 		return rotational.genHeadingPIDCommand(
 			"Aim to Pass",
-			LoggedTunable.from("Shooting/Passing/Rotational PID", new PIDGains(3.5, 0.0, 0.0)),
+			LoggedTunable.from("Shooting/Passing/Rotational PID", new PIDGains(5.0, 0.0, 0.0)),
+			() -> rotationalPIDMaxOmega.get().in(RadiansPerSecond),
 			() -> RobotState.getInstance().getEstimatedGlobalPose().getRotation().getRadians(),
 			this.aimingSystem.passingCalc::getTargetAzimuthHeadingRads
 		);

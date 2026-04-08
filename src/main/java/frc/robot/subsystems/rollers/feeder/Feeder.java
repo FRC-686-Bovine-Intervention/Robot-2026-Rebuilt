@@ -19,8 +19,9 @@ public class Feeder extends SubsystemBase {
 	private final FeederIOInputsAutoLogged inputs = new FeederIOInputsAutoLogged();
 
 	private static final LoggedTunable<Voltage> idleVoltage = LoggedTunable.from("Subsystems/Rollers/Feeder/Commands/Idle/Voltage", Volts::of, 0.0);
-	private static final LoggedTunable<Voltage> feedVoltage = LoggedTunable.from("Subsystems/Rollers/Feeder/Commands/Feed/Voltage", Volts::of, 8.0);
-	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Subsystems/Rollers/Feeder/Commands/Eject/Voltage", Volts::of, 0.0);
+	private static final LoggedTunable<Voltage> feedVoltage = LoggedTunable.from("Subsystems/Rollers/Feeder/Commands/Feed/Voltage", Volts::of, 12.0);
+	private static final LoggedTunable<Voltage> ejectVoltage = LoggedTunable.from("Subsystems/Rollers/Feeder/Commands/Eject/Voltage", Volts::of, -4.0);
+	private static final LoggedTunable<Voltage> passivePrestageVoltage = LoggedTunable.from("Subsystems/Rollers/Feeder/Commands/Passive Prestage/Voltage", Volts::of, 1.0);
 
 	private final Alert leftMotorDisconnectedAlert = new Alert("Subsystems/Rollers/Feeder/Alerts", "Left Motor Disconnected", AlertType.kError);
 	private final Alert leftMotorDisconnectedGlobalAlert = new Alert("Feeder Left Motor Disconnected!", AlertType.kError);
@@ -81,6 +82,13 @@ public class Feeder extends SubsystemBase {
 		return this.genVoltageCommand(
 			"Eject",
 			() -> Feeder.ejectVoltage.get().in(Volts)
+		);
+	}
+
+	public Command passivePrestage() {
+		return this.genVoltageCommand(
+			"Passive Prestage",
+			() -> Feeder.passivePrestageVoltage.get().in(Volts)
 		);
 	}
 }

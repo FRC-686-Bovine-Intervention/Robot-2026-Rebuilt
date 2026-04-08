@@ -40,6 +40,16 @@ public class Rollers extends VirtualSubsystem {
 		;
 	}
 
+	public Command passivePrestage() {
+		return
+			Commands.parallel(
+				this.indexer.passivePrestage(),
+				this.feeder.passivePrestage()
+			)
+			.withName("Passive Prestage")
+		;
+	}
+
 	public Command untilNoBalls(double debounceSeconds) {
 		final var rollers = this;
 		return new Command() {

@@ -3,6 +3,8 @@ package frc.robot.automations;
 
 import java.util.function.BooleanSupplier;
 
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -28,6 +30,8 @@ public class AutoFeed implements Runnable {
 
 	private final EdgeDetector edgeDetector = new EdgeDetector(false);
 
+	private final Debouncer flywheelDebouncer = new Debouncer(0.25, DebounceType.kRising);
+
 	public AutoFeed(Drive drive, Shooter shooter, Rollers rollers, IntakeSlam intakeSlam, ExtensionSystem extensionSystem, BooleanSupplier disableTrigger) {
 		this.drive = drive;
 		this.shooter = shooter;
@@ -52,7 +56,7 @@ public class AutoFeed implements Runnable {
 
 		this.edgeDetector.update(
 			FieldConstants.allianceZone.getOurs().withinBounds(robotPose.getTranslation())
-		&& this.shooter.withinTolerance()
+			&& this.shooter.withinTolerance()
 			&& isHubShift
 			&& !disableTrigger.getAsBoolean()
 		);
