@@ -113,7 +113,7 @@ public class DoubleSwipe extends AutoRoutine {
 						Commands.deadline(
 							this.robot.rollers.untilNoBalls(1.0),
 							this.robot.intake.slam.hopperAgitate(this.robot.extensionSystem).asProxy(),
-							this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy(),
+							this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinShootingTolerance()).repeatedly().withName("Feed when ready").asProxy(),
 							this.robot.shooter.aimHoodAtHub().asProxy(),
 							this.robot.shooter.aimDriveAtHub(this.robot.drive.rotationalSubsystem).asProxy(),
 							this.robot.drive.translationSubsystem.simplePIDTo(FunctionalUtil.evalNow(firstTrajBallGrab.getFinalPose(false).get().getTranslation())).asProxy()
@@ -122,7 +122,8 @@ public class DoubleSwipe extends AutoRoutine {
 					this.robot.shooter.aimingSystem.aimAtHub(
 						FunctionalUtil.evalNow(firstTrajBallGrab.getFinalPose(false).get()),
 						FunctionalUtil.evalNow(new ChassisSpeeds()),
-						FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs())
+						FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs()),
+						false
 					).asProxy(),
 					this.robot.shooter.aimFlywheelAtHub().asProxy()
 				),
@@ -134,7 +135,7 @@ public class DoubleSwipe extends AutoRoutine {
 							this.robot.intake.rollers.intake().asProxy()
 						),
 						Commands.parallel(
-							this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy(),
+							this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinShootingTolerance()).repeatedly().withName("Feed when ready").asProxy(),
 							this.robot.intake.slam.hopperAgitate(this.robot.extensionSystem).asProxy(),
 							this.robot.shooter.aimHoodAtHub().asProxy(),
 							this.robot.shooter.aimDriveAtHub(this.robot.drive.rotationalSubsystem).asProxy(),
@@ -144,7 +145,8 @@ public class DoubleSwipe extends AutoRoutine {
 					this.robot.shooter.aimingSystem.aimAtHub(
 						FunctionalUtil.evalNow(secondTrajBallGrab.getFinalPose(false).get()),
 						FunctionalUtil.evalNow(new ChassisSpeeds()),
-						FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs())
+						FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs()),
+						false
 					).asProxy(),
 					this.robot.shooter.aimFlywheelAtHub().asProxy()
 				)

@@ -2,6 +2,8 @@ package frc.robot;
 
 import java.util.Optional;
 
+import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
@@ -171,6 +173,8 @@ public class HubShifts {
 				currentShift = Shift.Endgame;
 			}
 		}
+
+		Logger.recordOutput("Current Shift", HubShifts.getCurrentShift());
 	}
 
 	private static final Optional<Alliance> BLUE = Optional.of(Alliance.Blue);

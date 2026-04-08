@@ -16,7 +16,6 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.hood.HoodConstants;
 import frc.util.loggerUtil.tunables.LoggedTunable;
-import frc.util.math.MathExtraUtil;
 
 public class PhysicsShootingCalc implements ShootingCalc {
 	private double hoodAngleRads;
@@ -37,48 +36,61 @@ public class PhysicsShootingCalc implements ShootingCalc {
 	@Override
 	public void calculate(Pose2d robotPose, ChassisSpeeds fieldSpeeds, Translation3d aimPoint) {
 		this.shotPose = robotPose.getTranslation();
-		var shooterHubSpaceCartesian = new Pose3d(robotPose).transformBy(HoodConstants.hoodBase).getTranslation().toTranslation2d().minus(aimPoint.toTranslation2d());
-		double radius = shooterHubSpaceCartesian.getNorm() + PhysicsShootingCalc.distanceOffset.get().in(Meters);
+		final var shooterHubSpaceCartesian = new Pose3d(robotPose).transformBy(HoodConstants.hoodBase).getTranslation().toTranslation2d().minus(aimPoint.toTranslation2d());
+		final var radiusMeters = shooterHubSpaceCartesian.getNorm() + PhysicsShootingCalc.distanceOffset.get().in(Meters);
 
-		var radialUnitVectorCartesian = new double[] {-shooterHubSpaceCartesian.getX() / radius, -shooterHubSpaceCartesian.getY() / radius};
-		var tangentialUnitVectorCartesian = new double[] {-radialUnitVectorCartesian[1], radialUnitVectorCartesian[0]};
-		var robotSpeedsArray = new double[] { fieldSpeeds.vxMetersPerSecond, fieldSpeeds.vyMetersPerSecond };
+		final var radialUnitVectorCartesian = new Translation3d(
+			-shooterHubSpaceCartesian.getX() / radiusMeters,
+			-shooterHubSpaceCartesian.getY() / radiusMeters,
+			0.0
+		);
+		final var tangentialUnitVectorCartesian = new Translation3d(
+			-radialUnitVectorCartesian.getY(),
+			+radialUnitVectorCartesian.getX(),
+			0.0
+		);
+		final var robotSpeedsVecMPS = new Translation3d(
+			fieldSpeeds.vxMetersPerSecond,
+			fieldSpeeds.vyMetersPerSecond,
+			0.0
+		);
 
-		double radialVelocity = MathExtraUtil.dotProduct(radialUnitVectorCartesian, robotSpeedsArray);
-		double tangentialVelocity = MathExtraUtil.dotProduct(tangentialUnitVectorCartesian, robotSpeedsArray);
+		final var radialVelocityMPS = radialUnitVectorCartesian.dot(robotSpeedsVecMPS);
+		final var tangentialVelocityMPS = tangentialUnitVectorCartesian.dot(robotSpeedsVecMPS);
 
-		var hoodAngleRads = ShooterConstants.hoodPolynomial.evaluate(radius, radialVelocity);
+		final var hoodAngleRads = ShooterConstants.hoodPolynomial.evaluate(radiusMeters, radialVelocityMPS);
 		// Logger.recordOutput("DEBUG/PhysicsShooting/Before Hood Angle", hoodAngleRads);
-		var flywheelSpeedMPS = ShooterConstants.flywheelPolynomial.evaluate(radius, radialVelocity);
+		final var flywheelSpeedMPS = ShooterConstants.flywheelPolynomial.evaluate(radiusMeters, radialVelocityMPS);
 		// Logger.recordOutput("DEBUG/PhysicsShooting/Before Flywheel Speed", flywheelSpeedMPS);
-		var tofSeconds = ShooterConstants.tofPolynomial.evaluate(radius, radialVelocity);
+		this.tofSeconds = ShooterConstants.tofPolynomial.evaluate(radiusMeters, radialVelocityMPS);
 
-		var hubRobotSpaceCartesian = aimPoint.toTranslation2d().minus(robotPose.getTranslation());
-		double robotAngleRads = Math.atan2(hubRobotSpaceCartesian.getY(), hubRobotSpaceCartesian.getX());
+		final var hubRobotSpaceCartesian = aimPoint.toTranslation2d().minus(robotPose.getTranslation());
+		final var robotAngleRads = Math.atan2(hubRobotSpaceCartesian.getY(), hubRobotSpaceCartesian.getX());
 
-		var staticAimVector = Shooter.getLaunchVector(flywheelSpeedMPS, hoodAngleRads, robotAngleRads);
-		var radialVector = MathExtraUtil.scalarMultiply(radialUnitVectorCartesian, radialVelocity);
-		var offsetVector = MathExtraUtil.scalarMultiply(tangentialUnitVectorCartesian, -tangentialVelocity);
-		var newVector = MathExtraUtil.addVectors(staticAimVector, offsetVector);
+		final var staticAimVectorMPS = Shooter.calculateLaunchVector(flywheelSpeedMPS, hoodAngleRads, robotAngleRads);
+		final var radialVectorMPS = radialUnitVectorCartesian.times(radialVelocityMPS);
+		final var offsetVectorMPS = tangentialUnitVectorCartesian.times(-tangentialVelocityMPS);
+		final var launchVector = staticAimVectorMPS.plus(offsetVectorMPS);
 		// Logger.recordOutput("DEBUG/PhysicsShooting/NewVector", new Translation3d(newVector[0], newVector[1], newVector[2]));
 		// Logger.recordOutput("DEBUG/PhysicsShooting/staticVector", new Translation3d(staticAimVector[0], staticAimVector[1], staticAimVector[2]));
 		// Logger.recordOutput("DEBUG/PhysicsShooting/radialVector", new Translation2d(radialVector[0], radialVector[1]));
 		// Logger.recordOutput("DEBUG/PhysicsShooting/offsetVector", new Translation2d(offsetVector[0], offsetVector[1]));
 		// Logger.recordOutput("DEBUG/PhysicsShooting/tangentialVeloUnitVec", new Translation2d(tangentialUnitVectorCartesian[0], tangentialUnitVectorCartesian[1]));
-		var launchValues = getLaunchValues(newVector, radialVector);
 
-		this.robotRotationRads = launchValues[2];
-		this.hoodAngleRads = launchValues[1];
+		final var exitVeloMPS = launchVector.getNorm();
+		final var robotAngleVector = launchVector.plus(radialVectorMPS);
+
+		this.flywheelSpeedMS = Shooter.calculateFlywheelSpeedMPS(exitVeloMPS);
+		this.hoodAngleRads = Math.PI / 2.0 - Math.atan2(launchVector.getZ(), Math.hypot(launchVector.getX(), launchVector.getY()));
+		this.robotRotationRads = Math.atan2(robotAngleVector.getY(), robotAngleVector.getX());
 		// Logger.recordOutput("DEBUG/PhysicsShooting/HoodAngle", this.hoodAngleRads);
-		this.flywheelSpeedMS = launchValues[0];
 		// Logger.recordOutput("DEBUG/PhysicsShooting/FlywheelSpeed", this.flywheelSpeedMS);
 		// this.robotRotationRads = robotAngleRads;
 		// this.hoodAngleRads = hoodAngleRads;
 		// this.flywheelSpeedMS = flywheelSpeedMPS;
 		this.aimPoint = aimPoint;
-		this.tofSeconds = tofSeconds;
 
-		Logger.recordOutput("Subsystems/Shooter/Aiming/Effective Distance", radius, Meters);
+		Logger.recordOutput("Subsystems/Shooter/Aiming/Effective Distance", radiusMeters, Meters);
 	}
 
 	@Override
@@ -109,14 +121,5 @@ public class PhysicsShootingCalc implements ShootingCalc {
 	@Override
 	public double getTOFSeconds() {
 		return this.tofSeconds;
-	}
-
-	private static double[] getLaunchValues(double[] launchVector, double[] radialVelo) {
-		double exitVelo = Math.sqrt(Math.pow(launchVector[0], 2) + Math.pow(launchVector[1], 2) + Math.pow(launchVector[2], 2));
-		var robotAngleVector = MathExtraUtil.addVectors(launchVector, radialVelo);
-		double robotAngleRads = Math.atan2(robotAngleVector[1], robotAngleVector[0]);
-		double hoodAngleRads = Math.PI / 2.0 - Math.atan2(launchVector[2], Math.sqrt(Math.pow(launchVector[0], 2) + Math.pow(launchVector[1], 2)));
-		return new double[] {Shooter.getFlywheelSpeedMPS(exitVelo), hoodAngleRads, robotAngleRads};
-		// return new double[] {exitVelo, hoodAngleRads, robotAngleRads};
 	}
 }

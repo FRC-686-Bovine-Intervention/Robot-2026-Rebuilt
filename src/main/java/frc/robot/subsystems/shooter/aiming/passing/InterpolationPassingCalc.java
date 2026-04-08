@@ -20,7 +20,7 @@ public class InterpolationPassingCalc implements PassingCalc {
 	// private static final LoggedTunable<Angle> customAzimuthOffset = LoggedTunable.from("Subsystems/Shooter/Aiming/Custom Azimuth Offset", Radians::of, 0.0);
 
 	private Translation3d aimPoint;
-	// private Pose2d shotPose;
+	private Translation2d shotPose;
 	// private ChassisSpeeds shotSpeeds;
 	private double effectiveDistanceMeters;
 	private double targetHoodAngleRads;
@@ -33,11 +33,11 @@ public class InterpolationPassingCalc implements PassingCalc {
 
 	@Override
 	public void calculate(Pose2d robotPose, ChassisSpeeds fieldSpeeds, Translation3d aimPoint) {
-		var robotPos = robotPose.getTranslation();
+		this.shotPose = robotPose.getTranslation();
 		this.aimPoint = aimPoint;
 
-		var predictedX = robotPos.getX() + fieldSpeeds.vxMetersPerSecond * lookaheadTime.get().in(Seconds);
-		var predictedY = robotPos.getY() + fieldSpeeds.vyMetersPerSecond * lookaheadTime.get().in(Seconds);
+		var predictedX = this.shotPose.getX() + fieldSpeeds.vxMetersPerSecond * lookaheadTime.get().in(Seconds);
+		var predictedY = this.shotPose.getY() + fieldSpeeds.vyMetersPerSecond * lookaheadTime.get().in(Seconds);
 
 		var predictedToTargetX = this.aimPoint.getX() - predictedX;
 		var predictedToTargetY = this.aimPoint.getY() - predictedY;
@@ -79,5 +79,10 @@ public class InterpolationPassingCalc implements PassingCalc {
 	@Override
 	public Translation3d getAimPoint() {
 		return this.aimPoint;
+	}
+
+	@Override
+	public Translation2d getShotPose() {
+		return this.shotPose;
 	}
 }
