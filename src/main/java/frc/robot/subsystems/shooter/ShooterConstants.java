@@ -24,8 +24,8 @@ public class ShooterConstants {
 		hubTargetFlyWheelVeloMPS.put(Inches.of(52.0).in(Meters), MetersPerSecond.of(6.3).in(MetersPerSecond)); // 48.25 actual
 		hubTargetFlyWheelVeloMPS.put(Inches.of(110.5).in(Meters), MetersPerSecond.of(8.0).in(MetersPerSecond)); // 107.5 actual
 		hubTargetFlyWheelVeloMPS.put(Inches.of(125.2).in(Meters), MetersPerSecond.of(8.1).in(MetersPerSecond)); // 122.0 actual
-		hubTargetFlyWheelVeloMPS.put(Inches.of(138.0).in(Meters), MetersPerSecond.of(8.0).in(MetersPerSecond)); // 140.0 actual
-		hubTargetFlyWheelVeloMPS.put(Inches.of(178.1).in(Meters), MetersPerSecond.of(10.0).in(MetersPerSecond)); // 183.0 actual
+		hubTargetFlyWheelVeloMPS.put(Inches.of(141.0).in(Meters), MetersPerSecond.of(8.1).in(MetersPerSecond)); // 140.0 actual
+		hubTargetFlyWheelVeloMPS.put(Inches.of(182.5).in(Meters), MetersPerSecond.of(8.7).in(MetersPerSecond)); // 183.0 actual
 
 		// hubTargetFlyWheelVeloMPS.put(Inches.of(40.125).in(Meters),         MetersPerSecond.of(7.3).in(MetersPerSecond)); // Hub Shot
 		// hubTargetFlyWheelVeloMPS.put(Inches.of(90.0).in(Meters),          MetersPerSecond.of(7.899966).in(MetersPerSecond));
@@ -41,8 +41,8 @@ public class ShooterConstants {
 		hubTargetHoodAngleRads.put(Inches.of(52.0).in(Meters), Degrees.of(13.2).in(Radians)); // 48.25 actual
 		hubTargetHoodAngleRads.put(Inches.of(110.5).in(Meters), Degrees.of(20.0).in(Radians)); // 107.5 actual
 		hubTargetHoodAngleRads.put(Inches.of(125.2).in(Meters), Degrees.of(22.9).in(Radians)); // 122.0 actual
-		hubTargetHoodAngleRads.put(Inches.of(138.0).in(Meters), Degrees.of(30.0).in(Radians)); // 140.0 actual
-		hubTargetHoodAngleRads.put(Inches.of(178.1).in(Meters), Degrees.of(32.0).in(Radians)); // 183.0 actual
+		hubTargetHoodAngleRads.put(Inches.of(141.0).in(Meters), Degrees.of(24.1).in(Radians)); // 140.0 actual
+		hubTargetHoodAngleRads.put(Inches.of(182.5).in(Meters), Degrees.of(31.2).in(Radians)); // 183.0 actual
 
 		// hubTargetHoodAngleRads.put(Inches.of(40.125).in(Meters),        Degrees.of(12.0).in(Radians)); // Hub Shot
 		// hubTargetHoodAngleRads.put(Inches.of(90.0).in(Meters),         Degrees.of(19.918093).in(Radians));
