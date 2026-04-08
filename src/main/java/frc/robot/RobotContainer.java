@@ -83,6 +83,7 @@ import frc.robot.subsystems.rollers.indexer.IndexerIOTalonFX;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.aiming.AimingSystem;
 import frc.robot.subsystems.shooter.aiming.passing.InterpolationPassingCalc;
+import frc.robot.subsystems.shooter.aiming.shooting.InterpolationShootingCalc;
 import frc.robot.subsystems.shooter.aiming.shooting.PhysicsShootingCalc;
 import frc.robot.subsystems.shooter.flywheel.Flywheel;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
@@ -165,7 +166,7 @@ public class RobotContainer {
 					new Flywheel(new FlywheelIOTalonFX()),
 					new Hood(new HoodIOTalonFXS(commonCANdi)),
 					new AimingSystem(
-						new PhysicsShootingCalc(),
+						new InterpolationShootingCalc(),
 						new InterpolationPassingCalc()
 					)
 				);
@@ -907,7 +908,7 @@ public class RobotContainer {
 		final var intakeDoublePressThreshold = LoggedTunable.from("Controls/Intake/Double Press Threshold", Seconds::of, 0.25);
 		final var intakeDoublePressTimer = new Timer();
 		final var intakeHopperDumpEdge = new EdgeDetector(false);
-		// final var intakeHopperDumpSupplier = this.driveController.povUp();
+		final var intakeHopperDumpSupplier = this.driveController.povUp();
 		CommandScheduler.getInstance().getDefaultButtonLoop().bind(() -> {
 			if (this.driveController.hid.getAButtonPressed()) {
 				CommandScheduler.getInstance().schedule(intakeRollersIntakeCommand);
@@ -927,7 +928,7 @@ public class RobotContainer {
 				intakeDoublePressTimer.stop();
 				intakeDoublePressTimer.reset();
 			}
-			// intakeHopperDumpEdge.update(intakeHopperDumpSupplier.getAsBoolean());
+			intakeHopperDumpEdge.update(intakeHopperDumpSupplier.getAsBoolean());
 			if (intakeHopperDumpEdge.risingEdge()) {
 				CommandScheduler.getInstance().schedule(intakeHopperDump);
 			}
@@ -1001,32 +1002,32 @@ public class RobotContainer {
 
 		this.driveController.x().whileTrue(rollersForceFeedCommand);
 
-		final var flywheelStepper = Cooldown.incrementingStepper(
-			"FLYWHEEL STEPPER",
-			"FLYWHEEL STEPPER",
-			Seconds.of(0.0625),
-			MetersPerSecond.of(9.0),
-			MetersPerSecond.of(0.1),
-			MetersPerSecond,
-			this.driveController.povRight(),
-			this.driveController.povLeft()
-		);
-		final var hoodStepper = Cooldown.incrementingStepper(
-			"HOOD STEPPER",
-			"HOOD STEPPER",
-			Seconds.of(0.0625),
-			Degrees.of(12.0),
-			Degrees.of(0.1),
-			Radians,
-			this.driveController.povUp(),
-			this.driveController.povDown()
-		);
+		// final var flywheelStepper = Cooldown.incrementingStepper(
+		// 	"FLYWHEEL STEPPER",
+		// 	"FLYWHEEL STEPPER",
+		// 	Seconds.of(0.0625),
+		// 	MetersPerSecond.of(9.0),
+		// 	MetersPerSecond.of(0.1),
+		// 	MetersPerSecond,
+		// 	this.driveController.povRight(),
+		// 	this.driveController.povLeft()
+		// );
+		// final var hoodStepper = Cooldown.incrementingStepper(
+		// 	"HOOD STEPPER",
+		// 	"HOOD STEPPER",
+		// 	Seconds.of(0.0625),
+		// 	Degrees.of(12.0),
+		// 	Degrees.of(0.1),
+		// 	Radians,
+		// 	this.driveController.povUp(),
+		// 	this.driveController.povDown()
+		// );
 
-		this.driveController.start().toggleOnTrue(
-			Commands.parallel(
-				this.shooter.flywheel.genSurfaceVeloCommand("STEPPER", flywheelStepper::getAsDouble),
-				this.shooter.hood.genAngleCommand("STEPPER", hoodStepper::getAsDouble)
-			)
-		);
+		// this.driveController.start().toggleOnTrue(
+		// 	Commands.parallel(
+		// 		this.shooter.flywheel.genSurfaceVeloCommand("STEPPER", flywheelStepper::getAsDouble),
+		// 		this.shooter.hood.genAngleCommand("STEPPER", hoodStepper::getAsDouble)
+		// 	)
+		// );
 	}
 }
