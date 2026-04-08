@@ -100,7 +100,6 @@ import frc.robot.subsystems.vision.cameras.CameraIO;
 import frc.robot.subsystems.vision.cameras.CameraIOLimelight;
 import frc.robot.subsystems.vision.cameras.CameraIOPhoton;
 import frc.robot.subsystems.vision.object.ObjectVision;
-import frc.util.Cooldown;
 import frc.util.EdgeDetector;
 import frc.util.PIDGains;
 import frc.util.Perspective;
