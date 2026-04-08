@@ -48,7 +48,7 @@ public class AutoCommons {
 				),
 				Commands.deadline(
 					robot.rollers.untilNoBalls(noBallTimeout),
-					robot.rollers.feed().onlyWhile(() -> robot.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy(),
+					robot.rollers.feed().onlyWhile(() -> robot.shooter.withinShootingTolerance()).repeatedly().withName("Feed when ready").asProxy(),
 					robot.intake.slam.hopperAgitate(robot.extensionSystem).asProxy(),
 					robot.shooter.aimHoodAtHub().asProxy(),
 					robot.shooter.aimDriveAtHub(robot.drive.rotationalSubsystem).asProxy(),
@@ -58,7 +58,8 @@ public class AutoCommons {
 			robot.shooter.aimingSystem.aimAtHub(
 				FunctionalUtil.evalNow(traj.getFinalPose(false).get()),
 				FunctionalUtil.evalNow(new ChassisSpeeds()),
-				FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs())
+				FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs()),
+				false
 			).asProxy(),
 			robot.shooter.aimFlywheelAtHub().asProxy()
 		);

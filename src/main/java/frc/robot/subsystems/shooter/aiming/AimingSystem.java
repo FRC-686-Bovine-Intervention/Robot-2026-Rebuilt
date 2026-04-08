@@ -2,6 +2,8 @@ package frc.robot.subsystems.shooter.aiming;
 
 import java.util.function.Supplier;
 
+import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -9,10 +11,14 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.shooter.aiming.passing.PassingCalc;
 import frc.robot.subsystems.shooter.aiming.shooting.ShootingCalc;
+import lombok.Getter;
 
 public class AimingSystem extends SubsystemBase {
 	public final ShootingCalc shootingCalc;
 	public final PassingCalc passingCalc;
+
+	@Getter
+	private boolean autoFeedEnabled = false;
 
 	public AimingSystem(ShootingCalc shootingCalc, PassingCalc passingCalc) {
 		super("Shooter/Aiming");
@@ -21,7 +27,12 @@ public class AimingSystem extends SubsystemBase {
 		this.passingCalc = passingCalc;
 	}
 
-	public Command aimAtHub(Supplier<Pose2d> robotPoseSupplier, Supplier<ChassisSpeeds> fieldSpeedsSupplier, Supplier<Translation3d> aimPointSupplier) {
+	private void setAutoFeedEnabled(boolean enabled) {
+		this.autoFeedEnabled = enabled;
+		Logger.recordOutput("Subsystems/Shooter/Aiming/Auto Feed Enabled", this.autoFeedEnabled);
+	}
+
+	public Command aimAtHub(Supplier<Pose2d> robotPoseSupplier, Supplier<ChassisSpeeds> fieldSpeedsSupplier, Supplier<Translation3d> aimPointSupplier, boolean autoFeedEnabled) {
 		final var aimingSystem = this;
 		return new Command() {
 			{
@@ -36,6 +47,7 @@ public class AimingSystem extends SubsystemBase {
 					fieldSpeedsSupplier.get(),
 					aimPointSupplier.get()
 				);
+				aimingSystem.setAutoFeedEnabled(autoFeedEnabled);
 			}
 
 			@Override
@@ -50,7 +62,7 @@ public class AimingSystem extends SubsystemBase {
 		};
 	}
 
-	public Command aimToPass(Supplier<Pose2d> robotPoseSupplier, Supplier<ChassisSpeeds> fieldSpeedsSupplier, Supplier<Translation3d> aimPointSupplier) {
+	public Command aimToPass(Supplier<Pose2d> robotPoseSupplier, Supplier<ChassisSpeeds> fieldSpeedsSupplier, Supplier<Translation3d> aimPointSupplier, boolean autoFeedEnabled) {
 		final var aimingSystem = this;
 		return new Command() {
 			{
@@ -65,6 +77,7 @@ public class AimingSystem extends SubsystemBase {
 					fieldSpeedsSupplier.get(),
 					aimPointSupplier.get()
 				);
+				aimingSystem.setAutoFeedEnabled(autoFeedEnabled);
 			}
 
 			@Override

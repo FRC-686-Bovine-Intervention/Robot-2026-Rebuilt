@@ -567,7 +567,7 @@ public class RobotContainer {
 					0.0
 				)
 			);
-			private static final LoggedTunable<Angle> angularThreshold = LoggedTunable.from("Controls/Flick Stick/Threshold", Degrees::of, 0.0);
+			private static final LoggedTunable<Angle> angularThreshold = LoggedTunable.from("Controls/Flick Stick/Threshold", Degrees::of, 2.0);
 			private static final LoggedTunable<Time> preciseTimeThreshold = LoggedTunable.from("Controls/Flick Stick/Precise Time", Seconds::of, 0.5);
 
 			private static final AllianceFlipped<Rotation2d[]> snapPoints;
@@ -760,7 +760,8 @@ public class RobotContainer {
 				this.shooter.aimingSystem.aimAtHub(
 					RobotState.getInstance()::getEstimatedGlobalPose,
 					this.drive::getFieldMeasuredSpeeds,
-					FieldConstants.hubAimPoint::getOurs
+					FieldConstants.hubAimPoint::getOurs,
+					true
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
@@ -773,7 +774,8 @@ public class RobotContainer {
 				this.shooter.aimingSystem.aimAtHub(
 					FieldConstants.hubIntakeFrontRobotPose::getOurs,
 					FunctionalUtil.evalNow(new ChassisSpeeds()),
-					FieldConstants.hubAimPoint::getOurs
+					FieldConstants.hubAimPoint::getOurs,
+					false
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
@@ -786,7 +788,8 @@ public class RobotContainer {
 				this.shooter.aimingSystem.aimAtHub(
 					FieldConstants.leftTrenchPresetShotPose::getOurs,
 					FunctionalUtil.evalNow(new ChassisSpeeds()),
-					FieldConstants.hubAimPoint::getOurs
+					FieldConstants.hubAimPoint::getOurs,
+					false
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
@@ -799,7 +802,8 @@ public class RobotContainer {
 				this.shooter.aimingSystem.aimAtHub(
 					FieldConstants.rightTrenchPresetShotPose::getOurs,
 					FunctionalUtil.evalNow(new ChassisSpeeds()),
-					FieldConstants.hubAimPoint::getOurs
+					FieldConstants.hubAimPoint::getOurs,
+					false
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
@@ -812,7 +816,8 @@ public class RobotContainer {
 				this.shooter.aimingSystem.aimAtHub(
 					FieldConstants.towerPresetShotPose::getOurs,
 					FunctionalUtil.evalNow(new ChassisSpeeds()),
-					FieldConstants.hubAimPoint::getOurs
+					FieldConstants.hubAimPoint::getOurs,
+					false
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
@@ -831,7 +836,8 @@ public class RobotContainer {
 						} else {
 							return FieldConstants.botPassPoint.getOurs();
 						}
-					}
+					},
+					true
 				).repeatedly(),
 				this.shooter.aimFlywheelToPass(),
 				this.shooter.aimHoodToPass(),
@@ -870,7 +876,7 @@ public class RobotContainer {
 		// this.automationsLoop.bind(new HookAutoDeployHysteresis(this.climber.hook, climberHookAutoDeployCommand));
 		// this.automationsLoop.bind(new AutoSpinUp(this.drive, this.shooter, intakeRollersIntakeCommand));
 		// this.automationsLoop.bind(new AutoDriveAim(this.drive, this.shooter, intakeRollersIntakeCommand));
-		this.automationsLoop.bind(new AutoFeed(this.drive, this.shooter, this.rollers, this.intake.slam, this.extensionSystem, this.driveController.y().or(secondDriverOverride)));
+		this.automationsLoop.bind(new AutoFeed(this.shooter, this.rollers, this.driveController.y().or(secondDriverOverride), aimToPassCommand::isScheduled));
 		this.automationsLoop.bind(new HubShiftNotifications(this.driveController));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		// new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
