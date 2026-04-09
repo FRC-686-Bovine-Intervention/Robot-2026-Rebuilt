@@ -19,8 +19,8 @@ public class InterpolationPassingCalc implements PassingCalc {
 	// private static final LoggedTunable<Distance> altitudeDegsTolerance = LoggedTunable.from("Subsystems/Shooter/Aiming/Tolerance/Altitude", Centimeters::of, 46);
 	// private static final LoggedTunable<Angle> customAzimuthOffset = LoggedTunable.from("Subsystems/Shooter/Aiming/Custom Azimuth Offset", Radians::of, 0.0);
 
-	private Translation3d aimPoint;
-	private Translation2d shotPose;
+	private Translation3d aimPoint = Translation3d.kZero;
+	private Translation2d shotPose = Translation2d.kZero;
 	// private ChassisSpeeds shotSpeeds;
 	private double effectiveDistanceMeters;
 	private double targetHoodAngleRads;

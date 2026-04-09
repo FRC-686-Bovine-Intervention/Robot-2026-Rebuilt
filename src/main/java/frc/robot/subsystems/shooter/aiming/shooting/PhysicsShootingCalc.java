@@ -21,8 +21,8 @@ public class PhysicsShootingCalc implements ShootingCalc {
 	private double hoodAngleRads;
 	private double flywheelSpeedMS;
 	private double robotRotationRads;
-	private Translation3d aimPoint;
-	private Translation2d shotPose;
+	private Translation3d aimPoint = Translation3d.kZero;
+	private Translation2d shotPose = Translation2d.kZero;
 	private double tofSeconds;
 
 	private static final LoggedTunable<Distance> distanceOffset = LoggedTunable.from("Shooting/Aiming/Distance Offset", Inches::of, 0.0);
