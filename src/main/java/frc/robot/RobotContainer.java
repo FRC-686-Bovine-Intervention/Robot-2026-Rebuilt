@@ -47,6 +47,7 @@ import frc.robot.auto.routines.ScoreFuel;
 import frc.robot.automations.AutoFeed;
 import frc.robot.automations.HubShiftNotifications;
 import frc.robot.automations.IntakeDeployHysteresis;
+import frc.robot.automations.PassivePrestage;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.ExtensionSystem;
@@ -407,10 +408,10 @@ public class RobotContainer {
 
 		final var autoSelector = new AutoSelector("Auto Selector");
 		// Add autonomous routines to autonomous selector
-		autoSelector.addDefaultRoutine(new DoubleSwipe(this));
+		autoSelector.addDefaultRoutine(new ScoreFuel(this));
+		autoSelector.addRoutine(new DoubleSwipe(this));
 		autoSelector.addRoutine(new ResetPosition());
 		autoSelector.addRoutine(new Preloads(this));
-		autoSelector.addRoutine(new ScoreFuel(this));
 
 		this.autoManager = new AutoManager(autoSelector);
 
@@ -750,10 +751,15 @@ public class RobotContainer {
 		final var rollersIndexerIdleCommand = this.rollers.indexer.idle();
 		final var rollersFeederIdleCommand = this.rollers.feeder.idle();
 		final var rollersForceFeedCommand = this.rollers.feed().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("Force Feed");
-		final var rollersPassivePrestageCommand = this.rollers.passivePrestage();
+		final var rollersPassivePrestageCommand = this.rollers.passivePrestage().until(this.rollers::isFeederSensorTripped).withName("Passive Prestage");
 
 		final var flywheelIdleCommand = this.shooter.flywheel.idle();
 		final var hoodStowCommand = this.shooter.hood.stow();
+
+		final var ejectCommand = Commands.parallel(
+			this.rollers.eject(),
+			this.intake.rollers.eject()
+		).withName("Eject");
 
 		final var aimAtHubCommand =
 			Commands.parallel(
@@ -877,6 +883,7 @@ public class RobotContainer {
 		// this.automationsLoop.bind(new AutoSpinUp(this.drive, this.shooter, intakeRollersIntakeCommand));
 		// this.automationsLoop.bind(new AutoDriveAim(this.drive, this.shooter, intakeRollersIntakeCommand));
 		this.automationsLoop.bind(new AutoFeed(this.shooter, this.rollers, this.driveController.y().or(secondDriverOverride), aimToPassCommand::isScheduled));
+		this.automationsLoop.bind(new PassivePrestage(this.rollers, rollersFeederIdleCommand, rollersPassivePrestageCommand));
 		this.automationsLoop.bind(new HubShiftNotifications(this.driveController));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		// new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
@@ -1005,6 +1012,7 @@ public class RobotContainer {
 			}
 		});
 
+		this.driveController.b().whileTrue(ejectCommand);
 		this.driveController.x().whileTrue(rollersForceFeedCommand);
 
 		// final var flywheelStepper = Cooldown.incrementingStepper(

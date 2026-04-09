@@ -40,6 +40,16 @@ public class Rollers extends VirtualSubsystem {
 		;
 	}
 
+	public Command eject() {
+		return
+			Commands.parallel(
+				this.indexer.eject(),
+				this.feeder.eject()
+			)
+			.withName("Eject")
+		;
+	}
+
 	public Command passivePrestage() {
 		return
 			Commands.parallel(

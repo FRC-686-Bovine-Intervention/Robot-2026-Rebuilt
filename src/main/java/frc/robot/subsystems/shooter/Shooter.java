@@ -35,7 +35,7 @@ public class Shooter {
 	public final Hood hood;
 	public final AimingSystem aimingSystem;
 
-	private static final LoggedTunable<LinearVelocity>  shooterTolerance = LoggedTunable.from("Shooting/Aiming/Tolerances/Shooter", MetersPerSecond::of, 1.5);
+	private static final LoggedTunable<LinearVelocity>  shooterTolerance = LoggedTunable.from("Shooting/Aiming/Tolerances/Shooter", MetersPerSecond::of, 0.5);
 	private static final LoggedTunable<Distance>        azimuthTolerance = LoggedTunable.from("Shooting/Aiming/Tolerances/Azimuth", Inches::of, 6.0);
 	private static final LoggedTunable<Distance>    translationTolerance = LoggedTunable.from("Shooting/Aiming/Tolerances/Translation", Inches::of, 4.0);
 
@@ -87,7 +87,7 @@ public class Shooter {
 
 				var translationalVelo = desiredVeloSupplier.get();
 
-				if (Math.hypot(translationalVelo.vxMetersPerSecond, translationalVelo.vyMetersPerSecond) >= 0.1 || Math.abs(pidOut) >= 0.02) {
+				if (Math.hypot(translationalVelo.vxMetersPerSecond, translationalVelo.vyMetersPerSecond) >= 0.1 || Math.abs(pidOut) >= 0.15) {
 					drive.runRobotSpeeds(
 						translationalVelo.vxMetersPerSecond,
 						translationalVelo.vyMetersPerSecond,
