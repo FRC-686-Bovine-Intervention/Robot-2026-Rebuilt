@@ -35,7 +35,7 @@ public class Shooter {
 	public final Hood hood;
 	public final AimingSystem aimingSystem;
 
-	private static final LoggedTunable<LinearVelocity>  shooterTolerance = LoggedTunable.from("Shooting/Aiming/Tolerances/Shooter", MetersPerSecond::of, 0.5);
+	private static final LoggedTunable<LinearVelocity>  shooterTolerance = LoggedTunable.from("Shooting/Aiming/Tolerances/Shooter", MetersPerSecond::of, 1.0);
 	private static final LoggedTunable<Distance>        azimuthTolerance = LoggedTunable.from("Shooting/Aiming/Tolerances/Azimuth", Inches::of, 6.0);
 	private static final LoggedTunable<Distance>    translationTolerance = LoggedTunable.from("Shooting/Aiming/Tolerances/Translation", Inches::of, 4.0);
 

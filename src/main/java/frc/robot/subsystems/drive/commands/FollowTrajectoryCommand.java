@@ -29,13 +29,13 @@ public class FollowTrajectoryCommand extends Command {
 		0.0,
 		0.0
 	));
-	private static final LoggedTunable<PIDGains> CATCHUP_TRANS_PID_GAINS = LoggedTunable.from("Drive/Trajectory Following/Catchup PIDs/Trans PID", new PIDGains(
-		6.0,
+	private static final LoggedTunable<PIDGains> FOLLOWING_ROT_PID_GAINS = LoggedTunable.from("Drive/Trajectory Following/Following PIDs/Rot PID", new PIDGains(
+		3.5,
 		0.0,
 		0.0
 	));
-	private static final LoggedTunable<PIDGains> FOLLOWING_ROT_PID_GAINS = LoggedTunable.from("Drive/Trajectory Following/Following PIDs/Rot PID", new PIDGains(
-		3.5,
+	private static final LoggedTunable<PIDGains> CATCHUP_TRANS_PID_GAINS = LoggedTunable.from("Drive/Trajectory Following/Catchup PIDs/Trans PID", new PIDGains(
+		8.0,
 		0.0,
 		0.0
 	));
