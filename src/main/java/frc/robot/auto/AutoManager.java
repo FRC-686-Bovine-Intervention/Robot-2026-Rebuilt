@@ -49,8 +49,8 @@ public class AutoManager extends VirtualSubsystem {
 
 	public static Command generateAutoCommand(AutoRoutine routine, double initialDelaySeconds) {
 		return new Command() {
-			private final Command autoCommand = routine.generateCommand();
 			private final Timer autoTimer = new Timer();
+			private final Command autoCommand = routine.generateCommand(() -> this.autoTimer.get());
 			private double autoFinishTime = 0.0;
 			private boolean autoCommandRunning = false;
 			private boolean autoCommandFinished = false;

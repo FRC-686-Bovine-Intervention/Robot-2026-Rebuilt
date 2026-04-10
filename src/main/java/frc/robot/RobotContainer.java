@@ -19,10 +19,12 @@ import java.util.function.Supplier;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -45,6 +47,7 @@ import frc.robot.auto.routines.ScoreFuel;
 import frc.robot.automations.AutoFeed;
 import frc.robot.automations.HubShiftNotifications;
 import frc.robot.automations.IntakeDeployHysteresis;
+import frc.robot.automations.PassivePrestage;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.ExtensionSystem;
@@ -72,9 +75,6 @@ import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.rollers.RollerSensorsIO;
 import frc.robot.subsystems.rollers.RollerSensorsIOCANdi;
 import frc.robot.subsystems.rollers.Rollers;
-import frc.robot.subsystems.rollers.agitator.Agitator;
-import frc.robot.subsystems.rollers.agitator.AgitatorIO;
-import frc.robot.subsystems.rollers.agitator.AgitatorIOTalonFX;
 import frc.robot.subsystems.rollers.feeder.Feeder;
 import frc.robot.subsystems.rollers.feeder.FeederIO;
 import frc.robot.subsystems.rollers.feeder.FeederIOTalonFX;
@@ -105,6 +105,8 @@ import frc.util.EdgeDetector;
 import frc.util.PIDGains;
 import frc.util.Perspective;
 import frc.util.controllers.XboxController;
+import frc.util.flipping.AllianceFlipUtil;
+import frc.util.flipping.AllianceFlipped;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.loggerUtil.tunables.LoggedTunableNumber;
 import frc.util.misc.FunctionalUtil;
@@ -139,7 +141,7 @@ public class RobotContainer {
 	// Controllers
 	private final XboxController driveController = new XboxController(0, "Drive Controller");
 	private final Joystick secondDriverJoystick = new Joystick(1);
-	private final Trigger secondDriverOverride = new Trigger(() -> secondDriverJoystick.button(0, CommandScheduler.getInstance().getDefaultButtonLoop()).getAsBoolean());
+	private final Trigger secondDriverOverride = new Trigger(() -> secondDriverJoystick.button(1, CommandScheduler.getInstance().getDefaultButtonLoop()).getAsBoolean());
 
 	@SuppressWarnings("unused")
 	private final CommandJoystick simJoystick = new CommandJoystick(5);
@@ -174,7 +176,6 @@ public class RobotContainer {
 				);
 				this.rollers = new Rollers(
 					new Indexer(new IndexerIOTalonFX()),
-					new Agitator(new AgitatorIOTalonFX()),
 					new Feeder(new FeederIOTalonFX()),
 					new RollerSensorsIOCANdi(commonCANdi)
 				);
@@ -245,7 +246,6 @@ public class RobotContainer {
 				);
 				this.rollers = new Rollers(
 					new Indexer(new IndexerIO() {}),
-					new Agitator(new AgitatorIO() {}),
 					new Feeder(new FeederIO() {}),
 					new RollerSensorsIOCANdi(commonCANdi)
 				);
@@ -315,7 +315,6 @@ public class RobotContainer {
 				);
 				this.rollers = new Rollers(
 					new Indexer(new IndexerIO() {}),
-					new Agitator(new AgitatorIO() {}),
 					new Feeder(new FeederIO() {}),
 					new RollerSensorsIO() {}
 				);
@@ -409,10 +408,10 @@ public class RobotContainer {
 
 		final var autoSelector = new AutoSelector("Auto Selector");
 		// Add autonomous routines to autonomous selector
-		autoSelector.addDefaultRoutine(new DoubleSwipe(this));
+		autoSelector.addDefaultRoutine(new ScoreFuel(this));
+		autoSelector.addRoutine(new DoubleSwipe(this));
 		autoSelector.addRoutine(new ResetPosition());
 		autoSelector.addRoutine(new Preloads(this));
-		autoSelector.addRoutine(new ScoreFuel(this));
 
 		this.autoManager = new AutoManager(autoSelector);
 
@@ -509,6 +508,9 @@ public class RobotContainer {
 			.smoothDeadband(0.01)
 			.sensitivity(0.75)
 		;
+		final var flickJoystick = this.driveController.rightStick
+			.roughRadialDeadband(0.75)
+		;
 		final var driveTranslationCommand = new Command() {
 			{
 				this.setName("Driver Controlled");
@@ -555,6 +557,104 @@ public class RobotContainer {
 			@Override
 			public void end(boolean interrupted) {
 				drive.rotationalSubsystem.stop();
+			}
+		};
+		final var driveFlickStick = new Command() {
+			private static final LoggedTunable<PIDGains> pidGains = LoggedTunable.from(
+				"Controls/Flick Stick/PID",
+				new PIDGains(
+					5.0,
+					0.0,
+					0.0
+				)
+			);
+			private static final LoggedTunable<Angle> angularThreshold = LoggedTunable.from("Controls/Flick Stick/Threshold", Degrees::of, 2.0);
+			private static final LoggedTunable<Time> preciseTimeThreshold = LoggedTunable.from("Controls/Flick Stick/Precise Time", Seconds::of, 0.5);
+
+			private static final AllianceFlipped<Rotation2d[]> snapPoints;
+			static {
+				final var blueArray = new Rotation2d[] {
+					Rotation2d.kZero,
+					Rotation2d.kCCW_90deg,
+					Rotation2d.k180deg,
+					Rotation2d.kCW_90deg,
+				};
+				final var redArray = new Rotation2d[blueArray.length];
+				for (int i = 0; i < blueArray.length; i++) {
+					redArray[i] = AllianceFlipUtil.flip(blueArray[i]);
+				}
+				snapPoints = new AllianceFlipped<>(blueArray, redArray);
+			}
+
+			private final PIDController pid = pidGains.get().update(new PIDController(0.0, 0.0, 0.0));
+			private final Timer preciseTimer = new Timer();
+
+			private double targetHeadingRads = 0.0;
+
+			{
+				this.setName("Flick Stick");
+				this.addRequirements(drive.rotationalSubsystem);
+
+				this.pid.enableContinuousInput(-Math.PI, Math.PI);
+			}
+
+			@Override
+			public void initialize() {
+				this.execute();
+			}
+
+			@Override
+			public void execute() {
+				if (flickJoystick.magnitude() > 0.0) {
+					var flickRads = flickJoystick.radsFromPosYCCW();
+					var flickX = Math.cos(flickRads);
+					var flickY = Math.sin(flickRads);
+
+					var perspectiveForward = Perspective.getCurrent().getForwardDirection();
+					var fieldX = flickX * perspectiveForward.getCos() - flickY * perspectiveForward.getSin();
+					var fieldY = flickX * perspectiveForward.getSin() + flickY * perspectiveForward.getCos();
+
+					this.preciseTimer.start();
+					if (this.preciseTimer.hasElapsed(preciseTimeThreshold.get().in(Seconds))) {
+						this.targetHeadingRads = Math.atan2(fieldY, fieldX);
+					} else {
+						var ourSnapPoints = snapPoints.getOurs();
+						Rotation2d closestSnapPoint = null;
+						var closestDot = Double.NEGATIVE_INFINITY;
+						for (int i = 0; i < ourSnapPoints.length; i++) {
+							var snapPoint = ourSnapPoints[i];
+							var dot = fieldX * snapPoint.getCos() + fieldY * snapPoint.getSin();
+							if (dot >= closestDot) {
+								closestDot = dot;
+								closestSnapPoint = snapPoint;
+							}
+						}
+						this.targetHeadingRads = closestSnapPoint.getRadians();
+					}
+				} else {
+					this.preciseTimer.stop();
+					this.preciseTimer.reset();
+				}
+
+				var pidOut = this.pid.calculate(RobotState.getInstance().getEstimatedGlobalPose().getRotation().getRadians(), this.targetHeadingRads);
+				drive.rotationalSubsystem.driveVelocity(pidOut);
+			}
+
+			@Override
+			public void end(boolean interrupted) {
+				drive.rotationalSubsystem.stop();
+				this.preciseTimer.stop();
+				this.preciseTimer.reset();
+			}
+
+			@Override
+			public boolean isFinished() {
+				var robotRot = RobotState.getInstance().getEstimatedGlobalPose().getRotation();
+				var targetHeadingX = Math.cos(this.targetHeadingRads);
+				var targetHeadingY = Math.sin(this.targetHeadingRads);
+				var dot = robotRot.getCos() * targetHeadingX + robotRot.getSin() * targetHeadingY;
+				var thresholdDot = Math.cos(angularThreshold.get().in(Radians));
+				return flickJoystick.magnitude() <= 0.0 && dot >= thresholdDot;
 			}
 		};
 
@@ -650,25 +750,24 @@ public class RobotContainer {
 
 		final var rollersIndexerIdleCommand = this.rollers.indexer.idle();
 		final var rollersFeederIdleCommand = this.rollers.feeder.idle();
-		final var rollersAgitatorIdleCommand = this.rollers.agitator.idle();
-		final var rollersFeedCommand =
-			Commands.parallel(
-				this.rollers.indexer.index(),
-				this.rollers.feeder.feed(),
-				this.rollers.agitator.index()
-			)
-			.withName("Feed")
-		;
+		final var rollersForceFeedCommand = this.rollers.feed().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("Force Feed");
+		final var rollersPassivePrestageCommand = this.rollers.passivePrestage().until(this.rollers::isFeederSensorTripped).withName("Passive Prestage");
 
 		final var flywheelIdleCommand = this.shooter.flywheel.idle();
 		final var hoodStowCommand = this.shooter.hood.stow();
+
+		final var ejectCommand = Commands.parallel(
+			this.rollers.eject(),
+			this.intake.rollers.eject()
+		).withName("Eject");
 
 		final var aimAtHubCommand =
 			Commands.parallel(
 				this.shooter.aimingSystem.aimAtHub(
 					RobotState.getInstance()::getEstimatedGlobalPose,
 					this.drive::getFieldMeasuredSpeeds,
-					FieldConstants.hubAimPoint::getOurs
+					FieldConstants.hubAimPoint::getOurs,
+					true
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
@@ -681,7 +780,8 @@ public class RobotContainer {
 				this.shooter.aimingSystem.aimAtHub(
 					FieldConstants.hubIntakeFrontRobotPose::getOurs,
 					FunctionalUtil.evalNow(new ChassisSpeeds()),
-					FieldConstants.hubAimPoint::getOurs
+					FieldConstants.hubAimPoint::getOurs,
+					false
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
@@ -694,7 +794,8 @@ public class RobotContainer {
 				this.shooter.aimingSystem.aimAtHub(
 					FieldConstants.leftTrenchPresetShotPose::getOurs,
 					FunctionalUtil.evalNow(new ChassisSpeeds()),
-					FieldConstants.hubAimPoint::getOurs
+					FieldConstants.hubAimPoint::getOurs,
+					false
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
@@ -707,7 +808,8 @@ public class RobotContainer {
 				this.shooter.aimingSystem.aimAtHub(
 					FieldConstants.rightTrenchPresetShotPose::getOurs,
 					FunctionalUtil.evalNow(new ChassisSpeeds()),
-					FieldConstants.hubAimPoint::getOurs
+					FieldConstants.hubAimPoint::getOurs,
+					false
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
@@ -720,7 +822,8 @@ public class RobotContainer {
 				this.shooter.aimingSystem.aimAtHub(
 					FieldConstants.towerPresetShotPose::getOurs,
 					FunctionalUtil.evalNow(new ChassisSpeeds()),
-					FieldConstants.hubAimPoint::getOurs
+					FieldConstants.hubAimPoint::getOurs,
+					false
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
@@ -739,7 +842,8 @@ public class RobotContainer {
 						} else {
 							return FieldConstants.botPassPoint.getOurs();
 						}
-					}
+					},
+					true
 				).repeatedly(),
 				this.shooter.aimFlywheelToPass(),
 				this.shooter.aimHoodToPass(),
@@ -759,7 +863,6 @@ public class RobotContainer {
 
 		this.rollers.indexer.setDefaultCommand(rollersIndexerIdleCommand);
 		this.rollers.feeder.setDefaultCommand(rollersFeederIdleCommand);
-		this.rollers.agitator.setDefaultCommand(rollersAgitatorIdleCommand);
 
 		this.shooter.hood.setDefaultCommand(hoodStowCommand);
 		this.shooter.flywheel.setDefaultCommand(flywheelIdleCommand);
@@ -779,7 +882,8 @@ public class RobotContainer {
 		// this.automationsLoop.bind(new HookAutoDeployHysteresis(this.climber.hook, climberHookAutoDeployCommand));
 		// this.automationsLoop.bind(new AutoSpinUp(this.drive, this.shooter, intakeRollersIntakeCommand));
 		// this.automationsLoop.bind(new AutoDriveAim(this.drive, this.shooter, intakeRollersIntakeCommand));
-		this.automationsLoop.bind(new AutoFeed(this.drive, this.shooter, this.rollers, this.intake.slam, this.extensionSystem, this.driveController.y().or(secondDriverOverride)));
+		this.automationsLoop.bind(new AutoFeed(this.shooter, this.rollers, this.driveController.y().or(secondDriverOverride), aimToPassCommand::isScheduled));
+		this.automationsLoop.bind(new PassivePrestage(this.rollers, rollersFeederIdleCommand, rollersPassivePrestageCommand));
 		this.automationsLoop.bind(new HubShiftNotifications(this.driveController));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		// new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
@@ -891,6 +995,52 @@ public class RobotContainer {
 			}
 		});
 
-		this.driveController.x().whileTrue(this.rollers.feed().withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("Force Feed"));
+		final var flickStickTrigger = new EdgeDetector(false);
+
+		CommandScheduler.getInstance().getDefaultButtonLoop().bind(() -> {
+			flickStickTrigger.update(flickJoystick.magnitude() > 0.0);
+			if (
+				flickStickTrigger.risingEdge()
+				&& !driveFlickStick.isScheduled()
+				&& !aimAtHubCommand.isScheduled()
+				&& !aimAtHubFromHubFrontCommand.isScheduled()
+				&& !aimAtHubFromLeftTrenchCommand.isScheduled()
+				&& !aimAtHubFromRightTrenchCommand.isScheduled()
+				&& !aimAtHubFromTowerCommand.isScheduled()
+			) {
+				CommandScheduler.getInstance().schedule(driveFlickStick);
+			}
+		});
+
+		this.driveController.b().whileTrue(ejectCommand);
+		this.driveController.x().whileTrue(rollersForceFeedCommand);
+
+		// final var flywheelStepper = Cooldown.incrementingStepper(
+		// 	"FLYWHEEL STEPPER",
+		// 	"FLYWHEEL STEPPER",
+		// 	Seconds.of(0.0625),
+		// 	MetersPerSecond.of(9.0),
+		// 	MetersPerSecond.of(0.1),
+		// 	MetersPerSecond,
+		// 	this.driveController.povRight(),
+		// 	this.driveController.povLeft()
+		// );
+		// final var hoodStepper = Cooldown.incrementingStepper(
+		// 	"HOOD STEPPER",
+		// 	"HOOD STEPPER",
+		// 	Seconds.of(0.0625),
+		// 	Degrees.of(12.0),
+		// 	Degrees.of(0.1),
+		// 	Radians,
+		// 	this.driveController.povUp(),
+		// 	this.driveController.povDown()
+		// );
+
+		// this.driveController.start().toggleOnTrue(
+		// 	Commands.parallel(
+		// 		this.shooter.flywheel.genSurfaceVeloCommand("STEPPER", flywheelStepper::getAsDouble),
+		// 		this.shooter.hood.genAngleCommand("STEPPER", hoodStepper::getAsDouble)
+		// 	)
+		// );
 	}
 }

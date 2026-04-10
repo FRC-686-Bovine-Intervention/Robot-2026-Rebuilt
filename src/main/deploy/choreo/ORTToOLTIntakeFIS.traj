@@ -53,10 +53,10 @@
     {"from":5, "to":6, "data":{"type":"KeepInLane", "props":{"tolerance":{"exp":"0.01 m", "val":0.01}}}, "enabled":true},
     {"from":7, "to":7, "data":{"type":"PointAt", "props":{"x":{"exp":"4.62534 m", "val":4.62534}, "y":{"exp":"4.03479 m", "val":4.03479}, "tolerance":{"exp":"1 deg", "val":0.017453292519943295}, "flip":false}}, "enabled":true},
     {"from":5, "to":6, "data":{"type":"MaxAngularVelocity", "props":{"max":{"exp":"0 rad / s", "val":0.0}}}, "enabled":true},
-    {"from":"first", "to":"last", "data":{"type":"MaxVelocity", "props":{"max":{"exp":"GlobalMaxLinVelo", "val":4.0}}}, "enabled":true},
-    {"from":"first", "to":"last", "data":{"type":"MaxAcceleration", "props":{"max":{"exp":"GlobalMaxLinAccel", "val":8.0}}}, "enabled":true},
+    {"from":"first", "to":"last", "data":{"type":"MaxVelocity", "props":{"max":{"exp":"GlobalMaxLinVelo", "val":5.0}}}, "enabled":true},
+    {"from":"first", "to":"last", "data":{"type":"MaxAcceleration", "props":{"max":{"exp":"GlobalMaxLinAccel", "val":10.0}}}, "enabled":true},
     {"from":"first", "to":"last", "data":{"type":"MaxAngularVelocity", "props":{"max":{"exp":"GlobalMaxAngVelo", "val":37.69911184307752}}}, "enabled":true},
-    {"from":3, "to":4, "data":{"type":"MaxVelocity", "props":{"max":{"exp":"IntakeMaxVelo", "val":3.0}}}, "enabled":true}],
+    {"from":3, "to":4, "data":{"type":"MaxVelocity", "props":{"max":{"exp":"IntakeMaxVelo", "val":4.0}}}, "enabled":true}],
   "targetDt":{
    "exp":"0.05 s",
    "val":0.05

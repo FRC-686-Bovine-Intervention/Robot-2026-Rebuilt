@@ -49,10 +49,9 @@ public class HardwareDevices {
 	// Rollers
 	// | Indexer
 	public static final CANDevice indexerMotorID = rio.id(8);
-	// | Agitator
-	public static final CANDevice agitatorMotorID = rio.id(9);
 	// | Feeder
-	public static final CANDevice feederMotorID = rio.id(10);
+	public static final CANDevice leftFeederMotorID = rio.id(10);
+	public static final CANDevice rightFeederMotorID = rio.id(9);
 
 	// Shooter
 	// | Hood

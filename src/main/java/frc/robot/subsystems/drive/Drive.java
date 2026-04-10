@@ -738,7 +738,7 @@ public class Drive extends VirtualSubsystem {
 			return Commands.runEnd(() -> driveVelocity(omega.getAsDouble()), this::stop, this);
 		}
 
-		public Command genHeadingPIDCommand(String name, LoggedTunable<PIDGains> pidGains, DoubleSupplier measuredHeadingRadsSupplier, DoubleSupplier targetHeadingRadsSupplier) {
+		public Command genHeadingPIDCommand(String name, LoggedTunable<PIDGains> pidGains, DoubleSupplier maxOmegaRadsPerSec, DoubleSupplier measuredHeadingRadsSupplier, DoubleSupplier targetHeadingRadsSupplier) {
 			final var rotational = this;
 			return new Command() {
 				private final PIDController pid = new PIDController(pidGains.get().kP(), pidGains.get().kI(), pidGains.get().kD());
@@ -761,7 +761,9 @@ public class Drive extends VirtualSubsystem {
 				public void execute() {
 					var measuredHeadingRads = measuredHeadingRadsSupplier.getAsDouble();
 					var targetHeadingRads = targetHeadingRadsSupplier.getAsDouble();
-					rotational.driveVelocity(this.pid.calculate(measuredHeadingRads, targetHeadingRads));
+					var pidOut = this.pid.calculate(measuredHeadingRads, targetHeadingRads);
+					var maxOmega = maxOmegaRadsPerSec.getAsDouble();
+					rotational.driveVelocity(MathUtil.clamp(pidOut, -maxOmega, +maxOmega));
 				}
 
 				@Override

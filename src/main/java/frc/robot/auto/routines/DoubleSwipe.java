@@ -2,6 +2,7 @@ package frc.robot.auto.routines;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -18,8 +19,8 @@ import frc.util.misc.FunctionalUtil;
 
 public class DoubleSwipe extends AutoRoutine {
 	private static final AutoQuestion<AllianceFlipped<Pose2d>> startPosition = new AutoQuestion<>("Start Position") {
-		private final Map.Entry<String, AllianceFlipped<Pose2d>> startInLeftTrench = AutoQuestion.Settings.option("In L Trench", AutoConstants.startInsideLeftTrench);
-		private final Map.Entry<String, AllianceFlipped<Pose2d>> startInRightTrench = AutoQuestion.Settings.option("In R Trench", AutoConstants.startInsideRightTrench);
+		private final Map.Entry<String, AllianceFlipped<Pose2d>> startInLeftTrench = AutoQuestion.Settings.option("In L Trench", AutoConstants.startInsideLeftTrenchDS);
+		private final Map.Entry<String, AllianceFlipped<Pose2d>> startInRightTrench = AutoQuestion.Settings.option("In R Trench", AutoConstants.startInsideRightTrenchDS);
 
 		@Override
 		protected AutoQuestion.Settings<AllianceFlipped<Pose2d>> generateSettings() {
@@ -57,7 +58,7 @@ public class DoubleSwipe extends AutoRoutine {
 	}
 
 	@Override
-	public Command generateCommand() {
+	public Command generateCommand(DoubleSupplier autoTimer) {
 		final var startPosition = DoubleSwipe.startPosition.getResponse();
 		final var bump = DoubleSwipe.bump.getResponse();
 
@@ -66,7 +67,7 @@ public class DoubleSwipe extends AutoRoutine {
 
 		switch (bump) {
 			case Trench -> {
-				if (startPosition == AutoConstants.startInsideLeftTrench) {
+				if (startPosition == AutoConstants.startInsideLeftTrenchDS) {
 					firstTrajBallGrabName = "LeftTrenchGrab1";
 					secondTrajBallGrabName = "LeftTrenchGrab2";
 				} else {
@@ -75,7 +76,7 @@ public class DoubleSwipe extends AutoRoutine {
 				}
 			}
 			case Bump -> {
-				if (startPosition == AutoConstants.startInsideLeftTrench) {
+				if (startPosition == AutoConstants.startInsideLeftTrenchDS) {
 					firstTrajBallGrabName = "LeftTrenchGrab1Bump";
 					secondTrajBallGrabName = "LeftTrenchGrab2Bump";
 				} else {
@@ -84,7 +85,7 @@ public class DoubleSwipe extends AutoRoutine {
 				}
 			}
 			default -> {
-				if (startPosition == AutoConstants.startInsideLeftTrench) {
+				if (startPosition == AutoConstants.startInsideLeftTrenchDS) {
 					firstTrajBallGrabName = "LeftTrenchGrab1";
 					secondTrajBallGrabName = "LeftTrenchGrab2TrenchBump";
 				} else {
@@ -113,7 +114,7 @@ public class DoubleSwipe extends AutoRoutine {
 						Commands.deadline(
 							this.robot.rollers.untilNoBalls(1.0),
 							this.robot.intake.slam.hopperAgitate(this.robot.extensionSystem).asProxy(),
-							this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy(),
+							this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinShootingTolerance()).repeatedly().withName("Feed when ready").asProxy(),
 							this.robot.shooter.aimHoodAtHub().asProxy(),
 							this.robot.shooter.aimDriveAtHub(this.robot.drive.rotationalSubsystem).asProxy(),
 							this.robot.drive.translationSubsystem.simplePIDTo(FunctionalUtil.evalNow(firstTrajBallGrab.getFinalPose(false).get().getTranslation())).asProxy()
@@ -122,7 +123,8 @@ public class DoubleSwipe extends AutoRoutine {
 					this.robot.shooter.aimingSystem.aimAtHub(
 						FunctionalUtil.evalNow(firstTrajBallGrab.getFinalPose(false).get()),
 						FunctionalUtil.evalNow(new ChassisSpeeds()),
-						FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs())
+						FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs()),
+						false
 					).asProxy(),
 					this.robot.shooter.aimFlywheelAtHub().asProxy()
 				),
@@ -134,7 +136,7 @@ public class DoubleSwipe extends AutoRoutine {
 							this.robot.intake.rollers.intake().asProxy()
 						),
 						Commands.parallel(
-							this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy(),
+							this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinShootingTolerance()).repeatedly().withName("Feed when ready").asProxy(),
 							this.robot.intake.slam.hopperAgitate(this.robot.extensionSystem).asProxy(),
 							this.robot.shooter.aimHoodAtHub().asProxy(),
 							this.robot.shooter.aimDriveAtHub(this.robot.drive.rotationalSubsystem).asProxy(),
@@ -144,7 +146,8 @@ public class DoubleSwipe extends AutoRoutine {
 					this.robot.shooter.aimingSystem.aimAtHub(
 						FunctionalUtil.evalNow(secondTrajBallGrab.getFinalPose(false).get()),
 						FunctionalUtil.evalNow(new ChassisSpeeds()),
-						FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs())
+						FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs()),
+						false
 					).asProxy(),
 					this.robot.shooter.aimFlywheelAtHub().asProxy()
 				)

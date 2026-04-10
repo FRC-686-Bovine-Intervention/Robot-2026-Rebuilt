@@ -20,5 +20,5 @@ public class FlywheelConstants {
 
 	// Flywheel wheel
 	public static final LinearRelation wheel = LinearRelation.wheelDiameter(Inches.of(3.0));
-	public static final LinearRelation hoodRoller = LinearRelation.wheelDiameter(Inches.of(1.0));
+	public static final LinearRelation hoodRoller = LinearRelation.wheelDiameter(Inches.of(1.1));
 }

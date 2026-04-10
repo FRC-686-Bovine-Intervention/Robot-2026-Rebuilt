@@ -10,8 +10,10 @@ import frc.util.loggerUtil.inputs.LoggedMotor;
 public interface FeederIO {
 	@AutoLog
 	public static class FeederIOInputs {
-		boolean motorConnected = false;
-		LoggedMotor motor = new LoggedMotor();
+		boolean leftMotorConnected = false;
+		boolean rightMotorConnected = false;
+		LoggedMotor leftMotor = new LoggedMotor();
+		LoggedMotor rightMotor = new LoggedMotor();
 	}
 
 	public default void updateInputs(FeederIOInputs inputs) {}

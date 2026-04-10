@@ -1,6 +1,7 @@
 package frc.robot.auto.routines;
 
 import java.util.List;
+import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -24,18 +25,19 @@ public class Preloads extends AutoRoutine {
 	}
 
 	@Override
-	public Command generateCommand() {
+	public Command generateCommand(DoubleSupplier autoTimer) {
 		return Commands.parallel(
 			AutoCommons.setOdometryFlipped(AutoConstants.startCenter),
 			this.robot.shooter.aimingSystem.aimAtHub(
 				FunctionalUtil.evalNow(AutoConstants.startCenter.getOurs()),
 				FunctionalUtil.evalNow(new ChassisSpeeds()),
-				FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs())
+				FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs()),
+				false
 			).asProxy(),
 			this.robot.shooter.aimHoodAtHub().asProxy(),
 			this.robot.shooter.aimFlywheelAtHub().asProxy(),
 			this.robot.shooter.aimDriveAtHub(this.robot.drive.rotationalSubsystem).asProxy(),
-			this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy()
+			this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinShootingTolerance()).repeatedly().withName("Feed when ready").asProxy()
 		);
 	}
 }

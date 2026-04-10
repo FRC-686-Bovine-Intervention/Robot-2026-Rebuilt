@@ -16,6 +16,9 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
+import com.ctre.phoenix6.SignalLogger;
+import com.revrobotics.util.StatusLogger;
+
 import edu.wpi.first.net.WebServer;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.event.EventLoop;
@@ -35,6 +38,9 @@ public class Robot extends LoggedRobot {
 
 	public Robot() {
 		Leds.getInstance();
+
+		StatusLogger.disableAutoLogging();
+		SignalLogger.enableAutoLogging(false);
 
 		System.out.println("[Init Robot] Recording AdvantageKit Metadata");
 		Logger.recordMetadata("Robot", RobotType.getRobot().name());

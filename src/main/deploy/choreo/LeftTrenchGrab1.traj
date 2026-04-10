@@ -47,12 +47,12 @@
     {"from":4, "to":5, "data":{"type":"MaxAngularVelocity", "props":{"max":{"exp":"0 rad / s", "val":0.0}}}, "enabled":true},
     {"from":4, "to":5, "data":{"type":"KeepInLane", "props":{"tolerance":{"exp":"0.01 m", "val":0.01}}}, "enabled":true},
     {"from":0, "to":1, "data":{"type":"KeepInLane", "props":{"tolerance":{"exp":"0.01 m", "val":0.01}}}, "enabled":true},
-    {"from":"first", "to":"last", "data":{"type":"MaxVelocity", "props":{"max":{"exp":"GlobalMaxLinVelo", "val":4.0}}}, "enabled":true},
-    {"from":"first", "to":"last", "data":{"type":"MaxAcceleration", "props":{"max":{"exp":"GlobalMaxLinAccel", "val":8.0}}}, "enabled":true},
+    {"from":"first", "to":"last", "data":{"type":"MaxVelocity", "props":{"max":{"exp":"GlobalMaxLinVelo", "val":5.0}}}, "enabled":true},
+    {"from":"first", "to":"last", "data":{"type":"MaxAcceleration", "props":{"max":{"exp":"GlobalMaxLinAccel", "val":10.0}}}, "enabled":true},
     {"from":"first", "to":"last", "data":{"type":"MaxAngularVelocity", "props":{"max":{"exp":"GlobalMaxAngVelo", "val":37.69911184307752}}}, "enabled":true},
     {"from":1, "to":2, "data":{"type":"KeepInLane", "props":{"tolerance":{"exp":"0.2894422220600663 m", "val":0.2894422220600663}}}, "enabled":true},
     {"from":6, "to":6, "data":{"type":"PointAt", "props":{"x":{"exp":"4.630078315734863 m", "val":4.630078315734863}, "y":{"exp":"4.0302605628967285 m", "val":4.0302605628967285}, "tolerance":{"exp":"1 deg", "val":0.017453292519943295}, "flip":false}}, "enabled":true},
-    {"from":2, "to":3, "data":{"type":"MaxVelocity", "props":{"max":{"exp":"IntakeMaxVelo", "val":3.0}}}, "enabled":true}],
+    {"from":2, "to":3, "data":{"type":"MaxVelocity", "props":{"max":{"exp":"IntakeMaxVelo", "val":4.0}}}, "enabled":true}],
   "targetDt":{
    "exp":"0.05 s",
    "val":0.05

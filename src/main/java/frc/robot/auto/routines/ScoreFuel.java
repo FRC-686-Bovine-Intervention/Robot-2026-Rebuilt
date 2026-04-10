@@ -3,10 +3,10 @@ package frc.robot.auto.routines;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.DoubleSupplier;
 
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotContainer;
@@ -15,14 +15,9 @@ import frc.robot.auto.AutoConstants.IntakeLocation;
 import frc.robot.auto.AutoConstants.ScoringLocation;
 import frc.robot.auto.AutoConstants.StartingPosition;
 import frc.robot.auto.AutoRoutine;
-import frc.robot.constants.FieldConstants;
-import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.commands.FollowTrajectoryCommand;
-import frc.robot.subsystems.intake.Intake;
 import frc.util.flipping.AllianceFlipUtil;
 import frc.util.flipping.AllianceFlipUtil.FieldFlipType;
 import frc.util.flipping.AllianceFlipped;
-import frc.util.misc.FunctionalUtil;
 
 public class ScoreFuel extends AutoRoutine {
 
@@ -35,7 +30,7 @@ public class ScoreFuel extends AutoRoutine {
 
 		@Override
 		protected Settings<StartingPosition> generateSettings() {
-			return Settings.from(startInsideRightTrench, startInsideLeftTrench, startCenter, startInsideRightTrench);
+			return Settings.from(startInsideRightTrench, startInsideLeftTrench, startInsideRightTrench);
 		}
 	};
 
@@ -83,9 +78,9 @@ public class ScoreFuel extends AutoRoutine {
 		private static final Map.Entry<String, IntakeLocation> fullInnerSwipe = Settings.option("Full Inner Swipe", IntakeLocation.FULL_INNER_SWIPE);
 		private static final Map.Entry<String, IntakeLocation> halfOuterSwipe = Settings.option("Half Outer Swipe", IntakeLocation.HALF_OUTER_SWIPE);
 		// private static final Map.Entry<String, IntakeLocation> halfInnerSwipe = Settings.option("HIS", IntakeLocation.HALF_INNER_SWIPE);
-		private static final Map.Entry<String, IntakeLocation> opponentSwipe = Settings.option("Opponent Swipe", IntakeLocation.OPPONENT_SWIPE);
-		private static final Map.Entry<String, IntakeLocation> halfOpponentSwipe = Settings.option("Half Opponent Swipe", IntakeLocation.HALF_OPPONENT_SWIPE);
-		private static final Map.Entry<String, IntakeLocation> halfSweep = Settings.option("Half Sweep", IntakeLocation.HALF_SWEEP);
+		private static final Map.Entry<String, IntakeLocation> opponentSwipe = Settings.option("Bumper Obliterator 10000", IntakeLocation.OPPONENT_SWIPE);
+		private static final Map.Entry<String, IntakeLocation> halfOpponentSwipe = Settings.option("Intake Obliterator 5000", IntakeLocation.HALF_OPPONENT_SWIPE);
+		private static final Map.Entry<String, IntakeLocation> halfSweep = Settings.option("Bumper Obliterator 5000", IntakeLocation.HALF_SWEEP);
 		private static final Map.Entry<String, IntakeLocation> depot = Settings.option("Depot", IntakeLocation.DEPOT);
 		// private static final Map.Entry<String, IntakeLocation> outpost = Settings.option("O", IntakeLocation.OUTPOST);
 		private static final Map.Entry<String, IntakeLocation> noIntake = Settings.option("No Intake", IntakeLocation.FALSE);
@@ -147,7 +142,7 @@ public class ScoreFuel extends AutoRoutine {
 				startPosition == ScoringLocation.OUTSIDE_LEFT_TRENCH
 			) {
 				return Settings.from(
-					outsideLeftTrench,
+					left,
 					outsideLeftTrench,
 					outsideRightTrench,
 					left
@@ -156,7 +151,7 @@ public class ScoreFuel extends AutoRoutine {
 				startPosition == ScoringLocation.OUTSIDE_RIGHT_TRENCH
 			) {
 				return Settings.from(
-					outsideRightTrench,
+					right,
 					outsideLeftTrench,
 					outsideRightTrench,
 					right
@@ -172,6 +167,7 @@ public class ScoreFuel extends AutoRoutine {
 		private static final Map.Entry<String, IntakeLocation> fullInnerSwipe = Settings.option("Full Inner Swipe", IntakeLocation.FULL_INNER_SWIPE);
 		private static final Map.Entry<String, IntakeLocation> halfOuterSwipe = Settings.option("Half Outer Swipe", IntakeLocation.HALF_OUTER_SWIPE);
 		private static final Map.Entry<String, IntakeLocation> halfInnerSwipe = Settings.option("Half Inner Swipe", IntakeLocation.HALF_INNER_SWIPE);
+		private static final Map.Entry<String, IntakeLocation> halfInnerLoopSwipe = Settings.option("Half Inner Loop Swipe", IntakeLocation.HALF_INNER_LOOP_SWIPE);
 		// private static final Map.Entry<String, IntakeLocation> opponentSwipe = Settings.option("OpS", IntakeLocation.OPPONENT_SWIPE);
 		// private static final Map.Entry<String, IntakeLocation> halfOpponentSwipe = Settings.option("HOpS", IntakeLocation.HALF_OPPONENT_SWIPE);
 		// private static final Map.Entry<String, IntakeLocation> halfSweep = Settings.option("HSw", IntakeLocation.HALF_SWEEP);
@@ -188,7 +184,7 @@ public class ScoreFuel extends AutoRoutine {
 				(startPosition == ScoringLocation.OUTSIDE_RIGHT_TRENCH && scoreLocation == ScoringLocation.OUTSIDE_RIGHT_TRENCH)
 			) {
 				return Settings.from(
-					halfOuterSwipe,
+					halfInnerSwipe,
 					halfOuterSwipe,
 					halfInnerSwipe
 				);
@@ -205,7 +201,8 @@ public class ScoreFuel extends AutoRoutine {
 				(startPosition == ScoringLocation.OUTSIDE_RIGHT_TRENCH && scoreLocation == ScoringLocation.RIGHT)
 			) {
 				return Settings.from(
-					halfInnerSwipe,
+					halfInnerLoopSwipe,
+					halfInnerLoopSwipe,
 					halfInnerSwipe,
 					halfOuterSwipe
 				);
@@ -222,9 +219,17 @@ public class ScoreFuel extends AutoRoutine {
 		}
 	};
 
+	private static final AutoQuestion<Boolean> enableTransitionCutoff = new AutoQuestion<Boolean>("Transition Cutoff") {
+		private static final Map.Entry<String, Boolean> yes = Settings.option("Yes", true);
+		private static final Map.Entry<String, Boolean> no = Settings.option("No", false);
+
+		@Override
+		protected Settings<Boolean> generateSettings() {
+			return Settings.from(yes, yes, no);
+		}
+	};
+
 	private final RobotContainer robot;
-	private final Drive drive;
-	private final Intake intake;
 
 	public ScoreFuel(RobotContainer robot) {
 		super("Score Fuel", List.of(
@@ -232,88 +237,65 @@ public class ScoreFuel extends AutoRoutine {
 			firstScoringLocation,
 			firstIntakeLocation,
 			secondScoringLocation,
-			secondIntakeLocation
+			secondIntakeLocation,
+			enableTransitionCutoff
 		));
 		this.robot = robot;
-		this.drive = robot.drive;
-		this.intake = robot.intake;
 	}
 
 	@Override
-	public Command generateCommand() {
-		var startPosition = ScoreFuel.startPosition.getResponse();
-		var firstIntakeLocation = ScoreFuel.firstIntakeLocation.getResponse();
-		var firstScoringLocation = ScoreFuel.firstScoringLocation.getResponse();
-		var secondIntakeLocation = ScoreFuel.secondIntakeLocation.getResponse();
-		var secondScoringLocation = ScoreFuel.secondScoringLocation.getResponse();
+	public Command generateCommand(DoubleSupplier autoTimer) {
+		final var startPosition = ScoreFuel.startPosition.getResponse();
+		final var firstIntakeLocation = ScoreFuel.firstIntakeLocation.getResponse();
+		final var firstScoringLocation = ScoreFuel.firstScoringLocation.getResponse();
+		final var secondIntakeLocation = ScoreFuel.secondIntakeLocation.getResponse();
+		final var secondScoringLocation = ScoreFuel.secondScoringLocation.getResponse();
+		final var enableTransitionCutoff = ScoreFuel.enableTransitionCutoff.getResponse();
 
 		var commands = new ArrayList<Command>();
-		var firstTraj = generatePath(startPosition, firstScoringLocation, firstIntakeLocation).getOurs();
-		var firstPathCommand = new FollowTrajectoryCommand(this.drive, firstTraj, true);
-		var firstCommand = Commands.deadline(
-			Commands.sequence(
-				Commands.deadline(
-					firstPathCommand,
-					this.robot.intake.rollers.intake().asProxy()
-				),
-				Commands.deadline(
-					Commands.waitSeconds(4.0),
-					this.robot.shooter.aimHoodAtHub().asProxy(),
-					this.robot.shooter.aimDriveAtHub(this.robot.drive.rotationalSubsystem).asProxy(),
-					this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy()
-				)
-			),
-			this.robot.shooter.aimingSystem.aimAtHub(
-				FunctionalUtil.evalNow(firstTraj.getFinalPose(false).get()),
-				FunctionalUtil.evalNow(new ChassisSpeeds()),
-				FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs())
-			).asProxy(),
-			this.robot.shooter.aimFlywheelAtHub().asProxy()
+		var firstTraj = generatePath(startPosition, firstScoringLocation, firstIntakeLocation, false).getOurs();
+		var firstCommand = AutoCommons.swipe(
+			this.robot,
+			firstTraj,
+			0.5,
+			0.5,
+			1.0,
+			18.0,
+			17.0,
+			autoTimer,
+			enableTransitionCutoff
 		);
 		commands.add(firstCommand);
 
 		var secondTraj = generatePath(firstScoringLocation, secondScoringLocation, secondIntakeLocation).getOurs();
-		var secondPathCommand = new FollowTrajectoryCommand(this.drive, firstTraj, true);
-		var secondCommand = Commands.deadline(
-			Commands.sequence(
-				Commands.deadline(
-					secondPathCommand,
-					this.robot.intake.rollers.intake().asProxy()
-				),
-				Commands.deadline(
-					Commands.waitSeconds(4.0),
-					this.robot.shooter.aimHoodAtHub().asProxy(),
-					this.robot.shooter.aimDriveAtHub(this.robot.drive.rotationalSubsystem).asProxy(),
-					this.robot.rollers.feed().onlyWhile(() -> this.robot.shooter.withinTolerance()).repeatedly().withName("Feed when ready").asProxy()
-				)
-			),
-			this.robot.shooter.aimingSystem.aimAtHub(
-				FunctionalUtil.evalNow(secondTraj.getFinalPose(false).get()),
-				FunctionalUtil.evalNow(new ChassisSpeeds()),
-				FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs())
-			).asProxy(),
-			this.robot.shooter.aimFlywheelAtHub().asProxy()
+		var secondCommand = AutoCommons.swipe(
+			this.robot,
+			secondTraj,
+			0.0,
+			0.5,
+			1.0,
+			18.0,
+			17.0,
+			autoTimer,
+			enableTransitionCutoff
 		);
 		commands.add(secondCommand);
 
 		return Commands.parallel(
 			AutoCommons.setOdometryFlipped(startPosition.pose),
-			Commands.parallel(
-				this.intake.slam.deploy(this.robot.extensionSystem),
-				Commands.sequence(commands.toArray(Command[]::new))
-			)
+			Commands.sequence(commands.toArray(Command[]::new))
 		);
 	}
 
 
-	private static AllianceFlipped<Trajectory<SwerveSample>> generatePath(StartingPosition startingPosition, ScoringLocation scoringLocation, IntakeLocation intakeLocation) {
+	private static AllianceFlipped<Trajectory<SwerveSample>> generatePath(StartingPosition startingPosition, ScoringLocation scoringLocation, IntakeLocation intakeLocation, boolean comeBackThroughTrenchSideways) {
 		if (startingPosition == StartingPosition.INSIDE_LEFT_TRENCH && scoringLocation.canFlip * intakeLocation.canFlip > 0) {
 			//Needs to flip across Xenterline
-			var blueTraj = AutoCommons.loadBlueChoreoTrajectory(startingPosition.rightAlias + "To" + scoringLocation.rightAlias + "Intake" + intakeLocation.alias);
+			var blueTraj = AutoCommons.loadBlueChoreoTrajectory(startingPosition.rightAlias + "To" + scoringLocation.rightAlias + "Intake" + intakeLocation.alias + (comeBackThroughTrenchSideways ? "_Sideswipe" : ""));
 			var newBlueTraj = AllianceFlipUtil.flip(blueTraj.getBlue(), FieldFlipType.XenterLineMirror);
 			return AllianceFlipped.fromBlue(newBlueTraj);
 		} else {
-			return AutoCommons.loadBlueChoreoTrajectory(startingPosition.alias + "To" + scoringLocation.alias + "Intake" + intakeLocation.alias);
+			return AutoCommons.loadBlueChoreoTrajectory(startingPosition.alias + "To" + scoringLocation.alias + "Intake" + intakeLocation.alias + (comeBackThroughTrenchSideways ? "_Sideswipe" : ""));
 		}
 	}
 

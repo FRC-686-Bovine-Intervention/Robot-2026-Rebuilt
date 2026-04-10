@@ -1,6 +1,7 @@
 package frc.robot.subsystems.shooter.aiming.passing;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 
@@ -12,4 +13,5 @@ public interface PassingCalc {
 	public double getTargetAzimuthHeadingRads();
 
 	public Translation3d getAimPoint();
+	public Translation2d getShotPose();
 }

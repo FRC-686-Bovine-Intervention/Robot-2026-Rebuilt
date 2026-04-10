@@ -91,22 +91,22 @@
    "GlobalMaxLinAccel":{
     "dimension":"LinAcc",
     "var":{
-     "exp":"8 m / s / s",
-     "val":8.0
+     "exp":"10 m / s / s",
+     "val":10.0
     }
    },
    "GlobalMaxLinVelo":{
     "dimension":"LinVel",
     "var":{
-     "exp":"4 m / s",
-     "val":4.0
+     "exp":"5 m / s",
+     "val":5.0
     }
    },
    "IntakeMaxVelo":{
     "dimension":"LinVel",
     "var":{
-     "exp":"3 m / s",
-     "val":3.0
+     "exp":"4 m / s",
+     "val":4.0
     }
    },
    "NeutralZoneClusterWidth":{
@@ -641,6 +641,20 @@
     "heading":{
      "exp":"1.200625545208898 rad",
      "val":1.200625545208898
+    }
+   },
+   "LaedonRightHubShot":{
+    "x":{
+     "exp":"2.7009365558624268 m",
+     "val":2.7009365558624268
+    },
+    "y":{
+     "exp":"0.9785797595977783 m",
+     "val":0.9785797595977784
+    },
+    "heading":{
+     "exp":"MichaelRightHubShot.heading",
+     "val":0.0
     }
    },
    "LeftRampPointDown":{
@@ -1341,6 +1355,20 @@
     "heading":{
      "exp":"3.141592653589793 rad",
      "val":3.141592653589793
+    }
+   },
+   "TrenchEntryR":{
+    "x":{
+     "exp":"InsideTrenchR.x - 43 in",
+     "val":3.355339999999999
+    },
+    "y":{
+     "exp":"InsideTrenchR.y",
+     "val":0.4445
+    },
+    "heading":{
+     "exp":"0 deg",
+     "val":0.0
     }
    },
    "TrenchRShooter":{
