@@ -883,7 +883,7 @@ public class RobotContainer {
 		// this.automationsLoop.bind(new AutoSpinUp(this.drive, this.shooter, intakeRollersIntakeCommand));
 		// this.automationsLoop.bind(new AutoDriveAim(this.drive, this.shooter, intakeRollersIntakeCommand));
 		this.automationsLoop.bind(new AutoFeed(this.shooter, this.rollers, this.driveController.y().or(secondDriverOverride), aimToPassCommand::isScheduled));
-		this.automationsLoop.bind(new PassivePrestage(this.rollers, rollersFeederIdleCommand, rollersPassivePrestageCommand));
+		// this.automationsLoop.bind(new PassivePrestage(this.rollers, rollersFeederIdleCommand, rollersPassivePrestageCommand));
 		this.automationsLoop.bind(new HubShiftNotifications(this.driveController));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		// new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
