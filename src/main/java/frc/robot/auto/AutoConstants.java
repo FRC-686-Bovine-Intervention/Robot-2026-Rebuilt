@@ -137,7 +137,8 @@ public final class AutoConstants {
 		OUTSIDE_RIGHT_TRENCH("ORT", "OLT", 1),
 		CENTER("Center", 1),
 		LEFT("Left", "Right", 1),
-		RIGHT("Right", "Left", 1);
+		RIGHT("Right", "Left", 1),
+		STOP("Stop", 1);
 
 		public final String alias;
 		public final String rightAlias;
