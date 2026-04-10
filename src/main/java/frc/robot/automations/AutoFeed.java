@@ -1,16 +1,20 @@
 package frc.robot.automations;
 
 
+import static edu.wpi.first.units.Units.Seconds;
+
 import java.util.function.BooleanSupplier;
 
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
+import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.HubShifts;
 import frc.robot.subsystems.rollers.Rollers;
 import frc.robot.subsystems.shooter.Shooter;
+import frc.util.tuning.LoggedTunable;
 import frc.util.EdgeDetector;
 import frc.util.Environment;
 
@@ -26,6 +30,8 @@ public class AutoFeed implements Runnable {
 	private final EdgeDetector edgeDetector = new EdgeDetector(false);
 
 	private final Debouncer shooterDebouncer = new Debouncer(0.25, DebounceType.kRising);
+
+	private static final LoggedTunable<Time> inactiveFeedTime = LoggedTunable.from("Automations/Auto Feed/Inactive Feed Time", Seconds::of, 2.0);
 
 	public AutoFeed(Shooter shooter, Rollers rollers, BooleanSupplier disableTrigger, BooleanSupplier enablePassingTrigger) {
 		this.shooter = shooter;
@@ -50,7 +56,11 @@ public class AutoFeed implements Runnable {
 			|| (
 				(
 					currentHubShift.isHubActive().getOurs()
-					&& currentHubShift.getSecsLeftInShift() > this.shooter.aimingSystem.shootingCalc.getTOFSeconds()
+					&& currentHubShift.getSecsLeftInShift() > this.shooter.aimingSystem.shootingCalc.getTOFSeconds() - AutoFeed.inactiveFeedTime.get().in(Seconds)
+				)
+				|| (
+					!currentHubShift.isHubActive().getOurs()
+					&& currentHubShift.next().getSecsSinceShiftStarted() < AutoFeed.inactiveFeedTime.get().in(Seconds) - this.shooter.aimingSystem.shootingCalc.getTOFSeconds()
 				)
 				|| (
 					currentHubShift.next().isHubActive().getOurs()
