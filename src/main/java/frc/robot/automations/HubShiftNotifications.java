@@ -16,6 +16,7 @@ public class HubShiftNotifications implements Runnable {
 	private final Command rumbleActiveAlertCommand;
 	private final Command ledsActiveAlertCommand;
 	private final Command rumbleInactiveAlertCommand;
+	private final Command ledsInactiveAlertCommand;
 
 	public HubShiftNotifications(XboxController controller) {
 		final var leftRumble = controller.leftRumble;
@@ -161,8 +162,9 @@ public class HubShiftNotifications implements Runnable {
 			}
 		};
 
-		this.ledsActiveWarningCommand = Leds.getInstance().hubShiftDynamicWarningAnimation.setFlagCommand().withTimeout(1.0);
-		this.ledsActiveAlertCommand = Leds.getInstance().hubShiftDynamicAlertAnimation.setFlagCommand().withTimeout(1.0);
+		this.ledsActiveWarningCommand = Leds.getInstance().hubShiftDynamicActiveWarningAnimation.setFlagCommand().withTimeout(1.0);
+		this.ledsActiveAlertCommand = Leds.getInstance().hubShiftDynamicActiveAlertAnimation.setFlagCommand().withTimeout(1.0);
+		this.ledsInactiveAlertCommand = Leds.getInstance().hubShiftDynamicInactiveAlertAnimation.setFlagCommand().withTimeout(1.0);
 	}
 
 	private final EdgeDetector activeWarningDetector = new EdgeDetector(false);
@@ -181,19 +183,22 @@ public class HubShiftNotifications implements Runnable {
 		if (this.countdownDetector.risingEdge()) {
 			CommandScheduler.getInstance().schedule(this.rumbleCountdownCommand);
 		}
-		Leds.getInstance().hubShiftStaticGoodAnimation.setFlag(DriverStation.isTeleopEnabled() && !HubShifts.getCurrentShift().isHubActive().getOurs());
+		Leds.getInstance().hubShiftStaticActiveGoodAnimation.setFlag(DriverStation.isTeleopEnabled() && !HubShifts.getCurrentShift().isHubActive().getOurs());
 		if (this.activeWarningDetector.risingEdge()) {
 			CommandScheduler.getInstance().schedule(this.rumbleActiveWarningCommand);
 			CommandScheduler.getInstance().schedule(this.ledsActiveWarningCommand);
 		}
-		Leds.getInstance().hubShiftStaticWarningAnimation.setFlag(this.activeWarningDetector.getValue());
+		Leds.getInstance().hubShiftStaticActiveWarningAnimation.setFlag(this.activeWarningDetector.getValue());
 		if (this.activeAlertDetector.risingEdge()) {
 			CommandScheduler.getInstance().schedule(this.rumbleActiveAlertCommand);
 			CommandScheduler.getInstance().schedule(this.ledsActiveAlertCommand);
 		}
-		Leds.getInstance().hubShiftStaticAlertAnimation.setFlag(this.activeAlertDetector.getValue());
+		Leds.getInstance().hubShiftStaticActiveAlertAnimation.setFlag(this.activeAlertDetector.getValue());
+
+		Leds.getInstance().hubShiftStaticInactiveGoodAnimation.setFlag(DriverStation.isTeleopEnabled() && HubShifts.getCurrentShift().isHubActive().getOurs());
 		if (this.inactiveAlertDetector.risingEdge()) {
 			CommandScheduler.getInstance().schedule(this.rumbleInactiveAlertCommand);
+			CommandScheduler.getInstance().schedule(this.ledsInactiveAlertCommand);
 		}
 	}
 }

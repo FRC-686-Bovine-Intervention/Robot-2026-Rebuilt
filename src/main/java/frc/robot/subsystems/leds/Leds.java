@@ -29,11 +29,10 @@ public class Leds extends VirtualSubsystem {
 	public Leds() {
 		System.out.println("[Init Leds] Instantiating Leds");
 
-		this.hardwareStrip = new AddressableStrip(HardwareDevices.ledPort, 61);
+		this.hardwareStrip = new AddressableStrip(HardwareDevices.ledPort, 16 + 16);
 
 		final var rightTowerStrip = this.hardwareStrip.substrip(0, 16);
 		final var leftTowerStrip = this.hardwareStrip.substrip(16, 32).reverse();
-		final var intakeStrip = this.hardwareStrip.substrip(32, 61);
 
 		final var sideStrips = leftTowerStrip.parallel(rightTowerStrip);
 
@@ -58,12 +57,15 @@ public class Leds extends VirtualSubsystem {
 		this.hoodNotCalibratedAnimation = new FlashingAnimation(sideStrips.substrip(13, 16), WaveFunction.Sawtooth.frequency(2.0), InterpolationFunction.step.gradient(Color.kBlack, Color.kRed));
 		this.hoodCalibratedAnimation = new FillAnimation(sideStrips.substrip(13, 16), Color.kGreen);
 
-		this.hubShiftStaticGoodAnimation = new FillAnimation(sideStrips, Color.kGreen);
-		this.hubShiftStaticWarningAnimation = new FillAnimation(sideStrips, Color.kOrange);
-		this.hubShiftStaticAlertAnimation = new FillAnimation(sideStrips, Color.kRed);
+		this.hubShiftStaticActiveGoodAnimation = new FillAnimation(sideStrips, Color.kGreen);
+		this.hubShiftStaticActiveWarningAnimation = new FillAnimation(sideStrips, Color.kOrange);
+		this.hubShiftStaticActiveAlertAnimation = new FillAnimation(sideStrips, Color.kRed);
+		this.hubShiftStaticInactiveGoodAnimation = new FillAnimation(sideStrips, Color.kBlue);
+		this.hubShiftStaticInactiveAlertAnimation = new FillAnimation(sideStrips, Color.kPurple);
 
-		this.hubShiftDynamicWarningAnimation = new FlashingAnimation(sideStrips, WaveFunction.Modulo.frequency(4.0), InterpolationFunction.step.gradient(Color.kBlack, Color.kOrange));
-		this.hubShiftDynamicAlertAnimation = new FlashingAnimation(sideStrips, WaveFunction.Modulo.frequency(4.0), InterpolationFunction.step.gradient(Color.kBlack, Color.kRed));
+		this.hubShiftDynamicActiveWarningAnimation = new FlashingAnimation(sideStrips, WaveFunction.Modulo.frequency(4.0), InterpolationFunction.step.gradient(Color.kBlack, Color.kOrange));
+		this.hubShiftDynamicActiveAlertAnimation = new FlashingAnimation(sideStrips, WaveFunction.Modulo.frequency(4.0), InterpolationFunction.step.gradient(Color.kBlack, Color.kRed));
+		this.hubShiftDynamicInactiveAlertAnimation = new FlashingAnimation(sideStrips, WaveFunction.Modulo.frequency(4.0), InterpolationFunction.step.gradient(Color.kBlack, Color.kPurple));
 
 		this.loadingNotifier = new Notifier(() -> {
 			synchronized(this) {
@@ -96,12 +98,15 @@ public class Leds extends VirtualSubsystem {
 	public final FlashingAnimation hoodNotCalibratedAnimation;
 	public final FillAnimation hoodCalibratedAnimation;
 
-	public final FillAnimation hubShiftStaticGoodAnimation;
-	public final FillAnimation hubShiftStaticWarningAnimation;
-	public final FillAnimation hubShiftStaticAlertAnimation;
+	public final FillAnimation hubShiftStaticActiveGoodAnimation;
+	public final FillAnimation hubShiftStaticActiveWarningAnimation;
+	public final FillAnimation hubShiftStaticActiveAlertAnimation;
+	public final FillAnimation hubShiftStaticInactiveGoodAnimation;
+	public final FillAnimation hubShiftStaticInactiveAlertAnimation;
 
-	public final FlashingAnimation hubShiftDynamicWarningAnimation;
-	public final FlashingAnimation hubShiftDynamicAlertAnimation;
+	public final FlashingAnimation hubShiftDynamicActiveWarningAnimation;
+	public final FlashingAnimation hubShiftDynamicActiveAlertAnimation;
+	public final FlashingAnimation hubShiftDynamicInactiveAlertAnimation;
 
 	private int skippedFrames = 0;
 	private static final int frameSkipAmount = 15;
@@ -148,11 +153,15 @@ public class Leds extends VirtualSubsystem {
 		this.autonomousFinishedAnimation.applyIfFlagged();
 		this.autonomousOverrunAnimation.applyIfFlagged();
 
-		this.hubShiftStaticGoodAnimation.applyIfFlagged();
-		this.hubShiftStaticWarningAnimation.applyIfFlagged();
-		this.hubShiftStaticAlertAnimation.applyIfFlagged();
-		this.hubShiftDynamicWarningAnimation.applyIfFlagged();
-		this.hubShiftDynamicAlertAnimation.applyIfFlagged();
+		this.hubShiftStaticActiveGoodAnimation.applyIfFlagged();
+		this.hubShiftStaticActiveWarningAnimation.applyIfFlagged();
+		this.hubShiftStaticActiveAlertAnimation.applyIfFlagged();
+		this.hubShiftDynamicActiveWarningAnimation.applyIfFlagged();
+		this.hubShiftDynamicActiveAlertAnimation.applyIfFlagged();
+		this.hubShiftDynamicActiveAlertAnimation.applyIfFlagged();
+		this.hubShiftStaticInactiveGoodAnimation.applyIfFlagged();
+		this.hubShiftStaticInactiveAlertAnimation.applyIfFlagged();
+		this.hubShiftDynamicInactiveAlertAnimation.applyIfFlagged();
 
 		this.hoodNotCalibratedAnimation.applyIfFlagged();
 
