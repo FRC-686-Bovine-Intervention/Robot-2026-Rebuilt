@@ -102,7 +102,7 @@ public class HubShiftNotifications implements Runnable {
 
 			@Override
 			public boolean isFinished() {
-				return HubShifts.getCurrentShift().getSecsLeftInShift() < 8.0;
+				return HubShifts.getCurrentShift().getSecsLeftInShift() < 8.5;
 			}
 		};
 		this.rumbleActiveAlertCommand = new Command() {

@@ -37,7 +37,7 @@ public class IntakeSlam extends SubsystemBase {
 	private final IntakeSlamIO io;
 	private final IntakeSlamIOInputsAutoLogged inputs = new IntakeSlamIOInputsAutoLogged();
 
-	private static final LoggedTunable<Angle> stowAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Stow/Angle", Degrees::of, 145.0);
+	private static final LoggedTunable<Angle> stowAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Stow/Angle", Degrees::of, 140.0);
 	private static final LoggedTunable<Angle> deployAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Angle", Degrees::of, IntakeSlamConstants.minAngle.in(Degrees));
 	private static final LoggedTunable<Voltage> deployPushdownVolts = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Pushdown Volts", Volts::of, -1.0);
 	private static final LoggedTunable<Angle> deployPushdownThreshold = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Pushdown Threshold", Degrees::of, 2.0);
