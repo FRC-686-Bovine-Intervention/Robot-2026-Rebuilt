@@ -64,6 +64,7 @@ public class AutoCommons {
 		if (enableAutoCutoff) {
 			endingCommand = Commands.race(
 				Commands.sequence(
+					Commands.waitUntil(() -> robot.shooter.withinShootingTolerance()),
 					Commands.waitSeconds(minShotTime),
 					robot.rollers.untilNoBalls(noBallTimeout)
 				),
@@ -74,6 +75,7 @@ public class AutoCommons {
 			);
 		} else {
 			endingCommand = Commands.sequence(
+				Commands.waitUntil(() -> robot.shooter.withinShootingTolerance()),
 				Commands.waitSeconds(minShotTime),
 				robot.rollers.untilNoBalls(noBallTimeout)
 			);
