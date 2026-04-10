@@ -185,9 +185,10 @@ public class ScoreFuel extends AutoRoutine {
 				(startPosition == ScoringLocation.OUTSIDE_RIGHT_TRENCH && scoreLocation == ScoringLocation.OUTSIDE_RIGHT_TRENCH)
 			) {
 				return Settings.from(
+					halfInnerLoopSwipe,
 					halfInnerSwipe,
 					halfOuterSwipe,
-					halfInnerSwipe
+					halfInnerLoopSwipe
 				);
 			} else if (
 				(startPosition == ScoringLocation.OUTSIDE_RIGHT_TRENCH && scoreLocation == ScoringLocation.OUTSIDE_LEFT_TRENCH) ||
