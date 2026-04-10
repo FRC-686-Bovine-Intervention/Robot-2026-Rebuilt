@@ -2,6 +2,7 @@ package frc.robot.auto.routines;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -33,7 +34,7 @@ public class ResetPosition extends AutoRoutine {
 	}
 
 	@Override
-	public Command generateCommand() {
+	public Command generateCommand(DoubleSupplier autoTimer) {
 		final var startPosition = ResetPosition.startPosition.getResponse();
 		return AutoCommons.setOdometryFlipped(startPosition);
 	}

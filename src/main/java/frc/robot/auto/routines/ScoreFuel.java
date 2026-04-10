@@ -3,6 +3,7 @@ package frc.robot.auto.routines;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.DoubleSupplier;
 
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
@@ -218,13 +219,13 @@ public class ScoreFuel extends AutoRoutine {
 		}
 	};
 
-	private static final AutoQuestion<Boolean> comeBackThroughTrenchSideways = new AutoQuestion<Boolean>("Trench Sideways") {
+	private static final AutoQuestion<Boolean> enableTransitionCutoff = new AutoQuestion<Boolean>("Transition Cutoff") {
 		private static final Map.Entry<String, Boolean> yes = Settings.option("Yes", true);
 		private static final Map.Entry<String, Boolean> no = Settings.option("No", false);
 
 		@Override
 		protected Settings<Boolean> generateSettings() {
-			return Settings.from(no, yes, no);
+			return Settings.from(yes, yes, no);
 		}
 	};
 
@@ -237,27 +238,47 @@ public class ScoreFuel extends AutoRoutine {
 			firstIntakeLocation,
 			secondScoringLocation,
 			secondIntakeLocation,
-			comeBackThroughTrenchSideways
+			enableTransitionCutoff
 		));
 		this.robot = robot;
 	}
 
 	@Override
-	public Command generateCommand() {
-		var startPosition = ScoreFuel.startPosition.getResponse();
-		var firstIntakeLocation = ScoreFuel.firstIntakeLocation.getResponse();
-		var firstScoringLocation = ScoreFuel.firstScoringLocation.getResponse();
-		var secondIntakeLocation = ScoreFuel.secondIntakeLocation.getResponse();
-		var secondScoringLocation = ScoreFuel.secondScoringLocation.getResponse();
-		var comeBackThroughTrenchSideways = ScoreFuel.comeBackThroughTrenchSideways.getResponse();
+	public Command generateCommand(DoubleSupplier autoTimer) {
+		final var startPosition = ScoreFuel.startPosition.getResponse();
+		final var firstIntakeLocation = ScoreFuel.firstIntakeLocation.getResponse();
+		final var firstScoringLocation = ScoreFuel.firstScoringLocation.getResponse();
+		final var secondIntakeLocation = ScoreFuel.secondIntakeLocation.getResponse();
+		final var secondScoringLocation = ScoreFuel.secondScoringLocation.getResponse();
+		final var enableTransitionCutoff = ScoreFuel.enableTransitionCutoff.getResponse();
 
 		var commands = new ArrayList<Command>();
-		var firstTraj = generatePath(startPosition, firstScoringLocation, firstIntakeLocation, comeBackThroughTrenchSideways).getOurs();
-		var firstCommand = AutoCommons.swipe(this.robot, firstTraj, 0.75, 1.0);
+		var firstTraj = generatePath(startPosition, firstScoringLocation, firstIntakeLocation, false).getOurs();
+		var firstCommand = AutoCommons.swipe(
+			this.robot,
+			firstTraj,
+			0.5,
+			0.5,
+			1.0,
+			18.0,
+			17.0,
+			autoTimer,
+			enableTransitionCutoff
+		);
 		commands.add(firstCommand);
 
 		var secondTraj = generatePath(firstScoringLocation, secondScoringLocation, secondIntakeLocation).getOurs();
-		var secondCommand = AutoCommons.swipe(this.robot, secondTraj, 0.0, 220.0);
+		var secondCommand = AutoCommons.swipe(
+			this.robot,
+			secondTraj,
+			0.0,
+			0.5,
+			1.0,
+			18.0,
+			17.0,
+			autoTimer,
+			enableTransitionCutoff
+		);
 		commands.add(secondCommand);
 
 		return Commands.parallel(

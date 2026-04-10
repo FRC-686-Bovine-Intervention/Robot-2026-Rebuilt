@@ -1,6 +1,7 @@
 package frc.robot.auto;
 
 import java.util.Optional;
+import java.util.function.DoubleSupplier;
 
 import choreo.Choreo;
 import choreo.trajectory.SwerveSample;
@@ -29,7 +30,17 @@ public class AutoCommons {
 		return AllianceFlipped.fromBlue(traj.get());
 	}
 
-	public static Command swipe(RobotContainer robot, Trajectory<SwerveSample> traj, double intakeDeployDelay, double noBallTimeout) {
+	public static Command swipe(
+		RobotContainer robot,
+		Trajectory<SwerveSample> traj,
+		double intakeDeployDelay,
+		double noBallTimeout,
+		double minShotTime,
+		double autoTimeCutoff,
+		double autoTimeDisableCutoff,
+		DoubleSupplier autoTimer,
+		boolean enableAutoCutoff
+	) {
 		final Command intakeDeployCommand;
 		if (intakeDeployDelay == 0.0) {
 			intakeDeployCommand = robot.intake.slam.deploy(robot.extensionSystem).asProxy();
@@ -37,6 +48,24 @@ public class AutoCommons {
 			intakeDeployCommand = Commands.sequence(
 				Commands.waitSeconds(intakeDeployDelay),
 				robot.intake.slam.deploy(robot.extensionSystem).asProxy()
+			);
+		}
+		final Command endingCommand;
+		if (enableAutoCutoff) {
+			endingCommand = Commands.race(
+				Commands.parallel(
+					robot.rollers.untilNoBalls(noBallTimeout),
+					Commands.waitSeconds(minShotTime)
+				),
+				Commands.parallel(
+					Commands.waitUntil(() -> autoTimer.getAsDouble() >= autoTimeCutoff),
+					Commands.waitUntil(() -> robot.shooter.withinShootingTolerance() && autoTimer.getAsDouble() <= autoTimeDisableCutoff)
+				)
+			);
+		} else {
+			endingCommand = Commands.parallel(
+				robot.rollers.untilNoBalls(noBallTimeout),
+				Commands.waitSeconds(minShotTime)
 			);
 		}
 		return Commands.deadline(
@@ -47,7 +76,7 @@ public class AutoCommons {
 					robot.intake.rollers.intake().asProxy()
 				),
 				Commands.deadline(
-					robot.rollers.untilNoBalls(noBallTimeout),
+					endingCommand,
 					robot.rollers.feed().onlyWhile(() -> robot.shooter.withinShootingTolerance()).repeatedly().withName("Feed when ready").asProxy(),
 					robot.intake.slam.hopperAgitate(robot.extensionSystem).asProxy(),
 					robot.shooter.aimHoodAtHub().asProxy(),

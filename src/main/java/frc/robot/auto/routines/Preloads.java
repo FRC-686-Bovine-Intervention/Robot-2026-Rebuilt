@@ -1,6 +1,7 @@
 package frc.robot.auto.routines;
 
 import java.util.List;
+import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -24,7 +25,7 @@ public class Preloads extends AutoRoutine {
 	}
 
 	@Override
-	public Command generateCommand() {
+	public Command generateCommand(DoubleSupplier autoTimer) {
 		return Commands.parallel(
 			AutoCommons.setOdometryFlipped(AutoConstants.startCenter),
 			this.robot.shooter.aimingSystem.aimAtHub(

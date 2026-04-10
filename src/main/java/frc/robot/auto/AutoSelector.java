@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.DoubleSupplier;
 
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
@@ -27,7 +28,8 @@ public class AutoSelector extends VirtualSubsystem {
 	private final String key;
 
 	private static final AutoRoutine idleRoutine = new AutoRoutine("Do Nothing", List.of()) {
-		public Command generateCommand() {
+		@Override
+		public Command generateCommand(DoubleSupplier autoTimer) {
 			return Commands.none();
 		}
 	};
