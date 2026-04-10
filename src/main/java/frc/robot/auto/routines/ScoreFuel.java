@@ -259,6 +259,7 @@ public class ScoreFuel extends AutoRoutine {
 		var firstCommand = AutoCommons.swipe(
 			this.robot,
 			firstTraj,
+			2.0,
 			0.5,
 			0.5,
 			1.0,
@@ -273,6 +274,7 @@ public class ScoreFuel extends AutoRoutine {
 		var secondCommand = AutoCommons.swipe(
 			this.robot,
 			secondTraj,
+			0.0,
 			0.0,
 			0.5,
 			1.0,

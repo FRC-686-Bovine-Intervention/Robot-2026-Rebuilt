@@ -23,7 +23,7 @@ public class FollowTrajectoryCommand extends Command {
 	private final Timer trajectoryTimer = new Timer();
 	private final boolean endWhenFinished;
 
-	private static final LoggedTunable<Distance> MAX_ERROR = LoggedTunable.from("Drive/Trajectory Following/Max Error", Inches::of, 24.0);
+	private static final LoggedTunable<Distance> MAX_ERROR = LoggedTunable.from("Drive/Trajectory Following/Max Error", Inches::of, 36.0);
 	private static final LoggedTunable<PIDGains> FOLLOWING_TRANS_PID_GAINS = LoggedTunable.from("Drive/Trajectory Following/Following PIDs/Trans PID", new PIDGains(
 		4.0,
 		0.0,

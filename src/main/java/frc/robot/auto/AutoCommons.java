@@ -33,6 +33,7 @@ public class AutoCommons {
 	public static Command swipe(
 		RobotContainer robot,
 		Trajectory<SwerveSample> traj,
+		double flywheelSpinupDelay,
 		double intakeDeployDelay,
 		double noBallTimeout,
 		double minShotTime,
@@ -48,6 +49,15 @@ public class AutoCommons {
 			intakeDeployCommand = Commands.sequence(
 				Commands.waitSeconds(intakeDeployDelay),
 				robot.intake.slam.deploy(robot.extensionSystem).asProxy()
+			);
+		}
+		final Command flywheelSpinupCommand;
+		if (flywheelSpinupDelay == 0.0) {
+			flywheelSpinupCommand = robot.shooter.aimFlywheelAtHub().asProxy();
+		} else {
+			flywheelSpinupCommand = Commands.sequence(
+				Commands.waitSeconds(flywheelSpinupDelay),
+				robot.shooter.aimFlywheelAtHub().asProxy()
 			);
 		}
 		final Command endingCommand;
@@ -90,7 +100,7 @@ public class AutoCommons {
 				FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs()),
 				false
 			).asProxy(),
-			robot.shooter.aimFlywheelAtHub().asProxy()
+			flywheelSpinupCommand
 		);
 	}
 }
