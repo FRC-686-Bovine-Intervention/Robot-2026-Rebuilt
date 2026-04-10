@@ -172,6 +172,8 @@ public class HubShifts {
 			} else {
 				currentShift = Shift.Endgame;
 			}
+		} else {
+			currentShift = Shift.Disabled;
 		}
 
 		Logger.recordOutput("Current Shift", HubShifts.getCurrentShift());

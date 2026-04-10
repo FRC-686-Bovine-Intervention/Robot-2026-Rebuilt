@@ -84,8 +84,8 @@ public class HubShiftNotifications implements Runnable {
 
 			@Override
 			public void execute() {
-				var wrappedTime = HubShifts.getCurrentShift().getSecsSinceShiftStarted() % 0.25;
-				if (wrappedTime < 0.125) {
+				var wrappedTime = HubShifts.getCurrentShift().getSecsSinceShiftStarted() % 0.5;
+				if (wrappedTime < 0.25) {
 					leftRumble.setRumble(0.8);
 					rightRumble.setRumble(0.8);
 				} else {
