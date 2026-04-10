@@ -1,5 +1,6 @@
 package frc.robot.automations;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.HubShifts;
@@ -180,7 +181,7 @@ public class HubShiftNotifications implements Runnable {
 		if (this.countdownDetector.risingEdge()) {
 			CommandScheduler.getInstance().schedule(this.rumbleCountdownCommand);
 		}
-		Leds.getInstance().hubShiftStaticGoodAnimation.setFlag(true);
+		Leds.getInstance().hubShiftStaticGoodAnimation.setFlag(DriverStation.isTeleopEnabled() && !HubShifts.getCurrentShift().isHubActive().getOurs());
 		if (this.activeWarningDetector.risingEdge()) {
 			CommandScheduler.getInstance().schedule(this.rumbleActiveWarningCommand);
 			CommandScheduler.getInstance().schedule(this.ledsActiveWarningCommand);
