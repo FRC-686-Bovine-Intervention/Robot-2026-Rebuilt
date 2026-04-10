@@ -14,7 +14,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.HubShifts;
 import frc.robot.subsystems.rollers.Rollers;
 import frc.robot.subsystems.shooter.Shooter;
-import frc.util.tuning.LoggedTunable;
+import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.EdgeDetector;
 import frc.util.Environment;
 
