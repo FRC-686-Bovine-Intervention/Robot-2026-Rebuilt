@@ -15,6 +15,7 @@ import frc.robot.auto.AutoConstants.IntakeLocation;
 import frc.robot.auto.AutoConstants.ScoringLocation;
 import frc.robot.auto.AutoConstants.StartingPosition;
 import frc.robot.auto.AutoRoutine;
+import frc.robot.subsystems.drive.commands.FollowTrajectoryCommand;
 import frc.util.flipping.AllianceFlipUtil;
 import frc.util.flipping.AllianceFlipUtil.FieldFlipType;
 import frc.util.flipping.AllianceFlipped;
@@ -280,6 +281,16 @@ public class ScoreFuel extends AutoRoutine {
 			enableTransitionCutoff
 		);
 		commands.add(secondCommand);
+
+		var thirdTraj = generatePath(secondScoringLocation, secondScoringLocation, secondIntakeLocation).getOurs();
+		var thirdCommand = Commands.parallel(
+			Commands.deadline(
+				new FollowTrajectoryCommand(this.robot.drive, thirdTraj, true).withName("Grab Ball").asProxy(),
+				this.robot.intake.rollers.intake().asProxy()
+			),
+			this.robot.intake.slam.deploy(robot.extensionSystem).asProxy()
+		);
+		commands.add(thirdCommand);
 
 		return Commands.parallel(
 			AutoCommons.setOdometryFlipped(startPosition.pose),
