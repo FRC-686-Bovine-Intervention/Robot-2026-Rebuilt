@@ -60,7 +60,7 @@ public class AutoFeed implements Runnable {
 				)
 				|| (
 					!currentHubShift.isHubActive().getOurs()
-					&& currentHubShift.next().getSecsSinceShiftStarted() < AutoFeed.inactiveFeedTime.get().in(Seconds) - this.shooter.aimingSystem.shootingCalc.getTOFSeconds()
+					&& currentHubShift.getSecsSinceShiftStarted() < AutoFeed.inactiveFeedTime.get().in(Seconds) - this.shooter.aimingSystem.shootingCalc.getTOFSeconds()
 				)
 				|| (
 					currentHubShift.next().isHubActive().getOurs()
