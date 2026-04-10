@@ -63,9 +63,9 @@ public class AutoCommons {
 		final Command endingCommand;
 		if (enableAutoCutoff) {
 			endingCommand = Commands.race(
-				Commands.parallel(
-					robot.rollers.untilNoBalls(noBallTimeout),
-					Commands.waitSeconds(minShotTime)
+				Commands.sequence(
+					Commands.waitSeconds(minShotTime),
+					robot.rollers.untilNoBalls(noBallTimeout)
 				),
 				Commands.parallel(
 					Commands.waitUntil(() -> autoTimer.getAsDouble() >= autoTimeCutoff),
@@ -73,9 +73,9 @@ public class AutoCommons {
 				)
 			);
 		} else {
-			endingCommand = Commands.parallel(
-				robot.rollers.untilNoBalls(noBallTimeout),
-				Commands.waitSeconds(minShotTime)
+			endingCommand = Commands.sequence(
+				Commands.waitSeconds(minShotTime),
+				robot.rollers.untilNoBalls(noBallTimeout)
 			);
 		}
 		return Commands.deadline(
