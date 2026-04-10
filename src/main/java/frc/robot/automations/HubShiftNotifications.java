@@ -200,5 +200,6 @@ public class HubShiftNotifications implements Runnable {
 			CommandScheduler.getInstance().schedule(this.rumbleInactiveAlertCommand);
 			CommandScheduler.getInstance().schedule(this.ledsInactiveAlertCommand);
 		}
+		Leds.getInstance().hubShiftStaticInactiveAlertAnimation.setFlag(this.inactiveAlertDetector.getValue());
 	}
 }
