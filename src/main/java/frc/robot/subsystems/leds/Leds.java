@@ -58,7 +58,12 @@ public class Leds extends VirtualSubsystem {
 		this.hoodNotCalibratedAnimation = new FlashingAnimation(sideStrips.substrip(13, 16), WaveFunction.Sawtooth.frequency(2.0), InterpolationFunction.step.gradient(Color.kBlack, Color.kRed));
 		this.hoodCalibratedAnimation = new FillAnimation(sideStrips.substrip(13, 16), Color.kGreen);
 
-		this.hubShiftAnimation = new HubShiftAnimation(leftTowerStrip.parallel(rightTowerStrip), Color.kGreen, Color.kRed, new Color(0.0, 0.2, 0.0), Color.kRed);
+		this.hubShiftStaticGoodAnimation = new FillAnimation(sideStrips, Color.kGreen);
+		this.hubShiftStaticWarningAnimation = new FillAnimation(sideStrips, Color.kOrange);
+		this.hubShiftStaticAlertAnimation = new FillAnimation(sideStrips, Color.kRed);
+
+		this.hubShiftDynamicWarningAnimation = new FlashingAnimation(sideStrips, WaveFunction.Modulo.frequency(4.0), InterpolationFunction.step.gradient(Color.kBlack, Color.kOrange));
+		this.hubShiftDynamicAlertAnimation = new FlashingAnimation(sideStrips, WaveFunction.Modulo.frequency(4.0), InterpolationFunction.step.gradient(Color.kBlack, Color.kRed));
 
 		this.loadingNotifier = new Notifier(() -> {
 			synchronized(this) {
@@ -88,10 +93,15 @@ public class Leds extends VirtualSubsystem {
 	public final FlashingAnimation tipped;
 	public final AllianceColorAnimation allianceColorAnimation;
 
-	public final HubShiftAnimation hubShiftAnimation;
-
 	public final FlashingAnimation hoodNotCalibratedAnimation;
 	public final FillAnimation hoodCalibratedAnimation;
+
+	public final FillAnimation hubShiftStaticGoodAnimation;
+	public final FillAnimation hubShiftStaticWarningAnimation;
+	public final FillAnimation hubShiftStaticAlertAnimation;
+
+	public final FlashingAnimation hubShiftDynamicWarningAnimation;
+	public final FlashingAnimation hubShiftDynamicAlertAnimation;
 
 	private int skippedFrames = 0;
 	private static final int frameSkipAmount = 15;
@@ -129,7 +139,7 @@ public class Leds extends VirtualSubsystem {
 
 			this.hoodCalibratedAnimation.applyIfFlagged();
 		} else {
-			this.hubShiftAnimation.apply();
+
 		}
 
 		this.autonomousBackgroundAnimation.applyIfFlagged();
@@ -137,6 +147,12 @@ public class Leds extends VirtualSubsystem {
 		this.autonomousRunningAnimation.applyIfFlagged();
 		this.autonomousFinishedAnimation.applyIfFlagged();
 		this.autonomousOverrunAnimation.applyIfFlagged();
+
+		this.hubShiftStaticGoodAnimation.applyIfFlagged();
+		this.hubShiftStaticWarningAnimation.applyIfFlagged();
+		this.hubShiftStaticAlertAnimation.applyIfFlagged();
+		this.hubShiftDynamicWarningAnimation.applyIfFlagged();
+		this.hubShiftDynamicAlertAnimation.applyIfFlagged();
 
 		this.hoodNotCalibratedAnimation.applyIfFlagged();
 
