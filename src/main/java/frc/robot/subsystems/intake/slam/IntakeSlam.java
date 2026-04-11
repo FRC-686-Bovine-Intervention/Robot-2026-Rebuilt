@@ -21,6 +21,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.BatteryLogger;
+import frc.robot.RobotType;
+import frc.robot.RobotType.Mode;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.ExtensionSystem;
 import frc.util.FFGains;
@@ -181,6 +184,13 @@ public class IntakeSlam extends SubsystemBase {
 
 		this.motorDisconnectedAlert.set(!this.inputs.motorConnected);
 		this.motorDisconnectedGlobalAlert.set(!this.inputs.motorConnected);
+
+		if (RobotType.getMode() == Mode.REPLAY) {
+			BatteryLogger.getInstance().logMechanism(
+				"Intake/Slam",
+				this.inputs.motor.motor.getSupplyCurrentAmps()
+			);
+		}
 
 		LoggedTracer.logEpoch("CommandScheduler Periodic/Subsystem/Intake Slam/Periodic");
 		LoggedTracer.logEpoch("CommandScheduler Periodic/Subsystem/Intake Slam");

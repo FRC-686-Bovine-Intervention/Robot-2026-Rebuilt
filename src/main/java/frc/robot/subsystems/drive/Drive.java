@@ -10,6 +10,7 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.DoubleSupplier;
 import java.util.function.Function;
@@ -39,8 +40,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.BatteryLogger;
 import frc.robot.RobotState;
+import frc.robot.RobotType;
 import frc.robot.RobotState.OdometryObservation;
+import frc.robot.RobotType.Mode;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.drive.gyro.GyroIO;
 import frc.robot.subsystems.drive.gyro.GyroIOInputsAutoLogged;
@@ -351,6 +355,11 @@ public class Drive extends VirtualSubsystem {
 		// Logger.recordOutput("Subsystems/Drive/Swerve States/Setpoints Optimized", emptyStates);
 
 		// LoggedTracer.logEpoch("CommandScheduler Periodic/VirtualSubsystem Periodic/Drive/Clear Log Fields");
+
+		if (RobotType.getMode() == Mode.REPLAY) {
+			BatteryLogger.getInstance().logMechanism("Drive", Arrays.stream(this.modules).mapToDouble(Module::getDriveSupplyCurrentAmps).sum());
+		}
+
 		LoggedTracer.logEpoch("CommandScheduler Periodic/VirtualSubsystem Periodic/Drive");
 	}
 

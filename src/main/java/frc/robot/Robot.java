@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import frc.robot.RobotType.Mode;
 import frc.robot.subsystems.leds.Leds;
 import frc.util.Environment;
 import frc.util.LoggedTracer;
@@ -188,6 +189,10 @@ public class Robot extends LoggedRobot {
 
 		VirtualSubsystem.postCommandPeriodicAll();
 		LoggedTracer.logEpoch("VirtualSubsystem PostCommandPeriodic");
+
+		if (RobotType.getMode() == Mode.REPLAY) {
+			BatteryLogger.getInstance().periodic();
+		}
 	}
 
 	@Override

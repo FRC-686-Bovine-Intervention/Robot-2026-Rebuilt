@@ -21,6 +21,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.BatteryLogger;
+import frc.robot.RobotType;
+import frc.robot.RobotType.Mode;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.leds.Leds;
 import frc.util.FFGains;
@@ -193,6 +196,13 @@ public class Hood extends SubsystemBase {
 
 		this.notCalibratedAlert.set(!this.isCalibrated());
 		this.notCalibratedGlobalAlert.set(!this.isCalibrated());
+
+		if (RobotType.getMode() == Mode.REPLAY) {
+			BatteryLogger.getInstance().logMechanism(
+				"Shooter/Hood",
+				this.inputs.motor.motor.getSupplyCurrentAmps()
+			);
+		}
 
 		LoggedTracer.logEpoch("CommandScheduler Periodic/Subsystem/Shooter Hood/Periodic");
 		LoggedTracer.logEpoch("CommandScheduler Periodic/Subsystem/Shooter Hood");

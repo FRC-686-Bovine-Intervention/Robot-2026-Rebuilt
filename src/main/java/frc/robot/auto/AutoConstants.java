@@ -14,7 +14,7 @@ import frc.util.flipping.AllianceFlipped;
 
 public final class AutoConstants {
 	public static final Time allottedAutoTime = Seconds.of(20.3);
-	public static final Time disabledTime = Seconds.of(3);
+	public static final Time disabledTime = Seconds.of(4.0);
 
 	public static final Distance startLineX = FieldConstants.robotStartingLineCenterX.getBlue();
 	public static final Distance startXInAllianceZone = startLineX.minus(RobotConstants.centerToFrontBumper);
