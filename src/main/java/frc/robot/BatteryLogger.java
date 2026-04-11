@@ -19,6 +19,7 @@ public class BatteryLogger {
 	private double totalPowerWatts = 0.0;
 
 	private final HashMap<String, Double> mechanismEnergiesJoules = new HashMap<>();
+	private final HashMap<String, Double> mechanismPowerWatts = new HashMap<>();
 
 	public void logMechanism(String name, double totalSupplyCurrent) {
 		if (this.prevTimestamp == -1.0) {
@@ -28,9 +29,12 @@ public class BatteryLogger {
 		final var dtSeconds = timestamp - this.prevTimestamp;
 		final var powerWatts = totalSupplyCurrent * RobotController.getBatteryVoltage();
 		final var prevEnergyJoules = this.mechanismEnergiesJoules.getOrDefault(name, 0.0);
-		final var deltaEnergyJoules = powerWatts * dtSeconds;
+		final var prevPowerWatts = this.mechanismPowerWatts.getOrDefault(name, 0.0);
+		final var midpointPowerWatts = (prevPowerWatts + powerWatts) / 2.0;
+		final var deltaEnergyJoules = midpointPowerWatts * dtSeconds;
 		final var energyJoules = deltaEnergyJoules + prevEnergyJoules;
 		this.mechanismEnergiesJoules.put(name, energyJoules);
+		this.mechanismPowerWatts.put(name, powerWatts);
 		this.totalEnergyJoules += deltaEnergyJoules;
 		this.totalPowerWatts += powerWatts;
 
