@@ -86,8 +86,8 @@ public class HubShiftNotifications implements Runnable {
 			public void execute() {
 				var wrappedTime = HubShifts.getCurrentShift().getSecsSinceShiftStarted() % 0.5;
 				if (wrappedTime < 0.25) {
-					leftRumble.setRumble(0.8);
-					rightRumble.setRumble(0.8);
+					leftRumble.setRumble(1.0);
+					rightRumble.setRumble(1.0);
 				} else {
 					leftRumble.setRumble(0.0);
 					rightRumble.setRumble(0.0);
@@ -118,8 +118,8 @@ public class HubShiftNotifications implements Runnable {
 
 			@Override
 			public void execute() {
-				leftRumble.setRumble(0.8);
-				rightRumble.setRumble(0.8);
+				leftRumble.setRumble(1.0);
+				rightRumble.setRumble(1.0);
 			}
 
 			@Override
@@ -146,8 +146,8 @@ public class HubShiftNotifications implements Runnable {
 
 			@Override
 			public void execute() {
-				leftRumble.setRumble(0.8);
-				rightRumble.setRumble(0.8);
+				leftRumble.setRumble(1.0);
+				rightRumble.setRumble(1.0);
 			}
 
 			@Override
