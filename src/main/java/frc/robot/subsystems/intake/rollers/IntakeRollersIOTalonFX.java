@@ -1,5 +1,7 @@
 package frc.robot.subsystems.intake.rollers;
 
+import static edu.wpi.first.units.Units.Amps;
+
 import java.util.Optional;
 
 import com.ctre.phoenix6.BaseStatusSignal;
@@ -46,6 +48,14 @@ public class IntakeRollersIOTalonFX implements IntakeRollersIO {
 		this.rightConfig.MotorOutput
 			.withInverted(InvertedValue.Clockwise_Positive)
 			.withNeutralMode(NeutralModeValue.Brake)
+		;
+		this.leftConfig.CurrentLimits
+			.withSupplyCurrentLimitEnable(true)
+			.withSupplyCurrentLimit(Amps.of(40.0))
+		;
+		this.rightConfig.CurrentLimits
+			.withSupplyCurrentLimitEnable(true)
+			.withSupplyCurrentLimit(Amps.of(40.0))
 		;
 
 		this.leftMotor.getConfigurator().apply(this.leftConfig);
