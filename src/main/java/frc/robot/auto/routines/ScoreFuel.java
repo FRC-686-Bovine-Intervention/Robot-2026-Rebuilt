@@ -226,8 +226,8 @@ public class ScoreFuel extends AutoRoutine {
 		private static final Map.Entry<String, Boolean> no = Settings.option("No", false);
 
 		@Override
-		protected Settings<Boolean> generateSettings() {
-			return Settings.from(yes, yes, no);
+		protected Settings<Boolean> generateSettings() {n, 
+			return Settings.from(no, yes, no);
 		}
 	};
 
