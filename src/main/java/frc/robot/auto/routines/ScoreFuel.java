@@ -31,7 +31,7 @@ public class ScoreFuel extends AutoRoutine {
 
 		@Override
 		protected Settings<StartingPosition> generateSettings() {
-			return Settings.from(startInsideRightTrench, startInsideLeftTrench, startInsideRightTrench);
+			return Settings.from(startInsideLeftTrench, startInsideLeftTrench, startInsideRightTrench);
 		}
 	};
 
@@ -95,7 +95,7 @@ public class ScoreFuel extends AutoRoutine {
 				(startPosition == StartingPosition.INSIDE_RIGHT_TRENCH && scoreLocation == ScoringLocation.OUTSIDE_RIGHT_TRENCH)
 			) {
 				return Settings.from(
-					halfOuterSwipe,
+					halfSweep,
 					halfOuterSwipe,
 					halfOpponentSwipe,
 					halfSweep
