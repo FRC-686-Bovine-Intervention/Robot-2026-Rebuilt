@@ -1,5 +1,6 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Joules;
 import static edu.wpi.first.units.Units.Watts;
 
@@ -17,6 +18,7 @@ public class BatteryLogger {
 	private double prevTimestamp = -1.0;
 	private double totalEnergyJoules = 0.0;
 	private double totalPowerWatts = 0.0;
+	private double totalCurrentAmps = 0.0;
 
 	private final HashMap<String, Double> mechanismEnergiesJoules = new HashMap<>();
 	private final HashMap<String, Double> mechanismPowerWatts = new HashMap<>();
@@ -37,9 +39,11 @@ public class BatteryLogger {
 		this.mechanismPowerWatts.put(name, powerWatts);
 		this.totalEnergyJoules += deltaEnergyJoules;
 		this.totalPowerWatts += powerWatts;
+		this.totalCurrentAmps += totalSupplyCurrent;
 
 		Logger.recordOutput("BatteryLogger/" + name + "/Power Watts", powerWatts, Watts);
 		Logger.recordOutput("BatteryLogger/" + name + "/Energy Joules", energyJoules, Joules);
+		Logger.recordOutput("BatteryLogger/" + name + "/Current Amps", totalSupplyCurrent, Amps);
 	}
 
 	public void periodic() {
@@ -51,8 +55,10 @@ public class BatteryLogger {
 
 		Logger.recordOutput("BatteryLogger/Total Power Watts", this.totalPowerWatts, Watts);
 		Logger.recordOutput("BatteryLogger/Total Energy Joules", this.totalEnergyJoules, Joules);
+		Logger.recordOutput("BatteryLogger/Total Current Amps", this.totalCurrentAmps, Amps);
 
 		this.totalPowerWatts = 0.0;
+		this.totalCurrentAmps = 0.0;
 		this.prevTimestamp = timestamp;
 	}
 }
