@@ -5,6 +5,8 @@
 package frc.robot;
 
 
+import static edu.wpi.first.units.Units.Volts;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -21,11 +23,13 @@ import com.revrobotics.util.StatusLogger;
 
 import edu.wpi.first.net.WebServer;
 import edu.wpi.first.wpilibj.Filesystem;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import frc.robot.RobotType.Mode;
 import frc.robot.subsystems.leds.Leds;
 import frc.util.Environment;
 import frc.util.LoggedTracer;
@@ -41,6 +45,7 @@ public class Robot extends LoggedRobot {
 
 		StatusLogger.disableAutoLogging();
 		SignalLogger.enableAutoLogging(false);
+		RobotController.setBrownoutVoltage(Volts.of(6.2));
 
 		System.out.println("[Init Robot] Recording AdvantageKit Metadata");
 		Logger.recordMetadata("Robot", RobotType.getRobot().name());
@@ -188,6 +193,10 @@ public class Robot extends LoggedRobot {
 
 		VirtualSubsystem.postCommandPeriodicAll();
 		LoggedTracer.logEpoch("VirtualSubsystem PostCommandPeriodic");
+
+		if (RobotType.getMode() == Mode.REPLAY) {
+			BatteryLogger.getInstance().periodic();
+		}
 	}
 
 	@Override

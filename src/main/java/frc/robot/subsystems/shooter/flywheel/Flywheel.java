@@ -19,6 +19,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.BatteryLogger;
+import frc.robot.RobotType;
+import frc.robot.RobotType.Mode;
 import frc.robot.constants.RobotConstants;
 import frc.util.FFGains;
 import frc.util.NeutralMode;
@@ -144,6 +147,16 @@ public class Flywheel extends SubsystemBase {
 		}
 		if (configChanged) {
 			this.io.configSend();
+		}
+
+		if (RobotType.getMode() == Mode.REPLAY) {
+			BatteryLogger.getInstance().logMechanism(
+				"Shooter/Flywheel",
+				this.inputs.leftBottomMotor.motor.getSupplyCurrentAmps()
+				+ this.inputs.leftTopMotor.motor.getSupplyCurrentAmps()
+				+ this.inputs.rightBottomMotor.motor.getSupplyCurrentAmps()
+				+ this.inputs.rightTopMotor.motor.getSupplyCurrentAmps()
+			);
 		}
 	}
 

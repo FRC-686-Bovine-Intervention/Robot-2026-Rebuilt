@@ -11,6 +11,9 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.BatteryLogger;
+import frc.robot.RobotType;
+import frc.robot.RobotType.Mode;
 import frc.util.NeutralMode;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 
@@ -38,6 +41,13 @@ public class Indexer extends SubsystemBase {
 
 		this.motorDisconnectedAlert.set(!this.inputs.motorConnected);
 		this.motorDisconnectedGlobalAlert.set(!this.inputs.motorConnected);
+
+		if (RobotType.getMode() == Mode.REPLAY) {
+			BatteryLogger.getInstance().logMechanism(
+				"Rollers/Indexer",
+				this.inputs.motor.getSupplyCurrentAmps()
+			);
+		}
 	}
 
 	private Command genVoltageCommand(String name, DoubleSupplier voltsSupplier) {

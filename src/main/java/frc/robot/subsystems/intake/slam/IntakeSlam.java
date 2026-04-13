@@ -21,6 +21,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.BatteryLogger;
+import frc.robot.RobotType;
+import frc.robot.RobotType.Mode;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.ExtensionSystem;
 import frc.util.FFGains;
@@ -37,7 +40,7 @@ public class IntakeSlam extends SubsystemBase {
 	private final IntakeSlamIO io;
 	private final IntakeSlamIOInputsAutoLogged inputs = new IntakeSlamIOInputsAutoLogged();
 
-	private static final LoggedTunable<Angle> stowAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Stow/Angle", Degrees::of, 145.0);
+	private static final LoggedTunable<Angle> stowAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Stow/Angle", Degrees::of, 140.0);
 	private static final LoggedTunable<Angle> deployAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Angle", Degrees::of, IntakeSlamConstants.minAngle.in(Degrees));
 	private static final LoggedTunable<Voltage> deployPushdownVolts = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Pushdown Volts", Volts::of, -1.0);
 	private static final LoggedTunable<Angle> deployPushdownThreshold = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Pushdown Threshold", Degrees::of, 2.0);
@@ -181,6 +184,13 @@ public class IntakeSlam extends SubsystemBase {
 
 		this.motorDisconnectedAlert.set(!this.inputs.motorConnected);
 		this.motorDisconnectedGlobalAlert.set(!this.inputs.motorConnected);
+
+		if (RobotType.getMode() == Mode.REPLAY) {
+			BatteryLogger.getInstance().logMechanism(
+				"Intake/Slam",
+				this.inputs.motor.motor.getSupplyCurrentAmps()
+			);
+		}
 
 		LoggedTracer.logEpoch("CommandScheduler Periodic/Subsystem/Intake Slam/Periodic");
 		LoggedTracer.logEpoch("CommandScheduler Periodic/Subsystem/Intake Slam");

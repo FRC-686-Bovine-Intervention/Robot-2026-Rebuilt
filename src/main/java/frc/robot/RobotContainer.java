@@ -47,7 +47,6 @@ import frc.robot.auto.routines.ScoreFuel;
 import frc.robot.automations.AutoFeed;
 import frc.robot.automations.HubShiftNotifications;
 import frc.robot.automations.IntakeDeployHysteresis;
-import frc.robot.automations.PassivePrestage;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.ExtensionSystem;
@@ -83,7 +82,7 @@ import frc.robot.subsystems.rollers.indexer.IndexerIO;
 import frc.robot.subsystems.rollers.indexer.IndexerIOTalonFX;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.aiming.AimingSystem;
-import frc.robot.subsystems.shooter.aiming.passing.InterpolationPassingCalc;
+import frc.robot.subsystems.shooter.aiming.passing.PhysicsPassingCalc;
 import frc.robot.subsystems.shooter.aiming.shooting.InterpolationShootingCalc;
 import frc.robot.subsystems.shooter.aiming.shooting.PhysicsShootingCalc;
 import frc.robot.subsystems.shooter.flywheel.Flywheel;
@@ -167,7 +166,7 @@ public class RobotContainer {
 					new Hood(new HoodIOTalonFXS(commonCANdi)),
 					new AimingSystem(
 						new InterpolationShootingCalc(),
-						new InterpolationPassingCalc()
+						new PhysicsPassingCalc()
 					)
 				);
 				this.intake = new Intake(
@@ -237,7 +236,7 @@ public class RobotContainer {
 					new Hood(new HoodIOSim(commonCANdi)),
 					new AimingSystem(
 						new PhysicsShootingCalc(),
-						new InterpolationPassingCalc()
+						new PhysicsPassingCalc()
 					)
 				);
 				this.intake = new Intake(
@@ -306,7 +305,7 @@ public class RobotContainer {
 					new Hood(new HoodIO() {}),
 					new AimingSystem(
 						new PhysicsShootingCalc(),
-						new InterpolationPassingCalc()
+						new PhysicsPassingCalc()
 					)
 				);
 				this.intake = new Intake(
@@ -883,7 +882,7 @@ public class RobotContainer {
 		// this.automationsLoop.bind(new AutoSpinUp(this.drive, this.shooter, intakeRollersIntakeCommand));
 		// this.automationsLoop.bind(new AutoDriveAim(this.drive, this.shooter, intakeRollersIntakeCommand));
 		this.automationsLoop.bind(new AutoFeed(this.shooter, this.rollers, this.driveController.y().or(secondDriverOverride), aimToPassCommand::isScheduled));
-		this.automationsLoop.bind(new PassivePrestage(this.rollers, rollersFeederIdleCommand, rollersPassivePrestageCommand));
+		// this.automationsLoop.bind(new PassivePrestage(this.rollers, rollersFeederIdleCommand, rollersPassivePrestageCommand));
 		this.automationsLoop.bind(new HubShiftNotifications(this.driveController));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		// new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());

@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.wpilibj2.command.Command;
 
@@ -16,7 +17,7 @@ public abstract class AutoRoutine {
 		this.questions = questions;
 	}
 
-	public abstract Command generateCommand();
+	public abstract Command generateCommand(DoubleSupplier autoTimer);
 
 	public static abstract class AutoQuestion<T> {
 		public final String name;

@@ -20,7 +20,7 @@ public class HubShifts {
 			public AllianceFlipped<Boolean> isHubActive() {
 				var autoWinner = HubShifts.getAutoWinner();
 				if (autoWinner.isEmpty()) {
-					return BOTH_ACTIVE;
+					return BLUE_ACTIVE;
 				}
 				return switch (autoWinner.get()) {
 					case Blue -> RED_ACTIVE;
@@ -33,7 +33,7 @@ public class HubShifts {
 			public AllianceFlipped<Boolean> isHubActive() {
 				var autoWinner = HubShifts.getAutoWinner();
 				if (autoWinner.isEmpty()) {
-					return BOTH_ACTIVE;
+					return RED_ACTIVE;
 				}
 				return switch (autoWinner.get()) {
 					case Blue -> BLUE_ACTIVE;
@@ -46,7 +46,7 @@ public class HubShifts {
 			public AllianceFlipped<Boolean> isHubActive() {
 				var autoWinner = HubShifts.getAutoWinner();
 				if (autoWinner.isEmpty()) {
-					return BOTH_ACTIVE;
+					return BLUE_ACTIVE;
 				}
 				return switch (autoWinner.get()) {
 					case Blue -> RED_ACTIVE;
@@ -59,7 +59,7 @@ public class HubShifts {
 			public AllianceFlipped<Boolean> isHubActive() {
 				var autoWinner = HubShifts.getAutoWinner();
 				if (autoWinner.isEmpty()) {
-					return BOTH_ACTIVE;
+					return RED_ACTIVE;
 				}
 				return switch (autoWinner.get()) {
 					case Blue -> BLUE_ACTIVE;
@@ -172,6 +172,8 @@ public class HubShifts {
 			} else {
 				currentShift = Shift.Endgame;
 			}
+		} else {
+			currentShift = Shift.Disabled;
 		}
 
 		Logger.recordOutput("Current Shift", HubShifts.getCurrentShift());

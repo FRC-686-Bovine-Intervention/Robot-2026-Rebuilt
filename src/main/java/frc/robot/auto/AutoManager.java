@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.leds.Leds;
+import frc.util.Environment;
 import frc.util.VirtualSubsystem;
 
 public class AutoManager extends VirtualSubsystem {
@@ -49,8 +50,8 @@ public class AutoManager extends VirtualSubsystem {
 
 	public static Command generateAutoCommand(AutoRoutine routine, double initialDelaySeconds) {
 		return new Command() {
-			private final Command autoCommand = routine.generateCommand();
 			private final Timer autoTimer = new Timer();
+			private final Command autoCommand = routine.generateCommand(() -> this.autoTimer.get());
 			private double autoFinishTime = 0.0;
 			private boolean autoCommandRunning = false;
 			private boolean autoCommandFinished = false;
@@ -128,6 +129,8 @@ public class AutoManager extends VirtualSubsystem {
 
 				if (overrun) {
 					System.out.println(String.format("[AutoManager] Autonomous overran the allotted %.1f seconds!", AutoConstants.allottedAutoTime.in(Seconds)));
+				}
+				if (overrun && !Environment.isCompetition()) {
 					Leds.getInstance().autonomousOverrunAnimation.setFlag(true);
 				} else {
 					Leds.getInstance().autonomousFinishedAnimation.setFlag(true);

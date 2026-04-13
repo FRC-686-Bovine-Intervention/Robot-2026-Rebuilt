@@ -9,6 +9,9 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.BatteryLogger;
+import frc.robot.RobotType;
+import frc.robot.RobotType.Mode;
 import frc.util.NeutralMode;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 
@@ -29,6 +32,14 @@ public class IntakeRollers extends SubsystemBase {
 	public void periodic() {
 		this.io.updateInputs(this.inputs);
 		Logger.processInputs("Inputs/Intake/Rollers", this.inputs);
+
+		if (RobotType.getMode() == Mode.REPLAY) {
+			BatteryLogger.getInstance().logMechanism(
+				"Intake/Rollers",
+				this.inputs.leftMotor.getSupplyCurrentAmps()
+				+ this.inputs.rightMotor.getSupplyCurrentAmps()
+			);
+		}
 	}
 
 	private Command genVoltageCommand(String name, DoubleSupplier voltsSupplier) {

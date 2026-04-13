@@ -3,6 +3,7 @@ package frc.robot.auto.routines;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.DoubleSupplier;
 
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
@@ -14,6 +15,7 @@ import frc.robot.auto.AutoConstants.IntakeLocation;
 import frc.robot.auto.AutoConstants.ScoringLocation;
 import frc.robot.auto.AutoConstants.StartingPosition;
 import frc.robot.auto.AutoRoutine;
+import frc.robot.subsystems.drive.commands.FollowTrajectoryCommand;
 import frc.util.flipping.AllianceFlipUtil;
 import frc.util.flipping.AllianceFlipUtil.FieldFlipType;
 import frc.util.flipping.AllianceFlipped;
@@ -29,7 +31,7 @@ public class ScoreFuel extends AutoRoutine {
 
 		@Override
 		protected Settings<StartingPosition> generateSettings() {
-			return Settings.from(startInsideRightTrench, startInsideLeftTrench, startInsideRightTrench);
+			return Settings.from(startInsideLeftTrench, startInsideLeftTrench, startInsideRightTrench);
 		}
 	};
 
@@ -93,7 +95,7 @@ public class ScoreFuel extends AutoRoutine {
 				(startPosition == StartingPosition.INSIDE_RIGHT_TRENCH && scoreLocation == ScoringLocation.OUTSIDE_RIGHT_TRENCH)
 			) {
 				return Settings.from(
-					halfOuterSwipe,
+					halfSweep,
 					halfOuterSwipe,
 					halfOpponentSwipe,
 					halfSweep
@@ -183,9 +185,10 @@ public class ScoreFuel extends AutoRoutine {
 				(startPosition == ScoringLocation.OUTSIDE_RIGHT_TRENCH && scoreLocation == ScoringLocation.OUTSIDE_RIGHT_TRENCH)
 			) {
 				return Settings.from(
+					halfInnerLoopSwipe,
 					halfInnerSwipe,
 					halfOuterSwipe,
-					halfInnerSwipe
+					halfInnerLoopSwipe
 				);
 			} else if (
 				(startPosition == ScoringLocation.OUTSIDE_RIGHT_TRENCH && scoreLocation == ScoringLocation.OUTSIDE_LEFT_TRENCH) ||
@@ -218,7 +221,7 @@ public class ScoreFuel extends AutoRoutine {
 		}
 	};
 
-	private static final AutoQuestion<Boolean> comeBackThroughTrenchSideways = new AutoQuestion<Boolean>("Trench Sideways") {
+	private static final AutoQuestion<Boolean> enableTransitionCutoff = new AutoQuestion<Boolean>("Transition Cutoff") {
 		private static final Map.Entry<String, Boolean> yes = Settings.option("Yes", true);
 		private static final Map.Entry<String, Boolean> no = Settings.option("No", false);
 
@@ -237,28 +240,60 @@ public class ScoreFuel extends AutoRoutine {
 			firstIntakeLocation,
 			secondScoringLocation,
 			secondIntakeLocation,
-			comeBackThroughTrenchSideways
+			enableTransitionCutoff
 		));
 		this.robot = robot;
 	}
 
 	@Override
-	public Command generateCommand() {
-		var startPosition = ScoreFuel.startPosition.getResponse();
-		var firstIntakeLocation = ScoreFuel.firstIntakeLocation.getResponse();
-		var firstScoringLocation = ScoreFuel.firstScoringLocation.getResponse();
-		var secondIntakeLocation = ScoreFuel.secondIntakeLocation.getResponse();
-		var secondScoringLocation = ScoreFuel.secondScoringLocation.getResponse();
-		var comeBackThroughTrenchSideways = ScoreFuel.comeBackThroughTrenchSideways.getResponse();
+	public Command generateCommand(DoubleSupplier autoTimer) {
+		final var startPosition = ScoreFuel.startPosition.getResponse();
+		final var firstIntakeLocation = ScoreFuel.firstIntakeLocation.getResponse();
+		final var firstScoringLocation = ScoreFuel.firstScoringLocation.getResponse();
+		final var secondIntakeLocation = ScoreFuel.secondIntakeLocation.getResponse();
+		final var secondScoringLocation = ScoreFuel.secondScoringLocation.getResponse();
+		final var enableTransitionCutoff = ScoreFuel.enableTransitionCutoff.getResponse();
 
 		var commands = new ArrayList<Command>();
-		var firstTraj = generatePath(startPosition, firstScoringLocation, firstIntakeLocation, comeBackThroughTrenchSideways).getOurs();
-		var firstCommand = AutoCommons.swipe(this.robot, firstTraj, 0.75, 1.0);
+		var firstTraj = generatePath(startPosition, firstScoringLocation, firstIntakeLocation, false).getOurs();
+		var firstCommand = AutoCommons.swipe(
+			this.robot,
+			firstTraj,
+			2.0,
+			0.5,
+			0.5,
+			2.5,
+			18.5,
+			15.5,
+			autoTimer,
+			enableTransitionCutoff
+		);
 		commands.add(firstCommand);
 
 		var secondTraj = generatePath(firstScoringLocation, secondScoringLocation, secondIntakeLocation).getOurs();
-		var secondCommand = AutoCommons.swipe(this.robot, secondTraj, 0.0, 220.0);
+		var secondCommand = AutoCommons.swipe(
+			this.robot,
+			secondTraj,
+			0.0,
+			0.0,
+			0.5,
+			2.5,
+			18.5,
+			15.5,
+			autoTimer,
+			enableTransitionCutoff
+		);
 		commands.add(secondCommand);
+
+		var thirdTraj = generatePath(secondScoringLocation, ScoringLocation.STOP, IntakeLocation.HALF_INNER_SWIPE).getOurs();
+		var thirdCommand = Commands.parallel(
+			Commands.deadline(
+				new FollowTrajectoryCommand(this.robot.drive, thirdTraj, true).withName("Grab Ball").asProxy(),
+				this.robot.intake.rollers.intake().asProxy()
+			),
+			this.robot.intake.slam.deploy(robot.extensionSystem).asProxy()
+		);
+		commands.add(thirdCommand);
 
 		return Commands.parallel(
 			AutoCommons.setOdometryFlipped(startPosition.pose),

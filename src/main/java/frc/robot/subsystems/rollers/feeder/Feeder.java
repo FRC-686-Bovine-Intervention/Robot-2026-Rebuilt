@@ -11,6 +11,9 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.BatteryLogger;
+import frc.robot.RobotType;
+import frc.robot.RobotType.Mode;
 import frc.util.NeutralMode;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 
@@ -42,6 +45,14 @@ public class Feeder extends SubsystemBase {
 		this.leftMotorDisconnectedGlobalAlert.set(!this.inputs.leftMotorConnected);
 		this.rightMotorDisconnectedAlert.set(!this.inputs.rightMotorConnected);
 		this.rightMotorDisconnectedGlobalAlert.set(!this.inputs.rightMotorConnected);
+
+		if (RobotType.getMode() == Mode.REPLAY) {
+			BatteryLogger.getInstance().logMechanism(
+				"Rollers/Feeder",
+				this.inputs.leftMotor.getSupplyCurrentAmps()
+				+ this.inputs.rightMotor.getSupplyCurrentAmps()
+			);
+		}
 	}
 
 	private Command genVoltageCommand(String name, DoubleSupplier voltsSupplier) {
