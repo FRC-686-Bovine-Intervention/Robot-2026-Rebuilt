@@ -888,7 +888,6 @@ public class RobotContainer {
 		// new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
 
 		// Bind buttons
-		this.driveController.leftBumper().whileTrue(driveTankCommand);
 		new Trigger(() ->
 			translationJoystick.magnitude() > 0.0
 			&& !driveTankCommand.isScheduled()
@@ -916,16 +915,24 @@ public class RobotContainer {
 		 *  | Press: Deploy intake (if not deployed) and roll in
 		 *  | Double Press: Retract intake
 		 */
+		final var intakeEdge = new EdgeDetector(false);
+		final var intakeSupplier = this.driveController.a();
 		final var intakeDoublePressThreshold = LoggedTunable.from("Controls/Intake/Double Press Threshold", Seconds::of, 0.25);
 		final var intakeDoublePressTimer = new Timer();
 		final var intakeHopperDumpEdge = new EdgeDetector(false);
 		final var intakeHopperDumpSupplier = this.driveController.povUp();
+		final var tankEdge = new EdgeDetector(false);
+		final var tankSupplier = this.driveController.leftBumper();
+
 		CommandScheduler.getInstance().getDefaultButtonLoop().bind(() -> {
-			if (this.driveController.hid.getAButtonPressed()) {
+			intakeEdge.update(intakeSupplier.getAsBoolean());
+			if (intakeEdge.risingEdge()) {
 				CommandScheduler.getInstance().schedule(intakeRollersIntakeCommand);
-				CommandScheduler.getInstance().schedule(intakeDeployCommand);
+				if (intakeStowCommand.isScheduled()) {
+					CommandScheduler.getInstance().schedule(intakeDeployCommand);
+				}
 			}
-			if (this.driveController.hid.getAButtonReleased()) {
+			if (intakeEdge.fallingEdge()) {
 				CommandScheduler.getInstance().cancel(intakeRollersIntakeCommand);
 				if (intakeDoublePressTimer.isRunning()) {
 					if (!intakeDoublePressTimer.hasElapsed(intakeDoublePressThreshold.get().in(Seconds))) {
@@ -939,14 +946,33 @@ public class RobotContainer {
 				intakeDoublePressTimer.stop();
 				intakeDoublePressTimer.reset();
 			}
+
 			intakeHopperDumpEdge.update(intakeHopperDumpSupplier.getAsBoolean());
 			if (intakeHopperDumpEdge.risingEdge()) {
 				CommandScheduler.getInstance().schedule(intakeHopperDump);
+				CommandScheduler.getInstance().schedule(intakeRollersIntakeCommand);
 			}
 			if (intakeHopperDumpEdge.fallingEdge()) {
 				CommandScheduler.getInstance().schedule(intakeDeployCommand);
+				if (!intakeEdge.getValue()) {
+					CommandScheduler.getInstance().cancel(intakeRollersIntakeCommand);
+				}
+			}
+
+			tankEdge.update(tankSupplier.getAsBoolean());
+			if (tankEdge.risingEdge()) {
+				CommandScheduler.getInstance().schedule(driveTankCommand);
+				CommandScheduler.getInstance().schedule(intakeRollersIntakeCommand);
+				CommandScheduler.getInstance().schedule(intakeDeployCommand);
+			}
+			if (tankEdge.fallingEdge()) {
+				CommandScheduler.getInstance().cancel(driveTankCommand);
+				if (!intakeEdge.getValue()) {
+					CommandScheduler.getInstance().cancel(intakeRollersIntakeCommand);
+				}
 			}
 		});
+
 
 		final var aimAutoTrigger = new EdgeDetector(false);
 		final var aimHubTrigger = new EdgeDetector(false);
