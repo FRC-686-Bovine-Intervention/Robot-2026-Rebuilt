@@ -19,6 +19,8 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotState;
+import frc.robot.RobotType;
+import frc.robot.RobotType.Mode;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.shooter.aiming.AimingSystem;
 import frc.robot.subsystems.shooter.flywheel.Flywheel;
@@ -135,7 +137,8 @@ public class Shooter {
 			shotPose,
 			targetSurfaceVeloMPS,
 			targetHoodAngleRads,
-			targetAzimuthHeadingRads
+			targetAzimuthHeadingRads,
+			"Shooting"
 		);
 	}
 
@@ -151,7 +154,8 @@ public class Shooter {
 			shotPose,
 			targetSurfaceVeloMPS,
 			targetHoodAngleRads,
-			targetAzimuthHeadingRads
+			targetAzimuthHeadingRads,
+			"Passing"
 		);
 	}
 
@@ -160,7 +164,8 @@ public class Shooter {
 		Translation2d shotPose,
 		double targetSurfaceVeloMPS,
 		double targetHoodAngleRads,
-		double targetAzimuthHeadingRads
+		double targetAzimuthHeadingRads,
+		String name
 	) {
 		final var targetLaunchVector = Shooter.calculateLaunchVector(targetSurfaceVeloMPS, targetHoodAngleRads, targetAzimuthHeadingRads);
 		final var targetVectorFloor = Math.hypot(targetLaunchVector.getX(), targetLaunchVector.getY());
@@ -190,9 +195,15 @@ public class Shooter {
 
 		final var withinTranslationTolerance = GeomUtil.isNear(shotPose, RobotState.getInstance().getEstimatedGlobalPose().getTranslation(), translationTolerance.get().in(Meters));
 
-		Logger.recordOutput("Subsystems/Shooter/Aiming/Tolerances/Within Azimuth Tolerance", withinAzimuthTolerance);
-		Logger.recordOutput("Subsystems/Shooter/Aiming/Tolerances/Shooter Tolerance", withinShooterTolerance);
-		Logger.recordOutput("Subsystems/Shooter/Aiming/Tolerances/Translation Tolerance", withinTranslationTolerance);
+		Logger.recordOutput("Subsystems/Shooter/" + name + "/Tolerances/Within Azimuth Tolerance", withinAzimuthTolerance);
+		Logger.recordOutput("Subsystems/Shooter/" + name + "/Tolerances/Shooter Tolerance", withinShooterTolerance);
+		Logger.recordOutput("Subsystems/Shooter/" + name + "/Tolerances/Translation Tolerance", withinTranslationTolerance);
+
+		if (RobotType.getMode() == Mode.REPLAY) {
+			final var hoodTranslation = this.hood.mech.getFieldRelative().getTranslation();
+			Logger.recordOutput("Subsystems/Shooter/Measured Launch Vector", hoodTranslation, hoodTranslation.plus(measuredLaunchVector));
+			Logger.recordOutput("Subsystems/Shooter/Target Launch Vector", hoodTranslation, hoodTranslation.plus(targetLaunchVector));
+		}
 
 		return withinAzimuthTolerance && withinShooterTolerance && withinTranslationTolerance;
 	}

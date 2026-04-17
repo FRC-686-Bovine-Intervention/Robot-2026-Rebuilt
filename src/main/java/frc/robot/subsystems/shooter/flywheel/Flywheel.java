@@ -185,15 +185,18 @@ public class Flywheel extends SubsystemBase {
 
 			@Override
 			public void execute() {
-				var goalSurfaceVeloMPS = surfaceVeloSupplierMPS.getAsDouble();
-				var goalAngularVeloRadsPerSec = FlywheelConstants.wheel.metersToRadians(goalSurfaceVeloMPS);
-				if (flywheel.getMeasuredSurfaceVeloMPS() > goalSurfaceVeloMPS * Flywheel.bangBangThreshold.getAsDouble()) {
+				final var goalSurfaceVeloMPS = surfaceVeloSupplierMPS.getAsDouble();
+				final var goalAngularVeloRadsPerSec = FlywheelConstants.wheel.metersToRadians(goalSurfaceVeloMPS);
+				final var bangBangThresholdMPS = goalSurfaceVeloMPS * Flywheel.bangBangThreshold.getAsDouble();
+				if (flywheel.getMeasuredSurfaceVeloMPS() > bangBangThresholdMPS) {
 					flywheel.io.setVelocityRadsPerSec(goalAngularVeloRadsPerSec);
 					Logger.recordOutput("Subsystems/Shooter/Flywheel/Bang Bang Enabled", false);
 				} else {
 					flywheel.io.setCurrent(bangBangCurrent.get().in(Amps));
 					Logger.recordOutput("Subsystems/Shooter/Flywheel/Bang Bang Enabled", true);
 				}
+				Logger.recordOutput("Subsystems/Shooter/Flywheel/Surface Velocity/Goal", goalSurfaceVeloMPS, MetersPerSecond);
+				Logger.recordOutput("Subsystems/Shooter/Flywheel/Surface Velocity/Bang Bang Threshold", bangBangThresholdMPS, MetersPerSecond);
 			}
 
 			@Override
