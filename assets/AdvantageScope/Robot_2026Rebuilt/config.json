@@ -7,6 +7,13 @@
     "position": [0, 0, 0],
     "cameras": [
         {
+            "name": "Hopper",
+            "rotations": [{ "axis": "y", "degrees": -15 },{ "axis": "z", "degrees": -5.374629 }],
+            "position": [-0.2549009634, 0.314325, 0.51435],
+            "resolution": [16,9],
+            "fov": 80
+        },
+        {
             "name": "Hub Zoom",
             "rotations": [{ "axis": "y", "degrees": -15 },{ "axis": "z", "degrees": -5.374629 }],
             "position": [-0.2549009634, 0.314325, 0.51435],
@@ -41,20 +48,8 @@
             "zeroedPosition": [0.18860357, 0, -0.46653141]
         },
         {
-            "zeroedRotations": [{ "axis": "z", "degrees": 90 },{ "axis": "y", "degrees": 90 },{ "axis": "y", "degrees": 77.606461691456901932073109190622 }],
-            "zeroedPosition": [-0.26458066908925017988745953541204, 0, 0.06370180219024179527804949332474]
-        },
-        {
-            "zeroedRotations": [{ "axis": "z", "degrees": 90 },{ "axis": "y", "degrees": 90 },{ "axis": "y", "degrees": 77.606461691456901932073109190622 }],
-            "zeroedPosition": [-0.2331272116780560586067532275001, 0, 0.12915786209215001887557764010994]
-        },
-        {
-            "zeroedRotations": [{ "axis": "z", "degrees": 90 },{ "axis": "y", "degrees": 90 },{ "axis": "y", "degrees": 141.940882301 }],
-            "zeroedPosition": [-0.16386907, 0, 0.64005827]
-        },
-        {
-            "zeroedRotations": [{ "axis": "x", "degrees": 90 }, { "axis" : "z", "degrees" : 90 }],
-            "zeroedPosition": [0.039076, 0.324, -0.184]
+            "zeroedRotations": [],
+            "zeroedPosition": [0.307975, 0, -0.241300]
         }
     ]
 }

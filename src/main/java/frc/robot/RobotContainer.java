@@ -376,10 +376,7 @@ public class RobotContainer {
 
 		// Setup robot structure
 		this.drive.structureRoot
-			.addChild(this.intake.slam.driverMech
-				.addChild(this.intake.slam.couplerMech)
-			)
-			.addChild(this.intake.slam.followerMech)
+			.addChild(this.intake.slam.mech)
 			.addChild(this.shooter.hood.mech)
 			// .addChild(this.climber.hook.mech)
 			.addChild(this.hopperCamera.mount)
@@ -392,9 +389,7 @@ public class RobotContainer {
 		// Register Mechanism3ds
 		Mechanism3d.registerMechs(
 			this.shooter.hood.mech,
-			this.intake.slam.followerMech,
-			this.intake.slam.driverMech,
-			this.intake.slam.couplerMech
+			this.intake.slam.mech
 			// this.climber.hook.mech
 		);
 
