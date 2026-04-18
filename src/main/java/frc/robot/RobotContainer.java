@@ -950,13 +950,9 @@ public class RobotContainer {
 			intakeHopperDumpEdge.update(intakeHopperDumpSupplier.getAsBoolean());
 			if (intakeHopperDumpEdge.risingEdge()) {
 				CommandScheduler.getInstance().schedule(intakeHopperDump);
-				CommandScheduler.getInstance().schedule(intakeRollersIntakeCommand);
 			}
 			if (intakeHopperDumpEdge.fallingEdge()) {
 				CommandScheduler.getInstance().schedule(intakeDeployCommand);
-				if (!intakeEdge.getValue()) {
-					CommandScheduler.getInstance().cancel(intakeRollersIntakeCommand);
-				}
 			}
 
 			tankEdge.update(tankSupplier.getAsBoolean());
