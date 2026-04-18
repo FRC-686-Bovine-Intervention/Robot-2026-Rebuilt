@@ -743,9 +743,12 @@ public class RobotContainer {
 
 		final var intakeRollersIdleCommand = this.intake.rollers.idle();
 		final var intakeRollersIntakeCommand = this.intake.rollers.intake();
+		final var intakeRollersCompressCommand = this.intake.rollers.compress();
 		final var intakeStowCommand = this.intake.slam.stow();
-		final var intakeHopperDump = this.intake.slam.hopperDump(this.extensionSystem);
 		final var intakeDeployCommand = this.intake.slam.deploy(this.extensionSystem);
+		final var intakeHopperDumpCommand = this.intake.slam.hopperDump(this.extensionSystem);
+		final var intakeLinearCompressCommand = this.intake.slam.linearCompress(this.extensionSystem);
+		final var intakeTrigCompressCommand = this.intake.slam.trigCompress(this.extensionSystem);
 
 		final var rollersIndexerIdleCommand = this.rollers.indexer.idle();
 		final var rollersFeederIdleCommand = this.rollers.feeder.idle();
@@ -920,6 +923,10 @@ public class RobotContainer {
 		final var intakeDoublePressTimer = new Timer();
 		final var intakeHopperDumpEdge = new EdgeDetector(false);
 		final var intakeHopperDumpSupplier = this.driveController.povUp();
+		final var intakeLinearCompressEdge = new EdgeDetector(false);
+		final var intakeLinearCompressSupplier = this.driveController.povLeft();
+		final var intakeTrigCompressEdge = new EdgeDetector(false);
+		final var intakeTrigCompressSupplier = this.driveController.povRight();
 		CommandScheduler.getInstance().getDefaultButtonLoop().bind(() -> {
 			if (this.driveController.hid.getAButtonPressed()) {
 				CommandScheduler.getInstance().schedule(intakeRollersIntakeCommand);
@@ -939,12 +946,35 @@ public class RobotContainer {
 				intakeDoublePressTimer.stop();
 				intakeDoublePressTimer.reset();
 			}
+
 			intakeHopperDumpEdge.update(intakeHopperDumpSupplier.getAsBoolean());
 			if (intakeHopperDumpEdge.risingEdge()) {
-				CommandScheduler.getInstance().schedule(intakeHopperDump);
+				CommandScheduler.getInstance().schedule(intakeHopperDumpCommand);
+				CommandScheduler.getInstance().schedule(intakeRollersCompressCommand);
 			}
 			if (intakeHopperDumpEdge.fallingEdge()) {
 				CommandScheduler.getInstance().schedule(intakeDeployCommand);
+				CommandScheduler.getInstance().cancel(intakeRollersCompressCommand);
+			}
+
+			intakeLinearCompressEdge.update(intakeLinearCompressSupplier.getAsBoolean());
+			if (intakeLinearCompressEdge.risingEdge()) {
+				CommandScheduler.getInstance().schedule(intakeLinearCompressCommand);
+				CommandScheduler.getInstance().schedule(intakeRollersCompressCommand);
+			}
+			if (intakeLinearCompressEdge.fallingEdge()) {
+				CommandScheduler.getInstance().schedule(intakeDeployCommand);
+				CommandScheduler.getInstance().cancel(intakeRollersCompressCommand);
+			}
+			
+			intakeTrigCompressEdge.update(intakeTrigCompressSupplier.getAsBoolean());
+			if (intakeTrigCompressEdge.risingEdge()) {
+				CommandScheduler.getInstance().schedule(intakeTrigCompressCommand);
+				CommandScheduler.getInstance().schedule(intakeRollersCompressCommand);
+			}
+			if (intakeTrigCompressEdge.fallingEdge()) {
+				CommandScheduler.getInstance().schedule(intakeDeployCommand);
+				CommandScheduler.getInstance().cancel(intakeRollersCompressCommand);
 			}
 		});
 
