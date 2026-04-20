@@ -16,7 +16,8 @@
   "waypoints":[
     {"x":{"exp":"RightShooter.x", "val":2.8584582805633545}, "y":{"exp":"RightShooter.y", "val":2.6051342487335205}, "heading":{"exp":"RightShooter.heading", "val":0.7757910845571518}, "intervals":23, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"2.1490490436553955 m", "val":2.1490490436553955}, "y":{"exp":"4.48207426071167 m", "val":4.48207426071167}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":29, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
-    {"x":{"exp":"Depot.x", "val":0.90805}, "y":{"exp":"Depot.y", "val":5.9589955496}, "heading":{"exp":"Depot.heading", "val":3.141592653589793}, "intervals":34, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
+    {"x":{"exp":"Depot.x", "val":0.90805}, "y":{"exp":"Depot.y", "val":5.9589955496}, "heading":{"exp":"Depot.heading", "val":3.141592653589793}, "intervals":34, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":{"exp":"LeftShooter.x", "val":2.908181667327881}, "y":{"exp":"LeftShooter.y", "val":5.6541955496}, "heading":{"exp":"LeftShooter.heading", "val":-0.8156920210794066}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
   "constraints":[
     {"from":"first", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
     {"from":"last", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
