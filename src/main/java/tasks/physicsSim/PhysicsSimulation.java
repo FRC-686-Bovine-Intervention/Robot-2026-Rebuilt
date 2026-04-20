@@ -35,7 +35,7 @@ public class PhysicsSimulation {
 				FlywheelConstants.hoodRoller.effectiveRadius().in(Meters),
 				HoodConstants.hoodRadius.in(Meters),
 				0.870833333,
-				FlywheelConstants.wheel.rotationsToMeters(FlywheelConstants.motorToMechanism.reductionSigned() * 6000) / 60,
+				19.94911333,
 				0.0,
 				30,
 				HoodConstants.minAngle.in(Degrees),
