@@ -8,10 +8,10 @@
     "cameras": [
         {
             "name": "Hopper",
-            "rotations": [{ "axis": "y", "degrees": -15 },{ "axis": "z", "degrees": -5.374629 }],
-            "position": [-0.2549009634, 0.314325, 0.51435],
+            "rotations": [{ "axis": "y", "degrees": -15 }],
+            "position": [-0.031135, 0.0, 0.530729],
             "resolution": [16,9],
-            "fov": 80
+            "fov": 72
         },
         {
             "name": "Hub Zoom",
