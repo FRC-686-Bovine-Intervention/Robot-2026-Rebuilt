@@ -1,5 +1,7 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Seconds;
+
 import java.util.Optional;
 
 import org.littletonrobotics.junction.Logger;
@@ -76,7 +78,7 @@ public class HubShifts {
 
 			@Override
 			public double getSecsLeftInShift() {
-				return Double.POSITIVE_INFINITY;
+				return 0.0;
 			}
 
 			@Override
@@ -104,7 +106,7 @@ public class HubShifts {
 		}
 
 		public double getSecsSinceShiftStarted() {
-			var shiftStartSecs = switch (this) {
+			final var shiftStartSecs = switch (this) {
 				case Auto -> 0.0;
 				case Transition -> 0.0;
 				case Shift1 -> 10.0;
@@ -114,11 +116,15 @@ public class HubShifts {
 				case Endgame -> 110.0;
 				case Disabled -> 0.0;
 			};
-			return (Timer.getTimestamp() - teleopEnableTime) - shiftStartSecs;
+			final var enableTimestampSecs = switch (this) {
+				case Auto -> HubShifts.autoEnableTimestampSecs;
+				default -> HubShifts.teleopEnableTimestampSecs;
+			};
+			return (Timer.getTimestamp() - enableTimestampSecs) - shiftStartSecs;
 		}
 		public double getSecsLeftInShift() {
-			var shiftEndSecs = switch (this) {
-				case Auto -> 0.0;
+			final var shiftEndSecs = switch (this) {
+				case Auto -> 20.0;
 				case Transition -> 10.0;
 				case Shift1 -> 35.0;
 				case Shift2 -> 60.0;
@@ -127,7 +133,11 @@ public class HubShifts {
 				case Endgame -> 140.0;
 				case Disabled -> 0.0;
 			};
-			return shiftEndSecs - (Timer.getTimestamp() - teleopEnableTime);
+			final var enableTimestampSecs = switch (this) {
+				case Auto -> HubShifts.autoEnableTimestampSecs;
+				default -> HubShifts.teleopEnableTimestampSecs;
+			};
+			return shiftEndSecs - (Timer.getTimestamp() - enableTimestampSecs);
 		}
 		public double getShiftLength() {
 			return switch (this) {
@@ -146,37 +156,50 @@ public class HubShifts {
 	@Getter
 	private static Shift currentShift = Shift.Disabled;
 
-	private static double teleopEnableTime;
+	private static double autoEnableTimestampSecs;
+	private static boolean prevAutoEnable = false;
+	private static double teleopEnableTimestampSecs;
 	private static boolean prevTeleopEnable = false;
 
 	public static void periodic() {
-		var teleopEnable = DriverStation.isTeleopEnabled();
-		if (teleopEnable && !prevTeleopEnable) {
-			teleopEnableTime = Timer.getTimestamp();
+		final var autoEnable = DriverStation.isAutonomousEnabled();
+		final var teleopEnable = DriverStation.isTeleopEnabled();
+
+		if (autoEnable && !HubShifts.prevAutoEnable) {
+			HubShifts.autoEnableTimestampSecs = Timer.getTimestamp();
 		}
-		prevTeleopEnable = teleopEnable;
-		if (DriverStation.isAutonomousEnabled()) {
-			currentShift = Shift.Auto;
-		} else if (teleopEnable) {
-			var timeSinceTeleEnable = Timer.getTimestamp() - teleopEnableTime;
-			if (timeSinceTeleEnable < 10.0) {
-				currentShift = Shift.Transition;
-			} else if (timeSinceTeleEnable < 35.0) {
-				currentShift = Shift.Shift1;
-			} else if (timeSinceTeleEnable < 60.0) {
-				currentShift = Shift.Shift2;
-			} else if (timeSinceTeleEnable < 85.0) {
-				currentShift = Shift.Shift3;
-			} else if (timeSinceTeleEnable < 110.0) {
-				currentShift = Shift.Shift4;
-			} else {
-				currentShift = Shift.Endgame;
-			}
-		} else {
-			currentShift = Shift.Disabled;
+		if (teleopEnable && !HubShifts.prevTeleopEnable) {
+			HubShifts.teleopEnableTimestampSecs = Timer.getTimestamp();
 		}
 
-		Logger.recordOutput("Current Shift", HubShifts.getCurrentShift());
+		HubShifts.prevAutoEnable = autoEnable;
+		HubShifts.prevTeleopEnable = teleopEnable;
+
+		if (autoEnable) {
+			HubShifts.currentShift = Shift.Auto;
+		} else if (teleopEnable) {
+			final var timeSinceTeleEnable = Timer.getTimestamp() - HubShifts.teleopEnableTimestampSecs;
+			if (timeSinceTeleEnable < 10.0) {
+				HubShifts.currentShift = Shift.Transition;
+			} else if (timeSinceTeleEnable < 35.0) {
+				HubShifts.currentShift = Shift.Shift1;
+			} else if (timeSinceTeleEnable < 60.0) {
+				HubShifts.currentShift = Shift.Shift2;
+			} else if (timeSinceTeleEnable < 85.0) {
+				HubShifts.currentShift = Shift.Shift3;
+			} else if (timeSinceTeleEnable < 110.0) {
+				HubShifts.currentShift = Shift.Shift4;
+			} else {
+				HubShifts.currentShift = Shift.Endgame;
+			}
+		} else {
+			HubShifts.currentShift = Shift.Disabled;
+		}
+
+		Logger.recordOutput("Hub Shifts/Current Shift", HubShifts.getCurrentShift());
+		Logger.recordOutput("Hub Shifts/Hub Active", HubShifts.getCurrentShift().isHubActive().getOurs());
+		Logger.recordOutput("Hub Shifts/Seconds left in Shift", HubShifts.getCurrentShift().getSecsLeftInShift(), Seconds);
+		Logger.recordOutput("Hub Shifts/Seconds since Shift Started", HubShifts.getCurrentShift().getSecsSinceShiftStarted(), Seconds);
 	}
 
 	private static final Optional<Alliance> BLUE = Optional.of(Alliance.Blue);
