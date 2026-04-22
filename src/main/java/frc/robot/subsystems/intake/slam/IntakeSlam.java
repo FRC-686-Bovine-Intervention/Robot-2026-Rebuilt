@@ -54,8 +54,8 @@ public class IntakeSlam extends SubsystemBase {
 	// private static final LoggedTunable<Time> trigCompressTime = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Trig Compress/Time", Seconds::of, 2.0);
 
 	private static final LoggedTunable<Angle> hopperAgitateStartAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Hopper Agitiate/Start Angle", Degrees::of, 0.0);
-	private static final LoggedTunable<Angle> hopperAgitateEndAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Hopper Agitiate/End Angle", Degrees::of, 75.0);
-	private static final LoggedTunable<Time> hopperAgitatePeriod = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Hopper Agitiate/Time", Seconds::of, 0.65);
+	private static final LoggedTunable<Angle> hopperAgitateEndAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Hopper Agitiate/End Angle", Degrees::of, 85.0);
+	private static final LoggedTunable<Time> hopperAgitatePeriod = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Hopper Agitiate/Time", Seconds::of, 0.4);
 
 	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kV", 1.5);
 	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kA", 0.5);
@@ -276,9 +276,9 @@ public class IntakeSlam extends SubsystemBase {
 			@Override
 			public void execute() {
 				if (this.agitateTimer.get() % (IntakeSlam.hopperAgitatePeriod.get().in(Seconds) * 2) < IntakeSlam.hopperAgitatePeriod.get().in(Seconds)) {
-					slam.setAngleGoalRads(IntakeSlam.hopperAgitateStartAngle.get().in(Radians));
-				} else {
 					slam.setAngleGoalRads(IntakeSlam.hopperAgitateEndAngle.get().in(Radians));
+				} else {
+					slam.setAngleGoalRads(IntakeSlam.hopperAgitateStartAngle.get().in(Radians));
 				}
 			}
 

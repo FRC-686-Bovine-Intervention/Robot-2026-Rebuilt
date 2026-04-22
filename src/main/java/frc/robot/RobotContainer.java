@@ -955,6 +955,7 @@ public class RobotContainer {
 				CommandScheduler.getInstance().schedule(intakeRollersCompressCommand);
 			}
 			if (intakeForceHopperAgitateEdge.fallingEdge()) {
+				CommandScheduler.getInstance().cancel(intakeForceHopperAgitateCommand);
 				CommandScheduler.getInstance().schedule(intakeDeployCommand);
 				CommandScheduler.getInstance().cancel(intakeRollersCompressCommand);
 			}
