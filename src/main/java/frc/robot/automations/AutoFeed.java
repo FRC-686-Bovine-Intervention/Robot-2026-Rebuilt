@@ -16,11 +16,12 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.HubShifts;
 import frc.robot.RobotState;
 import frc.robot.constants.FieldConstants;
+import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.rollers.Rollers;
 import frc.robot.subsystems.shooter.Shooter;
-import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.EdgeDetector;
 import frc.util.Environment;
+import frc.util.loggerUtil.tunables.LoggedTunable;
 
 public class AutoFeed implements Runnable {
 	private final Shooter shooter;
@@ -53,6 +54,7 @@ public class AutoFeed implements Runnable {
 
 	@Override
 	public void run() {
+		final var isShooting = this.shooter.flywheel.isShooting() && this.shooter.hood.isShooting();
 		final var isEnabled = this.shooter.aimingSystem.isAutoFeedEnabled();
 		final var currentHubShift = HubShifts.getCurrentShift();
 		final var isHubShift =
@@ -96,13 +98,15 @@ public class AutoFeed implements Runnable {
 
 		if (enablePassing) {
 			this.edgeDetector.update(
-				isEnabled
+				isShooting
+				&& isEnabled
 				&& shooterDebounced
 				&& !disableButton
 			);
 		} else {
 			this.edgeDetector.update(
-				isEnabled
+				isShooting
+				&& isEnabled
 				&& isHubShift
 				&& shooterDebounced
 				&& !disableButton
@@ -117,6 +121,13 @@ public class AutoFeed implements Runnable {
 			CommandScheduler.getInstance().cancel(this.command);
 		}
 
+		Leds.getInstance().shooterReadyAnimation.setFlag(this.edgeDetector.getValue() && !enablePassing && isShooting);
+		Leds.getInstance().shooterWaitingForShiftAnimation.setFlag(!isHubShift && !enablePassing && isShooting);
+		Leds.getInstance().shooterWaitingForTagsAnimation.setFlag(!hubTagSeen && !enablePassing && isShooting);
+		Leds.getInstance().shooterOutOfToleranceAnimation.setFlag(!shooterWithinTolerance && !enablePassing && isShooting);
+		Leds.getInstance().shooterDisabledAnimation.setFlag(this.disableTrigger.getAsBoolean() && !enablePassing && isShooting);
+
+		Logger.recordOutput("Automations/Auto Feed/Is Shooting", isShooting);
 		Logger.recordOutput("Automations/Auto Feed/Within Tolerance", shooterWithinTolerance);
 		Logger.recordOutput("Automations/Auto Feed/Passing Enabled", enablePassing);
 		Logger.recordOutput("Automations/Auto Feed/Feeding", this.edgeDetector.getValue());

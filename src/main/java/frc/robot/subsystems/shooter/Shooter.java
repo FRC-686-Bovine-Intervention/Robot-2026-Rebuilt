@@ -46,11 +46,11 @@ public class Shooter {
 	private static final LoggedTunable<Distance>    passingTranslationTolerance = LoggedTunable.from("Shooting/Passing/Tolerances/Translation", Inches::of, 4.0);
 
 	public Command aimFlywheelAtHub() {
-		return this.flywheel.genSurfaceVeloCommand("Aim at Hub", this.aimingSystem.shootingCalc::getTargetFlywheelSurfaceVeloMPS);
+		return this.flywheel.genSurfaceVeloCommand("Aim at Hub", this.aimingSystem.shootingCalc::getTargetFlywheelSurfaceVeloMPS, true);
 	}
 
 	public Command aimHoodAtHub() {
-		return this.hood.genAngleCommand("Aim at Hub", this.aimingSystem.shootingCalc::getTargetHoodAngleRads);
+		return this.hood.genAngleCommand("Aim at Hub", this.aimingSystem.shootingCalc::getTargetHoodAngleRads, true);
 	}
 
 	private static final LoggedTunable<PIDGains> rotationalPIDGains = LoggedTunable.from("Shooting/Aiming/Azimuth/Rotational PID", new PIDGains(5.0, 0.0, 0.0));
@@ -112,11 +112,11 @@ public class Shooter {
 	}
 
 	public Command aimFlywheelToPass() {
-		return this.flywheel.genSurfaceVeloCommand("Aim to Pass", this.aimingSystem.passingCalc::getTargetFlywheelSurfaceVeloMPS);
+		return this.flywheel.genSurfaceVeloCommand("Aim to Pass", this.aimingSystem.passingCalc::getTargetFlywheelSurfaceVeloMPS, true);
 	}
 
 	public Command aimHoodToPass() {
-		return this.hood.genAngleCommand("Aim to Pass", this.aimingSystem.passingCalc::getTargetHoodAngleRads);
+		return this.hood.genAngleCommand("Aim to Pass", this.aimingSystem.passingCalc::getTargetHoodAngleRads, true);
 	}
 
 	public Command aimDriveToPass(Drive.Rotational rotational) {

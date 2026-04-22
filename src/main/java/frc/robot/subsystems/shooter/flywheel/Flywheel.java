@@ -34,7 +34,7 @@ public class Flywheel extends SubsystemBase {
 	private final FlywheelIO io;
 	private final FlywheelIOInputsAutoLogged inputs = new FlywheelIOInputsAutoLogged();
 
-	private static final LoggedTunable<LinearVelocity> spinupSurfaceVelo = LoggedTunable.from("Subsystems/Shooter/Flywheel/Commands/Spinup/Velocity", MetersPerSecond::of, +20.0);
+	private static final LoggedTunable<LinearVelocity> passiveSpinupSurfaceVelo = LoggedTunable.from("Subsystems/Shooter/Flywheel/Commands/Spinup/Velocity", MetersPerSecond::of, +20.0);
 
 	private static final LoggedTunable<Current> bangBangCurrent = LoggedTunable.from("Subsystems/Shooter/Flywheel/Commands/Bang Bang/Current", Amps::of, 120.0);
 	private static final LoggedTunableNumber bangBangThreshold = LoggedTunable.from("Subsystems/Shooter/Flywheel/Commands/Bang Bang/Threshold", 0.95);
@@ -65,6 +65,9 @@ public class Flywheel extends SubsystemBase {
 	private double setpointSurfaceVeloMPS = 0.0;
 	@Getter
 	private double setpointSurfaceAccelMPSS = 0.0;
+
+	@Getter
+	private boolean shooting = false;
 
 	public Flywheel(FlywheelIO io) {
 		super("Shooter/Flywheel");
@@ -171,16 +174,22 @@ public class Flywheel extends SubsystemBase {
 			@Override
 			public void initialize() {
 				flywheel.io.stop(NeutralMode.DEFAULT);
+				flywheel.shooting = false;
 			}
 		};
 	}
 
-	public Command genSurfaceVeloCommand(String name, DoubleSupplier surfaceVeloSupplierMPS) {
+	public Command genSurfaceVeloCommand(String name, DoubleSupplier surfaceVeloSupplierMPS, boolean shooting) {
 		final var flywheel = this;
 		return new Command() {
 			{
 				this.setName(name);
 				this.addRequirements(flywheel);
+			}
+
+			@Override
+			public void initialize() {
+				flywheel.shooting = shooting;
 			}
 
 			@Override
@@ -202,14 +211,16 @@ public class Flywheel extends SubsystemBase {
 			@Override
 			public void end(boolean interrupted) {
 				flywheel.io.stop(NeutralMode.DEFAULT);
+				flywheel.shooting = false;
 			}
 		};
 	}
 
-	public Command spinup() {
+	public Command passiveSpinup() {
 		return this.genSurfaceVeloCommand(
-			"Spinup",
-			() -> Flywheel.spinupSurfaceVelo.get().in(MetersPerSecond)
+			"Passive Spinup",
+			() -> Flywheel.passiveSpinupSurfaceVelo.get().in(MetersPerSecond),
+			false
 		);
 	}
 }
