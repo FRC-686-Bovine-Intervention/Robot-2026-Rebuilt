@@ -32,7 +32,6 @@ import frc.util.NeutralMode;
 import frc.util.PIDGains;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 import frc.util.loggerUtil.tunables.LoggedTunableNumber;
-import frc.util.robotStructure.FourBarLinkage;
 import frc.util.robotStructure.angle.ArmMech;
 import lombok.Getter;
 
@@ -84,17 +83,7 @@ public class IntakeSlam extends SubsystemBase {
 	private final Alert motorDisconnectedAlert = new Alert("Subsystems/Intake/Slam/Alerts", "Motor Disconnected", AlertType.kError);
 	private final Alert motorDisconnectedGlobalAlert = new Alert("Intake Slam Motor Disconnected!", AlertType.kError);
 
-	private final FourBarLinkage mechLinkage = new FourBarLinkage(
-		IntakeSlamConstants.mechDriverAxle2d,
-		IntakeSlamConstants.mechFollowerAxle2d,
-		IntakeSlamConstants.mechDriverLength,
-		IntakeSlamConstants.mechFollowerLength,
-		IntakeSlamConstants.mechCouplerLength,
-		false
-	);
-	public final ArmMech driverMech = new ArmMech(IntakeSlamConstants.mechDriverBase3d);
-	public final ArmMech followerMech = new ArmMech(IntakeSlamConstants.mechFollowerBase3d);
-	public final ArmMech couplerMech = new ArmMech(IntakeSlamConstants.mechCouplerBase3d);
+	public final ArmMech mech = new ArmMech(IntakeSlamConstants.mechBase3d);
 
 	@Getter
 	private double measuredAngleRads = 0.0;
@@ -169,10 +158,7 @@ public class IntakeSlam extends SubsystemBase {
 		Logger.recordOutput("Subsystems/Intake/Slam/Angle/Setpoint", this.getSetpointAngleRads(), Radians);
 		Logger.recordOutput("Subsystems/Intake/Slam/Velocity/Setpoint", this.getSetpointVelocityRadsPerSec(), RadiansPerSecond);
 
-		this.mechLinkage.setDriverAngleRads(this.getMeasuredAngleRads());
-		this.driverMech.setRads(this.mechLinkage.getHorizonBaseDriverCouplerAngleRads());
-		this.followerMech.setRads(this.mechLinkage.getHorizonBaseFollowerCouplerAngleRads());
-		this.couplerMech.setRads(this.mechLinkage.getDriverRelativeCouplerAngleRads());
+		this.mech.setRads(this.getMeasuredAngleRads());
 
 		var configChanged = false;
 		if (IntakeSlam.profilekV.hasChanged(this.hashCode()) | IntakeSlam.profilekV.hasChanged(this.hashCode())) {
