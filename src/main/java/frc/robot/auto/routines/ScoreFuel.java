@@ -266,7 +266,8 @@ public class ScoreFuel extends AutoRoutine {
 			18.5,
 			15.5,
 			autoTimer,
-			enableTransitionCutoff
+			enableTransitionCutoff,
+			true
 		);
 		commands.add(firstCommand);
 
@@ -281,7 +282,8 @@ public class ScoreFuel extends AutoRoutine {
 			18.5,
 			15.5,
 			autoTimer,
-			enableTransitionCutoff
+			enableTransitionCutoff,
+			true
 		);
 		commands.add(secondCommand);
 

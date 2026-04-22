@@ -32,6 +32,7 @@ public class Preloads extends AutoRoutine {
 				FunctionalUtil.evalNow(AutoConstants.startCenter.getOurs()),
 				FunctionalUtil.evalNow(new ChassisSpeeds()),
 				FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs()),
+				false,
 				false
 			).asProxy(),
 			this.robot.shooter.aimHoodAtHub().asProxy(),
