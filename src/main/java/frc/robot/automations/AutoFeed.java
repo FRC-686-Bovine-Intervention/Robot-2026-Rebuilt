@@ -10,6 +10,7 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -91,7 +92,7 @@ public class AutoFeed implements Runnable {
 		if (enablePassing) {
 			shooterWithinTolerance = this.shooter.withinPassingTolerance();
 		} else {
-			shooterWithinTolerance = this.shooter.withinShootingTolerance();
+			shooterWithinTolerance = this.shooter.withinShootingTolerance(ignoringTags);
 		}
 
 		final var shooterDebounced = this.shooterDebouncer.calculate(shooterWithinTolerance);
@@ -114,6 +115,7 @@ public class AutoFeed implements Runnable {
 				&& isEnabled
 				&& shooterDebounced
 				&& !disableButton
+				&& DriverStation.isTeleopEnabled()
 			);
 		} else {
 			this.edgeDetector.update(
@@ -123,6 +125,7 @@ public class AutoFeed implements Runnable {
 				&& shooterDebounced
 				&& !disableButton
 				&& (hubTagSeen || ignoringTags)
+				&& DriverStation.isTeleopEnabled()
 			);
 		}
 
@@ -137,11 +140,11 @@ public class AutoFeed implements Runnable {
 			CommandScheduler.getInstance().cancel(this.autoCompressCommand);
 		}
 
-		Leds.getInstance().shooterReadyAnimation.setFlag(this.edgeDetector.getValue() && !enablePassing && isShooting);
-		Leds.getInstance().shooterWaitingForShiftAnimation.setFlag(!isHubShift && !enablePassing && isShooting);
-		Leds.getInstance().shooterWaitingForTagsAnimation.setFlag(!hubTagSeen && !enablePassing && isShooting);
-		Leds.getInstance().shooterOutOfToleranceAnimation.setFlag(!shooterWithinTolerance && !enablePassing && isShooting);
-		Leds.getInstance().shooterDisabledAnimation.setFlag(this.disableTrigger.getAsBoolean() && !enablePassing && isShooting);
+		Leds.getInstance().shooterReadyAnimation.setFlag(this.edgeDetector.getValue() && !enablePassing && isShooting && DriverStation.isTeleopEnabled());
+		Leds.getInstance().shooterWaitingForShiftAnimation.setFlag(!isHubShift && !enablePassing && isShooting && DriverStation.isTeleopEnabled());
+		Leds.getInstance().shooterWaitingForTagsAnimation.setFlag(!(hubTagSeen || ignoringTags) && !enablePassing && isShooting && DriverStation.isTeleopEnabled());
+		Leds.getInstance().shooterOutOfToleranceAnimation.setFlag(!shooterWithinTolerance && !enablePassing && isShooting && DriverStation.isTeleopEnabled());
+		Leds.getInstance().shooterDisabledAnimation.setFlag(this.disableTrigger.getAsBoolean() && !enablePassing && isShooting && DriverStation.isTeleopEnabled());
 
 		Logger.recordOutput("Automations/Auto Feed/Is Shooting", isShooting);
 		Logger.recordOutput("Automations/Auto Feed/Ignoring Tags", ignoringTags);

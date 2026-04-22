@@ -37,7 +37,7 @@ public class Shooter {
 	public final Hood hood;
 	public final AimingSystem aimingSystem;
 
-	private static final LoggedTunable<LinearVelocity>  aimingShooterTolerance = LoggedTunable.from("Shooting/Aiming/Tolerances/Shooter", MetersPerSecond::of, 1.0);
+	private static final LoggedTunable<LinearVelocity>  aimingShooterTolerance = LoggedTunable.from("Shooting/Aiming/Tolerances/Shooter", MetersPerSecond::of, 0.5);
 	private static final LoggedTunable<Distance>        aimingAzimuthTolerance = LoggedTunable.from("Shooting/Aiming/Tolerances/Azimuth", Inches::of, 6.0);
 	private static final LoggedTunable<Distance>    aimingTranslationTolerance = LoggedTunable.from("Shooting/Aiming/Tolerances/Translation", Inches::of, 4.0);
 
@@ -130,6 +130,9 @@ public class Shooter {
 	}
 
 	public boolean withinShootingTolerance() {
+		return this.withinShootingTolerance(false);
+	}
+	public boolean withinShootingTolerance(boolean ignoringTranslation) {
 		final var aimPoint = this.aimingSystem.shootingCalc.getAimPoint();
 		final var shotPose = this.aimingSystem.shootingCalc.getShotPose();
 		final var targetSurfaceVeloMPS = this.aimingSystem.shootingCalc.getTargetFlywheelSurfaceVeloMPS();
@@ -145,6 +148,7 @@ public class Shooter {
 			aimingShooterTolerance.get().in(MetersPerSecond),
 			aimingAzimuthTolerance.get().in(Meters),
 			aimingTranslationTolerance.get().in(Meters),
+			ignoringTranslation,
 			"Shooting"
 		);
 	}
@@ -165,6 +169,7 @@ public class Shooter {
 			passingShooterTolerance.get().in(MetersPerSecond),
 			passingAzimuthTolerance.get().in(Meters),
 			passingTranslationTolerance.get().in(Meters),
+			true,
 			"Passing"
 		);
 	}
@@ -178,6 +183,7 @@ public class Shooter {
 		double shooterToleranceMPS,
 		double azimuthToleranceMeters,
 		double translationToleranceMeters,
+		boolean ignoringTranslation,
 		String name
 	) {
 		final var targetLaunchVector = Shooter.calculateLaunchVector(targetSurfaceVeloMPS, targetHoodAngleRads, targetAzimuthHeadingRads);
@@ -208,7 +214,7 @@ public class Shooter {
 
 		final var withinShooterTolerance = errorMPS <= shooterToleranceMPS;
 
-		final var withinTranslationTolerance = GeomUtil.isNear(shotPose, RobotState.getInstance().getEstimatedGlobalPose().getTranslation(), translationToleranceMeters);
+		final var withinTranslationTolerance = ignoringTranslation || GeomUtil.isNear(shotPose, RobotState.getInstance().getEstimatedGlobalPose().getTranslation(), translationToleranceMeters);
 
 		Logger.recordOutput("Subsystems/Shooter/" + name + "/Tolerances/Within Azimuth Tolerance", withinAzimuthTolerance);
 		Logger.recordOutput("Subsystems/Shooter/" + name + "/Tolerances/Shooter Tolerance", withinShooterTolerance);
