@@ -19,6 +19,8 @@ public class AimingSystem extends SubsystemBase {
 
 	@Getter
 	private boolean autoFeedEnabled = false;
+	@Getter
+	private boolean autoFeedIgnoreTags = false;
 
 	public AimingSystem(ShootingCalc shootingCalc, PassingCalc passingCalc) {
 		super("Shooter/Aiming");
@@ -29,10 +31,15 @@ public class AimingSystem extends SubsystemBase {
 
 	private void setAutoFeedEnabled(boolean enabled) {
 		this.autoFeedEnabled = enabled;
-		Logger.recordOutput("Subsystems/Shooter/Aiming/Auto Feed Enabled", this.autoFeedEnabled);
+		Logger.recordOutput("Subsystems/Shooter/Aiming/Auto Feed/Enabled", this.autoFeedEnabled);
 	}
 
-	public Command aimAtHub(Supplier<Pose2d> robotPoseSupplier, Supplier<ChassisSpeeds> fieldSpeedsSupplier, Supplier<Translation3d> aimPointSupplier, boolean autoFeedEnabled) {
+	private void setAutoFeedIgnoreTags(boolean enabled) {
+		this.autoFeedIgnoreTags = enabled;
+		Logger.recordOutput("Subsystems/Shooter/Aiming/Auto Feed/Ignore Tags", this.autoFeedIgnoreTags);
+	}
+
+	public Command aimAtHub(Supplier<Pose2d> robotPoseSupplier, Supplier<ChassisSpeeds> fieldSpeedsSupplier, Supplier<Translation3d> aimPointSupplier, boolean autoFeedEnabled, boolean autoFeedIgnoreTags) {
 		final var aimingSystem = this;
 		return new Command() {
 			{
@@ -48,6 +55,7 @@ public class AimingSystem extends SubsystemBase {
 					aimPointSupplier.get()
 				);
 				aimingSystem.setAutoFeedEnabled(autoFeedEnabled);
+				aimingSystem.setAutoFeedIgnoreTags(autoFeedIgnoreTags);
 			}
 
 			@Override
@@ -62,7 +70,7 @@ public class AimingSystem extends SubsystemBase {
 		};
 	}
 
-	public Command aimToPass(Supplier<Pose2d> robotPoseSupplier, Supplier<ChassisSpeeds> fieldSpeedsSupplier, Supplier<Translation3d> aimPointSupplier, boolean autoFeedEnabled) {
+	public Command aimToPass(Supplier<Pose2d> robotPoseSupplier, Supplier<ChassisSpeeds> fieldSpeedsSupplier, Supplier<Translation3d> aimPointSupplier, boolean autoFeedEnabled, boolean autoFeedIgnoreTags) {
 		final var aimingSystem = this;
 		return new Command() {
 			{
@@ -78,6 +86,7 @@ public class AimingSystem extends SubsystemBase {
 					aimPointSupplier.get()
 				);
 				aimingSystem.setAutoFeedEnabled(autoFeedEnabled);
+				aimingSystem.setAutoFeedIgnoreTags(autoFeedIgnoreTags);
 			}
 
 			@Override

@@ -116,6 +116,7 @@ public class AutoCommons {
 				FunctionalUtil.evalNow(traj.getFinalPose(false).get()),
 				FunctionalUtil.evalNow(new ChassisSpeeds()),
 				FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs()),
+				false,
 				false
 			).asProxy(),
 			flywheelSpinupCommand

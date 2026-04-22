@@ -766,7 +766,8 @@ public class RobotContainer {
 					RobotState.getInstance()::getEstimatedGlobalPose,
 					this.drive::getFieldMeasuredSpeeds,
 					FieldConstants.hubAimPoint::getOurs,
-					true
+					true,
+					false
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
@@ -780,6 +781,7 @@ public class RobotContainer {
 					FieldConstants.hubIntakeFrontRobotPose::getOurs,
 					FunctionalUtil.evalNow(new ChassisSpeeds()),
 					FieldConstants.hubAimPoint::getOurs,
+					true,
 					true
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
@@ -794,6 +796,7 @@ public class RobotContainer {
 					FieldConstants.leftTrenchPresetShotPose::getOurs,
 					FunctionalUtil.evalNow(new ChassisSpeeds()),
 					FieldConstants.hubAimPoint::getOurs,
+					true,
 					true
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
@@ -808,6 +811,7 @@ public class RobotContainer {
 					FieldConstants.rightTrenchPresetShotPose::getOurs,
 					FunctionalUtil.evalNow(new ChassisSpeeds()),
 					FieldConstants.hubAimPoint::getOurs,
+					true,
 					true
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
@@ -822,6 +826,7 @@ public class RobotContainer {
 					FieldConstants.towerPresetShotPose::getOurs,
 					FunctionalUtil.evalNow(new ChassisSpeeds()),
 					FieldConstants.hubAimPoint::getOurs,
+					true,
 					true
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
@@ -842,6 +847,7 @@ public class RobotContainer {
 							return FieldConstants.botPassPoint.getOurs();
 						}
 					},
+					true,
 					true
 				).repeatedly(),
 				this.shooter.aimFlywheelToPass(),

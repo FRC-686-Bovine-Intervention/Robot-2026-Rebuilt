@@ -56,6 +56,7 @@ public class AutoFeed implements Runnable {
 	public void run() {
 		final var isShooting = this.shooter.flywheel.isShooting() && this.shooter.hood.isShooting();
 		final var isEnabled = this.shooter.aimingSystem.isAutoFeedEnabled();
+		final var ignoringTags = this.shooter.aimingSystem.isAutoFeedIgnoreTags();
 		final var currentHubShift = HubShifts.getCurrentShift();
 		final var isHubShift =
 			!Environment.isCompetition()
@@ -89,10 +90,12 @@ public class AutoFeed implements Runnable {
 		final var disableButton = this.disableTrigger.getAsBoolean();
 
 		var hubTagSeen = false;
-		for (final var tagID : FieldConstants.hubTagIDs.getOurs()) {
-			if (!RobotState.getInstance().isTagStale(tagID)) {
-				hubTagSeen = true;
-				break;
+		if (!ignoringTags) {
+			for (final var tagID : FieldConstants.hubTagIDs.getOurs()) {
+				if (!RobotState.getInstance().isTagStale(tagID)) {
+					hubTagSeen = true;
+					break;
+				}
 			}
 		}
 
@@ -110,7 +113,7 @@ public class AutoFeed implements Runnable {
 				&& isHubShift
 				&& shooterDebounced
 				&& !disableButton
-				&& hubTagSeen
+				&& (hubTagSeen || ignoringTags)
 			);
 		}
 
@@ -128,6 +131,7 @@ public class AutoFeed implements Runnable {
 		Leds.getInstance().shooterDisabledAnimation.setFlag(this.disableTrigger.getAsBoolean() && !enablePassing && isShooting);
 
 		Logger.recordOutput("Automations/Auto Feed/Is Shooting", isShooting);
+		Logger.recordOutput("Automations/Auto Feed/Ignoring Tags", ignoringTags);
 		Logger.recordOutput("Automations/Auto Feed/Within Tolerance", shooterWithinTolerance);
 		Logger.recordOutput("Automations/Auto Feed/Passing Enabled", enablePassing);
 		Logger.recordOutput("Automations/Auto Feed/Feeding", this.edgeDetector.getValue());
