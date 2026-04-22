@@ -5,6 +5,8 @@ import static edu.wpi.first.units.Units.Seconds;
 
 import java.util.function.BooleanSupplier;
 
+import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.units.measure.Time;
@@ -12,6 +14,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.HubShifts;
+import frc.robot.RobotState;
+import frc.robot.constants.FieldConstants;
 import frc.robot.subsystems.rollers.Rollers;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.util.loggerUtil.tunables.LoggedTunable;
@@ -69,8 +73,10 @@ public class AutoFeed implements Runnable {
 			)
 		;
 
+		final var enablePassing = this.enablePassingTrigger.getAsBoolean();
+
 		final boolean shooterWithinTolerance;
-		if (this.enablePassingTrigger.getAsBoolean()) {
+		if (enablePassing) {
 			shooterWithinTolerance = this.shooter.withinPassingTolerance();
 		} else {
 			shooterWithinTolerance = this.shooter.withinShootingTolerance();
@@ -78,17 +84,49 @@ public class AutoFeed implements Runnable {
 
 		final var shooterDebounced = this.shooterDebouncer.calculate(shooterWithinTolerance);
 
-		this.edgeDetector.update(
-			isEnabled
-			&& isHubShift
-			&& shooterDebounced
-			&& !this.disableTrigger.getAsBoolean()
-		);
+		final var disableButton = this.disableTrigger.getAsBoolean();
+
+		var hubTagSeen = false;
+		for (final var tagID : FieldConstants.hubTagIDs.getOurs()) {
+			if (!RobotState.getInstance().isTagStale(tagID)) {
+				hubTagSeen = true;
+				break;
+			}
+		}
+
+		if (enablePassing) {
+			this.edgeDetector.update(
+				isEnabled
+				&& shooterDebounced
+				&& !disableButton
+			);
+		} else {
+			this.edgeDetector.update(
+				isEnabled
+				&& isHubShift
+				&& shooterDebounced
+				&& !disableButton
+				&& hubTagSeen
+			);
+		}
+
 
 		if (this.edgeDetector.risingEdge() && !this.command.isScheduled()) {
 			CommandScheduler.getInstance().schedule(this.command);
 		} else if (this.edgeDetector.fallingEdge() && this.command.isScheduled()) {
 			CommandScheduler.getInstance().cancel(this.command);
 		}
+
+		Logger.recordOutput("Automations/Auto Feed/Within Tolerance", shooterWithinTolerance);
+		Logger.recordOutput("Automations/Auto Feed/Passing Enabled", enablePassing);
+		Logger.recordOutput("Automations/Auto Feed/Feeding", this.edgeDetector.getValue());
+		Logger.recordOutput("Automations/Auto Feed/Shooting Conditions/Enabled", isEnabled);
+		Logger.recordOutput("Automations/Auto Feed/Shooting Conditions/Hub Active", isHubShift);
+		Logger.recordOutput("Automations/Auto Feed/Shooting Conditions/Within Tolerance Debounced", shooterDebounced);
+		Logger.recordOutput("Automations/Auto Feed/Shooting Conditions/Disable Button", disableButton);
+		Logger.recordOutput("Automations/Auto Feed/Shooting Conditions/Hub Tag Seen", hubTagSeen);
+		Logger.recordOutput("Automations/Auto Feed/Passing Conditions/Enabled", isEnabled);
+		Logger.recordOutput("Automations/Auto Feed/Passing Conditions/Within Tolerance Debounced", shooterDebounced);
+		Logger.recordOutput("Automations/Auto Feed/Passing Conditions/Disable Button", disableButton);
 	}
 }

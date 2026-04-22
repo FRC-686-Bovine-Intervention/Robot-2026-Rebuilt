@@ -304,7 +304,7 @@ public class RobotContainer {
 					new Flywheel(new FlywheelIO() {}),
 					new Hood(new HoodIO() {}),
 					new AimingSystem(
-						new PhysicsShootingCalc(),
+						new InterpolationShootingCalc(),
 						new PhysicsPassingCalc()
 					)
 				);
@@ -780,7 +780,7 @@ public class RobotContainer {
 					FieldConstants.hubIntakeFrontRobotPose::getOurs,
 					FunctionalUtil.evalNow(new ChassisSpeeds()),
 					FieldConstants.hubAimPoint::getOurs,
-					false
+					true
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
@@ -794,7 +794,7 @@ public class RobotContainer {
 					FieldConstants.leftTrenchPresetShotPose::getOurs,
 					FunctionalUtil.evalNow(new ChassisSpeeds()),
 					FieldConstants.hubAimPoint::getOurs,
-					false
+					true
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
@@ -808,7 +808,7 @@ public class RobotContainer {
 					FieldConstants.rightTrenchPresetShotPose::getOurs,
 					FunctionalUtil.evalNow(new ChassisSpeeds()),
 					FieldConstants.hubAimPoint::getOurs,
-					false
+					true
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
@@ -822,7 +822,7 @@ public class RobotContainer {
 					FieldConstants.towerPresetShotPose::getOurs,
 					FunctionalUtil.evalNow(new ChassisSpeeds()),
 					FieldConstants.hubAimPoint::getOurs,
-					false
+					true
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
