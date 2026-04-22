@@ -69,6 +69,22 @@ public class AutoCommons {
 		);
 	}
 
+	public static boolean isReadyToShoot(RobotContainer robot) {
+		var hubTagSeen = false;
+		for (final var tagID : FieldConstants.hubTagIDs.getOurs()) {
+			if (!RobotState.getInstance().isTagStale(tagID)) {
+				hubTagSeen = true;
+				break;
+			}
+		}
+		return
+			robot.shooter.withinShootingTolerance()
+			&& robot.shooter.flywheel.isShooting()
+			&& robot.shooter.hood.isShooting()
+			&& hubTagSeen
+		;
+	}
+
 	public static Command swipe(
 		RobotContainer robot,
 		Trajectory<SwerveSample> traj,
@@ -106,18 +122,18 @@ public class AutoCommons {
 		if (enableAutoCutoff) {
 			endingConditionCommand = Commands.race(
 				Commands.sequence(
-					Commands.waitUntil(() -> robot.shooter.withinShootingTolerance()),
+					Commands.waitUntil(() -> AutoCommons.isReadyToShoot(robot)),
 					Commands.waitSeconds(minShotTime),
 					robot.rollers.untilNoBalls(noBallTimeout)
 				),
 				Commands.parallel(
 					Commands.waitUntil(() -> autoTimer.getAsDouble() >= autoTimeCutoff),
-					Commands.waitUntil(() -> robot.shooter.withinShootingTolerance() && autoTimer.getAsDouble() <= autoTimeDisableCutoff)
+					Commands.waitUntil(() -> AutoCommons.isReadyToShoot(robot) && autoTimer.getAsDouble() <= autoTimeDisableCutoff)
 				)
 			);
 		} else {
 			endingConditionCommand = Commands.sequence(
-				Commands.waitUntil(() -> robot.shooter.withinShootingTolerance()),
+				Commands.waitUntil(() -> AutoCommons.isReadyToShoot(robot)),
 				Commands.waitSeconds(minShotTime),
 				robot.rollers.untilNoBalls(noBallTimeout)
 			);
@@ -144,6 +160,7 @@ public class AutoCommons {
 				FunctionalUtil.evalNow(traj.getFinalPose(false).get()),
 				FunctionalUtil.evalNow(new ChassisSpeeds()),
 				FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs()),
+				false,
 				false
 			).asProxy(),
 			flywheelSpinupCommand

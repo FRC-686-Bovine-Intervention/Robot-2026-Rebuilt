@@ -89,6 +89,9 @@ public class Hood extends SubsystemBase {
 	private final Alert motorDisconnectedAlert = new Alert("Subsystems/Shooter/Hood/Alerts", "Motor Disconnected", AlertType.kError);
 	private final Alert motorDisconnectedGlobalAlert = new Alert("Hood Motor Disconnected!", AlertType.kError);
 
+	@Getter
+	private boolean shooting = false;
+
 	public Hood(HoodIO io) {
 		super("Shooter/Hood");
 
@@ -219,6 +222,7 @@ public class Hood extends SubsystemBase {
 			@Override
 			public void initialize() {
 				hood.io.stop(NeutralMode.COAST);
+				hood.shooting = false;
 			}
 
 			@Override
@@ -239,6 +243,11 @@ public class Hood extends SubsystemBase {
 			{
 				this.setName("Calibrate");
 				this.addRequirements(hood);
+			}
+
+			@Override
+			public void initialize() {
+				hood.shooting = false;
 			}
 
 			@Override
@@ -267,6 +276,11 @@ public class Hood extends SubsystemBase {
 			}
 
 			@Override
+			public void initialize() {
+				hood.shooting = false;
+			}
+
+			@Override
 			public void execute() {
 				if (hood.getMeasuredAngleRads() <= Hood.stowPulldownThreshold.get().in(Radians)) {
 					hood.io.setVolts(Hood.stowPulldownVoltage.get().in(Volts));
@@ -282,12 +296,17 @@ public class Hood extends SubsystemBase {
 		};
 	}
 
-	public Command genAngleCommand(String name, DoubleSupplier goalAngleRadsSupplier) {
+	public Command genAngleCommand(String name, DoubleSupplier goalAngleRadsSupplier, boolean shooting) {
 		final var hood = this;
 		return new Command() {
 			{
 				this.setName(name);
 				this.addRequirements(hood);
+			}
+
+			@Override
+			public void initialize() {
+				hood.shooting = shooting;
 			}
 
 			@Override
@@ -300,6 +319,7 @@ public class Hood extends SubsystemBase {
 			@Override
 			public void end(boolean interrupted) {
 				hood.io.stop(NeutralMode.DEFAULT);
+				hood.shooting = false;
 			}
 		};
 	}

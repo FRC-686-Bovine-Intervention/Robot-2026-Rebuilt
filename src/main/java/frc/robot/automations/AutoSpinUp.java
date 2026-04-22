@@ -36,7 +36,8 @@ public class AutoSpinUp implements Runnable {
 				RobotState.getInstance()::getEstimatedGlobalPose,
 				this.drive::getFieldMeasuredSpeeds,
 				FieldConstants.hubAimPoint::getOurs,
-				true
+				true,
+				false
 			).repeatedly(),
 			this.shooter.aimFlywheelAtHub(),
 			this.shooter.aimHoodAtHub()

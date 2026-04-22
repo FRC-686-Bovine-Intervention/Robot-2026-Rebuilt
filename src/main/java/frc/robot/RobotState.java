@@ -204,6 +204,20 @@ public class RobotState {
 		return Optional.of(observation.pose().plus(new Transform2d(odometrySample.get(), this.odometryPose)));
 	}
 
+	public boolean isTagStale(int tagID) {
+		var observation = this.txtyObservations.get(tagID);
+
+		if (observation == null) {
+			return true;
+		}
+
+		if (Timer.getTimestamp() - observation.timestamp() >= txtyStaleTime.get().in(Seconds)) {
+			return true;
+		}
+
+		return false;
+	}
+
 	public static record OdometryObservation(
 		double timestamp,
 		Optional<Rotation3d> gyroRotation,
