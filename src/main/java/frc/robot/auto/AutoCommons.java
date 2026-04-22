@@ -91,6 +91,7 @@ public class AutoCommons {
 				robot.intake.slam.deploy(robot.extensionSystem).asProxy()
 			);
 		}
+
 		final Command flywheelSpinupCommand;
 		if (flywheelSpinupDelay == 0.0) {
 			flywheelSpinupCommand = robot.shooter.aimFlywheelAtHub().asProxy();
@@ -100,9 +101,10 @@ public class AutoCommons {
 				robot.shooter.aimFlywheelAtHub().asProxy()
 			);
 		}
-		final Command endingCommand;
+
+		final Command endingConditionCommand;
 		if (enableAutoCutoff) {
-			endingCommand = Commands.race(
+			endingConditionCommand = Commands.race(
 				Commands.sequence(
 					Commands.waitUntil(() -> robot.shooter.withinShootingTolerance()),
 					Commands.waitSeconds(minShotTime),
@@ -114,12 +116,13 @@ public class AutoCommons {
 				)
 			);
 		} else {
-			endingCommand = Commands.sequence(
+			endingConditionCommand = Commands.sequence(
 				Commands.waitUntil(() -> robot.shooter.withinShootingTolerance()),
 				Commands.waitSeconds(minShotTime),
 				robot.rollers.untilNoBalls(noBallTimeout)
 			);
 		}
+
 		return Commands.deadline(
 			Commands.sequence(
 				Commands.deadline(
@@ -129,7 +132,7 @@ public class AutoCommons {
 					AutoCommons.passivePrestage(robot, enablePrestage)
 				),
 				Commands.deadline(
-					endingCommand,
+					endingConditionCommand,
 					AutoCommons.feedWhenReadyOrPrestage(robot, enablePrestage),
 					robot.intake.slam.hopperAgitate(robot.extensionSystem).asProxy(),
 					robot.shooter.aimHoodAtHub().asProxy(),
