@@ -102,7 +102,7 @@ public class ApriltagVision {
 				// final because averageTagDist mapToDouble needs it
 				final Pose3d cameraPose3d;
 				final Pose3d robotPose3d;
-				var useVisionRotation = false;
+				final boolean useVisionRotation;
 
 				if (frame.multiTagResult.isPresent()) {
 					final var multiTagResult = frame.multiTagResult.get();
@@ -125,26 +125,6 @@ public class ApriltagVision {
 					cameraPose3d = cameraPose;
 					robotPose3d = robotPose;
 					useVisionRotation = false;
-					// var bestCameraPose = tagPose.transformBy(target.bestCameraToTag.inverse());
-					// var bestRobotPose = bestCameraPose.transformBy(result.camMeta.mount.getRobotRelative().inverse());
-					// var altCameraPose = tagPose.transformBy(target.altCameraToTag.inverse());
-					// var altRobotPose = altCameraPose.transformBy(result.camMeta.mount.getRobotRelative().inverse());
-					// if (frame.targets[0].poseAmbiguity < ambiguityThreshold.get()) {
-					//     var currentRotation = RobotState.getInstance().getPose().getRotation();
-					//     var bestRotation = bestRobotPose.getRotation().toRotation2d();
-					//     var altRotation = altRobotPose.getRotation().toRotation2d();
-					//     if (Math.abs(currentRotation.minus(bestRotation).getRadians()) < Math.abs(currentRotation.minus(altRotation).getRadians())) {
-					//         cameraPose3d = bestCameraPose;
-					//         robotPose3d = bestRobotPose;
-					//     } else {
-					//         cameraPose3d = altCameraPose;
-					//         robotPose3d = altRobotPose;
-					//     }
-					// } else {
-					//     cameraPose3d = null;
-					//     robotPose3d = null;
-					// }
-
 				} else {
 					Logger.recordOutput(loggingKey + "/Robot pose null", true);
 					Logger.recordOutput(loggingKey + "/Camera pose null", true);

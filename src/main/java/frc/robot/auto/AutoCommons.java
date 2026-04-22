@@ -30,6 +30,22 @@ public class AutoCommons {
 		return AllianceFlipped.fromBlue(traj.get());
 	}
 
+	public static boolean isReadyToShoot(RobotContainer robot) {
+		var hubTagSeen = false;
+		for (final var tagID : FieldConstants.hubTagIDs.getOurs()) {
+			if (!RobotState.getInstance().isTagStale(tagID)) {
+				hubTagSeen = true;
+				break;
+			}
+		}
+		return
+			robot.shooter.withinShootingTolerance()
+			&& robot.shooter.flywheel.isShooting()
+			&& robot.shooter.hood.isShooting()
+			&& hubTagSeen
+		;
+	}
+
 	public static Command swipe(
 		RobotContainer robot,
 		Trajectory<SwerveSample> traj,
@@ -64,18 +80,18 @@ public class AutoCommons {
 		if (enableAutoCutoff) {
 			endingCommand = Commands.race(
 				Commands.sequence(
-					Commands.waitUntil(() -> robot.shooter.withinShootingTolerance()),
+					Commands.waitUntil(() -> AutoCommons.isReadyToShoot(robot)),
 					Commands.waitSeconds(minShotTime),
 					robot.rollers.untilNoBalls(noBallTimeout)
 				),
 				Commands.parallel(
 					Commands.waitUntil(() -> autoTimer.getAsDouble() >= autoTimeCutoff),
-					Commands.waitUntil(() -> robot.shooter.withinShootingTolerance() && autoTimer.getAsDouble() <= autoTimeDisableCutoff)
+					Commands.waitUntil(() -> AutoCommons.isReadyToShoot(robot) && autoTimer.getAsDouble() <= autoTimeDisableCutoff)
 				)
 			);
 		} else {
 			endingCommand = Commands.sequence(
-				Commands.waitUntil(() -> robot.shooter.withinShootingTolerance()),
+				Commands.waitUntil(() -> AutoCommons.isReadyToShoot(robot)),
 				Commands.waitSeconds(minShotTime),
 				robot.rollers.untilNoBalls(noBallTimeout)
 			);
@@ -89,7 +105,7 @@ public class AutoCommons {
 				),
 				Commands.deadline(
 					endingCommand,
-					robot.rollers.feed().onlyWhile(() -> robot.shooter.withinShootingTolerance()).repeatedly().withName("Feed when ready").asProxy(),
+					robot.rollers.feed().onlyWhile(() -> AutoCommons.isReadyToShoot(robot)).repeatedly().withName("Feed when ready").asProxy(),
 					robot.intake.slam.hopperAgitate(robot.extensionSystem).asProxy(),
 					robot.shooter.aimHoodAtHub().asProxy(),
 					robot.shooter.aimDriveAtHub(robot.drive.rotationalSubsystem).asProxy(),
@@ -100,6 +116,7 @@ public class AutoCommons {
 				FunctionalUtil.evalNow(traj.getFinalPose(false).get()),
 				FunctionalUtil.evalNow(new ChassisSpeeds()),
 				FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs()),
+				false,
 				false
 			).asProxy(),
 			flywheelSpinupCommand
