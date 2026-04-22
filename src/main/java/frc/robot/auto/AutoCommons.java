@@ -1,7 +1,9 @@
 package frc.robot.auto;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import choreo.Choreo;
 import choreo.trajectory.SwerveSample;
@@ -14,6 +16,7 @@ import frc.robot.RobotContainer;
 import frc.robot.RobotState;
 import frc.robot.constants.FieldConstants;
 import frc.robot.subsystems.drive.commands.FollowTrajectoryCommand;
+import frc.util.commands.ContinuouslySwappingCommand;
 import frc.util.flipping.AllianceFlipped;
 import frc.util.misc.FunctionalUtil;
 
@@ -28,6 +31,42 @@ public class AutoCommons {
 			throw new NullPointerException("No such Choreo trajectory: " + name);
 		}
 		return AllianceFlipped.fromBlue(traj.get());
+	}
+
+	public static Command feedWhenReadyOrPrestage(RobotContainer robot, boolean enablePrestage) {
+		return new ContinuouslySwappingCommand(
+			new Supplier<>() {
+				private final Command feedCommand = robot.rollers.feed().withName("Auto Feed").asProxy();
+				private final Command prestageCommand = AutoCommons.passivePrestage(robot, enablePrestage);
+
+				@Override
+				public Command get() {
+					if (robot.shooter.withinShootingTolerance()) {
+						return this.feedCommand;
+					}
+					return this.prestageCommand;
+				}
+			},
+			Set.of()
+		);
+	}
+
+	public static Command passivePrestage(RobotContainer robot, boolean enablePrestage) {
+		return new ContinuouslySwappingCommand(
+			new Supplier<>() {
+				private final Command prestageCommand = robot.rollers.passivePrestage().withName("Auto Prestage").asProxy();
+				private final Command idleCommand = robot.rollers.idle().withName("Auto Idle").asProxy();
+
+				@Override
+				public Command get() {
+					if (!robot.rollers.isFeederSensorTripped() && enablePrestage) {
+						return this.prestageCommand;
+					}
+					return this.idleCommand;
+				}
+			},
+			Set.of()
+		);
 	}
 
 	public static boolean isReadyToShoot(RobotContainer robot) {
@@ -56,7 +95,8 @@ public class AutoCommons {
 		double autoTimeCutoff,
 		double autoTimeDisableCutoff,
 		DoubleSupplier autoTimer,
-		boolean enableAutoCutoff
+		boolean enableAutoCutoff,
+		boolean enablePrestage
 	) {
 		final Command intakeDeployCommand;
 		if (intakeDeployDelay == 0.0) {
@@ -67,6 +107,7 @@ public class AutoCommons {
 				robot.intake.slam.deploy(robot.extensionSystem).asProxy()
 			);
 		}
+
 		final Command flywheelSpinupCommand;
 		if (flywheelSpinupDelay == 0.0) {
 			flywheelSpinupCommand = robot.shooter.aimFlywheelAtHub().asProxy();
@@ -76,9 +117,10 @@ public class AutoCommons {
 				robot.shooter.aimFlywheelAtHub().asProxy()
 			);
 		}
-		final Command endingCommand;
+
+		final Command endingConditionCommand;
 		if (enableAutoCutoff) {
-			endingCommand = Commands.race(
+			endingConditionCommand = Commands.race(
 				Commands.sequence(
 					Commands.waitUntil(() -> AutoCommons.isReadyToShoot(robot)),
 					Commands.waitSeconds(minShotTime),
@@ -90,22 +132,24 @@ public class AutoCommons {
 				)
 			);
 		} else {
-			endingCommand = Commands.sequence(
+			endingConditionCommand = Commands.sequence(
 				Commands.waitUntil(() -> AutoCommons.isReadyToShoot(robot)),
 				Commands.waitSeconds(minShotTime),
 				robot.rollers.untilNoBalls(noBallTimeout)
 			);
 		}
+
 		return Commands.deadline(
 			Commands.sequence(
 				Commands.deadline(
 					new FollowTrajectoryCommand(robot.drive, traj, true).withName("Grab Ball").asProxy(),
 					intakeDeployCommand,
-					robot.intake.rollers.intake().asProxy()
+					robot.intake.rollers.intake().asProxy(),
+					AutoCommons.passivePrestage(robot, enablePrestage)
 				),
 				Commands.deadline(
-					endingCommand,
-					robot.rollers.feed().onlyWhile(() -> AutoCommons.isReadyToShoot(robot)).repeatedly().withName("Feed when ready").asProxy(),
+					endingConditionCommand,
+					AutoCommons.feedWhenReadyOrPrestage(robot, enablePrestage),
 					robot.intake.slam.hopperAgitate(robot.extensionSystem).asProxy(),
 					robot.shooter.aimHoodAtHub().asProxy(),
 					robot.shooter.aimDriveAtHub(robot.drive.rotationalSubsystem).asProxy(),
