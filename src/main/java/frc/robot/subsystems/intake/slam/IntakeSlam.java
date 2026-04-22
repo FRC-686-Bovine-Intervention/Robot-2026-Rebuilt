@@ -10,14 +10,13 @@ import static edu.wpi.first.units.Units.Volts;
 
 import org.littletonrobotics.junction.Logger;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -45,13 +44,18 @@ public class IntakeSlam extends SubsystemBase {
 	private static final LoggedTunable<Angle> deployAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Angle", Degrees::of, IntakeSlamConstants.minAngle.in(Degrees));
 	private static final LoggedTunable<Voltage> deployPushdownVolts = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Pushdown Volts", Volts::of, -1.0);
 	private static final LoggedTunable<Angle> deployPushdownThreshold = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Deploy/Pushdown Threshold", Degrees::of, 2.0);
-	private static final LoggedTunable<Angle> hopperDumpAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Hopper Dump/Angle", Degrees::of, 90.0);
-	private static final LoggedTunable<Angle> linearCompressStartAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Linear Compress/Start Angle", Degrees::of, 0.0);
-	private static final LoggedTunable<Angle> linearCompressEndAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Linear Compress/End Angle", Degrees::of, 120.0);
-	private static final LoggedTunable<Time> linearCompressTime = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Linear Compress/Time", Seconds::of, 1.0);
-	private static final LoggedTunable<Angle> trigCompressStartAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Trig Compress/Start Angle", Degrees::of, 0.0);
-	private static final LoggedTunable<Angle> trigCompressEndAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Trig Compress/End Angle", Degrees::of, 120.0);
-	private static final LoggedTunable<Time> trigCompressTime = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Trig Compress/Time", Seconds::of, 1.0);
+
+	// private static final LoggedTunable<Angle> linearCompressStartAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Linear Compress/Start Angle", Degrees::of, 0.0);
+	// private static final LoggedTunable<Angle> linearCompressEndAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Linear Compress/End Angle", Degrees::of, 105.0);
+	// private static final LoggedTunable<Time> linearCompressTime = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Linear Compress/Time", Seconds::of, 2.0);
+
+	// private static final LoggedTunable<Angle> trigCompressStartAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Trig Compress/Start Angle", Degrees::of, 0.0);
+	// private static final LoggedTunable<Angle> trigCompressEndAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Trig Compress/End Angle", Degrees::of, 105.0);
+	// private static final LoggedTunable<Time> trigCompressTime = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Trig Compress/Time", Seconds::of, 2.0);
+
+	private static final LoggedTunable<Angle> hopperAgitateStartAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Hopper Agitiate/Start Angle", Degrees::of, 0.0);
+	private static final LoggedTunable<Angle> hopperAgitateEndAngle = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Hopper Agitiate/End Angle", Degrees::of, 75.0);
+	private static final LoggedTunable<Time> hopperAgitatePeriod = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Hopper Agitiate/Time", Seconds::of, 0.65);
 
 	private static final LoggedTunableNumber profilekV = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kV", 1.5);
 	private static final LoggedTunableNumber profilekA = LoggedTunable.from("Subsystems/Intake/Slam/Mechanism/Profile/kA", 0.5);
@@ -254,30 +258,9 @@ public class IntakeSlam extends SubsystemBase {
 		};
 	}
 
-	public Command hopperDump(ExtensionSystem extension) {
-		final var slam = this;
-		return new Command() {
-			{
-				this.setName("Hopper Dump");
-				this.addRequirements(slam, extension);
-			}
-
-			@Override
-			public void execute() {
-				slam.setAngleGoalRads(IntakeSlam.hopperDumpAngle.get().in(Radians));
-			}
-
-			@Override
-			public void end(boolean interrupted) {
-				slam.io.stop(NeutralMode.DEFAULT);
-			}
-		};
-	}
-
 	public Command hopperAgitate(ExtensionSystem extension) {
 		final var slam = this;
 		return new Command() {
-			private static final LoggedTunable<Time> agitatePeriod = LoggedTunable.from("Subsystems/Intake/Slam/Commands/Hopper Agitate", Seconds::of, 0.65);
 			private final Timer agitateTimer = new Timer();
 
 			{
@@ -292,10 +275,10 @@ public class IntakeSlam extends SubsystemBase {
 
 			@Override
 			public void execute() {
-				if (this.agitateTimer.get() % (agitatePeriod.get().in(Seconds) * 2) < agitatePeriod.get().in(Seconds)) {
-					slam.setAngleGoalRads(IntakeSlam.hopperDumpAngle.get().in(Radians));
+				if (this.agitateTimer.get() % (IntakeSlam.hopperAgitatePeriod.get().in(Seconds) * 2) < IntakeSlam.hopperAgitatePeriod.get().in(Seconds)) {
+					slam.setAngleGoalRads(IntakeSlam.hopperAgitateStartAngle.get().in(Radians));
 				} else {
-					slam.setAngleGoalRads(IntakeSlam.deployAngle.get().in(Radians));
+					slam.setAngleGoalRads(IntakeSlam.hopperAgitateEndAngle.get().in(Radians));
 				}
 			}
 
@@ -331,73 +314,73 @@ public class IntakeSlam extends SubsystemBase {
 		};
 	}
 
-	public Command linearCompress(ExtensionSystem extension) {
-		final var slam = this;
-		return new Command() {
-			private final Timer timer = new Timer();
+	// public Command linearCompress(ExtensionSystem extension) {
+	// 	final var slam = this;
+	// 	return new Command() {
+	// 		private final Timer timer = new Timer();
 
-			{
-				this.setName("Linear Compress");
-				this.addRequirements(slam, extension);
-			}
+	// 		{
+	// 			this.setName("Linear Compress");
+	// 			this.addRequirements(slam, extension);
+	// 		}
 
-			@Override
-			public void initialize() {
-				this.timer.restart();
-			}
+	// 		@Override
+	// 		public void initialize() {
+	// 			this.timer.restart();
+	// 		}
 
-			@Override
-			public void execute() {
-				final var goalRads = MathUtil.interpolate(
-					IntakeSlam.linearCompressStartAngle.get().in(Radians),
-					IntakeSlam.linearCompressEndAngle.get().in(Radians),
-					this.timer.get() / IntakeSlam.linearCompressTime.get().in(Seconds)
-				);
-				slam.setAngleGoalRads(goalRads);
-			}
+	// 		@Override
+	// 		public void execute() {
+	// 			final var goalRads = MathUtil.interpolate(
+	// 				IntakeSlam.linearCompressStartAngle.get().in(Radians),
+	// 				IntakeSlam.linearCompressEndAngle.get().in(Radians),
+	// 				this.timer.get() / IntakeSlam.linearCompressTime.get().in(Seconds)
+	// 			);
+	// 			slam.setAngleGoalRads(goalRads);
+	// 		}
 
-			@Override
-			public void end(boolean interrupted) {
-				this.timer.stop();
-				slam.io.stop(NeutralMode.DEFAULT);
-			}
-		};
-	}
+	// 		@Override
+	// 		public void end(boolean interrupted) {
+	// 			this.timer.stop();
+	// 			slam.io.stop(NeutralMode.DEFAULT);
+	// 		}
+	// 	};
+	// }
 
-	public Command trigCompress(ExtensionSystem extension) {
-		final var slam = this;
-		return new Command() {
-			private final Timer timer = new Timer();
+	// public Command trigCompress(ExtensionSystem extension) {
+	// 	final var slam = this;
+	// 	return new Command() {
+	// 		private final Timer timer = new Timer();
 
-			{
-				this.setName("Trig Compress");
-				this.addRequirements(slam, extension);
-			}
+	// 		{
+	// 			this.setName("Trig Compress");
+	// 			this.addRequirements(slam, extension);
+	// 		}
 
-			@Override
-			public void initialize() {
-				this.timer.restart();
-			}
+	// 		@Override
+	// 		public void initialize() {
+	// 			this.timer.restart();
+	// 		}
 
-			@Override
-			public void execute() {
-				final var goalRads = 
-					Math.acos(
-						MathUtil.interpolate(
-							Math.cos(IntakeSlam.trigCompressStartAngle.get().in(Radians)),
-							Math.cos(IntakeSlam.trigCompressEndAngle.get().in(Radians)),
-							this.timer.get() / IntakeSlam.trigCompressTime.get().in(Seconds)
-						)
-					)
-				;
-				slam.setAngleGoalRads(goalRads);
-			}
+	// 		@Override
+	// 		public void execute() {
+	// 			final var goalRads =
+	// 				Math.acos(
+	// 					MathUtil.interpolate(
+	// 						Math.cos(IntakeSlam.trigCompressStartAngle.get().in(Radians)),
+	// 						Math.cos(IntakeSlam.trigCompressEndAngle.get().in(Radians)),
+	// 						this.timer.get() / IntakeSlam.trigCompressTime.get().in(Seconds)
+	// 					)
+	// 				)
+	// 			;
+	// 			slam.setAngleGoalRads(goalRads);
+	// 		}
 
-			@Override
-			public void end(boolean interrupted) {
-				this.timer.stop();
-				slam.io.stop(NeutralMode.DEFAULT);
-			}
-		};
-	}
+	// 		@Override
+	// 		public void end(boolean interrupted) {
+	// 			this.timer.stop();
+	// 			slam.io.stop(NeutralMode.DEFAULT);
+	// 		}
+	// 	};
+	// }
 }
