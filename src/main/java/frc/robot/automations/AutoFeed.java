@@ -16,6 +16,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.HubShifts;
 import frc.robot.RobotState;
 import frc.robot.constants.FieldConstants;
+import frc.robot.subsystems.ExtensionSystem;
+import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.rollers.Rollers;
 import frc.robot.subsystems.shooter.Shooter;
@@ -25,9 +27,12 @@ import frc.util.loggerUtil.tunables.LoggedTunable;
 
 public class AutoFeed implements Runnable {
 	private final Shooter shooter;
-	private final Rollers rollers;
 
-	private final Command command;
+	private final Command intakeDeployCommand;
+
+	private final Command autoFeedCommand;
+	private final Command autoAgitateCommand;
+	private final Command autoCompressCommand;
 
 	private final BooleanSupplier disableTrigger;
 	private final BooleanSupplier enablePassingTrigger;
@@ -38,18 +43,22 @@ public class AutoFeed implements Runnable {
 
 	private static final LoggedTunable<Time> inactiveFeedTime = LoggedTunable.from("Automations/Auto Feed/Inactive Feed Time", Seconds::of, 2.0);
 
-	public AutoFeed(Shooter shooter, Rollers rollers, BooleanSupplier disableTrigger, BooleanSupplier enablePassingTrigger) {
+	public AutoFeed(Shooter shooter, Rollers rollers, Intake intake, ExtensionSystem extensionSystem, Command intakeDeployCommand, BooleanSupplier disableTrigger, BooleanSupplier enablePassingTrigger) {
 		this.shooter = shooter;
-		this.rollers = rollers;
 
 		this.disableTrigger = disableTrigger;
 		this.enablePassingTrigger = enablePassingTrigger;
 
-		this.command = Commands.parallel(
-			this.rollers.feeder.feed(),
-			this.rollers.indexer.index()
+		this.autoFeedCommand = Commands.parallel(
+			rollers.feeder.feed(),
+			rollers.indexer.index()
 		)
 		.withName("Auto Feed");
+
+		this.autoAgitateCommand = intake.slam.hopperAgitate(extensionSystem).withName("Auto Agitate");
+		this.autoCompressCommand = intake.rollers.compress().withName("Auto Compress");
+
+		this.intakeDeployCommand = intakeDeployCommand;
 	}
 
 	@Override
@@ -118,10 +127,14 @@ public class AutoFeed implements Runnable {
 		}
 
 
-		if (this.edgeDetector.risingEdge() && !this.command.isScheduled()) {
-			CommandScheduler.getInstance().schedule(this.command);
-		} else if (this.edgeDetector.fallingEdge() && this.command.isScheduled()) {
-			CommandScheduler.getInstance().cancel(this.command);
+		if (this.edgeDetector.risingEdge() && !this.autoFeedCommand.isScheduled()) {
+			CommandScheduler.getInstance().schedule(this.autoFeedCommand);
+			CommandScheduler.getInstance().schedule(this.autoAgitateCommand);
+			CommandScheduler.getInstance().schedule(this.autoCompressCommand);
+		} else if (this.edgeDetector.fallingEdge() && this.autoFeedCommand.isScheduled()) {
+			CommandScheduler.getInstance().cancel(this.autoFeedCommand);
+			CommandScheduler.getInstance().schedule(this.intakeDeployCommand);
+			CommandScheduler.getInstance().cancel(this.autoCompressCommand);
 		}
 
 		Leds.getInstance().shooterReadyAnimation.setFlag(this.edgeDetector.getValue() && !enablePassing && isShooting);
