@@ -41,7 +41,7 @@ public class Shooter {
 	private static final LoggedTunable<Distance>        aimingAzimuthTolerance = LoggedTunable.from("Shooting/Aiming/Tolerances/Azimuth", Inches::of, 6.0);
 	private static final LoggedTunable<Distance>    aimingTranslationTolerance = LoggedTunable.from("Shooting/Aiming/Tolerances/Translation", Inches::of, 4.0);
 
-	private static final LoggedTunable<LinearVelocity>  passingShooterTolerance = LoggedTunable.from("Shooting/Passing/Tolerances/Shooter", MetersPerSecond::of, 3.0);
+	private static final LoggedTunable<LinearVelocity>  passingShooterTolerance = LoggedTunable.from("Shooting/Passing/Tolerances/Shooter", MetersPerSecond::of, 1.0);
 	private static final LoggedTunable<Distance>        passingAzimuthTolerance = LoggedTunable.from("Shooting/Passing/Tolerances/Azimuth", Inches::of, 60.0);
 	private static final LoggedTunable<Distance>    passingTranslationTolerance = LoggedTunable.from("Shooting/Passing/Tolerances/Translation", Inches::of, 4.0);
 
