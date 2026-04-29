@@ -1259,6 +1259,20 @@
      "val":-3.119857330008472
     }
    },
+   "SORT":{
+    "x":{
+     "exp":"StartLineX - CenterToBumper",
+     "val":3.55854
+    },
+    "y":{
+     "exp":"CenterToBumper",
+     "val":0.4445
+    },
+    "heading":{
+     "exp":"90 deg",
+     "val":1.5707963267948966
+    }
+   },
    "StartingOverRampL":{
     "x":{
      "exp":"5.985846042633057 m",
@@ -1355,6 +1369,20 @@
     "heading":{
      "exp":"3.141592653589793 rad",
      "val":3.141592653589793
+    }
+   },
+   "TrenchAway":{
+    "x":{
+     "exp":"CenterToBumper * 3",
+     "val":1.3335
+    },
+    "y":{
+     "exp":"CenterToBumper * 2",
+     "val":0.889
+    },
+    "heading":{
+     "exp":"0.7681324299121239 rad",
+     "val":0.7681324299121239
     }
    },
    "TrenchEntryR":{
