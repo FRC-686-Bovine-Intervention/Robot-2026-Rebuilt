@@ -6,6 +6,7 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.rollers.feeder.Feeder;
 import frc.robot.subsystems.rollers.indexer.Indexer;
 import frc.util.VirtualSubsystem;
@@ -28,6 +29,18 @@ public class Rollers extends VirtualSubsystem {
 		Logger.processInputs("Inputs/Rollers/Sensors", this.sensorsInputs);
 
 		this.feederSensorTripped = this.sensorsInputs.feederSensor;
+
+		Leds.getInstance().fuelStagedAnimation.setFlag(this.isFeederSensorTripped());
+	}
+
+	public Command idle() {
+		return
+			Commands.parallel(
+				this.indexer.idle(),
+				this.feeder.idle()
+			)
+			.withName("Idle")
+		;
 	}
 
 	public Command feed() {

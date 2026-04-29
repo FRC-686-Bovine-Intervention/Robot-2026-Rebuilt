@@ -19,6 +19,8 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotState;
+import frc.robot.RobotType;
+import frc.robot.RobotType.Mode;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.shooter.aiming.AimingSystem;
 import frc.robot.subsystems.shooter.flywheel.Flywheel;
@@ -35,16 +37,20 @@ public class Shooter {
 	public final Hood hood;
 	public final AimingSystem aimingSystem;
 
-	private static final LoggedTunable<LinearVelocity>  shooterTolerance = LoggedTunable.from("Shooting/Aiming/Tolerances/Shooter", MetersPerSecond::of, 1.0);
-	private static final LoggedTunable<Distance>        azimuthTolerance = LoggedTunable.from("Shooting/Aiming/Tolerances/Azimuth", Inches::of, 6.0);
-	private static final LoggedTunable<Distance>    translationTolerance = LoggedTunable.from("Shooting/Aiming/Tolerances/Translation", Inches::of, 4.0);
+	private static final LoggedTunable<LinearVelocity>  aimingShooterTolerance = LoggedTunable.from("Shooting/Aiming/Tolerances/Shooter", MetersPerSecond::of, 0.5);
+	private static final LoggedTunable<Distance>        aimingAzimuthTolerance = LoggedTunable.from("Shooting/Aiming/Tolerances/Azimuth", Inches::of, 6.0);
+	private static final LoggedTunable<Distance>    aimingTranslationTolerance = LoggedTunable.from("Shooting/Aiming/Tolerances/Translation", Inches::of, 4.0);
+
+	private static final LoggedTunable<LinearVelocity>  passingShooterTolerance = LoggedTunable.from("Shooting/Passing/Tolerances/Shooter", MetersPerSecond::of, 3.0);
+	private static final LoggedTunable<Distance>        passingAzimuthTolerance = LoggedTunable.from("Shooting/Passing/Tolerances/Azimuth", Inches::of, 60.0);
+	private static final LoggedTunable<Distance>    passingTranslationTolerance = LoggedTunable.from("Shooting/Passing/Tolerances/Translation", Inches::of, 4.0);
 
 	public Command aimFlywheelAtHub() {
-		return this.flywheel.genSurfaceVeloCommand("Aim at Hub", this.aimingSystem.shootingCalc::getTargetFlywheelSurfaceVeloMPS);
+		return this.flywheel.genSurfaceVeloCommand("Aim at Hub", this.aimingSystem.shootingCalc::getTargetFlywheelSurfaceVeloMPS, true);
 	}
 
 	public Command aimHoodAtHub() {
-		return this.hood.genAngleCommand("Aim at Hub", this.aimingSystem.shootingCalc::getTargetHoodAngleRads);
+		return this.hood.genAngleCommand("Aim at Hub", this.aimingSystem.shootingCalc::getTargetHoodAngleRads, true);
 	}
 
 	private static final LoggedTunable<PIDGains> rotationalPIDGains = LoggedTunable.from("Shooting/Aiming/Azimuth/Rotational PID", new PIDGains(5.0, 0.0, 0.0));
@@ -106,11 +112,11 @@ public class Shooter {
 	}
 
 	public Command aimFlywheelToPass() {
-		return this.flywheel.genSurfaceVeloCommand("Aim to Pass", this.aimingSystem.passingCalc::getTargetFlywheelSurfaceVeloMPS);
+		return this.flywheel.genSurfaceVeloCommand("Aim to Pass", this.aimingSystem.passingCalc::getTargetFlywheelSurfaceVeloMPS, true);
 	}
 
 	public Command aimHoodToPass() {
-		return this.hood.genAngleCommand("Aim to Pass", this.aimingSystem.passingCalc::getTargetHoodAngleRads);
+		return this.hood.genAngleCommand("Aim to Pass", this.aimingSystem.passingCalc::getTargetHoodAngleRads, true);
 	}
 
 	public Command aimDriveToPass(Drive.Rotational rotational) {
@@ -124,6 +130,9 @@ public class Shooter {
 	}
 
 	public boolean withinShootingTolerance() {
+		return this.withinShootingTolerance(false);
+	}
+	public boolean withinShootingTolerance(boolean ignoringTranslation) {
 		final var aimPoint = this.aimingSystem.shootingCalc.getAimPoint();
 		final var shotPose = this.aimingSystem.shootingCalc.getShotPose();
 		final var targetSurfaceVeloMPS = this.aimingSystem.shootingCalc.getTargetFlywheelSurfaceVeloMPS();
@@ -135,7 +144,12 @@ public class Shooter {
 			shotPose,
 			targetSurfaceVeloMPS,
 			targetHoodAngleRads,
-			targetAzimuthHeadingRads
+			targetAzimuthHeadingRads,
+			aimingShooterTolerance.get().in(MetersPerSecond),
+			aimingAzimuthTolerance.get().in(Meters),
+			aimingTranslationTolerance.get().in(Meters),
+			ignoringTranslation,
+			"Shooting"
 		);
 	}
 
@@ -151,7 +165,12 @@ public class Shooter {
 			shotPose,
 			targetSurfaceVeloMPS,
 			targetHoodAngleRads,
-			targetAzimuthHeadingRads
+			targetAzimuthHeadingRads,
+			passingShooterTolerance.get().in(MetersPerSecond),
+			passingAzimuthTolerance.get().in(Meters),
+			passingTranslationTolerance.get().in(Meters),
+			true,
+			"Passing"
 		);
 	}
 
@@ -160,7 +179,12 @@ public class Shooter {
 		Translation2d shotPose,
 		double targetSurfaceVeloMPS,
 		double targetHoodAngleRads,
-		double targetAzimuthHeadingRads
+		double targetAzimuthHeadingRads,
+		double shooterToleranceMPS,
+		double azimuthToleranceMeters,
+		double translationToleranceMeters,
+		boolean ignoringTranslation,
+		String name
 	) {
 		final var targetLaunchVector = Shooter.calculateLaunchVector(targetSurfaceVeloMPS, targetHoodAngleRads, targetAzimuthHeadingRads);
 		final var targetVectorFloor = Math.hypot(targetLaunchVector.getX(), targetLaunchVector.getY());
@@ -173,26 +197,34 @@ public class Shooter {
 		final var measuredVectorFloor = Math.hypot(measuredLaunchVector.getX(), measuredLaunchVector.getY());
 
 
-		final var azimuthDot = targetLaunchVector.getX() * measuredLaunchVector.getX() + targetLaunchVector.getY() * measuredLaunchVector.getY();
+		final var azimuthDot = (targetLaunchVector.getX() * measuredLaunchVector.getX() + targetLaunchVector.getY() * measuredLaunchVector.getY()) / Math.hypot(targetLaunchVector.getX(), targetLaunchVector.getY()) / Math.hypot(measuredLaunchVector.getX(), measuredLaunchVector.getY());
 		final var distanceToTargetMeters = robotPose.getTranslation().getDistance(aimPoint.toTranslation2d());
-		final var hubradiusMeters = azimuthTolerance.get().in(Meters);
+		final var hubradiusMeters = azimuthToleranceMeters;
 		final var a = Math.hypot(hubradiusMeters, distanceToTargetMeters);
-		final var azimuthToleranceDot = hubradiusMeters / a;
+		final var azimuthToleranceDot = distanceToTargetMeters / a;
 
 		final var withinAzimuthTolerance = azimuthDot >= azimuthToleranceDot;
+		Logger.recordOutput("Subsystems/Shooter/Aiming/Tolerances/Azimuth Tolerance Dot", azimuthToleranceDot);
+		Logger.recordOutput("Subsystems/Shooter/Aiming/Tolerances/Azimuth Dot", azimuthDot);
 
 
 		final var errorX = targetVectorFloor - measuredVectorFloor;
 		final var errorY = targetLaunchVector.getZ() - measuredLaunchVector.getZ();
 		final var errorMPS = Math.hypot(errorX, errorY);
 
-		final var withinShooterTolerance = errorMPS <= shooterTolerance.get().in(MetersPerSecond);
+		final var withinShooterTolerance = errorMPS <= shooterToleranceMPS;
 
-		final var withinTranslationTolerance = GeomUtil.isNear(shotPose, RobotState.getInstance().getEstimatedGlobalPose().getTranslation(), translationTolerance.get().in(Meters));
+		final var withinTranslationTolerance = ignoringTranslation || GeomUtil.isNear(shotPose, RobotState.getInstance().getEstimatedGlobalPose().getTranslation(), translationToleranceMeters);
 
-		Logger.recordOutput("Subsystems/Shooter/Aiming/Tolerances/Within Azimuth Tolerance", withinAzimuthTolerance);
-		Logger.recordOutput("Subsystems/Shooter/Aiming/Tolerances/Shooter Tolerance", withinShooterTolerance);
-		Logger.recordOutput("Subsystems/Shooter/Aiming/Tolerances/Translation Tolerance", withinTranslationTolerance);
+		Logger.recordOutput("Subsystems/Shooter/" + name + "/Tolerances/Within Azimuth Tolerance", withinAzimuthTolerance);
+		Logger.recordOutput("Subsystems/Shooter/" + name + "/Tolerances/Shooter Tolerance", withinShooterTolerance);
+		Logger.recordOutput("Subsystems/Shooter/" + name + "/Tolerances/Translation Tolerance", withinTranslationTolerance);
+
+		if (RobotType.getMode() == Mode.REPLAY) {
+			final var hoodTranslation = this.hood.mech.getFieldRelative().getTranslation();
+			Logger.recordOutput("Subsystems/Shooter/Measured Launch Vector", hoodTranslation, hoodTranslation.plus(measuredLaunchVector));
+			Logger.recordOutput("Subsystems/Shooter/Target Launch Vector", hoodTranslation, hoodTranslation.plus(targetLaunchVector));
+		}
 
 		return withinAzimuthTolerance && withinShooterTolerance && withinTranslationTolerance;
 	}

@@ -35,7 +35,8 @@ public class AutoDriveAim implements Runnable {
 				RobotState.getInstance()::getEstimatedGlobalPose,
 				this.drive::getFieldMeasuredSpeeds,
 				FieldConstants.hubAimPoint::getOurs,
-				true
+				true,
+				false
 			).repeatedly(),
 			this.shooter.aimDriveAtHub(drive.rotationalSubsystem)
 		)

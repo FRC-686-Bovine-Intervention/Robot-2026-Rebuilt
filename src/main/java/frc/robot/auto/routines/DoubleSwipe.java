@@ -124,6 +124,7 @@ public class DoubleSwipe extends AutoRoutine {
 						FunctionalUtil.evalNow(firstTrajBallGrab.getFinalPose(false).get()),
 						FunctionalUtil.evalNow(new ChassisSpeeds()),
 						FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs()),
+						false,
 						false
 					).asProxy(),
 					this.robot.shooter.aimFlywheelAtHub().asProxy()
@@ -147,6 +148,7 @@ public class DoubleSwipe extends AutoRoutine {
 						FunctionalUtil.evalNow(secondTrajBallGrab.getFinalPose(false).get()),
 						FunctionalUtil.evalNow(new ChassisSpeeds()),
 						FunctionalUtil.evalNow(FieldConstants.hubAimPoint.getOurs()),
+						false,
 						false
 					).asProxy(),
 					this.robot.shooter.aimFlywheelAtHub().asProxy()

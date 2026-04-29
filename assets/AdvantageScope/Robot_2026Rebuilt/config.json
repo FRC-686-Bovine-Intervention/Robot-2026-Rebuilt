@@ -3,9 +3,16 @@
 	"isFTC": false,
     "sourceUrl": "https://cad.onshape.com/documents/34eead4e7896b6745c3ea627/w/973e6b445ce238ade720c7cc/e/d290d3a1b8c04a63477cc834",
     "disableSimplification": true,
-    "rotations": [{ "axis": "x", "degrees": 90 },{ "axis": "z", "degrees": 90 }],
+    "rotations": [{ "axis": "z", "degrees": 90 },{ "axis": "y", "degrees": 90 }],
     "position": [0, 0, 0],
     "cameras": [
+        {
+            "name": "Hopper",
+            "rotations": [{ "axis": "y", "degrees": -15 }],
+            "position": [-0.031135, 0.0, 0.530729],
+            "resolution": [16,9],
+            "fov": 72
+        },
         {
             "name": "Hub Zoom",
             "rotations": [{ "axis": "y", "degrees": -15 },{ "axis": "z", "degrees": -5.374629 }],
@@ -37,24 +44,12 @@
     ],
     "components": [
         {
-            "zeroedRotations": [{ "axis": "z", "degrees": 90 }, { "axis" : "y", "degrees": 90}, { "axis" : "y", "degrees": -10.1511642166}],
+            "zeroedRotations": [{ "axis": "z", "degrees": 90 }, { "axis": "y", "degrees": 90 }, { "axis" : "y", "degrees": -10.1511642166}],
             "zeroedPosition": [0.18860357, 0, -0.46653141]
         },
         {
-            "zeroedRotations": [{ "axis": "z", "degrees": 90 },{ "axis": "y", "degrees": 90 },{ "axis": "y", "degrees": 77.606461691456901932073109190622 }],
-            "zeroedPosition": [-0.26458066908925017988745953541204, 0, 0.06370180219024179527804949332474]
-        },
-        {
-            "zeroedRotations": [{ "axis": "z", "degrees": 90 },{ "axis": "y", "degrees": 90 },{ "axis": "y", "degrees": 77.606461691456901932073109190622 }],
-            "zeroedPosition": [-0.2331272116780560586067532275001, 0, 0.12915786209215001887557764010994]
-        },
-        {
-            "zeroedRotations": [{ "axis": "z", "degrees": 90 },{ "axis": "y", "degrees": 90 },{ "axis": "y", "degrees": 141.940882301 }],
-            "zeroedPosition": [-0.16386907, 0, 0.64005827]
-        },
-        {
-            "zeroedRotations": [{ "axis": "x", "degrees": 90 }, { "axis" : "z", "degrees" : 90 }],
-            "zeroedPosition": [0.039076, 0.324, -0.184]
+            "zeroedRotations": [{ "axis": "z", "degrees": 90 }, { "axis": "y", "degrees": 90 }],
+            "zeroedPosition": [-0.307975, 0, -0.241300]
         }
     ]
 }

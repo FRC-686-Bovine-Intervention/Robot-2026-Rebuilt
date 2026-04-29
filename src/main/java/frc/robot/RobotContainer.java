@@ -47,6 +47,7 @@ import frc.robot.auto.routines.ScoreFuel;
 import frc.robot.automations.AutoFeed;
 import frc.robot.automations.HubShiftNotifications;
 import frc.robot.automations.IntakeDeployHysteresis;
+import frc.robot.automations.PassivePrestage;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
 import frc.robot.subsystems.ExtensionSystem;
@@ -304,7 +305,7 @@ public class RobotContainer {
 					new Flywheel(new FlywheelIO() {}),
 					new Hood(new HoodIO() {}),
 					new AimingSystem(
-						new PhysicsShootingCalc(),
+						new InterpolationShootingCalc(),
 						new PhysicsPassingCalc()
 					)
 				);
@@ -376,10 +377,7 @@ public class RobotContainer {
 
 		// Setup robot structure
 		this.drive.structureRoot
-			.addChild(this.intake.slam.driverMech
-				.addChild(this.intake.slam.couplerMech)
-			)
-			.addChild(this.intake.slam.followerMech)
+			.addChild(this.intake.slam.mech)
 			.addChild(this.shooter.hood.mech)
 			// .addChild(this.climber.hook.mech)
 			.addChild(this.hopperCamera.mount)
@@ -392,9 +390,7 @@ public class RobotContainer {
 		// Register Mechanism3ds
 		Mechanism3d.registerMechs(
 			this.shooter.hood.mech,
-			this.intake.slam.followerMech,
-			this.intake.slam.driverMech,
-			this.intake.slam.couplerMech
+			this.intake.slam.mech
 			// this.climber.hook.mech
 		);
 
@@ -743,9 +739,10 @@ public class RobotContainer {
 
 		final var intakeRollersIdleCommand = this.intake.rollers.idle();
 		final var intakeRollersIntakeCommand = this.intake.rollers.intake();
+		final var intakeRollersCompressCommand = this.intake.rollers.compress();
 		final var intakeStowCommand = this.intake.slam.stow();
-		final var intakeHopperDump = this.intake.slam.hopperDump(this.extensionSystem);
 		final var intakeDeployCommand = this.intake.slam.deploy(this.extensionSystem);
+		final var intakeForceHopperAgitateCommand = this.intake.slam.hopperAgitate(this.extensionSystem).withInterruptBehavior(InterruptionBehavior.kCancelIncoming).withName("Force Agitate");
 
 		final var rollersIndexerIdleCommand = this.rollers.indexer.idle();
 		final var rollersFeederIdleCommand = this.rollers.feeder.idle();
@@ -766,7 +763,8 @@ public class RobotContainer {
 					RobotState.getInstance()::getEstimatedGlobalPose,
 					this.drive::getFieldMeasuredSpeeds,
 					FieldConstants.hubAimPoint::getOurs,
-					true
+					true,
+					false
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
@@ -780,7 +778,8 @@ public class RobotContainer {
 					FieldConstants.hubIntakeFrontRobotPose::getOurs,
 					FunctionalUtil.evalNow(new ChassisSpeeds()),
 					FieldConstants.hubAimPoint::getOurs,
-					false
+					true,
+					true
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
@@ -794,7 +793,8 @@ public class RobotContainer {
 					FieldConstants.leftTrenchPresetShotPose::getOurs,
 					FunctionalUtil.evalNow(new ChassisSpeeds()),
 					FieldConstants.hubAimPoint::getOurs,
-					false
+					true,
+					true
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
@@ -808,7 +808,8 @@ public class RobotContainer {
 					FieldConstants.rightTrenchPresetShotPose::getOurs,
 					FunctionalUtil.evalNow(new ChassisSpeeds()),
 					FieldConstants.hubAimPoint::getOurs,
-					false
+					true,
+					true
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
@@ -822,7 +823,8 @@ public class RobotContainer {
 					FieldConstants.towerPresetShotPose::getOurs,
 					FunctionalUtil.evalNow(new ChassisSpeeds()),
 					FieldConstants.hubAimPoint::getOurs,
-					false
+					true,
+					true
 				).repeatedly(),
 				this.shooter.aimFlywheelAtHub(),
 				this.shooter.aimHoodAtHub(),
@@ -842,6 +844,7 @@ public class RobotContainer {
 							return FieldConstants.botPassPoint.getOurs();
 						}
 					},
+					true,
 					true
 				).repeatedly(),
 				this.shooter.aimFlywheelToPass(),
@@ -881,14 +884,21 @@ public class RobotContainer {
 		// this.automationsLoop.bind(new HookAutoDeployHysteresis(this.climber.hook, climberHookAutoDeployCommand));
 		// this.automationsLoop.bind(new AutoSpinUp(this.drive, this.shooter, intakeRollersIntakeCommand));
 		// this.automationsLoop.bind(new AutoDriveAim(this.drive, this.shooter, intakeRollersIntakeCommand));
-		this.automationsLoop.bind(new AutoFeed(this.shooter, this.rollers, this.driveController.y().or(secondDriverOverride), aimToPassCommand::isScheduled));
-		// this.automationsLoop.bind(new PassivePrestage(this.rollers, rollersFeederIdleCommand, rollersPassivePrestageCommand));
+		this.automationsLoop.bind(new AutoFeed(
+			this.shooter,
+			this.rollers,
+			this.intake,
+			this.extensionSystem,
+			intakeDeployCommand,
+			this.driveController.y().or(secondDriverOverride),
+			aimToPassCommand::isScheduled
+		));
+		this.automationsLoop.bind(new PassivePrestage(this.rollers, rollersFeederIdleCommand, rollersPassivePrestageCommand));
 		this.automationsLoop.bind(new HubShiftNotifications(this.driveController));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		// new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
 
 		// Bind buttons
-		this.driveController.leftBumper().whileTrue(driveTankCommand);
 		new Trigger(() ->
 			translationJoystick.magnitude() > 0.0
 			&& !driveTankCommand.isScheduled()
@@ -916,16 +926,24 @@ public class RobotContainer {
 		 *  | Press: Deploy intake (if not deployed) and roll in
 		 *  | Double Press: Retract intake
 		 */
+		final var intakeEdge = new EdgeDetector(false);
+		final var intakeSupplier = this.driveController.a();
 		final var intakeDoublePressThreshold = LoggedTunable.from("Controls/Intake/Double Press Threshold", Seconds::of, 0.25);
 		final var intakeDoublePressTimer = new Timer();
-		final var intakeHopperDumpEdge = new EdgeDetector(false);
-		final var intakeHopperDumpSupplier = this.driveController.povUp();
+		final var intakeForceHopperAgitateEdge = new EdgeDetector(false);
+		final var intakeForceHopperAgitateSupplier = this.driveController.povUp();
+		final var tankEdge = new EdgeDetector(false);
+		final var tankSupplier = this.driveController.leftBumper();
+
 		CommandScheduler.getInstance().getDefaultButtonLoop().bind(() -> {
-			if (this.driveController.hid.getAButtonPressed()) {
+			intakeEdge.update(intakeSupplier.getAsBoolean());
+			if (intakeEdge.risingEdge()) {
 				CommandScheduler.getInstance().schedule(intakeRollersIntakeCommand);
-				CommandScheduler.getInstance().schedule(intakeDeployCommand);
+				if (intakeStowCommand.isScheduled()) {
+					CommandScheduler.getInstance().schedule(intakeDeployCommand);
+				}
 			}
-			if (this.driveController.hid.getAButtonReleased()) {
+			if (intakeEdge.fallingEdge()) {
 				CommandScheduler.getInstance().cancel(intakeRollersIntakeCommand);
 				if (intakeDoublePressTimer.isRunning()) {
 					if (!intakeDoublePressTimer.hasElapsed(intakeDoublePressThreshold.get().in(Seconds))) {
@@ -939,14 +957,33 @@ public class RobotContainer {
 				intakeDoublePressTimer.stop();
 				intakeDoublePressTimer.reset();
 			}
-			intakeHopperDumpEdge.update(intakeHopperDumpSupplier.getAsBoolean());
-			if (intakeHopperDumpEdge.risingEdge()) {
-				CommandScheduler.getInstance().schedule(intakeHopperDump);
+
+
+			intakeForceHopperAgitateEdge.update(intakeForceHopperAgitateSupplier.getAsBoolean());
+			if (intakeForceHopperAgitateEdge.risingEdge()) {
+				CommandScheduler.getInstance().schedule(intakeForceHopperAgitateCommand);
+				CommandScheduler.getInstance().schedule(intakeRollersCompressCommand);
 			}
-			if (intakeHopperDumpEdge.fallingEdge()) {
+			if (intakeForceHopperAgitateEdge.fallingEdge()) {
+				CommandScheduler.getInstance().cancel(intakeForceHopperAgitateCommand);
+				CommandScheduler.getInstance().cancel(intakeRollersCompressCommand);
 				CommandScheduler.getInstance().schedule(intakeDeployCommand);
 			}
+
+			tankEdge.update(tankSupplier.getAsBoolean());
+			if (tankEdge.risingEdge()) {
+				CommandScheduler.getInstance().schedule(driveTankCommand);
+				CommandScheduler.getInstance().schedule(intakeRollersIntakeCommand);
+				CommandScheduler.getInstance().schedule(intakeDeployCommand);
+			}
+			if (tankEdge.fallingEdge()) {
+				CommandScheduler.getInstance().cancel(driveTankCommand);
+				if (!intakeEdge.getValue()) {
+					CommandScheduler.getInstance().cancel(intakeRollersIntakeCommand);
+				}
+			}
 		});
+
 
 		final var aimAutoTrigger = new EdgeDetector(false);
 		final var aimHubTrigger = new EdgeDetector(false);

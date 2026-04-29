@@ -67,6 +67,15 @@ public class Leds extends VirtualSubsystem {
 		this.hubShiftDynamicActiveAlertAnimation = new FlashingAnimation(sideStrips, WaveFunction.Modulo.frequency(4.0), InterpolationFunction.step.gradient(Color.kBlack, Color.kRed));
 		this.hubShiftDynamicInactiveAlertAnimation = new FlashingAnimation(sideStrips, WaveFunction.Modulo.frequency(4.0), InterpolationFunction.step.gradient(Color.kBlack, Color.kPurple));
 
+		this.fuelStagedAnimation = new FillAnimation(sideStrips.substrip(10, 13), Color.kGreen);
+
+		final var shooterStrip = sideStrips.substrip(4, 12);
+		this.shooterOutOfToleranceAnimation = new FillAnimation(shooterStrip, Color.kRed);
+		this.shooterWaitingForShiftAnimation = new FillAnimation(shooterStrip, Color.kOrange);
+		this.shooterWaitingForTagsAnimation = new FillAnimation(shooterStrip, Color.kWhite);
+		this.shooterDisabledAnimation = new WaveAnimation(shooterStrip, (time, pos) -> (pos * shooterStrip.getLength()) % 2, InterpolationFunction.step.gradient(Color.kRed, Color.kYellow));
+		this.shooterReadyAnimation = new FillAnimation(shooterStrip, Color.kGreen);
+
 		this.loadingNotifier = new Notifier(() -> {
 			synchronized(this) {
 				this.bootingAnimation.apply();
@@ -108,6 +117,14 @@ public class Leds extends VirtualSubsystem {
 	public final FlashingAnimation hubShiftDynamicActiveAlertAnimation;
 	public final FlashingAnimation hubShiftDynamicInactiveAlertAnimation;
 
+	public final FillAnimation fuelStagedAnimation;
+
+	public final WaveAnimation shooterDisabledAnimation;
+	public final FillAnimation shooterOutOfToleranceAnimation;
+	public final FillAnimation shooterWaitingForShiftAnimation;
+	public final FillAnimation shooterWaitingForTagsAnimation;
+	public final FillAnimation shooterReadyAnimation;
+
 	private int skippedFrames = 0;
 	private static final int frameSkipAmount = 15;
 
@@ -143,15 +160,9 @@ public class Leds extends VirtualSubsystem {
 			this.intakeCamConnection.apply();
 
 			this.hoodCalibratedAnimation.applyIfFlagged();
+			this.fuelStagedAnimation.applyIfFlagged();
 		} else {
-
 		}
-
-		this.autonomousBackgroundAnimation.applyIfFlagged();
-		this.autonomousDelayingAnimation.applyIfFlagged();
-		this.autonomousRunningAnimation.applyIfFlagged();
-		this.autonomousFinishedAnimation.applyIfFlagged();
-		this.autonomousOverrunAnimation.applyIfFlagged();
 
 		this.hubShiftStaticActiveGoodAnimation.applyIfFlagged();
 		this.hubShiftStaticActiveWarningAnimation.applyIfFlagged();
@@ -163,7 +174,19 @@ public class Leds extends VirtualSubsystem {
 		this.hubShiftStaticInactiveAlertAnimation.applyIfFlagged();
 		this.hubShiftDynamicInactiveAlertAnimation.applyIfFlagged();
 
+		this.shooterReadyAnimation.applyIfFlagged();
+		this.shooterDisabledAnimation.applyIfFlagged();
+		this.shooterWaitingForShiftAnimation.applyIfFlagged();
+		this.shooterWaitingForTagsAnimation.applyIfFlagged();
+		this.shooterOutOfToleranceAnimation.applyIfFlagged();
+
 		this.hoodNotCalibratedAnimation.applyIfFlagged();
+
+		this.autonomousBackgroundAnimation.applyIfFlagged();
+		this.autonomousDelayingAnimation.applyIfFlagged();
+		this.autonomousRunningAnimation.applyIfFlagged();
+		this.autonomousFinishedAnimation.applyIfFlagged();
+		this.autonomousOverrunAnimation.applyIfFlagged();
 
 		this.tipped.applyIfFlagged();
 		this.estopped.applyIfFlagged();

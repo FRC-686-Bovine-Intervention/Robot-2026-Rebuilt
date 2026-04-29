@@ -199,4 +199,73 @@ public final class FieldConstants {
 
 	public static final AllianceFlipped<Translation3d> topPassPoint = new AllianceFlipped<>(leftPassPoint.getBlue(), rightPassPoint.getRed());
 	public static final AllianceFlipped<Translation3d> botPassPoint = new AllianceFlipped<>(rightPassPoint.getBlue(), leftPassPoint.getRed());
+
+
+
+	public static final AllianceFlipped<int[]> hubTagIDs = new AllianceFlipped<>(
+		new int[] {
+			25,
+			26,
+			27,
+			18,
+			19,
+			20,
+			21,
+			24,
+		},
+		new int[] {
+			9,
+			10,
+			11,
+			2,
+			3,
+			4,
+			5,
+			8,
+		}
+	);
+
+	public static final AllianceFlipped<int[]> towerTagIDs = new AllianceFlipped<>(
+		new int[] {
+			31,
+			32,
+		},
+		new int[] {
+			15,
+			16,
+		}
+	);
+
+	public static final AllianceFlipped<int[]> outpostTagIDs = new AllianceFlipped<>(
+		new int[] {
+			29,
+			30,
+		},
+		new int[] {
+			13,
+			14,
+		}
+	);
+
+	public static final AllianceFlipped<int[]> leftTrenchTagIDs = new AllianceFlipped<>(
+		new int[] {
+			23,
+			22,
+		},
+		new int[] {
+			7,
+			8,
+		}
+	);
+
+	public static final AllianceFlipped<int[]> rightTrenchTagIDs = new AllianceFlipped<>(
+		new int[] {
+			28,
+			17,
+		},
+		new int[] {
+			12,
+			1,
+		}
+	);
 }
