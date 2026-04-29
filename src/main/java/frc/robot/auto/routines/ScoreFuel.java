@@ -135,6 +135,16 @@ public class ScoreFuel extends AutoRoutine {
 					depot
 				);
 			} else if (
+				scoreLocation == ScoringLocation.OUTSIDE_LEFT_TRENCH && startPosition == StartingPosition.OUTSIDE_LEFT_TRENCH
+			) {
+				return Settings.from(
+					halfSweep,
+					halfOuterSwipe,
+					halfSweep,
+					depot
+				);
+			}
+			else if (
 				scoreLocation == ScoringLocation.RIGHT || scoreLocation == ScoringLocation.LEFT
 			) {
 				return Settings.from(
@@ -161,7 +171,7 @@ public class ScoreFuel extends AutoRoutine {
 			var startPosition = ScoreFuel.firstScoringLocation.getResponse();
 			var firstIntakeLocation = ScoreFuel.firstIntakeLocation.getResponse();
 			if (
-				firstIntakeLocation == IntakeLocation.FALSE || firstIntakeLocation == IntakeLocation.DEPOT
+				firstIntakeLocation == IntakeLocation.FALSE
 			) {
 				return Settings.from(none, none);
 			} else if (
@@ -366,7 +376,7 @@ public class ScoreFuel extends AutoRoutine {
 
 
 	private static AllianceFlipped<Trajectory<SwerveSample>> generatePath(StartingPosition startingPosition, ScoringLocation scoringLocation, IntakeLocation intakeLocation, boolean comeBackThroughTrenchSideways) {
-		if (startingPosition == StartingPosition.INSIDE_LEFT_TRENCH && scoringLocation.canFlip * intakeLocation.canFlip > 0) {
+		if ((startingPosition == StartingPosition.INSIDE_LEFT_TRENCH || startingPosition == StartingPosition.OUTSIDE_LEFT_TRENCH) && scoringLocation.canFlip * intakeLocation.canFlip > 0) {
 			//Needs to flip across Xenterline
 			var blueTraj = AutoCommons.loadBlueChoreoTrajectory(startingPosition.rightAlias + "To" + scoringLocation.rightAlias + "Intake" + intakeLocation.alias + (comeBackThroughTrenchSideways ? "_Sideswipe" : ""));
 			var newBlueTraj = AllianceFlipUtil.flip(blueTraj.getBlue(), FieldFlipType.XenterLineMirror);

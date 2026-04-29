@@ -643,6 +643,20 @@
      "val":1.200625545208898
     }
    },
+   "LaedonLeftHubShot":{
+    "x":{
+     "exp":"LaedonRightHubShot.x",
+     "val":2.7009365558624268
+    },
+    "y":{
+     "exp":"FieldWidth - LaedonRightHubShot.y",
+     "val":7.091000240402222
+    },
+    "heading":{
+     "exp":"LaedonRightHubShot.heading",
+     "val":0.0
+    }
+   },
    "LaedonRightHubShot":{
     "x":{
      "exp":"2.7009365558624268 m",
@@ -1257,6 +1271,20 @@
     "heading":{
      "exp":"-3.119857330008472 rad",
      "val":-3.119857330008472
+    }
+   },
+   "SOLT":{
+    "x":{
+     "exp":"SORT.x",
+     "val":3.55854
+    },
+    "y":{
+     "exp":"FieldWidth - SORT.y",
+     "val":7.62508
+    },
+    "heading":{
+     "exp":"-90 deg",
+     "val":-1.5707963267948966
     }
    },
    "SORT":{
