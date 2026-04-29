@@ -40,6 +40,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoManager;
 import frc.robot.auto.AutoSelector;
+import frc.robot.auto.routines.CompatSwipe;
 import frc.robot.auto.routines.DoubleSwipe;
 import frc.robot.auto.routines.Preloads;
 import frc.robot.auto.routines.ResetPosition;
@@ -404,6 +405,7 @@ public class RobotContainer {
 		final var autoSelector = new AutoSelector("Auto Selector");
 		// Add autonomous routines to autonomous selector
 		autoSelector.addDefaultRoutine(new ScoreFuel(this));
+		autoSelector.addRoutine(new CompatSwipe(this));
 		autoSelector.addRoutine(new DoubleSwipe(this));
 		autoSelector.addRoutine(new ResetPosition());
 		autoSelector.addRoutine(new Preloads(this));
