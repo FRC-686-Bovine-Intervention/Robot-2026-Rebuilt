@@ -23,7 +23,7 @@ import frc.util.flipping.AllianceFlipped;
 public class ScoreFuel extends AutoRoutine {
 
 	private static final AutoQuestion<StartingPosition> startPosition = new AutoQuestion<StartingPosition>("Starting Position") {
-		// private static final Map.Entry<String, StartingPosition> startLeftBump =           Settings.option("LB",  StartingPosition.LEFT_BUMP);
+		private static final Map.Entry<String, StartingPosition> startLeftBump =           Settings.option("LB",  StartingPosition.LEFT_BUMP);
 		// private static final Map.Entry<String, StartingPosition> startRightBump =          Settings.option("RB",  StartingPosition.RIGHT_BUMP);
 		private static final Map.Entry<String, StartingPosition> startCenter =             Settings.option("Center",   StartingPosition.CENTER);
 		private static final Map.Entry<String, StartingPosition> startInsideLeftTrench =   Settings.option("L Trench", StartingPosition.INSIDE_LEFT_TRENCH);
@@ -33,7 +33,7 @@ public class ScoreFuel extends AutoRoutine {
 
 		@Override
 		protected Settings<StartingPosition> generateSettings() {
-			return Settings.from(startInsideLeftTrench, startInsideLeftTrench, startInsideRightTrench, startOutsideLeftTrench, startOutsideRightTrench);
+			return Settings.from(startInsideLeftTrench, startInsideLeftTrench, startInsideRightTrench, startOutsideLeftTrench, startOutsideRightTrench, startLeftBump);
 		}
 	};
 
@@ -70,6 +70,12 @@ public class ScoreFuel extends AutoRoutine {
 					);
 				}
 			} else if (
+				startPosition == StartingPosition.LEFT_BUMP
+			) {
+				return Settings.from(
+					left, left);
+			}
+			else if (
 				startPosition == StartingPosition.INSIDE_RIGHT_TRENCH || startPosition == StartingPosition.OUTSIDE_RIGHT_TRENCH
 			) {
 				if (citrusMode.getResponse()) {
@@ -141,6 +147,13 @@ public class ScoreFuel extends AutoRoutine {
 					halfSweep,
 					halfOuterSwipe,
 					halfSweep,
+					depot
+				);
+			} else if (
+				scoreLocation == ScoringLocation.LEFT && startPosition == StartingPosition.LEFT_BUMP
+			) {
+				return Settings.from(
+					depot,
 					depot
 				);
 			}
