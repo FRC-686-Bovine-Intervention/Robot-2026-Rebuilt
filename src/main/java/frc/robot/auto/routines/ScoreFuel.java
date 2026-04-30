@@ -28,16 +28,18 @@ public class ScoreFuel extends AutoRoutine {
 		private static final Map.Entry<String, StartingPosition> startCenter =             Settings.option("Center",   StartingPosition.CENTER);
 		private static final Map.Entry<String, StartingPosition> startInsideLeftTrench =   Settings.option("L Trench", StartingPosition.INSIDE_LEFT_TRENCH);
 		private static final Map.Entry<String, StartingPosition> startInsideRightTrench =  Settings.option("R Trench", StartingPosition.INSIDE_RIGHT_TRENCH);
+		private static final Map.Entry<String, StartingPosition> startOutsideLeftTrench =   Settings.option("Out L Trench", StartingPosition.OUTSIDE_LEFT_TRENCH);
+		private static final Map.Entry<String, StartingPosition> startOutsideRightTrench =  Settings.option("Out R Trench", StartingPosition.OUTSIDE_RIGHT_TRENCH);
 
 		@Override
 		protected Settings<StartingPosition> generateSettings() {
-			return Settings.from(startInsideLeftTrench, startInsideLeftTrench, startInsideRightTrench);
+			return Settings.from(startInsideLeftTrench, startInsideLeftTrench, startInsideRightTrench, startOutsideLeftTrench, startOutsideRightTrench);
 		}
 	};
 
 	private static final AutoQuestion<ScoringLocation> firstScoringLocation = new AutoQuestion<ScoringLocation>("First Score Location") {
-		// private static final Map.Entry<String, ScoringLocation> left = Settings.option("L", ScoringLocation.LEFT);
-		// private static final Map.Entry<String, ScoringLocation> right = Settings.option("R", ScoringLocation.RIGHT);
+		private static final Map.Entry<String, ScoringLocation> left = Settings.option("L", ScoringLocation.LEFT);
+		private static final Map.Entry<String, ScoringLocation> right = Settings.option("R", ScoringLocation.RIGHT);
 		private static final Map.Entry<String, ScoringLocation> center = Settings.option("Center", ScoringLocation.CENTER);
 		private static final Map.Entry<String, ScoringLocation> outsideLeftTrench = Settings.option("L Trench", ScoringLocation.OUTSIDE_LEFT_TRENCH);
 		private static final Map.Entry<String, ScoringLocation> outsideRightTrench = Settings.option("R Trench", ScoringLocation.OUTSIDE_RIGHT_TRENCH);
@@ -53,21 +55,35 @@ public class ScoreFuel extends AutoRoutine {
 					center
 				);
 			} else if (
-				startPosition == StartingPosition.INSIDE_LEFT_TRENCH
+				startPosition == StartingPosition.INSIDE_LEFT_TRENCH || startPosition == StartingPosition.OUTSIDE_LEFT_TRENCH
 			) {
-				return Settings.from(
-					outsideLeftTrench,
-					outsideLeftTrench,
-					outsideRightTrench
-				);
+				if (citrusMode.getResponse()) {
+					return Settings.from(
+						left,
+						left
+					);
+				} else {
+					return Settings.from(
+						outsideLeftTrench,
+						outsideLeftTrench,
+						outsideRightTrench
+					);
+				}
 			} else if (
-				startPosition == StartingPosition.INSIDE_RIGHT_TRENCH
+				startPosition == StartingPosition.INSIDE_RIGHT_TRENCH || startPosition == StartingPosition.OUTSIDE_RIGHT_TRENCH
 			) {
-				return Settings.from(
-					outsideRightTrench,
-					outsideLeftTrench,
-					outsideRightTrench
-				);
+				if (citrusMode.getResponse()) {
+					return Settings.from(
+						right,
+						right
+					);
+				} else {
+					return Settings.from(
+						outsideRightTrench,
+						outsideLeftTrench,
+						outsideRightTrench
+					);
+				}
 			} else {
 				return null;
 			}
@@ -118,7 +134,26 @@ public class ScoreFuel extends AutoRoutine {
 					noIntake,
 					depot
 				);
-			} else {
+			} else if (
+				scoreLocation == ScoringLocation.OUTSIDE_LEFT_TRENCH && startPosition == StartingPosition.OUTSIDE_LEFT_TRENCH
+			) {
+				return Settings.from(
+					halfSweep,
+					halfOuterSwipe,
+					halfSweep,
+					depot
+				);
+			}
+			else if (
+				scoreLocation == ScoringLocation.RIGHT || scoreLocation == ScoringLocation.LEFT
+			) {
+				return Settings.from(
+					halfSweep,
+					halfOuterSwipe,
+					halfSweep
+				);
+			}
+			else {
 				return null;
 			}
 		}
@@ -136,7 +171,7 @@ public class ScoreFuel extends AutoRoutine {
 			var startPosition = ScoreFuel.firstScoringLocation.getResponse();
 			var firstIntakeLocation = ScoreFuel.firstIntakeLocation.getResponse();
 			if (
-				firstIntakeLocation == IntakeLocation.FALSE || firstIntakeLocation == IntakeLocation.DEPOT
+				firstIntakeLocation == IntakeLocation.FALSE
 			) {
 				return Settings.from(none, none);
 			} else if (
@@ -157,7 +192,22 @@ public class ScoreFuel extends AutoRoutine {
 					outsideRightTrench,
 					right
 				);
-			} else {
+			} else if (
+				startPosition == ScoringLocation.RIGHT
+			) {
+				return Settings.from(
+					right,
+					right
+				);
+			} else if (
+				startPosition == ScoringLocation.LEFT
+			)  {
+				return Settings.from(
+					left,
+					left
+				);
+			}
+			else {
 				return null;
 			}
 		}
@@ -209,6 +259,16 @@ public class ScoreFuel extends AutoRoutine {
 					halfOuterSwipe
 				);
 			} else if (
+				(startPosition == ScoringLocation.LEFT && scoreLocation == ScoringLocation.LEFT) ||
+				(startPosition == ScoringLocation.RIGHT && scoreLocation == ScoringLocation.RIGHT)
+			) {
+				return Settings.from(
+					halfInnerLoopSwipe,
+					halfInnerLoopSwipe,
+					halfOuterSwipe
+				);
+			}
+			else if (
 				startPosition == null
 			) {
 				return Settings.from(
@@ -231,10 +291,21 @@ public class ScoreFuel extends AutoRoutine {
 		}
 	};
 
+	private static final AutoQuestion<Boolean> citrusMode = new AutoQuestion<Boolean>("Citrus Mode") {
+		private static final Map.Entry<String, Boolean> yes = Settings.option("Yes", true);
+		private static final Map.Entry<String, Boolean> no = Settings.option("No", false);
+
+		@Override
+		protected Settings<Boolean> generateSettings() {
+			return Settings.from(yes, yes, no);
+		}
+	};
+
 	private final RobotContainer robot;
 
 	public ScoreFuel(RobotContainer robot) {
 		super("Score Fuel", List.of(
+			citrusMode,
 			startPosition,
 			firstScoringLocation,
 			firstIntakeLocation,
@@ -305,13 +376,13 @@ public class ScoreFuel extends AutoRoutine {
 
 
 	private static AllianceFlipped<Trajectory<SwerveSample>> generatePath(StartingPosition startingPosition, ScoringLocation scoringLocation, IntakeLocation intakeLocation, boolean comeBackThroughTrenchSideways) {
-		if (startingPosition == StartingPosition.INSIDE_LEFT_TRENCH && scoringLocation.canFlip * intakeLocation.canFlip > 0) {
+		if ((startingPosition == StartingPosition.INSIDE_LEFT_TRENCH || startingPosition == StartingPosition.OUTSIDE_LEFT_TRENCH) && scoringLocation.canFlip * intakeLocation.canFlip > 0) {
 			//Needs to flip across Xenterline
 			var blueTraj = AutoCommons.loadBlueChoreoTrajectory(startingPosition.rightAlias + "To" + scoringLocation.rightAlias + "Intake" + intakeLocation.alias + (comeBackThroughTrenchSideways ? "_Sideswipe" : ""));
 			var newBlueTraj = AllianceFlipUtil.flip(blueTraj.getBlue(), FieldFlipType.XenterLineMirror);
 			return AllianceFlipped.fromBlue(newBlueTraj);
 		} else {
-			return AutoCommons.loadBlueChoreoTrajectory(startingPosition.alias + "To" + scoringLocation.alias + "Intake" + intakeLocation.alias + (comeBackThroughTrenchSideways ? "_Sideswipe" : ""));
+			return AutoCommons.loadBlueChoreoTrajectory(startingPosition.alias + "To" + scoringLocation.alias + "Intake" + intakeLocation.alias + (comeBackThroughTrenchSideways ? "_Sideswipe" : "") /*+ (citrusMode.getResponse() ? "_Trench" : "")*/);
 		}
 	}
 
