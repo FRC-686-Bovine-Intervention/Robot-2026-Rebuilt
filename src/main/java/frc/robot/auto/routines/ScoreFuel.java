@@ -23,7 +23,7 @@ import frc.util.flipping.AllianceFlipped;
 public class ScoreFuel extends AutoRoutine {
 
 	private static final AutoQuestion<StartingPosition> startPosition = new AutoQuestion<StartingPosition>("Starting Position") {
-		private static final Map.Entry<String, StartingPosition> startLeftBump =           Settings.option("LB",  StartingPosition.LEFT_BUMP);
+		private static final Map.Entry<String, StartingPosition> startLeftBump =           Settings.option("L Bump",  StartingPosition.LEFT_BUMP);
 		// private static final Map.Entry<String, StartingPosition> startRightBump =          Settings.option("RB",  StartingPosition.RIGHT_BUMP);
 		private static final Map.Entry<String, StartingPosition> startCenter =             Settings.option("Center",   StartingPosition.CENTER);
 		private static final Map.Entry<String, StartingPosition> startInsideLeftTrench =   Settings.option("L Trench", StartingPosition.INSIDE_LEFT_TRENCH);
@@ -38,8 +38,8 @@ public class ScoreFuel extends AutoRoutine {
 	};
 
 	private static final AutoQuestion<ScoringLocation> firstScoringLocation = new AutoQuestion<ScoringLocation>("First Score Location") {
-		private static final Map.Entry<String, ScoringLocation> left = Settings.option("L", ScoringLocation.LEFT);
-		private static final Map.Entry<String, ScoringLocation> right = Settings.option("R", ScoringLocation.RIGHT);
+		private static final Map.Entry<String, ScoringLocation> left = Settings.option("L Bump", ScoringLocation.LEFT);
+		private static final Map.Entry<String, ScoringLocation> right = Settings.option("R Bump", ScoringLocation.RIGHT);
 		private static final Map.Entry<String, ScoringLocation> center = Settings.option("Center", ScoringLocation.CENTER);
 		private static final Map.Entry<String, ScoringLocation> outsideLeftTrench = Settings.option("L Trench", ScoringLocation.OUTSIDE_LEFT_TRENCH);
 		private static final Map.Entry<String, ScoringLocation> outsideRightTrench = Settings.option("R Trench", ScoringLocation.OUTSIDE_RIGHT_TRENCH);
@@ -65,8 +65,8 @@ public class ScoreFuel extends AutoRoutine {
 				} else {
 					return Settings.from(
 						outsideLeftTrench,
-						outsideLeftTrench,
-						outsideRightTrench
+						outsideLeftTrench//,
+						// outsideRightTrench
 					);
 				}
 			} else if (
@@ -86,7 +86,7 @@ public class ScoreFuel extends AutoRoutine {
 				} else {
 					return Settings.from(
 						outsideRightTrench,
-						outsideLeftTrench,
+						// outsideLeftTrench,
 						outsideRightTrench
 					);
 				}
@@ -113,8 +113,8 @@ public class ScoreFuel extends AutoRoutine {
 			var startPosition = ScoreFuel.startPosition.getResponse();
 			var scoreLocation = ScoreFuel.firstScoringLocation.getResponse();
 			if (
-				(startPosition == StartingPosition.INSIDE_LEFT_TRENCH && scoreLocation == ScoringLocation.OUTSIDE_LEFT_TRENCH) ||
-				(startPosition == StartingPosition.INSIDE_RIGHT_TRENCH && scoreLocation == ScoringLocation.OUTSIDE_RIGHT_TRENCH)
+				((startPosition == StartingPosition.INSIDE_LEFT_TRENCH || startPosition == StartingPosition.OUTSIDE_LEFT_TRENCH) && scoreLocation == ScoringLocation.OUTSIDE_LEFT_TRENCH) ||
+				((startPosition == StartingPosition.INSIDE_RIGHT_TRENCH || startPosition == StartingPosition.OUTSIDE_RIGHT_TRENCH) && scoreLocation == ScoringLocation.OUTSIDE_RIGHT_TRENCH)
 			) {
 				return Settings.from(
 					halfSweep,
@@ -123,8 +123,8 @@ public class ScoreFuel extends AutoRoutine {
 					halfSweep
 				);
 			} else if (
-				(startPosition == StartingPosition.INSIDE_LEFT_TRENCH && scoreLocation == ScoringLocation.OUTSIDE_RIGHT_TRENCH) ||
-				(startPosition == StartingPosition.INSIDE_RIGHT_TRENCH && scoreLocation == ScoringLocation.OUTSIDE_LEFT_TRENCH)
+				((startPosition == StartingPosition.INSIDE_LEFT_TRENCH || startPosition == StartingPosition.OUTSIDE_LEFT_TRENCH) && scoreLocation == ScoringLocation.OUTSIDE_RIGHT_TRENCH) ||
+				((startPosition == StartingPosition.INSIDE_RIGHT_TRENCH || startPosition == StartingPosition.OUTSIDE_RIGHT_TRENCH) && scoreLocation == ScoringLocation.OUTSIDE_LEFT_TRENCH)
 			) {
 				return Settings.from(
 					fullOuterSwipe,
