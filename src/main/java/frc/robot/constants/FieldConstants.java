@@ -47,6 +47,7 @@ public final class FieldConstants {
 		fieldWidth.div(2.0)
 	));
 	public static final Distance hubHeight = Inches.of(72.000000);
+	public static final Distance hubWidth = Inches.of(47.0);
 
 	public static final AllianceFlipped<Translation2d> towerRungsCenter = AllianceFlipped.fromBlue(new Translation2d(
 		Inches.of(41.798750),
@@ -57,13 +58,13 @@ public final class FieldConstants {
 	public static final AllianceFlipped<Distance> outpostCenterY = AllianceFlipped.fromBlueYPos(Inches.of(26.150500));
 
 	public static final AllianceFlipped<VerticalLine> allianceZone = AllianceFlipped.fromBlue(new VerticalLine(allianceZoneBoundaryX.getBlue().in(Meters), false));
+	public static final AllianceFlipped<VerticalLine> shootingZone = AllianceFlipped.fromBlue(new VerticalLine(allianceZoneBoundaryX.getBlue().plus(hubWidth).in(Meters), false));
 
 	public static final Angle bumpAngle = Degrees.of(15.0);
 	public static final Distance bumpHeight = Inches.of(6.5);
 	public static final Distance bumpWidth = Inches.of(73.000000);
 	public static final Distance bumpLength = bumpHeight.div(Math.tan(bumpAngle.in(Radians))).times(2.0);
 
-	public static final Distance hubWidth = Inches.of(47.0);
 
 	public static final Distance bottomBumpTopY = fieldWidth.div(2.0).minus(hubWidth.div(2.0));
 	public static final Distance bottomBumpBottomY = bottomBumpTopY.minus(bumpWidth);
