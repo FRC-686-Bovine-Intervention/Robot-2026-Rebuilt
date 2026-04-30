@@ -41,7 +41,7 @@ public class AutoCommons {
 
 				@Override
 				public Command get() {
-					if (robot.shooter.withinShootingTolerance()) {
+					if (AutoCommons.isReadyToShoot(robot)) {
 						return this.feedCommand;
 					}
 					return this.prestageCommand;
