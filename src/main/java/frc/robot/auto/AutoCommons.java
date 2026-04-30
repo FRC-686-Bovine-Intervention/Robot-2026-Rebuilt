@@ -78,7 +78,7 @@ public class AutoCommons {
 			}
 		}
 		return
-			robot.shooter.withinShootingTolerance()
+			robot.shooter.withinShootingTolerance(!hubTagSeen)
 			&& robot.shooter.flywheel.isShooting()
 			&& robot.shooter.hood.isShooting()
 			&& hubTagSeen
