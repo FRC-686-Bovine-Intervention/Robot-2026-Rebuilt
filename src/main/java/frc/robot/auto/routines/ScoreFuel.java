@@ -360,7 +360,7 @@ public class ScoreFuel extends AutoRoutine {
 		);
 		commands.add(firstCommand);
 
-		if (secondScoringLocation != ScoringLocation.NONE) {
+		// if (secondScoringLocation != ScoringLocation.NONE) {
 			var secondTraj = generatePath(firstScoringLocation, secondScoringLocation, secondIntakeLocation).getOurs();
 			var secondCommand = AutoCommons.swipe(
 				this.robot,
@@ -386,7 +386,7 @@ public class ScoreFuel extends AutoRoutine {
 				this.robot.intake.slam.deploy(robot.extensionSystem).asProxy()
 			);
 			commands.add(thirdCommand);
-		}
+		// }
 
 		return Commands.parallel(
 			AutoCommons.setOdometryFlipped(startPosition.pose),
