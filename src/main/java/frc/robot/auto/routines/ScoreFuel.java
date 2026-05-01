@@ -33,7 +33,7 @@ public class ScoreFuel extends AutoRoutine {
 
 		@Override
 		protected Settings<StartingPosition> generateSettings() {
-			return Settings.from(startInsideLeftTrench, startInsideLeftTrench, startInsideRightTrench, startOutsideLeftTrench, startOutsideRightTrench, startLeftBump);
+			return Settings.from(startInsideLeftTrench, startInsideLeftTrench, startInsideRightTrench, startOutsideLeftTrench, startOutsideRightTrench, startLeftBump, startCenter);
 		}
 	};
 
@@ -73,7 +73,9 @@ public class ScoreFuel extends AutoRoutine {
 				startPosition == StartingPosition.LEFT_BUMP
 			) {
 				return Settings.from(
-					left, left);
+					left, left
+
+				);
 			}
 			else if (
 				startPosition == StartingPosition.INSIDE_RIGHT_TRENCH || startPosition == StartingPosition.OUTSIDE_RIGHT_TRENCH
@@ -91,6 +93,7 @@ public class ScoreFuel extends AutoRoutine {
 					);
 				}
 			} else {
+				System.out.println("Returning null at first score");
 				return null;
 			}
 		}
@@ -136,8 +139,7 @@ public class ScoreFuel extends AutoRoutine {
 				startPosition == StartingPosition.CENTER
 			) {
 				return Settings.from(
-					noIntake,
-					noIntake,
+					depot,
 					depot
 				);
 			} else if (
@@ -167,6 +169,7 @@ public class ScoreFuel extends AutoRoutine {
 				);
 			}
 			else {
+				System.out.println("Returning null at first intake");
 				return null;
 			}
 		}
@@ -175,7 +178,7 @@ public class ScoreFuel extends AutoRoutine {
 	private static final AutoQuestion<ScoringLocation> secondScoringLocation = new AutoQuestion<ScoringLocation>("Second Score Location") {
 		private static final Map.Entry<String, ScoringLocation> left = Settings.option("L Bump", ScoringLocation.LEFT);
 		private static final Map.Entry<String, ScoringLocation> right = Settings.option("R Bump", ScoringLocation.RIGHT);
-		private static final Map.Entry<String, ScoringLocation> none = Settings.option("NONE", ScoringLocation.CENTER);
+		private static final Map.Entry<String, ScoringLocation> none = Settings.option("NONE", ScoringLocation.NONE);
 		private static final Map.Entry<String, ScoringLocation> outsideLeftTrench = Settings.option("L Trench", ScoringLocation.OUTSIDE_LEFT_TRENCH);
 		private static final Map.Entry<String, ScoringLocation> outsideRightTrench = Settings.option("R Trench", ScoringLocation.OUTSIDE_RIGHT_TRENCH);
 
@@ -184,7 +187,7 @@ public class ScoreFuel extends AutoRoutine {
 			var startPosition = ScoreFuel.firstScoringLocation.getResponse();
 			var firstIntakeLocation = ScoreFuel.firstIntakeLocation.getResponse();
 			if (
-				firstIntakeLocation == IntakeLocation.FALSE
+				firstIntakeLocation == IntakeLocation.FALSE || startPosition == ScoringLocation.CENTER
 			) {
 				return Settings.from(none, none);
 			} else if (
@@ -221,6 +224,7 @@ public class ScoreFuel extends AutoRoutine {
 				);
 			}
 			else {
+				System.out.println("Returning null at second score");
 				return null;
 			}
 		}
@@ -282,13 +286,14 @@ public class ScoreFuel extends AutoRoutine {
 				);
 			}
 			else if (
-				startPosition == null
+				startPosition == null || scoreLocation == ScoringLocation.NONE
 			) {
 				return Settings.from(
 					noIntake,
 					noIntake
 				);
 			} else {
+				System.out.println("Returning null at second intake");
 				return null;
 			}
 		}
@@ -355,31 +360,33 @@ public class ScoreFuel extends AutoRoutine {
 		);
 		commands.add(firstCommand);
 
-		var secondTraj = generatePath(firstScoringLocation, secondScoringLocation, secondIntakeLocation).getOurs();
-		var secondCommand = AutoCommons.swipe(
-			this.robot,
-			secondTraj,
-			0.0,
-			0.0,
-			0.5,
-			2.5,
-			18.5,
-			15.5,
-			autoTimer,
-			enableTransitionCutoff,
-			true
-		);
-		commands.add(secondCommand);
+		if (secondScoringLocation != ScoringLocation.NONE) {
+			var secondTraj = generatePath(firstScoringLocation, secondScoringLocation, secondIntakeLocation).getOurs();
+			var secondCommand = AutoCommons.swipe(
+				this.robot,
+				secondTraj,
+				0.0,
+				0.0,
+				0.5,
+				2.5,
+				18.5,
+				15.5,
+				autoTimer,
+				enableTransitionCutoff,
+				true
+			);
+			commands.add(secondCommand);
 
-		var thirdTraj = generatePath(secondScoringLocation, ScoringLocation.STOP, IntakeLocation.HALF_INNER_SWIPE).getOurs();
-		var thirdCommand = Commands.parallel(
-			Commands.deadline(
-				new FollowTrajectoryCommand(this.robot.drive, thirdTraj, true).withName("Grab Ball").asProxy(),
-				this.robot.intake.rollers.intake().asProxy()
-			),
-			this.robot.intake.slam.deploy(robot.extensionSystem).asProxy()
-		);
-		commands.add(thirdCommand);
+			var thirdTraj = generatePath(secondScoringLocation, ScoringLocation.STOP, IntakeLocation.HALF_INNER_SWIPE).getOurs();
+			var thirdCommand = Commands.parallel(
+				Commands.deadline(
+					new FollowTrajectoryCommand(this.robot.drive, thirdTraj, true).withName("Grab Ball").asProxy(),
+					this.robot.intake.rollers.intake().asProxy()
+				),
+				this.robot.intake.slam.deploy(robot.extensionSystem).asProxy()
+			);
+			commands.add(thirdCommand);
+		}
 
 		return Commands.parallel(
 			AutoCommons.setOdometryFlipped(startPosition.pose),

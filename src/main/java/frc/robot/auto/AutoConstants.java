@@ -127,7 +127,8 @@ public final class AutoConstants {
 		CENTER("Center", 1),
 		LEFT("Left", "Right", 1),
 		RIGHT("Right", "Left", 1),
-		STOP("Stop", 1);
+		STOP("Stop", 1),
+		NONE("None", 1);
 
 		public final String alias;
 		public final String rightAlias;
