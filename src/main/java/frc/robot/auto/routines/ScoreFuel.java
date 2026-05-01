@@ -116,6 +116,15 @@ public class ScoreFuel extends AutoRoutine {
 			var startPosition = ScoreFuel.startPosition.getResponse();
 			var scoreLocation = ScoreFuel.firstScoringLocation.getResponse();
 			if (
+				scoreLocation == ScoringLocation.OUTSIDE_LEFT_TRENCH && startPosition == StartingPosition.OUTSIDE_LEFT_TRENCH
+			) {
+				return Settings.from(
+					halfSweep,
+					halfOuterSwipe,
+					halfSweep,
+					depot
+				);
+			} else if (
 				((startPosition == StartingPosition.INSIDE_LEFT_TRENCH || startPosition == StartingPosition.OUTSIDE_LEFT_TRENCH) && scoreLocation == ScoringLocation.OUTSIDE_LEFT_TRENCH) ||
 				((startPosition == StartingPosition.INSIDE_RIGHT_TRENCH || startPosition == StartingPosition.OUTSIDE_RIGHT_TRENCH) && scoreLocation == ScoringLocation.OUTSIDE_RIGHT_TRENCH)
 			) {
@@ -140,15 +149,6 @@ public class ScoreFuel extends AutoRoutine {
 			) {
 				return Settings.from(
 					depot,
-					depot
-				);
-			} else if (
-				scoreLocation == ScoringLocation.OUTSIDE_LEFT_TRENCH && startPosition == StartingPosition.OUTSIDE_LEFT_TRENCH
-			) {
-				return Settings.from(
-					halfSweep,
-					halfOuterSwipe,
-					halfSweep,
 					depot
 				);
 			} else if (
