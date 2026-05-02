@@ -359,7 +359,7 @@ public class ScoreFuel extends AutoRoutine {
 			15.5,
 			autoTimer,
 			enableTransitionCutoff,
-			true
+			false
 		);
 		commands.add(firstCommand);
 
@@ -376,7 +376,7 @@ public class ScoreFuel extends AutoRoutine {
 				15.5,
 				autoTimer,
 				enableTransitionCutoff,
-				true
+				false
 			);
 			commands.add(secondCommand);
 
