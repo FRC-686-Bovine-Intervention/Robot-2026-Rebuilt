@@ -377,7 +377,7 @@ public class ScoreFuel extends AutoRoutine {
 			);
 			commands.add(secondCommand);
 
-			var thirdTraj = generatePath(secondScoringLocation, ScoringLocation.STOP, IntakeLocation.HALF_INNER_SWIPE).getOurs();
+			var thirdTraj = generatePath(secondScoringLocation, secondScoringLocation, IntakeLocation.HALF_INNER_LOOP_SWIPE).getOurs();
 			var thirdCommand = Commands.parallel(
 				Commands.deadline(
 					new FollowTrajectoryCommand(this.robot.drive, thirdTraj, true).withName("Grab Ball").asProxy(),
