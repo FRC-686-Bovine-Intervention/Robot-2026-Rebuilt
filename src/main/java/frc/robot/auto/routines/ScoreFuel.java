@@ -108,6 +108,7 @@ public class ScoreFuel extends AutoRoutine {
 		private static final Map.Entry<String, IntakeLocation> halfOpponentSwipe = Settings.option("Intake Obliterator 5000", IntakeLocation.HALF_OPPONENT_SWIPE);
 		private static final Map.Entry<String, IntakeLocation> halfSweep = Settings.option("Bumper Obliterator 5000", IntakeLocation.HALF_SWEEP);
 		private static final Map.Entry<String, IntakeLocation> depot = Settings.option("Depot", IntakeLocation.DEPOT);
+		private static final Map.Entry<String, IntakeLocation> halfInnerLoopSwipe = Settings.option("Half Inner Loop Swipe", IntakeLocation.HALF_INNER_LOOP_SWIPE);
 		// private static final Map.Entry<String, IntakeLocation> outpost = Settings.option("O", IntakeLocation.OUTPOST);
 		private static final Map.Entry<String, IntakeLocation> noIntake = Settings.option("No Intake", IntakeLocation.FALSE);
 
@@ -124,7 +125,8 @@ public class ScoreFuel extends AutoRoutine {
 					halfSweep,
 					depot
 				);
-			} else if (
+			}
+			else if (
 				((startPosition == StartingPosition.INSIDE_LEFT_TRENCH || startPosition == StartingPosition.OUTSIDE_LEFT_TRENCH) && scoreLocation == ScoringLocation.OUTSIDE_LEFT_TRENCH) ||
 				((startPosition == StartingPosition.INSIDE_RIGHT_TRENCH || startPosition == StartingPosition.OUTSIDE_RIGHT_TRENCH) && scoreLocation == ScoringLocation.OUTSIDE_RIGHT_TRENCH)
 			) {
@@ -165,7 +167,8 @@ public class ScoreFuel extends AutoRoutine {
 				return Settings.from(
 					halfSweep,
 					halfOuterSwipe,
-					halfSweep
+					halfSweep,
+					halfInnerLoopSwipe
 				);
 			}
 			else {
