@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.intake.slam.IntakeSlam;
 import frc.robot.subsystems.intake.slam.IntakeSlamConstants;
 import frc.util.EdgeDetector;
+import frc.util.Environment;
 import frc.util.loggerUtil.tunables.LoggedTunable;
 
 public class IntakeDeployHysteresis implements Runnable {
@@ -28,7 +29,13 @@ public class IntakeDeployHysteresis implements Runnable {
 	@Override
 	public void run() {
 		this.teleopEnableEdgeDetector.update(DriverStation.isTeleopEnabled());
-		if (this.teleopEnableEdgeDetector.risingEdge() && this.intakeSlam.getMeasuredAngleRads() <= IntakeDeployHysteresis.hysterisisThreshold.get().in(Radians)) {
+		if (
+			this.teleopEnableEdgeDetector.risingEdge()
+			&& (
+				this.intakeSlam.getMeasuredAngleRads() <= IntakeDeployHysteresis.hysterisisThreshold.get().in(Radians)
+				|| Environment.isCompetition()
+			)
+		) {
 			CommandScheduler.getInstance().schedule(this.intakeDeployCommand);
 		}
 	}
