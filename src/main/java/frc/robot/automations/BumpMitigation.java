@@ -111,7 +111,7 @@ public class BumpMitigation implements Runnable {
 				|| this.withinBounds(dynamicBoxTopRed, robotPose.getTranslation())
 				|| this.withinBounds(dynamicBoxBottomRed, robotPose.getTranslation())
 			)
-			&& this.drive.rotationalSubsystem.getCurrentCommand() == null
+			&& (this.drive.rotationalSubsystem.getCurrentCommand() == null || this.drive.rotationalSubsystem.getCurrentCommand() == this.command)
 		);
 
 		if (this.edgeDetector.risingEdge() && !this.command.isScheduled()) {
