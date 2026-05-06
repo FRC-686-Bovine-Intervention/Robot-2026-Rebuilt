@@ -3,6 +3,8 @@ package frc.robot.automations;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Radians;
 
+import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
+
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -16,6 +18,8 @@ public class IntakeDeployHysteresis implements Runnable {
 	private final IntakeSlam intakeSlam;
 	private final Command intakeDeployCommand;
 
+	private static final LoggedNetworkBoolean enabled = new LoggedNetworkBoolean("Automations/Intake Deploy Hysteresis/Enabled", true);
+
 	private static final LoggedTunable<Angle> hysterisisThreshold = LoggedTunable.from("Automations/Intake Deploy Hysterisis/Threshold", Degrees::of, IntakeSlamConstants.minAngle.plus(IntakeSlamConstants.maxAngle).div(2.0).in(Degrees));
 
 	private final EdgeDetector teleopEnableEdgeDetector = new EdgeDetector(false);
@@ -27,7 +31,7 @@ public class IntakeDeployHysteresis implements Runnable {
 
 	@Override
 	public void run() {
-		this.teleopEnableEdgeDetector.update(DriverStation.isTeleopEnabled());
+		this.teleopEnableEdgeDetector.update(DriverStation.isTeleopEnabled() && enabled.getAsBoolean());
 		if (this.teleopEnableEdgeDetector.risingEdge() && this.intakeSlam.getMeasuredAngleRads() <= IntakeDeployHysteresis.hysterisisThreshold.get().in(Radians)) {
 			CommandScheduler.getInstance().schedule(this.intakeDeployCommand);
 		}

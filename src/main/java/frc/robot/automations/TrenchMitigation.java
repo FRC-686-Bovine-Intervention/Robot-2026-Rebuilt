@@ -3,6 +3,8 @@ package frc.robot.automations;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Seconds;
 
+import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
+
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Time;
@@ -24,6 +26,8 @@ public class TrenchMitigation implements Runnable {
 	private final Drive drive;
 	private final Command intakeDeployCommand;
 	private final Command safetyCommand;
+
+	private static final LoggedNetworkBoolean enabled = new LoggedNetworkBoolean("Automations/Trench Mitigation/Enabled", true);
 
 	private final double[] staticBoxTopBlue = new double[] {
 		FieldConstants.trenchInnerX.getBlue().in(Meters),
@@ -93,6 +97,7 @@ public class TrenchMitigation implements Runnable {
 				|| this.withinBounds(this.dynamicBoxBottomRed,  robotPose.getTranslation())
 			)
 			&& DriverStation.isTeleopEnabled()
+			&& enabled.getAsBoolean()
 		);
 
 		if (this.edgeDetector.risingEdge() && !this.safetyCommand.isScheduled()) {
