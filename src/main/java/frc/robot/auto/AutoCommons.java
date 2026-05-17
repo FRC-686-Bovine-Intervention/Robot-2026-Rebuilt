@@ -5,11 +5,14 @@ import java.util.Set;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+import org.littletonrobotics.junction.Logger;
+
 import choreo.Choreo;
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotContainer;
@@ -41,7 +44,30 @@ public class AutoCommons {
 
 				@Override
 				public Command get() {
-					if (robot.shooter.withinShootingTolerance()) {
+					var hubTagSeen = false;
+					for (final var tagID : FieldConstants.hubTagIDs.getOurs()) {
+						if (!RobotState.getInstance().isTagStale(tagID)) {
+							hubTagSeen = true;
+							break;
+						}
+					}
+					final var shooterWithinTolerance = robot.shooter.withinShootingTolerance(!hubTagSeen);
+					final var flywheelIsShooting = robot.shooter.flywheel.isShooting();
+					final var hoodIsShooting = robot.shooter.hood.isShooting();
+
+					Logger.recordOutput("DEBUG/Auto is ready to shoot/shooter tolerance", shooterWithinTolerance);
+					Logger.recordOutput("DEBUG/Auto is ready to shoot/flywheel is shooting", flywheelIsShooting);
+					Logger.recordOutput("DEBUG/Auto is ready to shoot/hood is shooting", hoodIsShooting);
+					Logger.recordOutput("DEBUG/Auto is ready to shoot/hub tag seen", hubTagSeen);
+					Logger.recordOutput("DEBUG/Auto is ready to shoot/heartbeat", Timer.getTimestamp());
+
+					final var a =
+						shooterWithinTolerance
+						&& flywheelIsShooting
+						&& hoodIsShooting
+					;
+					Logger.recordOutput("DEBUG/Auto is ready to shoot/return val", a);
+					if (a) {
 						return this.feedCommand;
 					}
 					return this.prestageCommand;
@@ -77,11 +103,20 @@ public class AutoCommons {
 				break;
 			}
 		}
+		final var shooterWithinTolerance = robot.shooter.withinShootingTolerance(!hubTagSeen);
+		final var flywheelIsShooting = robot.shooter.flywheel.isShooting();
+		final var hoodIsShooting = robot.shooter.hood.isShooting();
+
+		// Logger.recordOutput("DEBUG/Auto is ready to shoot/shooter tolerance", shooterWithinTolerance);
+		// Logger.recordOutput("DEBUG/Auto is ready to shoot/flywheel is shooting", flywheelIsShooting);
+		// Logger.recordOutput("DEBUG/Auto is ready to shoot/hood is shooting", hoodIsShooting);
+		// Logger.recordOutput("DEBUG/Auto is ready to shoot/hub tag seen", hubTagSeen);
+
 		return
-			robot.shooter.withinShootingTolerance()
-			&& robot.shooter.flywheel.isShooting()
-			&& robot.shooter.hood.isShooting()
-			&& hubTagSeen
+			shooterWithinTolerance
+			&& flywheelIsShooting
+			&& hoodIsShooting
+			// && hubTagSeen
 		;
 	}
 
@@ -149,7 +184,7 @@ public class AutoCommons {
 				),
 				Commands.deadline(
 					endingConditionCommand,
-					AutoCommons.feedWhenReadyOrPrestage(robot, enablePrestage),
+					AutoCommons.feedWhenReadyOrPrestage(robot, false),
 					robot.intake.slam.hopperAgitate(robot.extensionSystem).asProxy(),
 					robot.shooter.aimHoodAtHub().asProxy(),
 					robot.shooter.aimDriveAtHub(robot.drive.rotationalSubsystem).asProxy(),

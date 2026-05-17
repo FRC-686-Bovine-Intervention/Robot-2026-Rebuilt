@@ -643,6 +643,20 @@
      "val":1.200625545208898
     }
    },
+   "LaedonLeftHubShot":{
+    "x":{
+     "exp":"LaedonRightHubShot.x",
+     "val":2.7009365558624268
+    },
+    "y":{
+     "exp":"FieldWidth - LaedonRightHubShot.y",
+     "val":7.091000240402222
+    },
+    "heading":{
+     "exp":"LaedonRightHubShot.heading",
+     "val":0.0
+    }
+   },
    "LaedonRightHubShot":{
     "x":{
      "exp":"2.7009365558624268 m",
@@ -1259,6 +1273,62 @@
      "val":-3.119857330008472
     }
    },
+   "SLB":{
+    "x":{
+     "exp":"SRB.x",
+     "val":3.55854
+    },
+    "y":{
+     "exp":"FieldWidth - SRB.y",
+     "val":5.876290000000001
+    },
+    "heading":{
+     "exp":"-90 deg",
+     "val":-1.5707963267948966
+    }
+   },
+   "SOLT":{
+    "x":{
+     "exp":"SORT.x",
+     "val":3.55854
+    },
+    "y":{
+     "exp":"FieldWidth - SORT.y",
+     "val":7.62508
+    },
+    "heading":{
+     "exp":"-90 deg",
+     "val":-1.5707963267948966
+    }
+   },
+   "SORT":{
+    "x":{
+     "exp":"StartLineX - CenterToBumper",
+     "val":3.55854
+    },
+    "y":{
+     "exp":"CenterToBumper",
+     "val":0.4445
+    },
+    "heading":{
+     "exp":"90 deg",
+     "val":1.5707963267948966
+    }
+   },
+   "SRB":{
+    "x":{
+     "exp":"StartLineX - CenterToBumper",
+     "val":3.55854
+    },
+    "y":{
+     "exp":"TrenchWidth + BumpWidth / 2",
+     "val":2.1932899999999997
+    },
+    "heading":{
+     "exp":"90 deg",
+     "val":1.5707963267948966
+    }
+   },
    "StartingOverRampL":{
     "x":{
      "exp":"5.985846042633057 m",
@@ -1355,6 +1425,20 @@
     "heading":{
      "exp":"3.141592653589793 rad",
      "val":3.141592653589793
+    }
+   },
+   "TrenchAway":{
+    "x":{
+     "exp":"CenterToBumper * 3",
+     "val":1.3335
+    },
+    "y":{
+     "exp":"CenterToBumper * 2",
+     "val":0.889
+    },
+    "heading":{
+     "exp":"0.7681324299121239 rad",
+     "val":0.7681324299121239
     }
    },
    "TrenchEntryR":{

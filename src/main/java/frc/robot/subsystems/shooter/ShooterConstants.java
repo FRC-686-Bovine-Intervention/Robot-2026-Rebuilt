@@ -41,6 +41,7 @@ public class ShooterConstants {
 	public static final InterpolatingDoubleTreeMap hubTargetHoodAngleRads = new InterpolatingDoubleTreeMap();
 	static {
 		hubTargetHoodAngleRads.put(Inches.of(52.0).in(Meters), Degrees.of(13.2).in(Radians)); // 48.25 actual
+		hubTargetHoodAngleRads.put(Inches.of(89.481812).in(Meters), Degrees.of((2.0 + 17.55686)).in(Radians)); // 107.5 actual
 		hubTargetHoodAngleRads.put(Inches.of(110.5).in(Meters), Degrees.of(20.0).in(Radians)); // 107.5 actual
 		hubTargetHoodAngleRads.put(Inches.of(125.2).in(Meters), Degrees.of(22.9).in(Radians)); // 122.0 actual
 		hubTargetHoodAngleRads.put(Inches.of(141.0).in(Meters), Degrees.of(24.1).in(Radians)); // 140.0 actual

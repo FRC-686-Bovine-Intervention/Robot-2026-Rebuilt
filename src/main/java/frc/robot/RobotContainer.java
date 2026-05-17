@@ -893,7 +893,7 @@ public class RobotContainer {
 			this.driveController.y().or(secondDriverOverride),
 			aimToPassCommand::isScheduled
 		));
-		this.automationsLoop.bind(new PassivePrestage(this.rollers, rollersFeederIdleCommand, rollersPassivePrestageCommand));
+		// this.automationsLoop.bind(new PassivePrestage(this.rollers, rollersFeederIdleCommand, rollersPassivePrestageCommand));
 		this.automationsLoop.bind(new HubShiftNotifications(this.driveController));
 		new Trigger(this.automationsLoop, () -> !this.shooter.hood.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.shooter.hood.calibrate());
 		// new Trigger(this.automationsLoop, () -> !this.climber.hook.isCalibrated() && DriverStation.isEnabled()).whileTrue(this.climber.hook.calibrate());
@@ -1003,7 +1003,7 @@ public class RobotContainer {
 			aimTowerTrigger.update(rightBumper && rightStickMag && (rightStickRads > 3.0 * Math.PI / 4.0 || rightStickRads < 3.0 * -Math.PI / 4.0));
 
 			if (aimAutoTrigger.risingEdge()) {
-				if (FieldConstants.allianceZone.getOurs().withinBounds(RobotState.getInstance().getEstimatedGlobalPose().getTranslation())) {
+				if (FieldConstants.shootingZone.getOurs().withinBounds(RobotState.getInstance().getEstimatedGlobalPose().getTranslation())) {
 					CommandScheduler.getInstance().schedule(aimAtHubCommand);
 				} else {
 					CommandScheduler.getInstance().schedule(aimToPassCommand);

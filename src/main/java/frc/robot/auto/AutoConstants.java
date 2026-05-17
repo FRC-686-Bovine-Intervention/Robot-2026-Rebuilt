@@ -1,11 +1,9 @@
 package frc.robot.auto;
 
-import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Seconds;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Time;
 import frc.robot.constants.FieldConstants;
@@ -21,79 +19,70 @@ public final class AutoConstants {
 	public static final Distance startXInTrench = startLineX.plus(RobotConstants.centerToFrontBumper);
 
 
-	public static final AllianceFlipped<Pose2d> startOutsideLeftTrench =
-		AllianceFlipped.fromBlue(new Pose2d(
-			startXInAllianceZone,
-			FieldConstants.fieldWidth.minus(RobotConstants.centerToFrontBumper),
-			Rotation2d.k180deg
+	// Outside Trench
+	public static final AllianceFlipped<Pose2d> startOutsideLeftTrench = AllianceFlipped.fromBlue(new Pose2d(
+		startXInAllianceZone,
+		FieldConstants.fieldWidth.minus(RobotConstants.centerToFrontBumper),
+		Rotation2d.kCW_90deg
 	));
-	public static final AllianceFlipped<Pose2d> startOutsideRightTrench =
-		AllianceFlipped.fromBlue(new Pose2d(
-			startXInAllianceZone,
-			RobotConstants.centerToFrontBumper,
-			Rotation2d.k180deg
-	));
-	public static final AllianceFlipped<Pose2d> startLeftBump =
-		AllianceFlipped.fromBlue(new Pose2d(
-			startXInAllianceZone,
-			FieldConstants.topBumpTopY.plus(FieldConstants.topBumpBottomY).div(2),
-			Rotation2d.k180deg
-	));
-	public static final AllianceFlipped<Pose2d> startRightBump =
-		AllianceFlipped.fromBlue(new Pose2d(
-			startXInAllianceZone,
-			FieldConstants.bottomBumpBottomY.plus(FieldConstants.bottomBumpTopY).div(2),
-			Rotation2d.k180deg
-	));
-	public static final AllianceFlipped<Pose2d> startCenter =
-		AllianceFlipped.fromBlue(new Pose2d(
-			startXInAllianceZone,
-			FieldConstants.fieldWidth.div(2),
-			Rotation2d.k180deg
+	public static final AllianceFlipped<Pose2d> startOutsideRightTrench = AllianceFlipped.fromBlue(new Pose2d(
+		startXInAllianceZone,
+		RobotConstants.centerToFrontBumper,
+		Rotation2d.kCCW_90deg
 	));
 
-	public static final AllianceFlipped<Pose2d> startInsideLeftTrench =
-		AllianceFlipped.fromBlue(new Pose2d(
-			startXInTrench,
-			FieldConstants.fieldWidth.minus(RobotConstants.centerToFrontBumper),
-			Rotation2d.kCW_90deg
+	// Inside Trench
+	public static final AllianceFlipped<Pose2d> startInsideLeftTrench = AllianceFlipped.fromBlue(new Pose2d(
+		startXInTrench,
+		FieldConstants.fieldWidth.minus(RobotConstants.centerToFrontBumper),
+		Rotation2d.kCW_90deg
 	));
-	public static final AllianceFlipped<Pose2d> startInsideRightTrench =
-		AllianceFlipped.fromBlue(new Pose2d(
-			startXInTrench,
-			RobotConstants.centerToFrontBumper,
-			Rotation2d.kCCW_90deg
-	));
-
-	public static final AllianceFlipped<Pose2d> startInsideLeftTrenchDS =
-		AllianceFlipped.fromBlue(new Pose2d(
-			startXInTrench,
-			FieldConstants.fieldWidth.minus(RobotConstants.centerToFrontBumper),
-			Rotation2d.k180deg
-	));
-	public static final AllianceFlipped<Pose2d> startInsideRightTrenchDS =
-		AllianceFlipped.fromBlue(new Pose2d(
-			startXInTrench,
-			RobotConstants.centerToFrontBumper,
-			Rotation2d.k180deg
+	public static final AllianceFlipped<Pose2d> startInsideRightTrench = AllianceFlipped.fromBlue(new Pose2d(
+		startXInTrench,
+		RobotConstants.centerToFrontBumper,
+		Rotation2d.kCCW_90deg
 	));
 
-	public static final AllianceFlipped<Pose2d> startInRightTrench = AllianceFlipped.fromBlue(
-		new Pose2d(
-			new Translation2d(
-				FieldConstants.robotStartingLineCenterX.getBlue().plus(RobotConstants.centerToFrontBumper),
-				Inches.of(24.0)
-			),
-			Rotation2d.k180deg
-		)
-	);
+	// Bump
+	public static final AllianceFlipped<Pose2d> startLeftBump = AllianceFlipped.fromBlue(new Pose2d(
+		startXInAllianceZone,
+		FieldConstants.topBumpTopY.plus(FieldConstants.topBumpBottomY).div(2),
+		Rotation2d.k180deg
+	));
+	public static final AllianceFlipped<Pose2d> startRightBump = AllianceFlipped.fromBlue(new Pose2d(
+		startXInAllianceZone,
+		FieldConstants.bottomBumpBottomY.plus(FieldConstants.bottomBumpTopY).div(2),
+		Rotation2d.k180deg
+	));
+
+	// Center
+	public static final AllianceFlipped<Pose2d> startCenter = AllianceFlipped.fromBlue(new Pose2d(
+		startXInAllianceZone,
+		FieldConstants.fieldWidth.div(2),
+		Rotation2d.kZero
+	));
+
+	// DoubleSwipe
+	public static final AllianceFlipped<Pose2d> startInsideLeftTrenchDS = AllianceFlipped.fromBlue(new Pose2d(
+		startXInTrench,
+		FieldConstants.fieldWidth.minus(RobotConstants.centerToFrontBumper),
+		Rotation2d.k180deg
+	));
+	public static final AllianceFlipped<Pose2d> startInsideRightTrenchDS = AllianceFlipped.fromBlue(new Pose2d(
+		startXInTrench,
+		RobotConstants.centerToFrontBumper,
+		Rotation2d.k180deg
+	));
 
 	public enum StartingPosition {
+		OUTSIDE_LEFT_TRENCH(startOutsideLeftTrench, "SOLT", "SORT"),
 		INSIDE_LEFT_TRENCH(startInsideLeftTrench, "SILT", "SIRT"),
-		// LEFT_BUMP(startLeftBump, "SLB", "SRB"),
+		LEFT_BUMP(startLeftBump, "SLB", "SRB"),
 		CENTER(startCenter, "SC"),
-		// RIGHT_BUMP(startRightBump, "SRB", "SLB"),
-		INSIDE_RIGHT_TRENCH(startInsideRightTrench, "SIRT", "SILT");
+		RIGHT_BUMP(startRightBump, "SRB", "SLB"),
+		INSIDE_RIGHT_TRENCH(startInsideRightTrench, "SIRT", "SILT"),
+		OUTSIDE_RIGHT_TRENCH(startOutsideRightTrench, "SORT", "SOLT"),
+		;
 
 		public final AllianceFlipped<Pose2d> pose;
 		public final String alias;
@@ -138,7 +127,8 @@ public final class AutoConstants {
 		CENTER("Center", 1),
 		LEFT("Left", "Right", 1),
 		RIGHT("Right", "Left", 1),
-		STOP("Stop", 1);
+		STOP("Stop", 1),
+		NONE("None", 1);
 
 		public final String alias;
 		public final String rightAlias;

@@ -1,5 +1,7 @@
 package frc.robot.automations;
 
+import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
+
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -10,6 +12,8 @@ public class PassivePrestage implements Runnable {
 	private final Command feederIdleCommand;
 	private final Command passivePrestageCommand;
 
+	private final LoggedNetworkBoolean enableSwitch = new LoggedNetworkBoolean("SmartDashboard/Automations/Passive Prestage/Enabled", true);
+
 	public PassivePrestage(Rollers rollers, Command feederIdleCommand, Command passivePrestageCommand) {
 		this.rollers = rollers;
 		this.feederIdleCommand = feederIdleCommand;
@@ -19,11 +23,15 @@ public class PassivePrestage implements Runnable {
 	@Override
 	public void run() {
 		if (
-			DriverStation.isTeleopEnabled()
+			this.enableSwitch.getAsBoolean()
+			&& DriverStation.isTeleopEnabled()
 			&& feederIdleCommand.isScheduled()
 			&& !rollers.isFeederSensorTripped()
 		) {
 			CommandScheduler.getInstance().schedule(this.passivePrestageCommand);
+		}
+		if (!this.enableSwitch.getAsBoolean() && this.passivePrestageCommand.isScheduled()) {
+			CommandScheduler.getInstance().cancel(this.passivePrestageCommand);
 		}
 	}
 }
