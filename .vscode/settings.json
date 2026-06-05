@@ -57,6 +57,12 @@
     "edu.wpi.first.math.**.proto.*",
     "edu.wpi.first.math.**.struct.*",
   ],
-  "java.dependency.enableDependencyCheckup": false,
+  "editor.defaultFormatter": "richardwillis.vscode-spotless-gradle",
+  "[json]": {
+    "editor.defaultFormatter": "richardwillis.vscode-spotless-gradle"
+  },
+  "[java]": {
+    "editor.defaultFormatter": "richardwillis.vscode-spotless-gradle"
+  },
   "wpilib.autoStartRioLog": false
 }
