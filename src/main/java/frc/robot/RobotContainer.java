@@ -927,6 +927,7 @@ public class RobotContainer {
 		 */
 		final var intakeEdge = new EdgeDetector(false);
 		final var intakeSupplier = this.driveController.a();
+		final var intakeUpSupplier = this.driveController.y();
 		final var intakeDoublePressThreshold = LoggedTunable.from("Controls/Intake/Double Press Threshold", Seconds::of, 0.25);
 		final var intakeDoublePressTimer = new Timer();
 		final var intakeForceHopperAgitateEdge = new EdgeDetector(false);
@@ -955,6 +956,9 @@ public class RobotContainer {
 			if (intakeDoublePressTimer.hasElapsed(intakeDoublePressThreshold.get().in(Seconds))) {
 				intakeDoublePressTimer.stop();
 				intakeDoublePressTimer.reset();
+			}
+			if (intakeUpSupplier.getAsBoolean()) {
+				CommandScheduler.getInstance().schedule(intakeStowCommand);
 			}
 
 
