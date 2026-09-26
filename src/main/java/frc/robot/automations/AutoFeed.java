@@ -134,10 +134,14 @@ public class AutoFeed implements Runnable {
 			CommandScheduler.getInstance().schedule(this.autoFeedCommand);
 			CommandScheduler.getInstance().schedule(this.autoAgitateCommand);
 			CommandScheduler.getInstance().schedule(this.autoCompressCommand);
-		} else if (this.edgeDetector.fallingEdge() && this.autoFeedCommand.isScheduled()) {
-			CommandScheduler.getInstance().cancel(this.autoFeedCommand);
-			CommandScheduler.getInstance().schedule(this.intakeDeployCommand);
-			CommandScheduler.getInstance().cancel(this.autoCompressCommand);
+		} else if (this.edgeDetector.fallingEdge()) {
+			if (this.autoFeedCommand.isScheduled()) {
+				CommandScheduler.getInstance().cancel(this.autoFeedCommand);
+			}
+			if (!this.intakeDeployCommand.isScheduled()) {
+				CommandScheduler.getInstance().schedule(this.intakeDeployCommand);
+				CommandScheduler.getInstance().cancel(this.autoCompressCommand);
+			}
 		}
 
 		Leds.getInstance().shooterReadyAnimation.setFlag(this.edgeDetector.getValue() && !enablePassing && isShooting && DriverStation.isTeleopEnabled());
